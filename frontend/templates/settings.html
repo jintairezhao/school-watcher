@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}设置{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>⚙️ 设置</h1>
+    <p class="page-subtitle">配置 API 密钥、爬取频率和管理学校</p>
+</div>
+
+<div class="settings-grid">
+    <!-- API 设置 -->
+    <div class="setting-card">
+        <div class="setting-card-header">
+            <h3>🔑 DeepSeek API</h3>
+            <p>用于生成通知摘要的 AI 服务</p>
+        </div>
+        <div class="setting-card-body">
+            <div class="form-group">
+                <label for="apiKey">API Key</label>
+                <div class="input-group">
+                    <input type="password" id="apiKey" class="form-input"
+                           value="{{ api_key_masked }}"
+                           placeholder="sk-xxxxxxxxxxxxxxxx"
+                           data-has-key="{{ api_key_has_value|tojson }}"
+                           autocomplete="off">
+                    <button class="btn btn-sm btn-outline" onclick="toggleApiKey()" type="button">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+                <span class="form-hint">在 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> 注册获取</span>
+            </div>
+            <button class="btn btn-primary" onclick="saveApiKey()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                保存 API Key
+            </button>
+        </div>
+    </div>
+
+    <!-- 用户管理（admin） -->
+    <div class="setting-card">
+        <div class="setting-card-header">
+            <h3>👥 用户管理</h3>
+            <p>重置密码 / 角色切换</p>
+        </div>
+        <div class="setting-card-body">
+            <div id="userList" class="text-muted">加载中…</div>
+        </div>
+    </div>
+
+    <!-- 爬取设置 -->
+    <div class="setting-card">
+        <div class="setting-card-header">
+            <h3>⏱️ 爬取设置</h3>
+            <p>自动爬取的时间间隔</p>
+        </div>
+        <div class="setting-card-body">
+            <div class="form-group">
+                <label for="interval">爬取间隔（分钟）</label>
+                <select id="interval" class="form-input">
+                    <option value="15" {% if interval == '15' %}selected{% endif %}>15 分钟</option>
+                    <option value="30" {% if interval == '30' %}selected{% endif %}>30 分钟（推荐）</option>
+                    <option value="60" {% if interval == '60' %}selected{% endif %}>1 小时</option>
+                    <option value="120" {% if interval == '120' %}selected{% endif %}>2 小时</option>
+                    <option value="360" {% if interval == '360' %}selected{% endif %}>6 小时</option>
+                    <option value="720" {% if interval == '720' %}selected{% endif %}>12 小时</option>
+                </select>
+                <span class="form-hint">应用将在后台按照此间隔自动检查和抓取新通知</span>
+            </div>
+            <button class="btn btn-primary" onclick="saveInterval()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                保存间隔
+            </button>
+            <div class="manual-actions">
+                <button class="btn btn-outline" onclick="triggerScrapeAll()" id="btnScrapeAll">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    立即抓取全部
+                </button>
+                <button class="btn btn-outline" onclick="triggerSummarize()" id="btnSummarize">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    重新生成所有摘要
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 爬取日志 -->
+    <div class="setting-card">
+        <div class="setting-card-header">
+            <h3>📋 爬取日志</h3>
+            <p>最近20次爬取记录</p>
+        </div>
+        <div class="setting-card-body">
+            {% if last_logs %}
+            <div class="log-list">
+                {% for log in last_logs %}
+                <div class="log-item">
+                    <span class="log-status log-{{ log.status }}">{{
+                        {'running': '运行中', 'success': '成功', 'failed': '失败'}.get(log.status, log.status)
+                    }}</span>
+                    <span class="log-info">
+                        新增 {{ log.new_count }} 条，共检查 {{ log.total_count }} 条
+                    </span>
+                    <span class="log-time">{{ log.started_at.strftime('%m-%d %H:%M') if log.started_at else '' }}</span>
+                    {% if log.error_message %}
+                    <span class="log-error" title="{{ log.error_message }}">{{ log.error_message|truncate(60) }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">暂无爬取记录</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleApiKey() {
+    const input = document.getElementById('apiKey');
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+// ---- 用户管理 ----
+async function loadUsers() {
+    const box = document.getElementById('userList');
+    if (!box) return;
+    try {
+        const resp = await fetch('/api/admin/users');
+        if (resp.status === 403) { box.textContent = '仅管理员可见'; return; }
+        const users = await resp.json();
+        box.innerHTML = users.map(u => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--color-border);">
+                <span>${u.username} <span class="text-muted">(${u.role})</span></span>
+                <span>
+                    <button class="btn btn-xs btn-outline" onclick="resetPw(${u.id}, this)">重置密码</button>
+                    <button class="btn btn-xs btn-ghost" onclick="setRole(${u.id}, '${u.role === 'admin' ? 'user' : 'admin'}')">${u.role === 'admin' ? '取消管理员' : '设为管理员'}</button>
+                </span>
+            </div>`).join('');
+    } catch(e) {
+        box.textContent = '加载失败';
+    }
+}
+async function resetPw(uid, btn) {
+    const resp = await fetch('/api/admin/users/' + uid + '/reset-password', {method: 'POST'});
+    const d = await resp.json();
+    if (d.success) prompt('临时密码（仅显示一次）：', d.temp_password);
+    else showToast('error', d.error || '失败');
+}
+async function setRole(uid, role) {
+    const resp = await fetch('/api/admin/users/' + uid + '/role', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({role: role})});
+    const d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.success ? '角色已更新' : (d.error || '失败'));
+    if (d.success) loadUsers();
+}
+document.addEventListener('DOMContentLoaded', loadUsers);
+
+async function saveApiKey() {
+    const input = document.getElementById('apiKey');
+    const key = input.value.trim();
+    if (!key) { showToast('error', '请输入 API Key'); return; }
+    if (!key.startsWith('sk-')) {
+        showToast('error', 'API Key 格式错误，应以 sk- 开头');
+        return;
+    }
+    // 如果用户没有修改脱敏后的值，跳过保存
+    if (input.dataset.hasKey === 'True' && key.includes('****')) {
+        showToast('info', 'API Key 未变更');
+        return;
+    }
+    try {
+        const resp = await fetch('/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ api_key: key })
+        });
+        const data = await resp.json();
+        showToast(data.success ? 'success' : 'error', data.message || data.error);
+        if (data.success) location.reload();
+    } catch(e) {
+        showToast('error', '保存失败: ' + e.message);
+    }
+}
+
+async function saveInterval() {
+    const interval = document.getElementById('interval').value;
+    try {
+        const resp = await fetch('/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ interval: interval })
+        });
+        const data = await resp.json();
+        showToast(data.success ? 'success' : 'error', data.message || data.error);
+    } catch(e) {
+        showToast('error', '保存失败: ' + e.message);
+    }
+}
+
+async function triggerScrapeAll() {
+    const btn = document.getElementById('btnScrapeAll');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> 抓取中...';
+    btn.disabled = true;
+    try {
+        const resp = await fetch('/api/scrape/all', { method: 'POST' });
+        const data = await resp.json();
+        showToast(data.success ? 'success' : 'error', data.message);
+        if (data.success) setTimeout(() => location.reload(), 2000);
+    } catch(e) {
+        showToast('error', '请求失败');
+    } finally {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+    }
+}
+
+async function triggerSummarize() {
+    const btn = document.getElementById('btnSummarize');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> 摘要生成中...';
+    btn.disabled = true;
+    try {
+        const resp = await fetch('/api/summarize', { method: 'POST' });
+        const data = await resp.json();
+        showToast(data.success ? 'success' : 'error', data.message);
+    } catch(e) {
+        showToast('error', '请求失败');
+    } finally {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

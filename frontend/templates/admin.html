@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block title %}后台管理 — 学校通知{% endblock %}
+
+{% block head %}
+<style>
+    /* ---- 后台标签页 ---- */
+    .admin-tabs {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        padding: 6px; margin-bottom: 18px;
+        background: var(--surface-card-glass);
+        border: 1px solid var(--surface-card-border-glass);
+        border-radius: var(--radius-card);
+    }
+    .admin-tab {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 14px; border: none; border-radius: var(--radius-btn);
+        background: transparent; color: var(--color-text-secondary);
+        font-size: 0.86rem; font-weight: 500; font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s var(--ease), color 0.15s var(--ease);
+    }
+    .admin-tab:hover { background: var(--color-surface-2); color: var(--color-text); }
+    .admin-tab.is-active { background: var(--color-primary-subtle); color: var(--color-primary); font-weight: 600; }
+    .admin-tab-panel[hidden] { display: none; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat-card { background: var(--surface-card-glass); border: 1px solid var(--surface-card-border-glass); border-radius: var(--radius-card); padding: 14px; }
+    .stat-card .n { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat-card .l { font-size: 0.78rem; color: var(--color-text-muted); }
+    .review-card { border: 1px solid var(--color-warning, #B45309); background: var(--color-warning-bg, #FEF3C7); color: #78350F; border-radius: var(--radius-card); padding: 10px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    html[data-theme="dark"] .review-card { background: rgba(180, 83, 9, 0.15); color: #FCD34D; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>️ 后台管理</h1>
+    <p class="page-subtitle">开发者控制台 · 仅管理员可见</p>
+</div>
+
+<nav class="admin-tabs" role="tablist">
+    <button class="admin-tab is-active" data-tab="overview" role="tab">📊 概览</button>
+    <button class="admin-tab" data-tab="schools" role="tab">🏫 学校管理</button>
+    <button class="admin-tab" data-tab="users" role="tab">👥 用户</button>
+    <button class="admin-tab" data-tab="scrape" role="tab">️ 抓取</button>
+    <button class="admin-tab" data-tab="selectors" role="tab">🩹 选择器健康</button>
+    <button class="admin-tab" data-tab="platform" role="tab">⚙️ 平台设置</button>
+</nav>
+
+<!-- ================= 概览 ================= -->
+<section class="admin-tab-panel" id="panel-overview">
+    <div class="stat-grid" id="statGrid"><p class="text-muted">加载中…</p></div>
+    <div class="setting-card">
+        <div class="setting-card-header"><h3>📋 最近抓取</h3><p>最近 10 条抓取记录</p></div>
+        <div class="setting-card-body"><div id="recentLogs" class="log-list"><p class="text-muted">加载中…</p></div></div>
+    </div>
+</section>
+
+<!-- ================= 学校管理 ================= -->
+<section class="admin-tab-panel" id="panel-schools" hidden>
+    <div class="page-header" style="margin-bottom:8px;">
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="showAddSchool()">+ 添加学校</button>
+        </div>
+    </div>
+    {% include '_admin_schools.html' %}
+</section>
+
+<!-- ================= 用户 ================= -->
+<section class="admin-tab-panel" id="panel-users" hidden>
+    <div class="setting-card">
+        <div class="setting-card-header"><h3>👥 用户管理</h3><p>重置密码 / 角色切换（不能改自己）</p></div>
+        <div class="setting-card-body"><div id="userList" class="text-muted">加载中…</div></div>
+    </div>
+</section>
+
+<!-- ================= 抓取 ================= -->
+<section class="admin-tab-panel" id="panel-scrape" hidden>
+    <div class="settings-grid" style="max-width:none;">
+        <div class="setting-card">
+            <div class="setting-card-header"><h3>⏱️ 爬取设置</h3><p>定时抓取间隔</p></div>
+            <div class="setting-card-body">
+                <div class="form-group">
+                    <label for="interval">爬取间隔（分钟）</label>
+                    <select id="interval" class="form-input">
+                        <option value="15">15 分钟</option>
+                        <option value="30" selected>30 分钟</option>
+                        <option value="60">1 小时</option>
+                        <option value="120">2 小时</option>
+                        <option value="360">6 小时</option>
+                        <option value="720">12 小时</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveInterval()">保存间隔</button>
+            </div>
+        </div>
+        <div class="setting-card">
+            <div class="setting-card-header"><h3>🚀 手动任务</h3><p>立即触发抓取 / 摘要</p></div>
+            <div class="setting-card-body manual-actions">
+                <button class="btn btn-primary" onclick="triggerScrapeAll()" id="btnScrapeAll">立即抓取全部（活跃学校）</button>
+                <button class="btn btn-outline" onclick="triggerSummarize()" id="btnSummarize">重新生成所有摘要</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 选择器健康 ================= -->
+<section class="admin-tab-panel" id="panel-selectors" hidden>
+    <div class="setting-card" style="margin-bottom:18px;">
+        <div class="setting-card-header"><h3>⚠️ 待人工复核</h3><p>监督器标记：结构损坏重探不达标 / 抓错 / WAF 壳页</p></div>
+        <div class="setting-card-body"><div id="reviewList"><p class="text-muted">加载中…</p></div></div>
+    </div>
+    <div class="setting-card">
+        <div class="setting-card-header"><h3>📜 选择器变更审计</h3><p>最近 50 条（auto=监督器自动，human=人工/回滚）</p></div>
+        <div class="setting-card-body"><div id="auditList" class="log-list"><p class="text-muted">加载中…</p></div></div>
+    </div>
+</section>
+
+<!-- ================= 平台设置 ================= -->
+<section class="admin-tab-panel" id="panel-platform" hidden>
+    <div class="settings-grid" style="max-width:none;">
+        <div class="setting-card">
+            <div class="setting-card-header"><h3>🔑 DeepSeek API</h3><p>AI 摘要服务（加密存储）</p></div>
+            <div class="setting-card-body">
+                <div class="form-group">
+                    <label for="apiKey">API Key</label>
+                    <input type="password" id="apiKey" class="form-input" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off">
+                </div>
+                <button class="btn btn-primary" onclick="saveApiKey()">保存 API Key</button>
+            </div>
+        </div>
+        <div class="setting-card">
+            <div class="setting-card-header"><h3>🚦 服务开关</h3><p>保存即生效，可一键降级回私有工具</p></div>
+            <div class="setting-card-body">
+                <div class="form-group"><label><input type="checkbox" id="tgReg"> 开放注册（关闭后仅存量用户可登录）</label></div>
+                <div class="form-group"><label><input type="checkbox" id="tgPub"> 匿名可浏览（关闭后整站仅登录可读）</label></div>
+                <button class="btn btn-primary" onclick="saveToggles()">保存开关</button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ---- 标签页切换（hash 记忆） ----
+function showTab(name) {
+    document.querySelectorAll('.admin-tab').forEach(function (t) {
+        t.classList.toggle('is-active', t.dataset.tab === name);
+    });
+    document.querySelectorAll('.admin-tab-panel').forEach(function (p) {
+        p.hidden = p.id !== 'panel-' + name;
+    });
+    if (name === 'overview') loadStats();
+    if (name === 'users') loadUsers();
+    if (name === 'scrape') loadInterval();
+    if (name === 'selectors') { loadReview(); loadAudit(); }
+    if (name === 'platform') loadToggles();
+}
+document.querySelectorAll('.admin-tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+        location.hash = t.dataset.tab;
+        showTab(t.dataset.tab);
+    });
+});
+function applyHash() {
+    var h = (location.hash || '#overview').slice(1);
+    showTab(document.getElementById('panel-' + h) ? h : 'overview');
+}
+window.addEventListener('hashchange', applyHash);
+document.addEventListener('DOMContentLoaded', applyHash);
+
+// ---- 概览 ----
+async function loadStats() {
+    try {
+        var r = await fetch('/api/admin/stats');
+        var s = await r.json();
+        var cards = [
+            ['用户', s.users, '其中 admin ' + s.admins],
+            ['学校', s.schools, '上架 ' + s.schools_enabled + ' · 活跃 ' + s.schools_active],
+            ['订阅', s.subscriptions, '订阅驱动抓取'],
+            ['通知', s.announcements, '近24h +' + s.announcements_24h],
+            ['抓取(7d)', s.scrapes_7d, '成功率 ' + (s.scrape_success_rate == null ? '—' : Math.round(s.scrape_success_rate * 100) + '%'), ' +' + s.scrape_new_7d + ' 条'],
+            ['选择器', s.selector_changes, '待复核 ' + s.selector_review],
+        ];
+        document.getElementById('statGrid').innerHTML = cards.map(function (c) {
+            return '<div class="stat-card"><div class="n">' + c[1] + '</div><div class="l">' + c[0] + (c[2] ? ' · ' + c[2] : '') + (c[3] || '') + '</div></div>';
+        }).join('');
+        document.getElementById('recentLogs').innerHTML = (s.recent_logs || []).map(function (l) {
+            return '<div class="log-item"><span class="log-status log-' + l.status + '">' + l.status + '</span>' +
+                '<span class="log-info">学校#' + (l.school_id || '-') + ' 新增 ' + l.new_count + ' / 检查 ' + l.total_count +
+                (l.error_message ? ' <span class="log-error">' + escHtml(l.error_message).slice(0, 60) + '</span>' : '') + '</span>' +
+                '<span class="log-time">' + (l.started_at || '').slice(5, 16).replace('T', ' ') + '</span></div>';
+        }).join('') || '<p class="text-muted">暂无记录</p>';
+    } catch (e) {
+        document.getElementById('statGrid').innerHTML = '<p class="text-muted">加载失败</p>';
+    }
+}
+
+// ---- 用户 ----
+async function loadUsers() {
+    var box = document.getElementById('userList');
+    try {
+        var resp = await fetch('/api/admin/users');
+        var users = await resp.json();
+        box.innerHTML = users.map(function (u) {
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--color-border);">' +
+                '<span>' + escHtml(u.username) + ' <span class="text-muted">(' + u.role + ' · 注册 ' + (u.created_at || '').slice(0, 10) + ')</span></span>' +
+                '<span><button class="btn btn-xs btn-outline" onclick="resetPw(' + u.id + ')">重置密码</button> ' +
+                '<button class="btn btn-xs btn-ghost" onclick="setRole(' + u.id + ',\'' + (u.role === 'admin' ? 'user' : 'admin') + '\')">' + (u.role === 'admin' ? '取消管理员' : '设为管理员') + '</button></span></div>';
+        }).join('');
+    } catch (e) { box.textContent = '加载失败'; }
+}
+async function resetPw(uid) {
+    var resp = await fetch('/api/admin/users/' + uid + '/reset-password', { method: 'POST' });
+    var d = await resp.json();
+    if (d.success) prompt('临时密码（仅显示一次）：', d.temp_password);
+    else showToast('error', d.error || '失败');
+}
+async function setRole(uid, role) {
+    var resp = await fetch('/api/admin/users/' + uid + '/role', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: role }) });
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.success ? '角色已更新' : (d.error || '失败'));
+    if (d.success) loadUsers();
+}
+
+// ---- 抓取 ----
+async function loadInterval() {
+    var r = await fetch('/api/admin/stats');
+    var s = await r.json();
+    document.getElementById('interval').value = s.scrape_interval;
+}
+async function saveInterval() {
+    var resp = await fetch('/api/settings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interval: document.getElementById('interval').value }) });
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.message || d.error);
+}
+async function triggerScrapeAll() {
+    var btn = document.getElementById('btnScrapeAll');
+    btn.disabled = true;
+    var resp = await fetch('/api/scrape/all', { method: 'POST' });
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.message || d.error);
+    btn.disabled = false;
+}
+async function triggerSummarize() {
+    var btn = document.getElementById('btnSummarize');
+    btn.disabled = true;
+    var resp = await fetch('/api/summarize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.message || d.error);
+    btn.disabled = false;
+}
+
+// ---- 选择器健康 ----
+async function loadReview() {
+    var r = await fetch('/api/selector-audit');
+    var d = await r.json();
+    var box = document.getElementById('reviewList');
+    box.innerHTML = (d.review || []).map(function (x) {
+        return '<div class="review-card"><span><b>' + escHtml(x.dept_name) + '</b>：' + escHtml(x.reason) + '</span>' +
+            '<span><button class="btn btn-xs btn-outline" onclick="rollbackDept(' + x.dept_id + ')">回滚选择器</button></span></div>';
+    }).join('') || '<p class="text-muted">暂无待复核部门 ✅</p>';
+}
+async function loadAudit() {
+    var r = await fetch('/api/selector-audit');
+    var d = await r.json();
+    document.getElementById('auditList').innerHTML = (d.changes || []).map(function (c) {
+        return '<div class="log-item"><span class="log-status log-' + (c.source === 'auto' ? 'running' : 'success') + '">' + c.source + '</span>' +
+            '<span class="log-info">' + escHtml(c.dept_name) + ' · ' + escHtml(c.reason) + '</span>' +
+            '<span class="log-time">' + (c.ts || '').slice(5, 16).replace('T', ' ') + '</span></div>';
+    }).join('') || '<p class="text-muted">暂无变更记录</p>';
+}
+
+// ---- 平台设置 ----
+async function saveApiKey() {
+    var key = document.getElementById('apiKey').value.trim();
+    if (!key) { showToast('error', '请输入 API Key'); return; }
+    if (!key.startsWith('sk-')) { showToast('error', 'API Key 格式错误，应以 sk- 开头'); return; }
+    var resp = await fetch('/api/settings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: key }) });
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.message || d.error);
+    if (d.success) document.getElementById('apiKey').value = '';
+}
+async function loadToggles() {
+    var r = await fetch('/api/admin/toggles');
+    var t = await r.json();
+    document.getElementById('tgReg').checked = t.open_registration === '1';
+    document.getElementById('tgPub').checked = t.public_read === '1';
+}
+async function saveToggles() {
+    var resp = await fetch('/api/admin/toggles', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            open_registration: document.getElementById('tgReg').checked ? '1' : '0',
+            public_read: document.getElementById('tgPub').checked ? '1' : '0'
+        }) });
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.success ? '开关已保存' : (d.error || '失败'));
+}
+</script>
+{% endblock %}

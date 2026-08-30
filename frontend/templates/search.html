@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}搜索「{{ q }}」 — 学校通知扒取工具{% endblock %}
+
+{% macro ann_card(ann, show_school=False) %}
+<a href="{{ url_for('pages.announcement_detail', ann_id=ann.id) }}?from={{ request.full_path|urlencode }}" class="ann-card {% if current_user and ann.id not in read_ids %}ann-unread{% endif %}">
+    <div class="ann-main">
+        <div class="ann-left">
+            <span class="ann-dot {% if current_user and ann.id not in read_ids %}ann-dot-unread{% endif %}"></span>
+        </div>
+        <div class="ann-body">
+            <h4 class="ann-title">{{ ann.title|highlight(q) }}</h4>
+            {% if ann.summary %}
+            <p class="ann-summary">{{ ann.summary|highlight(q) }}</p>
+            {% endif %}
+            {% set snip = ann.content_text|snippet(q) %}
+            {% if snip %}
+            <p class="ann-snippet">{{ snip }}</p>
+            {% endif %}
+            <div class="ann-meta">
+                {% if show_school %}
+                <span class="ann-school">🏫 {{ ann.school.name }}</span>
+                {% endif %}
+                <span class="ann-dept">{{ ann.department.name if ann.department else '未分类' }}</span>
+                {% if ann.published_at %}
+                <span class="ann-date">{{ ann.published_at.strftime('%Y-%m-%d') }}</span>
+                {% endif %}
+                {% if ann.is_updated %}
+                <span class="badge badge-updated">已更新</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="ann-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+    </div>
+</a>
+{% endmacro %}
+
+{% block content %}
+<div class="page-header">
+    {% if school %}
+    <a href="{{ url_for('pages.school_detail', school_id=school.id) }}" class="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        返回 {{ school.name }}
+    </a>
+    {% endif %}
+    <h1>🔍 搜索结果</h1>
+    {% if q %}
+    <p class="page-subtitle">
+        找到 <strong>{{ total }}</strong> 条匹配「{{ q }}」的通知{% if school %}（{{ school.name }}）{% endif %}
+    </p>
+    {% endif %}
+</div>
+
+<div class="search-bar">
+    <form action="{{ url_for('search.search') }}" method="get" class="search-form" role="search">
+        {% if school_id %}<input type="hidden" name="school_id" value="{{ school_id }}">{% endif %}
+        <svg class="search-form-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" name="q" value="{{ q }}" placeholder="输入关键词，空格分隔多个词" autofocus autocomplete="off">
+        <button type="submit" class="btn btn-primary">搜索</button>
+    </form>
+    <span class="form-hint">匹配标题、AI 摘要与正文；多个关键词用空格分隔（需全部命中）</span>
+</div>
+
+{% if q and results %}
+    {% if school_id %}
+    {# 学校内搜索：直接列表 #}
+    <div class="announcement-list">
+        {% for ann in results %}
+        {{ ann_card(ann) }}
+        {% endfor %}
+    </div>
+    {% else %}
+    {# 全局搜索：按学校分组 #}
+    {% for school_obj, anns in grouped_by_school.items() %}
+    <div class="search-school-group">
+        <a href="{{ url_for('pages.school_detail', school_id=school_obj.id) }}" class="search-school-title">
+            🏫 {{ school_obj.name }}
+            <span class="month-count">{{ anns|length }} 条</span>
+        </a>
+        <div class="announcement-list">
+            {% for ann in anns %}
+            {{ ann_card(ann, show_school=True) }}
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('search.search', q=q, school_id=school_id, page=pagination.prev_num) }}" class="page-btn">上一页</a>
+        {% endif %}
+        <span class="page-info">{{ pagination.page }} / {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+        <a href="{{ url_for('search.search', q=q, school_id=school_id, page=pagination.next_num) }}" class="page-btn">下一页</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+{% elif q %}
+<div class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>没有找到匹配的通知</h3>
+    <p>换个关键词试试，或用空格分隔多个关键词缩小范围</p>
+</div>
+{% endif %}
+{% endblock %}

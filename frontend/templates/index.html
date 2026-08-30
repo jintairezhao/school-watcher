@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}我的订阅 — 学校通知{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>我的订阅</h1>
+    <p class="page-subtitle">你关注的学校通知流</p>
+    <div class="header-actions">
+        <a href="{{ url_for('pages.explore') }}" class="btn btn-outline">🔍 发现学校</a>
+        {% if current_user and current_user.is_admin %}
+        <button class="btn btn-primary" onclick="triggerScrapeAll()" id="btnScrapeAll">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15 9a9 9 0 1 0-2.12-9.36L23 10"/></svg>
+            刷新全部
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+{% if not school_data %}
+<div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h2>还没有订阅任何学校</h2>
+    <p>去学校目录订阅你关注的学校，订阅后自动抓取更新</p>
+    <a href="{{ url_for('pages.explore') }}" class="btn btn-primary">去学校目录</a>
+</div>
+{% else %}
+<div class="school-grid">
+    {% for data in school_data %}
+    {% set school = data.school %}
+    <a href="{{ url_for('pages.school_detail', school_id=school.id) }}" class="school-card">
+        <div class="card-header">
+            <div class="school-avatar">{{ school.name[0] }}</div>
+            <div class="school-info">
+                <h3 class="school-name">{{ school.name }}</h3>
+                <span class="school-url">{{ school.url|replace('https://', '')|replace('http://', '')|truncate(30) }}</span>
+            </div>
+            {% if data.unread_count > 0 %}
+            <button class="btn btn-xs btn-outline card-read-all-btn"
+                    onclick="markSchoolRead(event, {{ school.id }}, this)"
+                    title="仅标记该学校所有通知为已读（仅本人）">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                一键已读
+            </button>
+            {% endif %}
+        </div>
+        <div class="card-stats">
+            <div class="stat">
+                <span class="stat-number">{{ data.total_count }}</span>
+                <span class="stat-label">总通知</span>
+            </div>
+            <div class="stat stat--unread {% if data.unread_count > 0 %}stat-has-unread{% endif %}">
+                <span class="stat-number {% if data.unread_count > 0 %}stat-highlight{% endif %}">{{ data.unread_count }}</span>
+                <span class="stat-label">未读</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ school.subscriber_count }}</span>
+                <span class="stat-label">订阅</span>
+            </div>
+        </div>
+        {% if data.latest %}
+        <div class="card-latest">
+            <span class="latest-label">最近更新</span>
+            {% for ann in data.latest[:3] %}
+            <div class="latest-item">
+                <span class="latest-dot {% if ann.id not in data.read_ids %}dot-unread{% endif %}"></span>
+                <span class="latest-title">{{ ann.title|truncate(40) }}</span>
+                <span class="latest-time">{{ ann.created_at.strftime('%m-%d %H:%M') if ann.created_at else '' }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function triggerScrapeAll() {
+    const btn = document.getElementById('btnScrapeAll');
+    btn.innerHTML = '<span class="spinner"></span> 启动中...';
+    btn.disabled = true;
+    try {
+        const resp = await fetch('/api/scrape/all', { method: 'POST' });
+        const data = await resp.json();
+        if (!data.success) {
+            showToast('error', data.error || '启动失败');
+            btn.innerHTML = '刷新全部';
+            btn.disabled = false;
+            return;
+        }
+        const schoolCount = Object.keys(data.session_ids || {}).length;
+        showToast('success', schoolCount + ' 所学校已开始抓取');
+        setTimeout(function() { location.reload(); }, 1500);
+    } catch (e) {
+        showToast('error', '请求失败: ' + e.message);
+        btn.innerHTML = '刷新全部';
+        btn.disabled = false;
+    }
+}
+
+async function markSchoolRead(event, schoolId, btn) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!confirm('确定将该学校所有未读通知标记为已读？（仅影响你自己）')) return;
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled = true;
+    try {
+        const resp = await fetch('/api/announcements/read-all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ school_id: schoolId })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            showToast('success', data.message || '已全部标记为已读');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast('error', data.error || '操作失败');
+            btn.innerHTML = origHTML;
+            btn.disabled = false;
+        }
+    } catch (e) {
+        showToast('error', '请求失败: ' + e.message);
+        btn.innerHTML = origHTML;
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

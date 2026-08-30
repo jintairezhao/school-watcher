@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}学校目录 — 学校通知{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>学校目录</h1>
+    <p class="page-subtitle">浏览全部上架学校 · 订阅驱动抓取 · 提交新学校</p>
+    <div class="header-actions">
+        {% if current_user %}
+        <button class="btn btn-primary" onclick="showSubmitSchool()">+ 提交新学校</button>
+        {% else %}
+        <a class="btn btn-outline" href="{{ url_for('auth.login_page', next=request.path) }}">登录后可订阅/提交</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="school-grid">
+    {% for s in schools %}
+    <div class="school-card" data-name="{{ s.name }}">
+        <div class="card-header">
+            <div class="school-avatar">{{ s.name[0] }}</div>
+            <div class="school-info">
+                <h3 class="school-name">
+                    <a href="{{ url_for('pages.school_detail', school_id=s.id) }}" style="color:inherit;text-decoration:none;">{{ s.name }}</a>
+                </h3>
+                <span class="school-url">{{ s.url|replace('https://', '')|replace('http://', '')|truncate(30) }}</span>
+            </div>
+            {% if s.subscriber_count == 0 %}
+            <span class="badge badge-paused">暂无订阅 · 暂停中</span>
+            {% endif %}
+        </div>
+        <div class="card-stats">
+            <div class="stat">
+                <span class="stat-number">{{ totals.get(s.id, 0) }}</span>
+                <span class="stat-label">通知</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ s.subscriber_count }}</span>
+                <span class="stat-label">订阅</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ s.departments.count() }}</span>
+                <span class="stat-label">部门</span>
+            </div>
+        </div>
+        <div class="manage-actions" style="padding:0 16px 14px;">
+            {% if current_user %}
+                {% if s.id in my_subs %}
+                <button class="btn btn-sm btn-outline" onclick="toggleSub({{ s.id }}, false, this)">✓ 已订阅 · 点击退订</button>
+                {% else %}
+                <button class="btn btn-sm btn-primary" onclick="toggleSub({{ s.id }}, true, this)">订阅</button>
+                {% endif %}
+            {% else %}
+            <a class="btn btn-sm btn-outline" href="{{ url_for('auth.login_page', next=request.path) }}">登录即可订阅</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 提交新学校模态框 -->
+<div class="modal-overlay" id="submitOverlay" style="display:none;" onclick="closeSubmitSchool(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h2>提交新学校</h2>
+        <p class="text-muted" style="margin-bottom:12px;">提交后你将自动订阅该校，系统立即开始首次抓取与自动发现</p>
+        <div class="form-group">
+            <label>学校名称</label>
+            <input id="subName" class="form-input" placeholder="如：中国石油大学（北京）" oninput="suggestUrl()">
+        </div>
+        <div class="form-group">
+            <label>官网 URL</label>
+            <input id="subUrl" class="form-input" placeholder="https://…">
+        </div>
+        <div id="subErr" class="login-error" style="display:none;"></div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeSubmitSchool()">取消</button>
+            <button class="btn btn-primary" onclick="submitSchool()" id="btnSubmit">提交</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var suggestTimer = null;
+function showSubmitSchool() { document.getElementById('submitOverlay').style.display = 'flex'; }
+function closeSubmitSchool(e) {
+    if (!e || e.target.id === 'submitOverlay')
+        document.getElementById('submitOverlay').style.display = 'none';
+}
+function suggestUrl() {
+    clearTimeout(suggestTimer);
+    suggestTimer = setTimeout(async function () {
+        var name = document.getElementById('subName').value.trim();
+        if (name.length < 2) return;
+        try {
+            var r = await fetch('/api/schools/suggest-url?name=' + encodeURIComponent(name));
+            var d = await r.json();
+            if (d.found && !document.getElementById('subUrl').value)
+                document.getElementById('subUrl').value = d.url;
+        } catch (e) {}
+    }, 600);
+}
+async function toggleSub(schoolId, on, btn) {
+    btn.disabled = true;
+    try {
+        var resp = on ? await fetch('/api/subscriptions', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({school_id: schoolId})
+        }) : await fetch('/api/subscriptions/' + schoolId, {method: 'DELETE'});
+        var d = await resp.json();
+        if (d.success) {
+            showToast('success', on ? (d.scrape_started ? '已订阅，首抓已启动' : '已订阅') : '已退订');
+            setTimeout(function() { location.reload(); }, 800);
+        } else {
+            showToast('error', d.error || '操作失败');
+            btn.disabled = false;
+        }
+    } catch (e) {
+        showToast('error', '请求失败: ' + e.message);
+        btn.disabled = false;
+    }
+}
+async function submitSchool() {
+    var name = document.getElementById('subName').value.trim();
+    var url = document.getElementById('subUrl').value.trim();
+    var err = document.getElementById('subErr');
+    err.style.display = 'none';
+    if (!name) { err.textContent = '请填写学校名称'; err.style.display = 'block'; return; }
+    document.getElementById('btnSubmit').disabled = true;
+    try {
+        var resp = await fetch('/api/schools', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name: name, url: url})
+        });
+        var d = await resp.json();
+        if (resp.ok) {
+            showToast('success', '已提交并订阅，首抓已启动');
+            setTimeout(function() { location.href = '/school/' + d.id; }, 800);
+        } else {
+            err.textContent = d.error || '提交失败';
+            err.style.display = 'block';
+            document.getElementById('btnSubmit').disabled = false;
+        }
+    } catch (e) {
+        err.textContent = '请求失败: ' + e.message;
+        err.style.display = 'block';
+        document.getElementById('btnSubmit').disabled = false;
+    }
+}
+</script>
+{% endblock %}

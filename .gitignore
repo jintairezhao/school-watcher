@@ -35,3 +35,6 @@ Thumbs.db
 # 临时文件
 *.log
 *.tmp
+
+# 本地权限测试（含测试凭据）
+test_admin_perms.py

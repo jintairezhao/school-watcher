@@ -1,0 +1,278 @@
+# ============================================================
+# CMS 模板注册表 — 数据驱动配置
+# ============================================================
+#
+# 本文件把「列表页选择器模板」和「日期解析格式」从引擎代码中外置。
+# 新增一种 CMS 支持，只需在此追加配置，无需改动 engine.py /
+# change_detector.py 的代码。
+#
+# 适用场景：
+#   - selector_profiles：站点发现时探测新学校通知列表结构；
+#     部门未配置选择器时的回退匹配。按顺序尝试，第一个匹配成功即用。
+#   - date_patterns：解析通知列表页上的发布时间字符串。
+#
+# 现有模板覆盖：
+#   - ZCMS（cupk.edu.cn 及大量中国高校使用）
+#   - GP CMS（cup.edu.cn 及石油/地质类高校使用）
+#   - 通用回退（ul.news-list、li>a）
+#
+# 新增模板示例：
+#   selector_profiles:
+#     - name: '某 CMS 列表'
+#       list_selector: 'ul.xxx-list li'
+#       title_selector: 'a'
+#       link_selector: 'a'
+#       date_selector: 'span.date'
+#       content_selector: 'div.article-content'
+# ============================================================
+
+# ---- 列表页选择器模板（按优先级顺序） ----
+# 字段说明：
+#   list_selector    列表项容器选择器（必填）
+#   title_selector   标题选择器（默认 'a'）
+#   link_selector    链接选择器（默认 'a'）
+#   date_selector    日期选择器（默认 'span'）
+#   content_selector 正文内容选择器（默认通用 div.article-content）
+selector_profiles:
+  - name: 'ZCMS 首页通知 (c-notice)'
+    list_selector: 'li.c-notice__half-li'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: '.c-notice__left-date'
+    content_selector: 'div.c-main__right'
+
+  - name: 'ZCMS 部门列表 (middleNotice)'
+    list_selector: 'li.middleNotice__notice--list'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span.middleNotice--dates'
+    content_selector: 'div.c-main__right'
+
+  - name: 'ZCMS 文章区块 (middleArticle art)'
+    list_selector: 'div.middleArticle__art--art'
+    title_selector: 'h3.middleArticle__art--titles'
+    link_selector: 'a.middleArticle__art--link'
+    date_selector: 'div.middleArticle__dates'
+    content_selector: 'div.c-main__right'
+
+  - name: 'ZCMS 文章列表 (middleArticle list)'
+    list_selector: 'li.middleArticle--articleList'
+    title_selector: 'a.middleArticle__articleList--article'
+    link_selector: 'a.middleArticle__articleList--article'
+    date_selector: 'span.middleArticle__articleList--date'
+    content_selector: 'div.c-main__right'
+
+  - name: '通用通知列表 (ul.news-list)'
+    list_selector: 'ul.news-list li, ul.news_list li, ul.notice-list li'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span.date, span.time, em.date'
+    content_selector: 'div.article-content, div.content, div.article'
+
+  - name: '通用列表 (li > a)'
+    list_selector: 'div.main li:has(a), div.content li:has(a), ul.list-tz li'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span, i, em'
+    content_selector: 'div.article-content, div.content, div.main, article'
+
+  # ---- GP CMS 模板 ----
+  - name: 'GP CMS 通知列表 (sub_list)'
+    list_selector: 'ul.sub_list li'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span.rightDate, span.leftDate'
+    content_selector: 'div.article-content, div.main, div.content, div.gp-article, article'
+
+  - name: 'GP CMS 通知列表 (block-list)'
+    list_selector: 'ul.block-list li'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span.gpArticleDate, div.gpArticleDate, div.time'
+    content_selector: 'div.article-content, div.main, div.content, div.gp-article, article'
+
+  - name: 'GP CMS 新闻列表 (NewsConList / EventsList)'
+    list_selector: 'ul.NewsConList li, ul.EventsList li, ul.acamicList li'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span.newsDate, span.date, span.time'
+    content_selector: 'div.article-content, div.main, div.content, div.gp-article, article'
+
+  - name: 'GP CMS 列表 (list01)'
+    list_selector: 'ul.list01 li'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span'
+    content_selector: 'div.article-content, div.main, div.content, div.gp-article, article'
+
+  - name: 'GP CMS 新闻列表 (newslist)'
+    list_selector: 'ul.newslist li'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span, div.date, div.time'
+    content_selector: 'div.article-content, div.main, div.content, div.gp-article, article'
+
+  - name: 'GP CMS 科研列表 (CUP-list)'
+    list_selector: 'ul.CUP-list li'
+    title_selector: 'span.artText'
+    link_selector: 'a'
+    date_selector: 'span.date'
+    content_selector: 'div.article-content, div.main, div.content, div.gp-article, div.detail, div.info, article'
+
+  # ---- 博达 CMS 模板（调研：24 校中约 19 校涉及，见 docs/SITE_PATTERNS.md） ----
+  - name: '博达列表 (line_u 序列 li)'
+    list_selector: 'li[id^="line_u"]'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span, div.time, div.date'
+    content_selector: 'div.v_news_content, div#vsb_content, div.article-content, div.content, article'
+
+  - name: '博达列表 (info 链接容器)'
+    list_selector: 'ul.list3 li:has(a[href*="info/"]), div.list16s li:has(a[href*="info/"]), div.cont_list_1400_002 li, ul.news-list li:has(a[href*="info/"])'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span, div.time, div.date'
+    content_selector: 'div.v_news_content, div#vsb_content, div.article-content, div.content, article'
+
+  - name: '博达新闻列表 (x-list/cloass/notice-item/jl-list)'
+    list_selector: 'ul.x-list li, li.cloass1, li.cloass, div.notice-item.clearfix, ul.jl-list1 li'
+    title_selector: 'a.zw, a[title], div.title a, a.con, a'
+    link_selector: 'a.zw, a[title], a.con, a'
+    date_selector: 'a.date, span.hjjk11, div.date-box, div.date, span.date'
+    content_selector: 'div.v_news_content, div#vsb_content, div.article-content, div.content, article'
+
+  - name: '博达列表 (a.con + div.tit)'
+    list_selector: 'li:has(> a.con)'
+    # 注意：CSS 逗号按文档顺序匹配，不能把 a.con 放进来（它会先于内部 div.tit 命中，
+    # 导致标题带上日期/浏览数前缀）；取不到时引擎回退链兜底
+    title_selector: 'div.tit, div.titline, h3.tit, h3'
+    link_selector: 'a.con'
+    date_selector: 'div.date span, div.date, span.date'
+    content_selector: 'div.v_news_content, div#vsb_content, div.article-content, div.content, article'
+
+  # ---- 苏迪 SiteEngine/SudyWP 模板（复旦/浙大/南开等） ----
+  - name: '苏迪列表 (news_list 属性标题)'
+    # li 中混有空占位项，用 :has 只取真实条目
+    list_selector: 'ul.news_list li:has(a[title]), ul.news_list li.news:has(a[href])'
+    title_selector: 'a[title], a[data-title], a'
+    link_selector: 'a[href*="/page.htm"], a[href]'
+    date_selector: 'div.news_days, div.news_year, span.news_date, span.date'
+    content_selector: 'div.wp_articlecontent, div.article-content, div.content, article'
+
+  - name: '苏迪列表 (wp_news 区块)'
+    list_selector: 'div[id^="wp_news_w"] ul li, ul.wp_list li, li.item:has(a[href*="/page.htm"])'
+    title_selector: 'div.tit a, div.news_con a, a'
+    link_selector: 'div.tit a, div.news_con a, a'
+    date_selector: 'div.time, span.time, div.news_con'
+    content_selector: 'div.wp_articlecontent, div.article-content, div.content, article'
+
+  # ---- Drupal 模板（哈工大主站等） ----
+  - name: 'Drupal 列表 (article 链接)'
+    list_selector: 'li:has(a[href*="/article/"])'
+    title_selector: 'span.title a, a'
+    link_selector: 'span.title a, a'
+    date_selector: 'div.pull-right span, span.date'
+    content_selector: 'div.article-content, div.content, article'
+
+  # ---- 自建 CMS 模板 ----
+  - name: '北大新闻列表 (articleList01)'
+    list_selector: 'div.articleList01 li'
+    title_selector: 'div.item-txt a'
+    link_selector: 'div.item-txt a'
+    date_selector: 'div.item-lf span, div.item-lf'
+    content_selector: 'div.article-content, div.content, article'
+
+  - name: '上交主站通知列表 (span.time)'
+    list_selector: 'ul.uli14 li:has(span.time), li:has(> a + span.time)'
+    title_selector: 'a'
+    link_selector: 'a'
+    date_selector: 'span.time'
+    content_selector: 'div.article-content, div.content, article'
+
+  - name: '上交新闻网列表 (a.card)'
+    list_selector: 'li.item:has(a.card), ul.list li:has(a.card)'
+    title_selector: 'a.card'
+    link_selector: 'a.card'
+    date_selector: 'span.time, span.date'
+    content_selector: 'div.article-content, div.content, .article, article'
+
+# ---- 日期解析格式（按优先级顺序，第一个命中即生效） ----
+# pattern 是 Python 正则（捕获组），format 标签决定如何组装：
+#   year-month-day         3 组：年/月/日（如 2026-08-23、2026.08.23）
+#   month-day-year         3 组：月/日/年（如 07-042026）
+#   year-month-day-concat  3 组：年月-日（如 202607-08）
+#   year-month-day-compact 3 组：纯数字紧凑（如 20260719）
+#   month-name-day-year    3 组：英文月 日 年（如 Jan 19, 2026）
+#   day-month-name-year    3 组：日 英文月 年（如 19 Jul 2026）
+#   day-month              2 组：日/月，年份推断（如 1707月）
+#   month-day              2 组：月/日，年份推断（如 7月8日）
+#   year-month             2 组：年/月，日缺省为 1（如 2026-05）
+# 可选字段 flags：正则标志（如 'IGNORECASE'，用于英文月份忽略大小写）
+date_patterns:
+  - pattern: '(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})日?'
+    format: 'year-month-day'
+
+  - pattern: '(\d{4})[-/](\d{1,2})[-/](\d{1,2})'
+    format: 'year-month-day'
+
+  - pattern: '(\d{4})\.(\d{1,2})\.(\d{1,2})'
+    format: 'year-month-day'
+
+  # 月-日 年：ZCMS 的 middleArticle__dates 用 <br/> 分两行（06-20\n2025），需容忍空白
+  - pattern: '(\d{1,2})-(\d{1,2})\s*(\d{4})'
+    format: 'month-day-year'
+
+  - pattern: '(\d{4})(\d{1,2})-(\d{1,2})'
+    format: 'year-month-day-concat'
+
+  - pattern: '(\d{1,2})(\d{1,2})月'
+    format: 'day-month'
+
+  - pattern: '(\d{1,2})月(\d{1,2})日'
+    format: 'month-day'
+
+  - pattern: '(\d{4})-(\d{1,2})(?![\d-])'
+    format: 'year-month'
+
+  # ---- 以下为 dom_analyzer 原 DATE_REGEX_PATTERNS 迁入（更广覆盖） ----
+  - pattern: '(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日?'
+    format: 'year-month-day'
+
+  - pattern: '(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})'
+    format: 'year-month-day'
+
+  - pattern: '(\d{1,2})月\s*(\d{1,2})日?'
+    format: 'month-day'
+
+  - pattern: '(\d{4})(\d{2})(\d{2})'
+    format: 'year-month-day-compact'
+
+  - pattern: '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})'
+    format: 'month-name-day-year'
+    flags: 'IGNORECASE'
+
+  - pattern: '(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{4})'
+    format: 'day-month-name-year'
+    flags: 'IGNORECASE'
+
+  - pattern: '[\[（(](\d{4})[-/.]?(\d{1,2})[-/.]?(\d{1,2})[\]）)]'
+    format: 'year-month-day'
+
+  - pattern: '【(\d{4})[-/.]?(\d{1,2})[-/.]?(\d{1,2})】'
+    format: 'year-month-day'
+
+  # ---- 调研新增（docs/SITE_PATTERNS.md）----
+  # 博达多校「日 + 年月」拼接（北航 26 2026.08 / 中大 29 2026/08 / 清华 27 2026.08）
+  - pattern: '(\d{1,2})\s+(\d{4})\.(\d{1,2})(?!\d)'
+    format: 'day-year-month'
+
+  - pattern: '(\d{1,2})\s+(\d{4})/(\d{1,2})(?!\d)'
+    format: 'day-year-month'
+
+  # 电子科大混合型 2026.07-22（年.月-日）
+  - pattern: '(\d{4})\.(\d{1,2})-(\d{1,2})'
+    format: 'year-month-day'
+
+  # Drupal 相对时间（9小时前 / 3天前）
+  - pattern: '(\d+)\s*(分钟前|小时前|天前)'
+    format: 'relative'

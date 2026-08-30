@@ -1,0 +1,86 @@
+"""平台设置 API（admin）与已读 API（登录用户）
+
+密码/密保已迁至 per-user 账户体系（routes/auth.py 找回、routes/account.py 自服务，
+account.py 于阶段 5 引入）；本文件只保留平台级设置与已读接口。
+"""
+import logging
+
+from flask import Blueprint, request, jsonify, g
+
+from backend.database.db import db
+from backend.database.models import AppConfig, Announcement
+from backend.auth import admin_required, login_required
+
+logger = logging.getLogger(__name__)
+
+bp = Blueprint('settings', __name__)
+
+
+@bp.route('/api/settings', methods=['POST'])
+@admin_required
+def api_save_settings():
+    """保存平台设置（API Key / 抓取间隔）"""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': '无效数据'}), 400
+
+    if 'api_key' in data:
+        key = data['api_key'].strip()
+        if not key.startswith('sk-'):
+            return jsonify({'error': 'API Key 格式错误，必须以 sk- 开头'}), 400
+        from backend.core.secrets import encrypt_field
+        AppConfig.set('deepseek_api_key', encrypt_field(key))
+
+    if 'interval' in data:
+        try:
+            interval = int(data['interval'])
+        except (TypeError, ValueError):
+            return jsonify({'error': '间隔必须为整数（分钟）'}), 400
+        if not 5 <= interval <= 720:
+            return jsonify({'error': '间隔需在 5-720 分钟之间'}), 400
+        AppConfig.set('scrape_interval', str(interval))
+        try:
+            from backend.scheduler.jobs import restart_scheduler
+            restart_scheduler()
+        except Exception as e:
+            logger.warning(f"重启调度器失败: {e}")
+
+    return jsonify({'success': True, 'message': '设置已保存'})
+
+
+# 注：已读语义将于阶段 4 切换为 per-user（user_reads 表），
+# 现阶段仍写全局 is_read 以保持阶段间可用。
+
+@bp.route('/api/announcements/<int:ann_id>/read', methods=['POST'])
+@login_required
+def api_mark_read(ann_id):
+    """标记为已读（仅本人）"""
+    from backend.services import read_state
+    read_state.mark_read(g.user.id, ann_id)
+    return jsonify({'success': True})
+
+
+@bp.route('/api/announcements/read-all', methods=['POST'])
+@login_required
+def api_mark_all_read():
+    """一键已读（仅本人）：指定学校或我订阅的全部学校"""
+    from backend.services import read_state
+    from backend.database.models import Subscription
+    try:
+        data = request.get_json(silent=True) or {}
+        school_id = data.get('school_id')
+        if school_id:
+            school_ids = [int(school_id)]
+        else:
+            school_ids = [s.school_id for s in
+                          Subscription.query.filter_by(user_id=g.user.id).all()]
+        count = read_state.mark_all_read(g.user.id, school_ids)
+        return jsonify({
+            'success': True,
+            'count': count,
+            'message': f'已标记 {count} 条通知为已读'
+        })
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"一键已读失败: {e}")
+        return jsonify({'success': False, 'error': '操作失败，请稍后重试'}), 500

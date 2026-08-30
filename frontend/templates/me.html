@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}个人中心 — 学校通知{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>个人中心</h1>
+    <p class="page-subtitle">👤 {{ current_user.username }} · {{ '管理员' if current_user.is_admin else '普通用户' }}</p>
+</div>
+
+<div class="settings-grid">
+    <div class="setting-card">
+        <h3>🔒 修改密码</h3>
+        <div class="form-group"><label>当前密码</label>
+            <input type="password" id="curPw" class="form-input" autocomplete="current-password"></div>
+        <div class="form-group"><label>新密码（至少 8 位）</label>
+            <input type="password" id="newPw" class="form-input" autocomplete="new-password"></div>
+        <button class="btn btn-primary" onclick="changePassword()">修改密码</button>
+    </div>
+
+    <div class="setting-card">
+        <h3>🛡️ 密保设置（忘记密码时自助找回）</h3>
+        <div class="form-group"><label>当前密码</label>
+            <input type="password" id="secPw" class="form-input" autocomplete="current-password"></div>
+        <div class="form-group"><label>密保问题</label>
+            <input type="text" id="secQ" class="form-input" placeholder="如：我的生日？"></div>
+        <div class="form-group"><label>密保答案</label>
+            <input type="text" id="secA" class="form-input"></div>
+        <button class="btn btn-primary" onclick="setSecurity()">保存密保</button>
+    </div>
+
+    <div class="setting-card">
+        <h3>📚 我的订阅（{{ subscriptions|length }}）</h3>
+        {% if not subscriptions %}
+        <p class="text-muted">还没有订阅，<a href="{{ url_for('pages.explore') }}">去学校目录看看</a></p>
+        {% else %}
+        <ul style="list-style:none;padding:0;margin:0;">
+            {% for s in subscriptions %}
+            <li style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--color-border);">
+                <a href="{{ url_for('pages.school_detail', school_id=s.school_id) }}">{{ s.school.name }}</a>
+                <button class="btn btn-xs btn-outline" onclick="unsub({{ s.school_id }}, this)">退订</button>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function changePassword() {
+    var resp = await fetch('/api/me/password', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({current_password: document.getElementById('curPw').value,
+                              new_password: document.getElementById('newPw').value})});
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.success ? '密码已修改' : (d.error || '失败'));
+}
+async function setSecurity() {
+    var resp = await fetch('/api/me/security', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({current_password: document.getElementById('secPw').value,
+                              question: document.getElementById('secQ').value,
+                              answer: document.getElementById('secA').value})});
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.success ? '密保已保存' : (d.error || '失败'));
+}
+async function unsub(schoolId, btn) {
+    btn.disabled = true;
+    var resp = await fetch('/api/subscriptions/' + schoolId, {method: 'DELETE'});
+    var d = await resp.json();
+    showToast(d.success ? 'success' : 'error', d.success ? '已退订' : (d.error || '失败'));
+    if (d.success) setTimeout(function() { location.reload(); }, 800);
+    else btn.disabled = false;
+}
+</script>
+{% endblock %}

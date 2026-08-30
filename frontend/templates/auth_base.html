@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#6366f1" id="themeColor">
+    <title>{% block title %}学校通知{% endblock %}</title>
+    <script>
+    (function () {
+        try {
+            var t = localStorage.getItem('theme');
+            if (t === 'light' || t === 'dark') {
+                document.documentElement.setAttribute('data-theme', t);
+            }
+        } catch (e) {}
+    })();
+    </script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+    // 认证页不加载 app.js：这里单独给 fetch 的写方法补 CSRF 头
+    (function () {
+        var _fetch = window.fetch;
+        window.fetch = function (input, init) {
+            init = init || {};
+            var method = (init.method || 'GET').toUpperCase();
+            if (['POST', 'PUT', 'DELETE', 'PATCH'].indexOf(method) >= 0) {
+                init.headers = new Headers(init.headers || {});
+                if (!init.headers.has('X-CSRF-Token')) {
+                    var m = document.querySelector('meta[name="csrf-token"]');
+                    if (m) init.headers.set('X-CSRF-Token', m.content);
+                }
+            }
+            return _fetch(input, init);
+        };
+    })();
+    </script>
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: var(--color-bg);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+        .login-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+        .login-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0 0 0.25rem;
+            color: var(--color-text);
+        }
+        .login-subtitle {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            margin: 0 0 1.5rem;
+        }
+        .login-form { text-align: left; }
+        .login-form .form-group { margin-bottom: 1.25rem; }
+        .login-form label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: var(--color-text);
+        }
+        .login-form .form-input {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--color-border-strong);
+            border-radius: var(--radius-input);
+            background: var(--color-surface-2);
+            color: var(--color-text);
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .login-form .form-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-ring);
+        }
+        .login-error {
+            background: var(--color-danger-bg);
+            color: var(--color-danger);
+            padding: 0.6rem 0.75rem;
+            border-radius: var(--radius-input);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 0.7rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-btn);
+            background: var(--color-primary);
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .login-btn:active { transform: scale(0.98); }
+        .login-btn:hover { background: var(--color-primary-hover); }
+        .login-forgot-wrap { margin-top: 1rem; text-align: center; }
+        .login-forgot {
+            font-size: 0.82rem;
+            color: var(--color-text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .login-forgot:hover {
+            color: var(--color-primary);
+            text-decoration: underline;
+        }
+        .login-footer {
+            margin-top: 1rem;
+            font-size: 0.78rem;
+            color: var(--color-text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            {% block card %}{% endblock %}
+        </div>
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

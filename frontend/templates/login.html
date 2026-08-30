@@ -1,0 +1,54 @@
+{% extends "auth_base.html" %}
+{% block title %}登录 — 学校通知{% endblock %}
+
+{% block card %}
+    <div class="login-icon">🔒</div>
+    <h1 class="login-title">学校通知</h1>
+    <p class="login-subtitle">登录你的账户</p>
+
+    {% if error %}
+    <div class="login-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="login-form" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username"
+                   class="form-input" placeholder="用户名"
+                   autofocus autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" name="password"
+                   class="form-input" placeholder="密码"
+                   autocomplete="current-password">
+        </div>
+        <button type="submit" class="login-btn">登 录</button>
+    </form>
+
+    <p class="login-forgot-wrap">
+        <a href="/recovery" class="login-forgot">忘记密码？</a>
+        · <a href="/register" class="login-forgot">注册账户</a>
+    </p>
+
+    <p class="login-footer">🏫 高校通知聚合 · 订阅你关注的学校</p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 清除浏览器自动填充的密码（BFCache 恢复时同样处理）
+(function() {
+    function clearPw() {
+        var el = document.getElementById('password');
+        if (el) { el.value = ''; }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(clearPw, 150);
+    });
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) { setTimeout(clearPw, 150); }
+    });
+})();
+</script>
+{% endblock %}

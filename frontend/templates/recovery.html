@@ -1,0 +1,190 @@
+{% extends "auth_base.html" %}
+{% block title %}密码恢复 — 学校通知{% endblock %}
+
+{% block card %}
+    <!-- ======== 阶段 1：验证密保 ======== -->
+    <div id="stageVerify">
+        <div class="login-icon">🔑</div>
+        <h1 class="login-title">密码恢复</h1>
+        <p class="login-subtitle" id="recoverySubtitle">输入用户名以获取密保问题</p>
+
+        <div id="recoveryError" class="login-error" style="display:none;"></div>
+
+        <div id="usernameForm" class="login-form">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" class="form-input"
+                       placeholder="请输入用户名" autocomplete="username" autofocus>
+            </div>
+            <button class="login-btn" onclick="loadQuestion()" id="btnLoad">下一步</button>
+        </div>
+
+        <div id="questionBox" class="login-form" style="display:none;">
+            <div class="form-group">
+                <label>密保问题</label>
+                <div class="form-input" id="questionText" style="background:var(--color-surface);"></div>
+            </div>
+            <div class="form-group">
+                <label for="answer">答案</label>
+                <input type="text" id="answer" class="form-input"
+                       placeholder="请输入密保答案" autocomplete="off">
+            </div>
+            <button class="login-btn" onclick="verifyAnswer()" id="btnVerify">验证</button>
+        </div>
+
+        <div id="noQuestion" style="display:none;">
+            <p style="color:var(--color-text-secondary);margin-bottom:1rem;font-size:0.85rem;">
+                该账号未设置密保问题，请联系管理员重置密码。
+            </p>
+        </div>
+
+        <div id="lockedMsg" style="display:none;">
+            <p style="color:var(--color-danger);margin-bottom:0.5rem;">⛔ 尝试次数过多，已暂时锁定</p>
+            <p id="lockedUntil" style="font-size:0.85rem;color:var(--color-text-muted);"></p>
+        </div>
+
+        <p class="login-forgot-wrap"><a href="/login" class="login-forgot">← 返回登录</a></p>
+    </div>
+
+    <!-- ======== 阶段 2：重置密码 ======== -->
+    <div id="stageReset" style="display:none;">
+        <div class="login-icon">✅</div>
+        <h1 class="login-title">设置新密码</h1>
+        <p class="login-subtitle">密保验证通过，请设置新密码（至少 8 位）</p>
+
+        <div id="resetError" class="login-error" style="display:none;"></div>
+
+        <div class="login-form">
+            <div class="form-group">
+                <label for="newPassword">新密码</label>
+                <input type="password" id="newPassword" class="form-input"
+                       placeholder="至少 8 位" autocomplete="new-password" autofocus>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">确认新密码</label>
+                <input type="password" id="confirmPassword" class="form-input"
+                       placeholder="再次输入新密码" autocomplete="new-password">
+            </div>
+            <button class="login-btn" onclick="resetPassword()" id="btnReset">重置密码</button>
+        </div>
+
+        <p class="login-forgot-wrap"><a href="/login" class="login-forgot">← 返回登录</a></p>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var currentUsername = '';
+
+function show(id, on) {
+    document.getElementById(id).style.display = on ? 'block' : 'none';
+}
+function err(box, msg) {
+    var el = document.getElementById(box);
+    el.textContent = msg;
+    show(box, true);
+}
+
+async function loadQuestion() {
+    currentUsername = document.getElementById('username').value.trim();
+    if (!currentUsername) { err('recoveryError', '请输入用户名'); return; }
+    show('recoveryError', false);
+    try {
+        var resp = await fetch('/api/recovery/question?username=' + encodeURIComponent(currentUsername));
+        var data = await resp.json();
+        if (data.locked) {
+            show('usernameForm', false);
+            show('lockedMsg', true);
+            document.getElementById('lockedUntil').textContent = '请稍后再试（30 分钟锁定）';
+            return;
+        }
+        if (!data.has_question) {
+            show('usernameForm', false);
+            show('noQuestion', true);
+            return;
+        }
+        document.getElementById('recoverySubtitle').textContent = '请回答以下问题以验证身份';
+        document.getElementById('questionText').textContent = data.question;
+        show('usernameForm', false);
+        show('questionBox', true);
+        document.getElementById('answer').focus();
+    } catch (e) {
+        err('recoveryError', '加载失败，请检查网络连接');
+    }
+}
+
+async function verifyAnswer() {
+    var answer = document.getElementById('answer').value.trim();
+    if (!answer) { err('recoveryError', '请输入密保答案'); return; }
+    show('recoveryError', false);
+    var btn = document.getElementById('btnVerify');
+    btn.disabled = true;
+    try {
+        var resp = await fetch('/api/recovery/verify', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: currentUsername, answer: answer})
+        });
+        var data = await resp.json();
+        if (data.success) {
+            show('stageVerify', false);
+            show('stageReset', true);
+            document.getElementById('newPassword').focus();
+        } else {
+            err('recoveryError', data.error || '答案不正确');
+            if (resp.status === 429) {
+                show('questionBox', false);
+                show('lockedMsg', true);
+            }
+        }
+    } catch (e) {
+        err('recoveryError', '请求失败，请检查网络连接');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function resetPassword() {
+    var newPw = document.getElementById('newPassword').value.trim();
+    var confirmPw = document.getElementById('confirmPassword').value.trim();
+    if (!newPw) { err('resetError', '请输入新密码'); return; }
+    if (newPw.length < 8) { err('resetError', '密码至少 8 位'); return; }
+    if (newPw !== confirmPw) { err('resetError', '两次输入的密码不一致'); return; }
+    show('resetError', false);
+    var btn = document.getElementById('btnReset');
+    btn.disabled = true;
+    try {
+        var resp = await fetch('/api/recovery/reset', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: newPw})
+        });
+        var data = await resp.json();
+        if (data.success) {
+            document.getElementById('stageReset').innerHTML =
+                '<div class="login-icon">🎉</div>' +
+                '<h1 class="login-title">密码已重置</h1>' +
+                '<p class="login-subtitle">请使用新密码登录</p>' +
+                '<a href="/login" class="login-btn" style="display:inline-block;text-align:center;margin-top:1rem;text-decoration:none;">前往登录</a>';
+            setTimeout(function() { window.location.href = '/login'; }, 2000);
+        } else {
+            err('resetError', data.error || '重置失败，请重试');
+        }
+    } catch (e) {
+        err('resetError', '请求失败，请检查网络连接');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('stageVerify').style.display !== 'none') {
+        if (document.getElementById('questionBox').style.display !== 'none') verifyAnswer();
+        else if (document.getElementById('usernameForm').style.display !== 'none') loadQuestion();
+    } else if (document.getElementById('stageReset').style.display !== 'none') {
+        resetPassword();
+    }
+});
+</script>
+{% endblock %}
