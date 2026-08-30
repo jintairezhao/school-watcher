@@ -1,0 +1,37 @@
+# 数据库（含 DeepSeek API Key）
+data/
+*.db
+
+# 环境变量（含密钥）
+.env
+
+# 隐私日志（记录所有秘密位置）
+docs/PRIVACY_LOG.md
+docs/PRIVACY_LOG.docx
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.log
+*.tmp
