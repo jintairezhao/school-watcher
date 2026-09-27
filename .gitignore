@@ -1,16 +1,39 @@
-# 数据库（含 DeepSeek API Key）
+# 本机数据、缓存和备份（可能包含账号与加密凭据）
 data/
 *.db
+*.db-*
+*.db.*
+*.sqlite
+*.sqlite-*
+*.sqlite.*
+*.sqlite3
+*.sqlite3-*
+*.sqlite3.*
+*.backup-*
+/backups/
 
 # 环境变量（含密钥）
 .env
+.env.*
+!.env.example
+*.env
+!*.env.example
 deploy/server.env
+.field-key
+browser-service.token
+*.pem
+*.key
 
 # 本机开发计划、执行记录、验收材料与设计草案
 /docs/
 /doc/
 /DESIGN.md
 /PRODUCT.md
+/.local/
+/.impeccable/
+/.codex/
+/.agents/
+/cupk_xszz.html
 
 # Python
 __pycache__/
@@ -21,6 +44,7 @@ dist/
 build/
 *.egg
 .eggs/
+.pytest_cache/
 
 # 虚拟环境
 venv/
@@ -41,6 +65,3 @@ Thumbs.db
 
 # 本地权限测试（含测试凭据）
 test_admin_perms.py
-
-# 本机界面检查截图与临时审查记录
-.impeccable/review/

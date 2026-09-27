@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 
 from .contracts import FetchResult
 
-DEFAULT_PROFILES = Path(__file__).resolve().parents[3] / 'source_profiles.json'
+DEFAULT_PROFILES = Path(__file__).resolve().parents[3] / 'config' / 'source_profiles.json'
 
 
 def _profile_path():

@@ -4,8 +4,8 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.audit_student_sources import classify_lead, CATEGORIES
-from scripts.read_student_entrances import choose_entrances
+from scripts.sources.audit_student_sources import classify_lead, CATEGORIES
+from scripts.sources.read_student_entrances import choose_entrances
 
 
 class StudentEntranceAuditTests(unittest.TestCase):

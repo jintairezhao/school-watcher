@@ -4,8 +4,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / 'scripts'))
-from migrate_safely import migrate
+from scripts.maintenance.migrate_safely import migrate
 
 if __name__ == '__main__':
     migrate()

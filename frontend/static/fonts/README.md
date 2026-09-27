@@ -36,8 +36,8 @@ live in `../css/typography.css`.
 Run from the project root:
 
 ```text
-python scripts/vendor_fonts.py --verify
-python scripts/vendor_fonts.py --restore
+python scripts/assets/vendor_fonts.py --verify
+python scripts/assets/vendor_fonts.py --restore
 ```
 
 Verification is offline. Restore first checks existing assets, downloads only

@@ -396,7 +396,7 @@ class FrontierTests(unittest.TestCase):
             self.assertFalse(result['accepted'])
 
     def test_cached_reparse_preserves_web_observation_time(self):
-        from scripts.reparse_sources import reparse_site
+        from scripts.sources.reparse_sources import reparse_site
         with tempfile.TemporaryDirectory() as folder:
             store = Inventory(Path(folder) / 'inventory.db')
             key = store.ensure_site('某大学', ROOT_URL)
@@ -416,7 +416,7 @@ class FrontierTests(unittest.TestCase):
             self.assertEqual(reparse_site(store, key)['reparsed'], 1)
 
     def test_root_first_reparse_keeps_unit_pages_for_the_next_pass(self):
-        from scripts.reparse_sources import reparse_site
+        from scripts.sources.reparse_sources import reparse_site
         with tempfile.TemporaryDirectory() as folder:
             store = Inventory(Path(folder) / 'inventory.db')
             key = store.ensure_site('某大学', ROOT_URL)

@@ -1,0 +1,3 @@
+-r base.txt
+-r browser.txt
+psycopg[binary]==3.3.6

@@ -6,11 +6,11 @@ if not exist ".venv\Scripts\python.exe" (
     python -m venv .venv
     if errorlevel 1 goto fail
 )
-".venv\Scripts\python.exe" -m pip install -r requirements.txt -r requirements-browser.txt
+".venv\Scripts\python.exe" -m pip install -r requirements.txt -r requirements/browser.txt
 if errorlevel 1 goto fail
 ".venv\Scripts\python.exe" -m playwright install chromium
 if errorlevel 1 echo Chromium download failed. Static sources remain available; see the browser setup guide.
-".venv\Scripts\python.exe" scripts\migrate_safely.py
+".venv\Scripts\python.exe" scripts\maintenance\migrate_safely.py
 if errorlevel 1 goto fail
 echo Setup complete. Run scripts\run.bat to start.
 echo AI is optional. Browser setup details are in deploy\README.md.

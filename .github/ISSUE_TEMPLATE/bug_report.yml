@@ -1,0 +1,31 @@
+name: 问题反馈
+description: 报告使用或部署问题；安全漏洞请使用私密渠道。
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: 请勿提交密钥、Cookie、数据库、完整备份、个人信息或未经脱敏的日志。安全问题请先阅读仓库 SECURITY.md。
+  - type: input
+    id: environment
+    attributes:
+      label: 版本和环境
+      description: 提交或版本、操作系统、Python 版本、Windows 本机或 Docker 部署。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 如涉及学校来源，请提供公开页面 URL 和栏目名称。
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 脱敏后的错误信息或截图

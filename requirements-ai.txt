@@ -1,2 +1,0 @@
-# Instance AI uses the requests dependency already pinned in requirements.txt.
-# No additional provider SDK is required; provider adapters never add hidden retries.

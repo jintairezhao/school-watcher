@@ -126,7 +126,7 @@ class BaselineTests(unittest.TestCase):
         result = save_baseline_check(self.store, baseline)
         self.assertFalse(result['scope_passed'])
         self.assertEqual(result['matched'], 1)
-        from scripts.verify_source_inventory import verify_file
+        from scripts.sources.verify_source_inventory import verify_file
         path = Path(self.temp.name) / 'columns.json'
         path.write_text(json.dumps(baseline), encoding='utf-8')
         self.store.finish(self.key, URL, state='fetched', fetched_at='2026-09-01T00:00:00+00:00')

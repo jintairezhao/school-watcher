@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # 本文件位于 backend/core/，其上两级即项目根目录
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = Path(os.environ.get('WATCHER_DATA_DIR', str(ROOT_DIR / 'data'))).resolve()
-CONFIG_YAML_PATH = ROOT_DIR / 'config.yaml'
+CONFIG_YAML_PATH = ROOT_DIR / 'config' / 'schools.yaml'
 ENV_PATH = ROOT_DIR / '.env'
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -84,19 +84,19 @@ def ensure_field_encryption_key():
 
 
 def load_config_yaml():
-    """从 config.yaml 自动导入学校配置到数据库（只增不更新）"""
+    """从 config/schools.yaml 自动导入学校配置到数据库（只增不更新）"""
     from backend.database.db import db
     from backend.database.models import School, Department
 
     if not CONFIG_YAML_PATH.exists():
-        logger.warning("config.yaml 不存在，跳过自动导入")
+        logger.warning("学校种子配置不存在，跳过自动导入：%s", CONFIG_YAML_PATH)
         return
 
     try:
         with open(CONFIG_YAML_PATH, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
     except Exception as e:
-        logger.error(f"读取 config.yaml 失败: {e}")
+        logger.error("读取学校种子配置 %s 失败: %s", CONFIG_YAML_PATH, e)
         return
 
     if not config or 'schools' not in config:

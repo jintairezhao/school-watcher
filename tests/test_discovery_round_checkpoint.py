@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.discover_sources import load_round, save_round
+from scripts.sources.discover_sources import load_round, save_round
 
 
 class DiscoveryRoundCheckpointTests(unittest.TestCase):

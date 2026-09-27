@@ -2,13 +2,26 @@
 
 Windows 本机使用 SQLite；Linux 多人部署使用 PostgreSQL 和 Docker Compose。网站、采集进程与浏览器服务分别运行，共用同一个数据目录和实例配置。目录库使用单机持久化磁盘，不跨机器共享 SQLite/WAL 文件。
 
+## 部署文件位置
+
+| 位置 | 用途 |
+| --- | --- |
+| `compose.yaml`、`Dockerfile`、`server.env.example` | 推荐的 Linux 多进程部署入口 |
+| `proxy/nginx.conf`、`proxy/squid.conf` | Compose 内部网关和浏览器出口代理配置，由镜像构建复制 |
+| `proxy/Caddyfile.compose` | 主机上为 Compose 提供 HTTPS 的示例 |
+| `systemd/`、`proxy/Caddyfile` | 手动部署的网站与 worker 服务、环境配置和直接代理示例 |
+| `seccomp_profile.json` | Chromium 沙箱使用的安全配置 |
+| `AI_CONFIGURATION.md`、`DATA_MANAGEMENT.md` | AI 凭据和数据维护说明 |
+
+手动 systemd 示例仅管理网站与 worker，浏览器与远程访问验证需要按下文另外配置。首次服务器部署优先使用完整的 Compose 配置。
+
 ## Windows 本机
 
 在项目根目录运行：
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-browser.txt
+.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements/browser.txt
 .venv\Scripts\python.exe -m playwright install chromium
 .venv\Scripts\python.exe scripts\launch_desktop.py
 ```
@@ -64,12 +77,12 @@ docker compose --env-file deploy/server.env -f deploy/compose.yaml restart gatew
 
 ## 升级与旧目录迁移
 
-升级前停止网站、采集和浏览器进程，保留完整备份，再运行 `python scripts/migrate_safely.py`。新旧代码不要同时写入同一个数据库。Compose 部署由初始化服务执行迁移。
+升级前停止网站、采集和浏览器进程，保留完整备份，再运行 `python scripts/maintenance/migrate_safely.py`。新旧代码不要同时写入同一个数据库。Compose 部署由初始化服务执行迁移。
 
 旧版本存在大型 `source_inventory.sqlite3` 调查库时：
 
-1. 运行 `python scripts/build_runtime_catalog.py`，生成并核对 `source_catalog.build.sqlite3`。
-2. 停止旧服务，运行 `python scripts/activate_lightweight.py --archive-legacy` 完成切换。
+1. 运行 `python scripts/maintenance/build_runtime_catalog.py`，生成并核对 `source_catalog.build.sqlite3`。
+2. 停止旧服务，运行 `python scripts/maintenance/activate_lightweight.py --archive-legacy` 完成切换。
 3. 确认账户、订阅、通知及新目录可用后再恢复服务。保管与旧程序匹配的业务备份和调查库归档，以便回退。
 
 这两个工具使用 `backend/resources/source_baselines/` 中的目录校验数据。切换工具适用于当前数据目录中使用默认名称 `school_watcher.db` 的 SQLite 部署。
@@ -81,7 +94,7 @@ docker compose --env-file deploy/server.env -f deploy/compose.yaml restart gatew
 SQLite 搬迁至 PostgreSQL 时，停止所有旧进程并准备空目标数据库。把目标连接地址放入 `WATCHER_MIGRATION_DATABASE_URL`，然后运行：
 
 ```sh
-python scripts/migrate_database.py --source /old/data/school_watcher.db --catalog /old/data/source_catalog.sqlite3 --destination-data /new/data --stopped
+python scripts/maintenance/migrate_database.py --source /old/data/school_watcher.db --catalog /old/data/source_catalog.sqlite3 --destination-data /new/data --stopped
 ```
 
 工具从源库的一致快照中迁移账号、订阅、通知、配置与个人状态，并核对目标数据。将原 `SECRET_KEY` 和凭据加密密钥安全配置到新环境，详见 [AI 配置](AI_CONFIGURATION.md)；浏览器验证会话需要重新建立。确认目标数据后只启动新环境。
@@ -89,7 +102,7 @@ python scripts/migrate_database.py --source /old/data/school_watcher.db --catalo
 创建完整备份：
 
 ```sh
-python scripts/backup_runtime.py
+python scripts/maintenance/backup_runtime.py
 ```
 
 SQLite 使用一致备份，PostgreSQL 使用原生 `pg_dump`。备份包含配套的目录文件和校验清单，不包含环境文件、加密主密钥及浏览器凭证；这些配置需要单独保管。
@@ -97,9 +110,9 @@ SQLite 使用一致备份，PostgreSQL 使用原生 `pg_dump`。备份包含配�
 恢复到新的空目录：
 
 ```sh
-python scripts/backup_runtime.py --restore BACKUP.zip --destination EMPTY_DIRECTORY
+python scripts/maintenance/backup_runtime.py --restore BACKUP.zip --destination EMPTY_DIRECTORY
 # PostgreSQL：DATABASE_URL 指向另一个空数据库
-python scripts/backup_runtime.py --restore BACKUP.zip --destination EMPTY_DIRECTORY --postgres
+python scripts/maintenance/backup_runtime.py --restore BACKUP.zip --destination EMPTY_DIRECTORY --postgres
 ```
 
 先在恢复环境核对账户、订阅、通知和个人状态，再停服切换。回退时使用匹配的旧代码和备份，不用旧程序直接打开已升级的数据库。

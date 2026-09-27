@@ -1,24 +1,40 @@
 name: Runtime acceptance
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['app.py', 'backend/**', 'frontend/**', 'scripts/**', 'tests/**', 'migrations/**', 'requirements.txt', 'requirements/**', 'config/**', 'deploy/**', '.dockerignore', '.github/workflows/runtime.yml']
   pull_request:
-    paths: ['backend/**', 'scripts/**', 'tests/**', 'migrations/**', 'requirements*.txt', 'deploy/**', '.github/workflows/runtime.yml']
+    paths: ['app.py', 'backend/**', 'frontend/**', 'scripts/**', 'tests/**', 'migrations/**', 'requirements.txt', 'requirements/**', 'config/**', 'deploy/**', '.dockerignore', '.github/workflows/runtime.yml']
 permissions:
   contents: read
+concurrency:
+  group: runtime-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   windows:
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.14.3'}
-      - run: python -m pip install -r requirements-test.txt
+      - run: python -m pip install -r requirements/test.txt
       - run: python -m playwright install chromium
       - run: python -m unittest discover -s tests -p "test_*.py"
         env:
           SECRET_KEY: isolated-ci-session-key
+      - name: Documented migration and minimal-runtime checks
+        run: |
+          python tests/smoke/check_migration.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/smoke/check_minimal_runtime.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        env:
+          SECRET_KEY: isolated-ci-session-key
   linux-postgres-and-compose:
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     env:
       POSTGRES_PASSWORD: isolated_ci_postgres_password
       SECRET_KEY: isolated_ci_session_secret_never_deploy

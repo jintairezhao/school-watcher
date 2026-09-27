@@ -7,8 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     && apt-get update && apt-get install -y --no-install-recommends 'postgresql-client-18=18.6-*' \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY requirements*.txt ./
-RUN pip install --no-cache-dir -r requirements-server.txt \
+COPY requirements.txt ./
+COPY requirements/ ./requirements/
+RUN pip install --no-cache-dir -r requirements/server.txt \
     && groupadd -g 10001 watcher && useradd -u 10001 -g watcher -m watcher \
     && mkdir -p /data && chown watcher:watcher /data
 COPY --chown=watcher:watcher . /app
@@ -28,12 +29,12 @@ CMD ["python", "scripts/run_browser.py"]
 FROM debian:bookworm-slim AS gateway
 RUN apt-get update && apt-get install -y --no-install-recommends nginx novnc \
     && rm -rf /var/lib/apt/lists/*
-COPY deploy/nginx.conf /etc/nginx/nginx.conf
+COPY deploy/proxy/nginx.conf /etc/nginx/nginx.conf
 CMD ["nginx", "-g", "daemon off;"]
 
 FROM debian:bookworm-slim AS egress
 RUN apt-get update && apt-get install -y --no-install-recommends squid ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-COPY deploy/squid.conf /etc/squid/squid.conf
+COPY deploy/proxy/squid.conf /etc/squid/squid.conf
 USER proxy
 CMD ["squid", "-N", "-f", "/etc/squid/squid.conf"]

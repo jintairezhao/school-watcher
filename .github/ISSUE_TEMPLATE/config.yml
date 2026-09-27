@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 安全问题
+    url: https://github.com/jintairezhao/school-watcher/blob/main/SECURITY.md
+    about: 涉及漏洞或凭据泄漏时，请先阅读安全报告方式，不要公开细节。

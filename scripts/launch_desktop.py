@@ -59,7 +59,7 @@ def main(open_browser=True):
             with log_path.open('ab') as log:
                 log.write(b'\n--- Desktop launch ---\n')
                 log.flush()
-                result = subprocess.run([python, str(ROOT / 'scripts' / 'migrate_safely.py')],
+                result = subprocess.run([python, str(ROOT / 'scripts' / 'maintenance' / 'migrate_safely.py')],
                     cwd=ROOT, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
                     creationflags=flags, timeout=90)
                 if result.returncode:

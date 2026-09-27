@@ -23,7 +23,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
-CMS_PROFILES_PATH = ROOT_DIR / 'cms_profiles.yaml'
+CMS_PROFILES_PATH = ROOT_DIR / 'config' / 'cms_profiles.yaml'
 
 # 选择器模板的字段默认值（新增模板时可省略部分字段）
 _SELECTOR_DEFAULTS = {

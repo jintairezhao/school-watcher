@@ -9,7 +9,7 @@ from backend import create_app
 from backend.database.db import db
 from backend.database.models import Announcement, Department, School
 from backend.services.source_catalog import FIELDS
-from scripts.apply_source_review import apply_review
+from scripts.sources.apply_source_review import apply_review
 
 
 class ApplySourceReviewTests(unittest.TestCase):
