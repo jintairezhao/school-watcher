@@ -40,6 +40,8 @@ def create_app(test_config=None):
         FETCH_EVIDENCE_DIR=os.environ.get('WATCHER_FETCH_EVIDENCE_DIR', str(DATA_DIR / 'fetch-evidence')),
         BROWSER_ENABLED=os.environ.get('WATCHER_BROWSER', '0') == '1',
         DESKTOP_MODE=os.environ.get('WATCHER_DESKTOP') == '1',
+        DESKTOP_TOKEN=os.environ.get('WATCHER_DESKTOP_TOKEN', ''),
+        DESKTOP_ORIGIN=os.environ.get('WATCHER_PUBLIC_ORIGIN', 'http://localhost'),
     )
     if test_config:
         app.config.update(test_config)

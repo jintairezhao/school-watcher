@@ -37,15 +37,13 @@ def configure(data_dir):
     os.environ.update(WATCHER_DATA_DIR=str(data_dir), WATCHER_ENV_FILE=str(env_file),
                       WATCHER_DESKTOP='1', WATCHER_ENV='desktop', WATCHER_HOST='127.0.0.1',
                       WATCHER_BROWSER_HOST='127.0.0.1', WATCHER_BROWSER='1',
+                      WATCHER_SEED_ON_START='0',
                       DATABASE_URL=f'sqlite:///{data_dir / "school_watcher.db"}')
     os.environ.pop('WATCHER_TRUST_PROXY', None)
     os.environ.setdefault('WATCHER_DESKTOP_TOKEN', secrets.token_hex(32))
     os.environ.setdefault('WATCHER_BROWSER_TOKEN', secrets.token_hex(32))
-    bundled = resource_root() / 'browser-runtime'
-    if sys.platform == 'darwin' and getattr(sys, 'frozen', False):
-        bundled = Path(sys.executable).parent.parent / 'Resources' / 'browser-runtime'
-    if bundled.is_dir():
-        os.environ['PLAYWRIGHT_BROWSERS_PATH'] = str(bundled)
+    # Keep downloaded components outside the installation so app updates retain them.
+    os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH', str(data_dir / 'browsers'))
     return data_dir
 
 
@@ -155,14 +153,33 @@ class DesktopRuntime:
         self.wait_ready('web', self.address + '/_desktop/health', os.environ['WATCHER_DESKTOP_TOKEN'])
         self.spawn('browser')
         self.wait_ready('browser', os.environ['WATCHER_BROWSER_URL'] + '/health', os.environ['WATCHER_BROWSER_TOKEN'])
+        self.prepare_browser()
         self.spawn('worker')
         settings.write_text(json.dumps({'port': port}), encoding='utf-8')
         threading.Thread(target=self.monitor, daemon=True).start()
         return self.address
 
+    def open_url(self):
+        return self.address + '/_desktop/open?token=' + os.environ['WATCHER_DESKTOP_TOKEN']
+
+    def prepare_browser(self, managed=False):
+        with self.guard:
+            for role in ('browser-setup', 'browser-download'):
+                previous = self.processes.get(role)
+                if previous and previous.poll() is None:
+                    return False
+            self.spawn('browser-download' if managed else 'browser-setup')
+            return True
+
     def monitor(self):
         restarts = []
         while not self.stopped.wait(1):
+            repair = self.data_dir / 'desktop-browser-repair.request'
+            if repair.exists() and self.prepare_browser(managed=True):
+                repair.unlink(missing_ok=True)
+            retry = self.data_dir / 'desktop-browser-retry.request'
+            if retry.exists() and self.prepare_browser():
+                retry.unlink(missing_ok=True)
             for role in ('web', 'worker', 'browser'):
                 with self.guard:
                     process = self.processes.get(role)
@@ -182,7 +199,7 @@ class DesktopRuntime:
     def close(self):
         self.stopped.set()
         with self.guard:
-            for role in ('probe', 'worker', 'browser', 'web', 'migrate'):
+            for role in ('probe', 'worker', 'browser', 'browser-setup', 'browser-download', 'web', 'migrate'):
                 process = self.processes.get(role)
                 if process and process.poll() is None:
                     try:
@@ -192,6 +209,12 @@ class DesktopRuntime:
 
 
 def run_service(role):
+    if role in ('browser-setup', 'browser-download'):
+        from desktop.browser import prepare
+        state = prepare(Path(os.environ['WATCHER_DATA_DIR']), managed=role == 'browser-download')
+        if state['phase'] == 'error':
+            raise RuntimeError(state['message'])
+        return
     if role == 'migrate':
         from scripts.maintenance.migrate_safely import migrate
         migrate()
@@ -203,11 +226,16 @@ def run_service(role):
     if role == 'probe':
         from playwright.sync_api import sync_playwright
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(chromium_sandbox=True)
-            page = browser.new_page()
-            page.set_content('<title>School Watcher desktop check</title>')
-            assert page.title() == 'School Watcher desktop check'
-            browser.close()
+            from desktop.browser import launch_channel
+            channel = launch_channel(os.environ['WATCHER_DATA_DIR'])
+            if not channel:
+                raise RuntimeError('采集组件尚未准备好')
+            for headless in (True, False):
+                browser = playwright.chromium.launch(channel=channel, headless=headless, chromium_sandbox=True)
+                page = browser.new_page()
+                page.set_content('<title>School Watcher desktop check</title><script>document.title += " ready"</script>')
+                assert page.title() == 'School Watcher desktop check ready'
+                browser.close()
         return
     from backend import create_app
     app = create_app()
@@ -215,6 +243,11 @@ def run_service(role):
         from backend.worker import run
         run(app)
     elif role == 'web':
+        from backend.auth.desktop import ensure_local_owner
+        with app.app_context():
+            ensure_local_owner()
+            from backend.services.starter_catalog import install
+            install()
         from waitress import serve
         # A private ownership/readiness check, independent of account login.
         original = app.wsgi_app

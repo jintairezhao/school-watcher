@@ -68,7 +68,9 @@
                 <a class="btn btn-sm btn-outline" href="{{ url_for('auth.login_page', next=request.path) }}">登录</a>
                 <a class="btn btn-sm btn-primary" href="{{ url_for('auth.register_page') }}">注册</a>
                 {% endif %}
-                {% if current_user %}
+                {% if current_user and config.DESKTOP_MODE %}
+                <a class="btn btn-sm btn-outline" href="{{ url_for('admin.admin_page') }}">系统管理</a>
+                {% elif current_user %}
                 <div class="nav-item has-menu" id="settingsNavItem">
                     <button type="button" class="nav-tab nav-tab--menu" aria-haspopup="true" aria-expanded="false" aria-controls="nav-menu-settings">
                         <span class="nav-user-mark" aria-hidden="true">{{ current_user.username[0]|upper }}</span>
@@ -102,6 +104,7 @@
     </nav>
 
     <!-- Flash 消息 -->
+    {% include '_desktop_components.html' %}
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="flash-container">

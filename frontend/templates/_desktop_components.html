@@ -1,0 +1,7 @@
+{% if config.DESKTOP_MODE %}
+<aside id="desktopComponents" class="flash flash-info" role="status" aria-live="polite" hidden>
+    <span id="desktopComponentMessage"></span>
+    <button id="desktopComponentRetry" type="button" class="btn btn-sm btn-outline" hidden>重新检测</button>
+</aside>
+<script src="{{ url_for('static', filename='js/desktop-components.js') }}" defer></script>
+{% endif %}

@@ -1,5 +1,5 @@
 <div class="setting-card">
-    <div class="setting-card-header"><h3>AI 服务</h3><p>本实例共用一套配置。目录识别与通知摘要可使用不同服务；本地部署由本机管理员配置。</p></div>
+    <div class="setting-card-header"><h3>AI 服务</h3><p>{{ '配置本机使用的 AI 服务，目录识别与通知摘要可使用不同服务。' if config.DESKTOP_MODE else '本实例共用一套配置。目录识别与通知摘要可使用不同服务；本地部署由本机管理员配置。' }}</p></div>
     <div class="setting-card-body">
         <p id="aiStatus" role="status" aria-live="polite">加载中…</p>
         <div id="aiProfiles"></div>

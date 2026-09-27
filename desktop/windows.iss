@@ -32,6 +32,9 @@ Source: "{#AppSource}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 #ifdef WebViewBootstrapper
 Source: "{#WebViewBootstrapper}"; DestDir: "{tmp}"; Flags: deleteafterinstall
 #endif
+[InstallDelete]
+; Only obsolete application-owned browser files, never the user data directory.
+Type: filesandordirs; Name: "{app}\_internal\browser-runtime"
 [Icons]
 Name: "{group}\School Watcher"; Filename: "{app}\SchoolWatcher.exe"
 Name: "{autodesktop}\School Watcher"; Filename: "{app}\SchoolWatcher.exe"; Tasks: desktopicon

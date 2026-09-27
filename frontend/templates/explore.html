@@ -21,7 +21,7 @@
                 <h2>{% if school %}<a href="{{ url_for('pages.school_detail', school_id=school.id) }}">{{ entry.name }}</a>{% else %}{{ entry.name }}{% endif %}</h2>
                 <p>{% if entry.province %}{{ entry.province }} · {% endif %}{% if entry.double_first_class %}双一流{% else %}其他本科高校{% endif %} · <a href="{{ entry.url }}" target="_blank" rel="noopener noreferrer">学校官网 <span class="sr-only">（新窗口）</span></a></p>
             </div>
-            <p class="directory-status">{% if school and totals.get(school.id, 0) %}{{ counts.get(school.id, 0) }} 个栏目 · {{ totals.get(school.id, 0) }} 条通知{% elif school and school.subscriber_count %}已订阅 · 尚无通知{% else %}订阅后接入官网{% endif %}</p>
+            <p class="directory-status">{% if school and totals.get(school.id, 0) %}{{ counts.get(school.id, 0) }} 个栏目 · {{ totals.get(school.id, 0) }} 条通知{% elif school and school.subscriber_count %}已订阅 · 尚无通知{% elif config.DESKTOP_MODE and school and counts.get(school.id, 0) %}已备好 {{ counts.get(school.id, 0) }} 个栏目 · 订阅后抓取{% else %}订阅后接入官网{% endif %}</p>
             <div class="directory-actions">
                 {% if current_user %}
                     {% if school and school.id in my_subs %}

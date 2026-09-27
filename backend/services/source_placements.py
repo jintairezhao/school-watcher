@@ -244,6 +244,9 @@ def official_source_placements(departments):
                 placements = placements_from_unit_identity(source, school['school_url'],
                     school['unit_paths'].get((source.name or '').strip(), []), school['groups'])
             school['resolved'][identity] = placements
+            if not placements and current_app.config.get('DESKTOP_MODE'):
+                from backend.services.starter_catalog import placements as starter_placements
+                school['resolved'][identity] = starter_placements(school['school_url'], source)
         if school['resolved'][identity]:
             result[source.id] = school['resolved'][identity]
     return result

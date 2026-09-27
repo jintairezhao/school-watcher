@@ -58,6 +58,33 @@ def register_hooks(app):
 
     @app.before_request
     def _load_user():
+        if current_app.config.get('DESKTOP_MODE') and request.path not in _HEALTH_PATHS and not g.internal_browser:
+            from urllib.parse import urlsplit
+            from backend.auth.desktop import local_owner
+            g.user = None
+            expected = current_app.config.get('DESKTOP_TOKEN', '')
+            origin = urlsplit(current_app.config['DESKTOP_ORIGIN'])
+            if request.remote_addr not in ('127.0.0.1', '::1') or request.host != origin.netloc or len(expected) < 32:
+                return jsonify(error='请从桌面应用打开学校通知'), 403
+            if request.path == '/_desktop/open':
+                supplied = request.args.get('token', '')
+                if request.method != 'GET' or not supplied.isascii() or not secrets.compare_digest(expected, supplied):
+                    return jsonify(error='桌面会话已失效，请重新打开应用'), 403
+                session.clear()
+                session['desktop_access'] = expected
+                session.permanent = True
+                return redirect(url_for('pages.index'))
+            supplied = session.get('desktop_access', '')
+            if not isinstance(supplied, str) or not secrets.compare_digest(expected, supplied):
+                return jsonify(error='请从桌面应用打开学校通知'), 403
+            g.user = local_owner()
+            if g.user is None:
+                return jsonify(error='本机数据尚未准备好，请重新打开应用'), 503
+            if request.blueprint in ('auth', 'account') or request.path == '/api/admin/toggles':
+                if request.method == 'GET' and request.path in ('/login', '/register', '/recovery', '/me'):
+                    return redirect(url_for('pages.index'))
+                return jsonify(error='桌面版无需账号'), 404
+            return None
         g.user = None if request.path in _HEALTH_PATHS or g.internal_browser else get_current_user()
 
     @app.before_request

@@ -4,9 +4,9 @@ on:
   push:
     tags: ['v*']
     branches: ['main', 'codex/desktop-release']
-    paths: ['desktop/**', 'backend/**', 'frontend/**', 'requirements/**', 'migrations/**', 'scripts/maintenance/migrate_safely.py', 'tests/test_desktop_updates.py', '.github/workflows/desktop.yml']
+    paths: ['desktop/**', 'backend/**', 'frontend/**', 'requirements/**', 'migrations/**', 'scripts/maintenance/migrate_safely.py', 'tests/test_desktop*.py', 'config/**', '.github/workflows/desktop.yml']
   pull_request:
-    paths: ['desktop/**', 'requirements/desktop.txt', 'requirements/build.txt', 'tests/test_desktop_updates.py', '.github/workflows/desktop.yml']
+    paths: ['desktop/**', 'requirements/desktop.txt', 'requirements/build.txt', 'tests/test_desktop*.py', 'config/**', '.github/workflows/desktop.yml']
 permissions:
   contents: read
 concurrency:
@@ -28,6 +28,7 @@ jobs:
       WATCHER_ENV_FILE: ${{ github.workspace }}/.local/ci-data/.env
       SECRET_KEY: isolated-ci-desktop-key-never-distributed
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.local/desktop-browsers
+      WATCHER_BROWSER_CHANNEL: chromium
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,10 +38,8 @@ jobs:
           cache-dependency-path: 'requirements/*.txt'
       - name: Install build dependencies
         run: python -m pip install -r requirements/build.txt
-      - name: Install bundled Chromium
-        run: python -m playwright install chromium
       - name: Check desktop behavior and update integrity
-        run: python -m unittest discover -s tests -p test_desktop_updates.py -v
+        run: python -m unittest discover -s tests -p 'test_desktop*.py' -v
       - name: Prepare Windows WebView2 bootstrapper
         if: runner.os == 'Windows'
         shell: pwsh
@@ -66,7 +65,7 @@ jobs:
           $data = Join-Path $PWD '.local/packaged-smoke'
           $report = Join-Path $PWD '.local/packaged-smoke.json'
           $proc = Start-Process -FilePath $app -ArgumentList @('--smoke-test','--data-dir',"`"$data`"",'--report',"`"$report`"") -WindowStyle Hidden -PassThru
-          if (-not $proc.WaitForExit(240000)) { Stop-Process -Id $proc.Id; throw 'Packaged runtime timed out' }
+          if (-not $proc.WaitForExit(1200000)) { Stop-Process -Id $proc.Id; throw 'Packaged runtime timed out' }
           if ($proc.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $report)) { throw 'Packaged runtime failed' }
           Get-Content -LiteralPath $report
           $guiReport = Join-Path $PWD '.local/packaged-gui.json'
@@ -90,6 +89,7 @@ jobs:
           assert Path('.local/packaged-gui.json').is_file()
           PY
       - uses: actions/upload-artifact@v4
+        # The packaged app has now downloaded the isolated browser itself.
         with:
           name: desktop-${{ matrix.target }}
           path: .local/desktop-release/*

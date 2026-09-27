@@ -96,11 +96,24 @@ class BrowserRuntime:
         if proxy:
             args.append('--proxy-bypass-list=<-loopback>')
         channel = os.environ.get('WATCHER_BROWSER_CHANNEL') or None
-        if channel not in (None, 'chrome', 'msedge'):
+        desktop = os.environ.get('WATCHER_DESKTOP') == '1'
+        if desktop:
+            from desktop.browser import launch_channel
+            channel = launch_channel(os.environ['WATCHER_DATA_DIR'])
+            if not channel:
+                raise RuntimeFault('browser_preparing', '采集组件正在准备或需要重试，请从应用菜单打开「采集组件」查看进度。', 503, True)
+        if channel not in (None, 'chrome', 'msedge', 'chromium'):
             raise RuntimeFault('browser_configuration', '浏览器通道配置不正确')
-        return await self.playwright.chromium.launch(headless=not headed, env=env,
-            chromium_sandbox=True, args=args, channel=channel,
-            proxy={'server': proxy} if proxy else None)
+        try:
+            return await self.playwright.chromium.launch(headless=not headed, env=env,
+                chromium_sandbox=True, args=args, channel=channel,
+                proxy={'server': proxy} if proxy else None)
+        except Exception:
+            if desktop and channel != 'chromium':
+                from desktop.browser import request_managed_browser
+                request_managed_browser(os.environ['WATCHER_DATA_DIR'])
+                raise RuntimeFault('browser_preparing', '正在切换到独立采集组件，请稍后重试。', 503, True)
+            raise
 
     async def _guard_context(self, context):
         async def limit_pages(page):

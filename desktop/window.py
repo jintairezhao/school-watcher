@@ -90,7 +90,7 @@ class UpdateAPI:
         try:
             if not self._path.is_file() or file_hash(self._path) != self._update.sha256:
                 raise UpdateError('安装包已发生变化，请重新下载。')
-            message = '将退出学校通知并打开安装程序。账号、订阅和阅读记录会保留。'
+            message = '将退出学校通知并打开安装程序。订阅、收藏和阅读记录会保留。'
             if sys.platform == 'darwin':
                 message = '将退出学校通知并打开安装镜像。请把新版拖入 Applications 并替换旧版，已有数据会保留。'
             if not self._window.create_confirmation_dialog('安装更新', message):
@@ -135,6 +135,23 @@ def run_window(runtime, smoke_test=False):
             subprocess.Popen(['open', str(runtime.data_dir)])
 
     update_window = None
+    component_window = None
+    def components():
+        nonlocal component_window
+        if component_window in webview.windows:
+            component_window.restore()
+            component_window.show()
+            return
+        class ComponentsAPI:
+            def state(self):
+                from desktop.browser import read_status
+                return read_status(runtime.data_dir)
+            def retry(self):
+                runtime.prepare_browser()
+                return {'phase': 'checking', 'message': '正在重新检测采集组件…'}
+        component_window = webview.create_window('采集组件 · School Watcher',
+            html=(resource_root() / 'desktop' / 'ui' / 'components.html').read_text(encoding='utf-8'),
+            js_api=ComponentsAPI(), width=560, height=390, min_size=(480, 350), background_color='#f5f5f7')
     def updates():
         nonlocal update_window
         if update_window in webview.windows:
@@ -153,7 +170,7 @@ def run_window(runtime, smoke_test=False):
         html=(resource_root() / 'desktop' / 'ui' / 'loading.html').read_text(encoding='utf-8'),
         width=1380, height=900, min_size=(980, 680), text_select=True, zoomable=True,
         background_color='#f5f5f7', hidden=smoke_test)
-    menu = [Menu('School Watcher', [MenuAction('检查更新…', updates),
+    menu = [Menu('School Watcher', [MenuAction('检查更新…', updates), MenuAction('采集组件…', components),
         MenuAction('打开数据文件夹', open_data), MenuAction('退出', quit_app)])]
 
     token = secrets.token_hex(32)
@@ -179,20 +196,19 @@ def run_window(runtime, smoke_test=False):
     def prepare():
         try:
             address = runtime.start()
-            window.load_url(address + '/login' if smoke_test else address)
+            window.load_url(runtime.open_url())
             if smoke_test:
                 print('Native check: waiting for page load', flush=True)
                 if not window.events.loaded.wait(30):
                     raise RuntimeError('Native page load timed out.')
-                print('Native check: page loaded; inspecting form', flush=True)
+                print('Native check: page loaded; inspecting desktop navigation', flush=True)
                 deadline = time.monotonic() + 30
                 while time.monotonic() < deadline:
-                    if window.run_js('location.pathname === "/login" && !!document.querySelector("input[type=password]")'):
-                        print('Native check: login form rendered', flush=True)
+                    if window.run_js('location.pathname === "/" && !!document.querySelector("a[href=\\"/admin\\"]") && !document.querySelector("a[href=\\"/login\\"],input[type=password]")'):
+                        print('Native check: account-free desktop rendered', flush=True)
                         return
                     time.sleep(.2)
-                observed = window.get_current_url()
-                raise RuntimeError(f'Native window did not render the login form: {observed}')
+                raise RuntimeError('Native window did not render the desktop navigation.')
             while not runtime.stopped.wait(1):
                 if runtime.failure:
                     raise RuntimeError(runtime.failure)

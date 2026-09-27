@@ -34,16 +34,11 @@ def main():
             '--noconfirm', '--distpath', str(dist), '--workpath', str(build / 'work')], cwd=ROOT, check=True)
     bundle = dist / ('School Watcher.app' if sys.platform == 'darwin' else 'SchoolWatcher')
     if sys.platform == 'darwin' and not args.skip_freeze:
-        # Preserve Chrome's signed nested bundles and framework symlinks intact.
-        # PyInstaller's individual Mach-O rewriting breaks those bundle signatures.
-        browser_source = Path(os.environ.get('WATCHER_BUNDLE_BROWSERS', ROOT / '.local' / 'desktop-browsers'))
-        shutil.copytree(browser_source, bundle / 'Contents' / 'Resources' / 'browser-runtime',
-                        symlinks=True, ignore=shutil.ignore_patterns('.links'))
         subprocess.run(['codesign', '--force', '--sign', os.environ.get('WATCHER_CODESIGN_IDENTITY') or '-',
                         '--timestamp=none', str(bundle)], check=True)
     # Also run this against the finished tree, since dependencies have their own hooks.
     forbidden = [p for p in bundle.rglob('*') if p.is_file() and (
-        '.local' in p.relative_to(bundle).parts or 'promo-web' in p.parts or p.name in ('.env', '.field-key', 'browser-service.token')
+        '.local' in p.relative_to(bundle).parts or 'promo-web' in p.parts or 'browser-runtime' in p.parts or p.name in ('.env', '.field-key', 'browser-service.token')
         or p.suffix.lower() in ('.db', '.sqlite', '.sqlite3', '.mp4', '.webm', '.wav', '.mp3'))]
     if forbidden:
         raise RuntimeError(f'Private or unrelated files found in bundle: {forbidden[:5]}')

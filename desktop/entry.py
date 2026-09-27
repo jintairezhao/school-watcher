@@ -17,7 +17,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version', version=VERSION)
     parser.add_argument('--data-dir', type=Path, default=None)
-    parser.add_argument('--service', choices=['migrate', 'web', 'worker', 'browser', 'probe'])
+    parser.add_argument('--service', choices=['migrate', 'web', 'worker', 'browser', 'probe', 'browser-setup', 'browser-download'])
     parser.add_argument('--smoke-test', action='store_true')
     parser.add_argument('--gui-smoke-test', action='store_true')
     parser.add_argument('--report', type=Path)
@@ -51,13 +51,17 @@ def main(argv=None):
     try:
         if args.smoke_test:
             import urllib.request
+            import http.cookiejar
             address = runtime.start()
-            opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-            for path in ('/login', '/static/js/directory.js', '/static/css/fonts.css'):
+            opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+            with opener.open(runtime.open_url(), timeout=15) as response:
+                assert response.status == 200 and b'/admin' in response.read()
+            for path in ('/admin', '/api/admin/stats', '/static/js/directory.js', '/static/css/fonts.css'):
                 with opener.open(address + path, timeout=10) as response:
                     assert response.status == 200 and response.read(100)
+            assert runtime.processes['browser-setup'].wait(timeout=900) == 0, 'Browser preparation failed'
             probe = runtime.spawn('probe')
-            assert probe.wait(timeout=60) == 0, 'Bundled Chromium smoke check failed'
+            assert probe.wait(timeout=90) == 0, 'Headless or headed browser smoke check failed'
             info = {'version': VERSION, 'status': 'passed', 'web': True, 'chromium': True,
                     'data_dir': str(data), 'resource_root': str(resource_root())}
             if args.report:

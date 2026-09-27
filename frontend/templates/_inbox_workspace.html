@@ -2,7 +2,7 @@
 <section class="inbox-empty" aria-labelledby="empty-title">
     <svg class="empty-state-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M4 14h4l2 2h4l2-2h4"/></svg>
     <h1 id="empty-title">收件箱还没有通知来源</h1>
-    <p>先订阅一所学校，新通知会按时间集中显示在这里。</p>
+    <p>{{ '已准备好学校与栏目配置。选择学校订阅后，将从官网获取通知。' if config.DESKTOP_MODE else '先订阅一所学校，新通知会按时间集中显示在这里。' }}</p>
     <a class="btn btn-primary" href="{{ url_for('pages.explore') }}">选择学校</a>
     <a href="{{ url_for('pages.index', view='saved', period='all') }}">查看我的收藏</a>
     <a href="{{ url_for('pages.index', view='archived', period='all') }}">查看已归档</a>

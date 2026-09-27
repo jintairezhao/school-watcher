@@ -1,5 +1,5 @@
 """安全响应头"""
-from flask import Flask
+from flask import Flask, request
 
 
 def register_security_headers(app: Flask):
@@ -10,6 +10,10 @@ def register_security_headers(app: Flask):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        if app.config.get('DESKTOP_MODE'):
+            response.headers['Referrer-Policy'] = 'no-referrer'
+            if not request.path.startswith('/static/'):
+                response.headers['Cache-Control'] = 'no-store'
         response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "

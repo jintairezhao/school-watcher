@@ -88,11 +88,11 @@ class UpdateTests(unittest.TestCase):
 
 
 class DesktopOwnershipTests(unittest.TestCase):
-    def test_first_desktop_user_is_admin_but_server_registration_is_not(self):
+    def test_server_registration_never_grants_admin(self):
         from backend import create_app
         from backend.database.db import db
         from backend.database.models import User
-        for desktop, expected in ((False,'user'),(True,'admin')):
+        for desktop, expected in ((False,'user'),):
             app = create_app({'TESTING':True,'SECRET_KEY':'isolated-desktop-test',
                               'SQLALCHEMY_DATABASE_URI':'sqlite://','DESKTOP_MODE':desktop})
             with app.app_context():

@@ -1,12 +1,16 @@
 # 桌面版与更新
 
-桌面版复用现有网页与后端，使用系统网页引擎呈现在独立窗口中。关闭应用后停止网站、采集 worker 和专用 Chromium；不会在后台留下常驻采集服务。
+桌面版复用现有网页与后端，使用系统网页引擎呈现在独立窗口中。关闭应用后停止网站、采集 worker、应用创建的采集浏览器和组件下载；不会关闭用户自己打开的浏览器。
 
 ## 下载和安装
 
 [GitHub Releases](https://github.com/jintairezhao/school-watcher/releases) 提供 Windows x64 安装程序及便携 ZIP，以及 Apple 芯片、Intel Mac 两种 DMG。macOS 构建目标为 macOS 15 及以上。Windows 使用 WebView2，缺少该组件时安装程序会运行微软官方引导程序，首次安装需要联网。
 
-首次启动注册本机账户，第一个账户自动成为本机管理员。应用菜单可检查更新、打开数据文件夹或退出。
+首次启动直接进入通知页面，无需注册或登录，可直接打开系统管理。应用菜单可检查更新、查看采集组件、打开数据文件夹或退出。桌面窗口使用每次启动的本机访问凭据，保留写操作保护；服务器部署仍使用原有多用户账号系统。
+
+安装包不再内置完整 Chromium 和独立 headless shell。优先检测可用的 Edge／Chrome，使用独立临时配置，不读取用户浏览器历史、密码或登录状态。没有可用浏览器时，从 Playwright 官方下载源安装匹配版本的完整 Chromium（`--no-shell`）到用户数据目录；同时支持无界面采集和人工访问验证。只有 Safari 的 Mac 也需要下载。首次准备需要联网，下载失败可从页面提示或菜单重新检测，已有通知与设置继续可用。
+
+初始配置仅包含 5 所学校、397 个部门或栏目的名称、官网地址、采集规则与分类层级。不包含开发者的订阅选择、通知、摘要、收藏、阅读记录、账号、Cookie 或密钥。首次安装收件箱为空，用户在学校目录选择订阅后重新采集。升级采用追加配置，保留已有本机数据与设置；原本机管理员的数据身份继续用于关联历史记录，但界面不再提供账号操作。
 
 | 系统 | 数据位置 |
 | --- | --- |
@@ -30,14 +34,14 @@ python -m pip install -r requirements/build.txt
 python desktop/entry.py
 ```
 
-将 `PLAYWRIGHT_BROWSERS_PATH` 设置为项目中的 `.local/desktop-browsers` 后运行 `python -m playwright install chromium`，再运行 `python desktop/build.py`。Windows 安装包需要 Inno Setup 6 和微软 WebView2 官方引导程序的本机路径 `WATCHER_WEBVIEW_BOOTSTRAPPER`，使用 `python desktop/build.py --installer`。
+运行 `python desktop/build.py`。构建不需要下载或收录浏览器。Windows 安装包需要 Inno Setup 6 和微软 WebView2 官方引导程序的本机路径 `WATCHER_WEBVIEW_BOOTSTRAPPER`，使用 `python desktop/build.py --installer`。CI 单独下载 Chromium 用于验收，但不放入安装包。
 
 生成内容只在 `.local/desktop-build`、`.local/desktop-dist`、`.local/desktop-release`。资源收录使用明确目录清单，不收录仓库根目录、`.env`、`data/`、`.local/` 或宣传片。完成后检查最终文件树，拒绝私有数据库和媒体制作文件。
 
 ## 发布新版本
 
 1. 修改 `desktop/__init__.py` 的 `VERSION`（例如 `0.2.0`）与 `desktop/RELEASE_NOTES.md`。
-2. 将变更合入 `main`。Desktop builds 会完成三个目标的构建、内置浏览器和原生窗口启动验收。
+2. 将变更合入 `main`。Desktop builds 会完成三个目标的构建、浏览器的有界面／无界面模式和原生窗口启动验收。
 3. 所有目标通过后，工作流为尚未发布的版本创建对应标签和 Release，上传三个安装包、便携 ZIP 和统一的 `SHA256SUMS.txt`。已有版本不会被覆盖；也支持主动推送 `v0.2.0` 这样的版本标签触发发布。
 
 不要单独覆盖某个已发布安装包而遗漏校验文件。检查更新依赖文件命名规则，请通过构建脚本生成。
