@@ -14,6 +14,7 @@ from backend import create_app
 from backend.database.db import db
 from backend.database.models import School, Department, User, Subscription
 from backend.services.source_inventory import DEFAULT_PATH, Inventory, site_key
+from backend.services.source_baselines import BASELINE_DIRECTORY
 from scripts.verify_source_inventory import verify_file
 from werkzeug.serving import make_server
 from playwright.sync_api import sync_playwright
@@ -32,7 +33,7 @@ def check():
         # of a live crawler that may have just invalidated an older parser review.
         copied_inventory = Inventory(inventory_path)
         reviewed_sites = set()
-        for baseline in (ROOT / 'docs' / 'source_baselines').glob('*.json'):
+        for baseline in BASELINE_DIRECTORY.glob('*.json'):
             result = verify_file(copied_inventory, baseline, reparse=True)
             assert result['scope_passed'], (baseline.name, result['status'])
             reviewed_sites.add(site_key(json.loads(baseline.read_text(encoding='utf-8'))['root_url']))

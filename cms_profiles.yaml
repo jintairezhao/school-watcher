@@ -147,7 +147,7 @@ selector_profiles:
     date_selector: 'span.date'
     content_selector: 'div.article-content, div.main, div.content, div.gp-article, div.detail, div.info, article'
 
-  # ---- 博达 CMS 模板（调研：24 校中约 19 校涉及，见 docs/SITE_PATTERNS.md） ----
+  # ---- 博达 CMS 模板 ----
   - name: '博达列表 (line_u 序列 li)'
     list_selector: 'li[id^="line_u"]'
     title_selector: 'a'
@@ -342,7 +342,7 @@ date_patterns:
   - pattern: '【(\d{4})[-/.]?(\d{1,2})[-/.]?(\d{1,2})】'
     format: 'year-month-day'
 
-  # ---- 调研新增（docs/SITE_PATTERNS.md）----
+  # ---- 通用栏目布局补充 ----
   # 博达多校「日 + 年月」拼接（北航 26 2026.08 / 中大 29 2026/08 / 清华 27 2026.08）
   - pattern: '(\d{1,2})\s+(\d{4})\.(\d{1,2})(?!\d)'
     format: 'day-year-month'

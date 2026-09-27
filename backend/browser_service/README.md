@@ -89,9 +89,3 @@ runtime ownership/security tests and Flask permission/CSRF tests. Real rendering
 run against localhost-only fixtures when bundled Chromium exists or
 `WATCHER_TEST_BROWSER_CHANNEL=msedge` is supplied. A test-only injected address validator
 allows that fixture origin; production URL validation is never relaxed.
-
-The Windows run on 2026-09-23 passed real delayed JavaScript, challenge reload with final
-headers, sustained access denial and explicit empty-list fixtures using Edge
-153.0.4234.48. The matching bundled Chromium download failed because of the local network's
-DNS/timeouts. Linux Xvfb/VNC and container validation must run on Linux before release;
-Windows tests do not establish those deployment guarantees.

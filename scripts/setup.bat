@@ -13,7 +13,7 @@ if errorlevel 1 echo Chromium download failed. Static sources remain available; 
 ".venv\Scripts\python.exe" scripts\migrate_safely.py
 if errorlevel 1 goto fail
 echo Setup complete. Run scripts\run.bat to start.
-echo AI is optional. Browser setup details are in docs\UNIFIED_FETCH_RUNTIME.md.
+echo AI is optional. Browser setup details are in deploy\README.md.
 pause
 exit /b 0
 :fail

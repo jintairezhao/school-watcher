@@ -6,9 +6,11 @@ data/
 .env
 deploy/server.env
 
-# 隐私日志（记录所有秘密位置）
-docs/PRIVACY_LOG.md
-docs/PRIVACY_LOG.docx
+# 本机开发计划、执行记录、验收材料与设计草案
+/docs/
+/doc/
+/DESIGN.md
+/PRODUCT.md
 
 # Python
 __pycache__/

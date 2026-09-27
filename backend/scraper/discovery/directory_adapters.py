@@ -1,7 +1,7 @@
 """Small, evidence-based adapters for official directories with nonsemantic markup.
 
 Selectors describe observed page structure; they do not supply the roster itself.
-Independent reviewed rosters belong in data/source_baselines, not in a parser.
+Independent reviewed rosters belong in backend/resources/source_baselines, not in a parser.
 """
 from urllib.parse import urlsplit
 import re

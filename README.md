@@ -1,10 +1,8 @@
 # School Watcher · 学校通知
 
-> [公共目录与实例 AI 的本轮实现、测试及待验收项](docs/ONBOARDING_AI_IMPLEMENTATION.md)。本轮新增来源统一核实、实例级 API 和按需共享摘要；全名单覆盖与真实服务器容量仍需验收。
-
 轻量的高校官网信息收件箱。订阅学校或官网栏目，在一处阅读、搜索、收藏和归档通知。
 
-**统一抓取版本**：Windows 本机 SQLite 与 Linux 多人 PostgreSQL 共用业务代码，动态页面由独立 Playwright 服务执行，管理员可以处理访问验证。部署、完整搬迁、备份恢复和验收范围见 [运行手册](docs/UNIFIED_FETCH_RUNTIME.md) 与 [验收记录](docs/RUNTIME_ACCEPTANCE.md)。
+Windows 本机 SQLite 与 Linux 多人 PostgreSQL 共用业务代码，动态页面由独立 Playwright 服务执行，管理员可以处理访问验证。安装、服务器部署、完整搬迁和备份恢复见[部署与维护手册](deploy/README.md)。
 
 ## 日常使用
 
@@ -98,7 +96,7 @@ python -m pip install -r requirements-browser.txt
 python -m playwright install chromium
 ```
 
-浏览器服务必须与网站、采集进程使用相同调用凭证。桌面启动器自动配置；手动启动请按[运行手册](docs/UNIFIED_FETCH_RUNTIME.md)配置。管理员入口位于“系统管理 → 处理访问验证”。
+浏览器服务必须与网站、采集进程使用相同调用凭证。桌面启动器自动配置；手动启动请按[部署与维护手册](deploy/README.md)配置。管理员入口位于“系统管理 → 处理访问验证”。
 
 AI 摘要独立可选：
 
@@ -123,7 +121,7 @@ python scripts/run_worker.py
 
 备份位于数据库旁的 `*.backup-时间戳`。数据库和 `.env` 含账户与配置，均不纳入版本控制。回滚时停止服务，将备份复制到新的数据库文件，通过 `DATABASE_URL=sqlite:///绝对路径` 指向副本，并配合升级前代码使用；不要手工覆盖正在运行的 SQLite 文件。
 
-已有大体积官网调查库的迁移采用「生成精简目录 → 核验 → 停服切换 → 压缩回退归档」流程，参见[部署与迁移说明](docs/DEPLOYMENT.md)。不要直接删除旧调查库。公开试运营的 Caddy、systemd、环境变量、日志和恢复配置位于 `deploy/`；本地启动不代表已发布公网。
+已有大体积官网调查库的迁移采用「生成精简目录 → 核验 → 停服切换 → 压缩回退归档」流程，参见[部署与维护手册](deploy/README.md)。不要直接删除旧调查库。服务器部署配置位于 `deploy/`。
 
 ## 验证与维护
 
@@ -138,6 +136,6 @@ python scripts/verify_sources.py
 python scripts/check_live_ingestion.py
 ```
 
-[公开试运营、备份和验收](docs/DEPLOYMENT.md) · [实现说明和历史验证记录](docs/LIGHTWEIGHT.md) · [原项目文档](docs/README.md)
+[部署与维护](deploy/README.md) · [AI 配置](deploy/AI_CONFIGURATION.md) · [字体来源与许可](frontend/static/fonts/README.md)
 
 官网会改版，静态采集无法保证覆盖每所高校的所有页面。优先通过「补充栏目地址」指定公开列表页；复杂网页可由管理员维护选择器或开启可选增强功能。

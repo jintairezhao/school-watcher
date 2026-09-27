@@ -9,7 +9,7 @@ sys.path.insert(0, str(ROOT))
 
 from filelock import FileLock, Timeout
 from backend.services.source_inventory import Inventory, DEFAULT_PATH, site_key
-from backend.services.source_baselines import save_baseline_check
+from backend.services.source_baselines import BASELINE_DIRECTORY, save_baseline_check
 from backend.scraper.discovery.inventory_crawler import inspect_page
 from scripts.reparse_sources import cached_response
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     parser.add_argument('--details', action='store_true')
     args = parser.parse_args()
     inventory = Inventory(args.inventory)
-    paths = args.baselines or sorted((ROOT / 'docs' / 'source_baselines').glob('*.json'))
+    paths = args.baselines or sorted(BASELINE_DIRECTORY.glob('*.json'))
     failed, busy = False, False
     for path in paths:
         try:

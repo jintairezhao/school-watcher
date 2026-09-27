@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from backend.services.source_inventory import Inventory, site_key
 from backend.services.runtime_catalog import RuntimeCatalog
-from backend.services.source_baselines import check_baseline
+from backend.services.source_baselines import BASELINE_DIRECTORY, check_baseline
 
 
 def build(source, output, audit_path):
@@ -21,7 +21,7 @@ def build(source, output, audit_path):
     inventory = Inventory.__new__(Inventory)
     inventory.path = source
     catalog = RuntimeCatalog(output)
-    baselines = [json.loads(p.read_text(encoding='utf-8')) for p in sorted((ROOT / 'docs/source_baselines').glob('*.json'))]
+    baselines = [json.loads(p.read_text(encoding='utf-8')) for p in sorted(BASELINE_DIRECTORY.glob('*.json'))]
     before = [check_baseline(inventory, b) for b in baselines]
     failures = [r['id'] for r in before if not r['scope_passed']]
     if failures:

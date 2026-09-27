@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from backend.scraper.discovery.structure import extract_structure, publication_evidence
 from backend.scraper.discovery.inventory_crawler import inspect_page
 from backend.services.source_inventory import Inventory
-from backend.services.source_baselines import check_baseline
+from backend.services.source_baselines import BASELINE_DIRECTORY, check_baseline
 
 URLS = {'snnu': 'http://www.snnu.edu.cn/jyjx/bkzy.htm',
         'hrbeu': 'http://ugs.hrbeu.edu.cn/2819/list.htm',
@@ -89,7 +89,7 @@ class ProgrammeCatalogueTests(unittest.TestCase):
             report = inv.report(key); page = next(p for p in report['pages'] if p['url'] == url)
             html = self.fixture('hrbeu')
             inspect_page(inv, report['site'], page, fetcher=lambda _: {'url': url, 'status': 200, 'html': html})
-            baseline = json.loads((Path(__file__).resolve().parents[1] / 'docs/source_baselines/hrbeu_undergraduate_programmes.json').read_text(encoding='utf-8'))
+            baseline = json.loads((BASELINE_DIRECTORY / 'hrbeu_undergraduate_programmes.json').read_text(encoding='utf-8'))
             baseline.update(root_url=root, reference_hash=hashlib.sha256(html.encode()).hexdigest())
             self.assertTrue(check_baseline(inv, baseline)['scope_passed'])
             baseline['entries'][0]['fields']['专业代码'] = '000000'

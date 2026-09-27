@@ -82,7 +82,7 @@ def activate(archive=False, clean_backups=False):
     from backend.database.db import db
     from backend.services.backups import create_backup
     from backend.services.runtime_catalog import RuntimeCatalog
-    from backend.services.source_baselines import check_baseline
+    from backend.services.source_baselines import BASELINE_DIRECTORY, check_baseline
     from flask_migrate import upgrade
     main = DATA_DIR / 'school_watcher.db'
     prepared = DATA_DIR / 'source_catalog.build.sqlite3'
@@ -92,7 +92,7 @@ def activate(archive=False, clean_backups=False):
             raise ValueError('Build and validate source_catalog.build.sqlite3 first')
         catalog = RuntimeCatalog(prepared)
         checks = [check_baseline(catalog, json.loads(p.read_text(encoding='utf-8')))
-                  for p in (ROOT / 'docs/source_baselines').glob('*.json')]
+                  for p in BASELINE_DIRECTORY.glob('*.json')]
         if not checks or not all(c['scope_passed'] for c in checks):
             raise RuntimeError('Prepared source catalogue did not pass all baselines')
         columns, before = business_fingerprint(main)

@@ -1,10 +1,14 @@
 """Compare discovery against independently reviewed, versioned official rosters."""
 import hashlib
 import json
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 
 from .source_inventory import canonical_url, now, site_key
+
+
+BASELINE_DIRECTORY = Path(__file__).resolve().parents[1] / 'resources' / 'source_baselines'
 
 
 def publication_hash(feed_json):
