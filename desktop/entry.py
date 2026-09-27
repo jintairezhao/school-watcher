@@ -23,6 +23,11 @@ def main(argv=None):
     parser.add_argument('--report', type=Path)
     args = parser.parse_args(argv)
     data = configure(args.data_dir or user_data_dir())
+    if args.gui_smoke_test:
+        import faulthandler
+        trace = (data / 'desktop-gui-trace.log').open('w')
+        faulthandler.enable(file=trace)
+        faulthandler.dump_traceback_later(60, file=trace)
     # Windowed executables have no stdout/stderr. Services still need real streams.
     if sys.stdout is None:
         sys.stdout = (data / f'desktop-{args.service or "app"}.log').open('a', encoding='utf-8')
@@ -70,6 +75,8 @@ def main(argv=None):
     finally:
         runtime.close()
         lock.release()
+        if args.gui_smoke_test:
+            faulthandler.cancel_dump_traceback_later()
 
 
 if __name__ == '__main__':

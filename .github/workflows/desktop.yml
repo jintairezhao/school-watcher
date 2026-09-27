@@ -97,6 +97,7 @@ jobs:
         with:
           name: desktop-debug-${{ matrix.target }}
           path: |
+            .local/packaged-smoke/desktop.log
             .local/packaged-smoke/desktop-*.log
             .local/ci-data/desktop-*.log
             .local/desktop-build/work/**/warn-*.txt

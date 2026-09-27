@@ -181,9 +181,14 @@ def run_window(runtime, smoke_test=False):
             address = runtime.start()
             window.load_url(address + '/login' if smoke_test else address)
             if smoke_test:
+                print('Native check: waiting for page load', flush=True)
+                if not window.events.loaded.wait(30):
+                    raise RuntimeError('Native page load timed out.')
+                print('Native check: page loaded; inspecting form', flush=True)
                 deadline = time.monotonic() + 30
                 while time.monotonic() < deadline:
                     if window.run_js('location.pathname === "/login" && !!document.querySelector("input[type=password]")'):
+                        print('Native check: login form rendered', flush=True)
                         return
                     time.sleep(.2)
                 observed = window.get_current_url()
@@ -204,6 +209,7 @@ def run_window(runtime, smoke_test=False):
                 pass
         finally:
             if smoke_test:
+                print('Native check: closing window', flush=True)
                 quit_app()
     def main_closed():
         runtime.stopped.set()
