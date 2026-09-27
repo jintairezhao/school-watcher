@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     tags: ['v*']
-    branches: ['codex/desktop-release']
+    branches: ['main', 'codex/desktop-release']
     paths: ['desktop/**', 'backend/**', 'frontend/**', 'requirements/**', 'migrations/**', 'scripts/maintenance/migrate_safely.py', 'tests/test_desktop_updates.py', '.github/workflows/desktop.yml']
   pull_request:
     paths: ['desktop/**', 'requirements/desktop.txt', 'requirements/build.txt', 'tests/test_desktop_updates.py', '.github/workflows/desktop.yml']
@@ -102,7 +102,7 @@ jobs:
             .local/desktop-build/work/**/warn-*.txt
           retention-days: 3
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -114,11 +114,15 @@ jobs:
       - name: Publish validated installers and combined checksums
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
         shell: bash
         run: |
-          test "$TAG" = "v$(python -c 'from desktop import VERSION; print(VERSION)')"
+          TAG="v$(python -c 'from desktop import VERSION; print(VERSION)')"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then test "$GITHUB_REF_NAME" = "$TAG"; fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; bump desktop.VERSION to publish a new version."
+            exit 0
+          fi
           mkdir release
           find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' \) -exec cp '{}' release/ \;
           (cd release && sha256sum *.exe *.dmg *.zip > SHA256SUMS.txt)
-          gh release create "$TAG" release/* --verify-tag --title "School Watcher $TAG" --notes-file desktop/RELEASE_NOTES.md
+          gh release create "$TAG" release/* --target "$GITHUB_SHA" --title "School Watcher $TAG" --notes-file desktop/RELEASE_NOTES.md

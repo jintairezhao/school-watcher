@@ -18,7 +18,9 @@ for folder in ('frontend', 'config', 'migrations', 'licenses', 'desktop/ui'):
 for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
     datas.append((str(root / name), '.'))
 if sys.platform != 'darwin':
-    datas.append((str(browser_path), 'browser-runtime'))
+    for entry in browser_path.iterdir():
+        if entry.is_dir() and entry.name != '.links':
+            datas.append((str(entry), 'browser-runtime/' + entry.name))
 hidden = ['desktop.window', 'desktop.updater', 'scripts.maintenance.migrate_safely', 'logging.config']
 for source in (root / 'backend').rglob('*.py'):
     name = '.'.join(source.relative_to(root).with_suffix('').parts)

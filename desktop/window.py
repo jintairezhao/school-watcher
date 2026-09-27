@@ -96,7 +96,17 @@ class UpdateAPI:
             if not self._window.create_confirmation_dialog('安装更新', message):
                 return self.state()
             if sys.platform == 'win32':
-                subprocess.Popen([str(self._path)], cwd=self._path.parent)
+                environment = os.environ.copy()
+                environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
+                frozen = getattr(sys, 'frozen', False)
+                if frozen:
+                    import ctypes
+                    ctypes.windll.kernel32.SetDllDirectoryW(None)
+                try:
+                    subprocess.Popen([str(self._path)], cwd=self._path.parent, env=environment)
+                finally:
+                    if frozen:
+                        ctypes.windll.kernel32.SetDllDirectoryW(str(resource_root()))
             elif sys.platform == 'darwin':
                 subprocess.run(['open', str(self._path)], check=True)
             self._quit()
@@ -173,10 +183,10 @@ def run_window(runtime, smoke_test=False):
             if smoke_test:
                 deadline = time.monotonic() + 30
                 while time.monotonic() < deadline:
-                    if window.evaluate_js('location.pathname === "/login" && !!document.querySelector("input[type=password]")'):
+                    if window.run_js('location.pathname === "/login" && !!document.querySelector("input[type=password]")'):
                         return
                     time.sleep(.2)
-                observed = window.evaluate_js('({url: location.href, title: document.title, state: document.readyState, form: !!document.querySelector("input[type=password]")})')
+                observed = window.get_current_url()
                 raise RuntimeError(f'Native window did not render the login form: {observed}')
             while not runtime.stopped.wait(1):
                 if runtime.failure:
@@ -187,7 +197,6 @@ def run_window(runtime, smoke_test=False):
                 smoke_error.append(exc)
                 return
             try:
-                window.evaluate_js('document.body.innerHTML=""')
                 import html
                 window.load_html('<html lang="zh-CN"><meta charset="utf-8"><body style="font:16px system-ui;padding:60px">'
                     '<h2>学校通知暂时无法启动</h2><p>' + html.escape(str(exc)) + '</p><p>可从应用菜单打开数据文件夹查看日志。</p></body></html>')

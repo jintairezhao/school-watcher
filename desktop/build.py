@@ -37,7 +37,8 @@ def main():
         # Preserve Chrome's signed nested bundles and framework symlinks intact.
         # PyInstaller's individual Mach-O rewriting breaks those bundle signatures.
         browser_source = Path(os.environ.get('WATCHER_BUNDLE_BROWSERS', ROOT / '.local' / 'desktop-browsers'))
-        shutil.copytree(browser_source, bundle / 'Contents' / 'Resources' / 'browser-runtime', symlinks=True)
+        shutil.copytree(browser_source, bundle / 'Contents' / 'Resources' / 'browser-runtime',
+                        symlinks=True, ignore=shutil.ignore_patterns('.links'))
         subprocess.run(['codesign', '--force', '--sign', os.environ.get('WATCHER_CODESIGN_IDENTITY') or '-',
                         '--timestamp=none', str(bundle)], check=True)
     # Also run this against the finished tree, since dependencies have their own hooks.
@@ -50,7 +51,7 @@ def main():
         name = f'School-Watcher-{VERSION}-windows-x64-portable'
         archive = shutil.make_archive(str(release / name), 'zip', root_dir=dist, base_dir='SchoolWatcher')
         if args.installer:
-            iscc = shutil.which('iscc') or str(Path(os.environ.get('ProgramFiles(x86)', 'C:/Program Files (x86)')) / 'Inno Setup 6' / 'ISCC.exe')
+            iscc = os.environ.get('WATCHER_ISCC') or shutil.which('iscc') or str(Path(os.environ.get('ProgramFiles(x86)', 'C:/Program Files (x86)')) / 'Inno Setup 6' / 'ISCC.exe')
             if not Path(iscc).is_file():
                 raise RuntimeError('Inno Setup 6 is required for --installer. Portable ZIP is already built.')
             command = [iscc, f'/DAppVersion={VERSION}', f'/DAppSource={bundle}', f'/DOutputPath={release}']
