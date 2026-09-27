@@ -42,6 +42,8 @@ def configure(data_dir):
     os.environ.setdefault('WATCHER_DESKTOP_TOKEN', secrets.token_hex(32))
     os.environ.setdefault('WATCHER_BROWSER_TOKEN', secrets.token_hex(32))
     bundled = resource_root() / 'browser-runtime'
+    if sys.platform == 'darwin' and getattr(sys, 'frozen', False):
+        bundled = Path(sys.executable).parent.parent / 'Resources' / 'browser-runtime'
     if bundled.is_dir():
         os.environ['PLAYWRIGHT_BROWSERS_PATH'] = str(bundled)
     return data_dir

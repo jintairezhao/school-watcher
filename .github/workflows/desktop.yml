@@ -66,11 +66,26 @@ jobs:
           if (-not $proc.WaitForExit(240000)) { Stop-Process -Id $proc.Id; throw 'Packaged runtime timed out' }
           if ($proc.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $report)) { throw 'Packaged runtime failed' }
           Get-Content -LiteralPath $report
+          $guiReport = Join-Path $PWD '.local/packaged-gui.json'
+          $gui = Start-Process -FilePath $app -ArgumentList @('--gui-smoke-test','--data-dir',"`"$data`"",'--report',"`"$guiReport`"") -WindowStyle Hidden -PassThru
+          if (-not $gui.WaitForExit(90000)) { Stop-Process -Id $gui.Id; throw 'Native window timed out' }
+          if ($gui.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $guiReport)) { throw 'Native window failed' }
       - name: Verify macOS packaged runtime and Chromium
         if: runner.os == 'macOS'
         run: >-
           '.local/desktop-dist/School Watcher.app/Contents/MacOS/SchoolWatcher'
           --smoke-test --data-dir "$PWD/.local/packaged-smoke" --report "$PWD/.local/packaged-smoke.json"
+      - name: Verify macOS native window
+        if: runner.os == 'macOS'
+        run: |
+          python - <<'PY'
+          import subprocess
+          from pathlib import Path
+          subprocess.run(['.local/desktop-dist/School Watcher.app/Contents/MacOS/SchoolWatcher',
+              '--gui-smoke-test', '--data-dir', str(Path('.local/packaged-smoke').resolve()),
+              '--report', str(Path('.local/packaged-gui.json').resolve())], check=True, timeout=90)
+          assert Path('.local/packaged-gui.json').is_file()
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.target }}
