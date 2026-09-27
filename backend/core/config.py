@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = Path(os.environ.get('WATCHER_DATA_DIR', str(ROOT_DIR / 'data'))).resolve()
 CONFIG_YAML_PATH = ROOT_DIR / 'config' / 'schools.yaml'
-ENV_PATH = ROOT_DIR / '.env'
+ENV_PATH = Path(os.environ.get('WATCHER_ENV_FILE', str(ROOT_DIR / '.env')))
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 

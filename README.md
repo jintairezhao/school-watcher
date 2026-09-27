@@ -28,6 +28,10 @@
 
 ## 快速开始
 
+### Windows / macOS 桌面版
+
+桌面分发方案提供独立应用窗口、内置本机服务和 Chromium，并支持从 GitHub Release 检查和下载安装更新。安装包、数据位置及版本发布流程见 [桌面版说明](deploy/DESKTOP.md)。首次发布以前仍可使用下方源码安装方式；实际可用安装包以 [Releases](https://github.com/jintairezhao/school-watcher/releases) 为准。
+
 ### Windows 本机
 
 使用 **Python 3.14.3**（当前依赖与 CI 配置版本）。首次安装需要联网下载 Python 依赖和匹配的 Chromium；日常界面字体由应用自身提供。

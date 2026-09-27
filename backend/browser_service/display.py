@@ -2,6 +2,7 @@
 import asyncio
 import os
 import socket
+import sys
 from pathlib import Path
 
 
@@ -13,7 +14,7 @@ class PrivateDisplay:
         self.port = None
 
     async def start(self):
-        if os.name == 'nt':
+        if os.name == 'nt' or sys.platform == 'darwin':
             return {}
         # Exclusive X lock and service concurrency prevent two verification desktops sharing.
         for number in range(90, 120):
@@ -38,7 +39,7 @@ class PrivateDisplay:
         return {**os.environ, 'DISPLAY': display}
 
     async def expose(self):
-        if os.name == 'nt':
+        if os.name == 'nt' or sys.platform == 'darwin':
             return
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))

@@ -1,0 +1,5 @@
+-r base.txt
+-r browser.txt
+-r desktop.txt
+pyinstaller==6.22.3
+Pillow==12.2.0

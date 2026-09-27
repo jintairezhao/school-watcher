@@ -14,7 +14,7 @@ from sqlalchemy.engine import make_url
 from flask_migrate import upgrade
 from alembic.script import ScriptDirectory
 
-load_dotenv(ROOT / '.env')
+load_dotenv(Path(os.environ.get('WATCHER_ENV_FILE', str(ROOT / '.env'))))
 from backend import create_app
 from backend.core.config import get_database_uri
 from backend.core.config import DATA_DIR

@@ -1,0 +1,109 @@
+name: Desktop builds
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+    branches: ['codex/desktop-release']
+    paths: ['desktop/**', 'backend/**', 'frontend/**', 'requirements/**', 'migrations/**', 'scripts/maintenance/migrate_safely.py', 'tests/test_desktop_updates.py', '.github/workflows/desktop.yml']
+  pull_request:
+    paths: ['desktop/**', 'requirements/desktop.txt', 'requirements/build.txt', 'tests/test_desktop_updates.py', '.github/workflows/desktop.yml']
+permissions:
+  contents: read
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-2025, target: windows-x64}
+          - {os: macos-15, target: macos-arm64}
+          - {os: macos-15-intel, target: macos-x64}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      WATCHER_DATA_DIR: ${{ github.workspace }}/.local/ci-data
+      WATCHER_ENV_FILE: ${{ github.workspace }}/.local/ci-data/.env
+      SECRET_KEY: isolated-ci-desktop-key-never-distributed
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.local/desktop-browsers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.14.3'}
+      - name: Install build dependencies
+        run: python -m pip install -r requirements/build.txt
+      - name: Install bundled Chromium
+        run: python -m playwright install chromium
+      - name: Check desktop behavior and update integrity
+        run: python -m unittest discover -s tests -p test_desktop_updates.py -v
+      - name: Prepare Windows WebView2 bootstrapper
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force .local/desktop-build | Out-Null
+          $bootstrapper = Join-Path $PWD '.local/desktop-build/MicrosoftEdgeWebview2Setup.exe'
+          Invoke-WebRequest 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile $bootstrapper
+          $signature = Get-AuthenticodeSignature -LiteralPath $bootstrapper
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Microsoft Corporation') { throw 'Invalid WebView2 signature' }
+          "WATCHER_WEBVIEW_BOOTSTRAPPER=$bootstrapper" | Out-File -FilePath $env:GITHUB_ENV -Append
+          'C:\Program Files (x86)\Inno Setup 6' | Out-File -FilePath $env:GITHUB_PATH -Append
+      - name: Build Windows application and installer
+        if: runner.os == 'Windows'
+        run: python desktop/build.py --installer
+      - name: Build macOS application and disk image
+        if: runner.os == 'macOS'
+        run: python desktop/build.py
+      - name: Verify Windows packaged runtime and Chromium
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $app = Join-Path $PWD '.local/desktop-dist/SchoolWatcher/SchoolWatcher.exe'
+          $data = Join-Path $PWD '.local/packaged-smoke'
+          $report = Join-Path $PWD '.local/packaged-smoke.json'
+          $proc = Start-Process -FilePath $app -ArgumentList @('--smoke-test','--data-dir',"`"$data`"",'--report',"`"$report`"") -WindowStyle Hidden -PassThru
+          if (-not $proc.WaitForExit(240000)) { Stop-Process -Id $proc.Id; throw 'Packaged runtime timed out' }
+          if ($proc.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $report)) { throw 'Packaged runtime failed' }
+          Get-Content -LiteralPath $report
+      - name: Verify macOS packaged runtime and Chromium
+        if: runner.os == 'macOS'
+        run: >-
+          '.local/desktop-dist/School Watcher.app/Contents/MacOS/SchoolWatcher'
+          --smoke-test --data-dir "$PWD/.local/packaged-smoke" --report "$PWD/.local/packaged-smoke.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.target }}
+          path: .local/desktop-release/*
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: desktop-debug-${{ matrix.target }}
+          path: |
+            .local/packaged-smoke/desktop-*.log
+            .local/ci-data/desktop-*.log
+            .local/desktop-build/work/**/warn-*.txt
+          retention-days: 3
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'desktop-*', path: artifacts}
+      - name: Publish validated installers and combined checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          test "$TAG" = "v$(python -c 'from desktop import VERSION; print(VERSION)')"
+          mkdir release
+          find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' \) -exec cp '{}' release/ \;
+          (cd release && sha256sum *.exe *.dmg *.zip > SHA256SUMS.txt)
+          gh release create "$TAG" release/* --verify-tag --title "School Watcher $TAG" --notes-file desktop/RELEASE_NOTES.md

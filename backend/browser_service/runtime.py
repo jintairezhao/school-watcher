@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import secrets
+import sys
 import time
 from urllib.parse import urlsplit
 from aiohttp import ClientError
@@ -385,7 +386,7 @@ class BrowserRuntime:
             raise RuntimeFault('session_missing', '验证窗口已关闭，请重新打开', 404)
         self._check_generation(verification, generation)
         return {'id': ident, 'state': verification['state'], 'runtime_id': self.boot_id,
-            'remote': os.name != 'nt', 'remaining_seconds': max(0, int(verification['expires'] - time.monotonic()))}
+            'remote': os.name != 'nt' and sys.platform != 'darwin', 'remaining_seconds': max(0, int(verification['expires'] - time.monotonic()))}
 
     async def verify_manual(self, ident, generation):
         state = self.manual_status(ident, generation)

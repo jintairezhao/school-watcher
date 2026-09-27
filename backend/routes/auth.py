@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 
 from flask import (Blueprint, render_template, request, redirect, url_for,
-                   session, jsonify, g)
+                   session, jsonify, g, current_app)
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from backend.auth import hash_answer
@@ -84,6 +84,11 @@ def register_page():
             user = User(username=username,
                         password_hash=generate_password_hash(password))
             db.session.add(user)
+            db.session.flush()
+            # Only the first local desktop account owns this local installation.
+            # Server registration keeps its existing non-administrator default.
+            if current_app.config.get('DESKTOP_MODE') and user.id == 1:
+                user.role = 'admin'
             db.session.commit()
             session.clear()
             session['user_id'] = user.id

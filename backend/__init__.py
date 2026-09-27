@@ -39,6 +39,7 @@ def create_app(test_config=None):
         BROWSER_SERVICE_TOKEN=os.environ.get('WATCHER_BROWSER_TOKEN', ''),
         FETCH_EVIDENCE_DIR=os.environ.get('WATCHER_FETCH_EVIDENCE_DIR', str(DATA_DIR / 'fetch-evidence')),
         BROWSER_ENABLED=os.environ.get('WATCHER_BROWSER', '0') == '1',
+        DESKTOP_MODE=os.environ.get('WATCHER_DESKTOP') == '1',
     )
     if test_config:
         app.config.update(test_config)
