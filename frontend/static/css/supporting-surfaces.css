@@ -59,6 +59,7 @@
 .account-heading { margin-bottom:24px; }
 .account-sections { border:0; }
 .account-sections [hidden] { display:none!important; }
+#desktopComponents[hidden], #desktopComponents [hidden] { display:none!important; }
 .account-section { padding:0 0 32px; margin:0 0 32px; border-color:var(--color-border); }
 .account-section:last-child { border:0; margin-bottom:0; }
 .account-section-header { align-items:flex-start; gap:24px; margin-bottom:24px; }
