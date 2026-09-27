@@ -1,0 +1,52 @@
+{
+  "id": "nju-management-directory-2026-09-21",
+  "root_url": "https://www.nju.edu.cn/",
+  "reference_url": "http://nubs.nju.edu.cn/njdxglxy/list.htm",
+  "reference_hash": "1e4325c0a2da35d5fd13da4e98f99b5e718542e4cb474c8057351851b6274a1c",
+  "scope": "南京大学商学院管理学院介绍页侧栏完整学院及系所分支，共 5 项；目录列示不等于各单位独立发布栏目。",
+  "category": "academic_units",
+  "reviewed_at": "2026-09-21",
+  "review_method": "独立读取商学院官网侧栏的学院标题、全部嵌套系所及原始相对链接。实际 HTTP 访问跳转至 HTTPS，按已观察到的最终地址解析相对链接。学院介绍正文显示内容正在更新，但侧栏目录仍明确列示；各系所介绍页另行读取，有正文且共享商学院公共导航，不能仅凭单位名称与页面标题一致确认新闻栏目属于该单位。原学校总目录的旧地址保留，不建立未经证实的网址别名。",
+  "scope_selector": ".col_list .wp_listcolumn > li.column-7",
+  "entries": [
+    {
+      "id": "管理学院",
+      "name": "管理学院",
+      "url": "https://nubs.nju.edu.cn/njdxglxy/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry"
+    },
+    {
+      "id": "工商管理系",
+      "name": "工商管理系",
+      "url": "https://nubs.nju.edu.cn/9093/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "管理学院"
+    },
+    {
+      "id": "会计学系",
+      "name": "会计学系",
+      "url": "https://nubs.nju.edu.cn/9094/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "管理学院"
+    },
+    {
+      "id": "营销与电子商务系",
+      "name": "营销与电子商务系",
+      "url": "https://nubs.nju.edu.cn/yxydzswx/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "管理学院"
+    },
+    {
+      "id": "人力资源管理学系",
+      "name": "人力资源管理学系",
+      "url": "https://nubs.nju.edu.cn/9096/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "管理学院"
+    }
+  ]
+}

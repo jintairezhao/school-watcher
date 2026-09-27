@@ -1,7 +1,7 @@
 """学校与部门管理 API"""
 import logging
 
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, url_for
 
 from backend.database.db import db
 from backend.database.models import School, Department
@@ -10,6 +10,34 @@ from backend.auth import admin_required, login_required
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('schools', __name__)
+
+
+@bp.route('/api/catalog/subscribe', methods=['POST'])
+@login_required
+def subscribe_catalog():
+    from backend.services.catalog import find_entry
+    from backend.services.school_registry import ensure_school
+    from backend.routes.subscriptions import subscribe_school
+    from backend.auth.rate_limit import check_rate_limit
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict) or not isinstance(data.get('name'), str):
+        return jsonify(error='请选择目录中的学校'), 400
+    entry = find_entry(data['name'])
+    if not entry:
+        return jsonify(error='目录中没有这所学校，请使用补充学校入口'), 404
+    if not check_rate_limit(f'catalog:{g.user.id}', 30, 3600)[0]:
+        return jsonify(error='订阅操作过于频繁，请稍后再试'), 429
+    try:
+        school, _created = ensure_school(entry['name'], entry['url'], submitted_by=g.user.id)
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 409
+    if school and not school.enabled:
+        return jsonify(error='该学校暂未开放订阅'), 409
+    started = subscribe_school(school, g.user.id)
+    from backend.services.source_governance import school_governance_status
+    return jsonify(success=True, school_id=school.id, subscribed=True, scrape_started=started,
+                   onboarding=school_governance_status(school.id),
+                   redirect=url_for('subscriptions.manage_sources', school_id=school.id))
 
 
 @bp.route('/api/schools', methods=['GET'])
@@ -29,12 +57,23 @@ def api_add_school():
     重名校不重复创建，引导去订阅。
     """
     from backend.auth.rate_limit import check_rate_limit
-    from backend.routes.subscriptions import start_background_scrape
-    from backend.database.models import Subscription
+    from backend.routes.subscriptions import subscribe_school
+    from backend.services.school_registry import ensure_school
 
-    data = request.get_json()
-    if not data or not data.get('name'):
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not isinstance(data.get('name'), str) or not data['name'].strip():
         return jsonify({'error': '学校名称不能为空'}), 400
+    name = data['name'].strip()
+    if len(name) > 200:
+        return jsonify(error='学校名称不能超过 200 字'), 400
+    from backend.scraper.http_client import validate_public_url
+    base_url = data.get('url')
+    try:
+        validate_public_url(base_url)
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400
+    if len(base_url) > 500:
+        return jsonify(error='官网地址过长'), 400
 
     allowed, _ = check_rate_limit(f'submit:{g.user.id}', 3, 3600)
     if not allowed:
@@ -43,32 +82,15 @@ def api_add_school():
     if not allowed:
         return jsonify({'error': '提交学校过于频繁，请稍后再试'}), 429
 
-    name = data['name'].strip()
-    existing = School.query.filter(db.func.lower(School.name) == name.lower()).first()
-    if existing:
+    try:
+        school, created = ensure_school(name, base_url, submitted_by=g.user.id, origin='submitted')
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 409
+    if not created:
         return jsonify({'error': '学校已存在，请在学校目录中订阅它',
-                        'school_id': existing.id}), 409
-
-    school = School(name=name, url=data.get('url', ''),
-                    submitted_by=g.user.id, config=data.get('config', '{}'))
-    db.session.add(school)
-    db.session.flush()  # 获取 school.id
-
-    # 默认部门，选择器留空 → 首抓时自动探测
-    base_url = data.get('url', '').strip()
-    db.session.add(Department(
-        school_id=school.id, name='通知公告',
-        list_url=base_url, list_selector='', title_selector='',
-        link_selector='', date_selector='', content_selector=''))
-
-    # 提交者自动订阅 → subscriber_count=1 → 进入抓取范围
-    db.session.add(Subscription(user_id=g.user.id, school_id=school.id))
-    db.session.execute(
-        db.update(School).where(School.id == school.id)
-        .values(subscriber_count=1))
-    db.session.commit()
-
-    start_background_scrape(school.id)
+                        'school_id': school.id}), 409
+    # An unexamined homepage is not a verified "通知公告" source.
+    subscribe_school(school, g.user.id)
     logger.info(f"已提交学校: {school.name}（提交者 {g.user.username}，已订阅并首抓）")
     return jsonify({**school.to_dict(), 'subscribed': True,
                     'scrape_started': True}), 201
@@ -98,9 +120,20 @@ def api_update_school(school_id):
     if not school:
         return jsonify({'error': '学校不存在'}), 404
 
-    data = request.get_json()
-    if data.get('name'):
-        school.name = data['name']
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(error='学校信息格式无效'), 400
+    if 'name' in data and data['name'] != school.name:
+        from backend.services.school_registry import rename_school
+        try:
+            rename_school(school, data['name'])
+        except ValueError as exc:
+            db.session.rollback()
+            return jsonify(error=str(exc)), 409
+    if any(field in data and data[field] != getattr(school, field) for field in ('url', 'enabled', 'config')):
+        from backend.services.tasks import invalidate_source
+        for department in school.departments:
+            invalidate_source(department.id)
     if 'url' in data:
         school.url = data['url']
     if 'enabled' in data:
@@ -121,6 +154,8 @@ def api_delete_school(school_id):
         return jsonify({'error': '学校不存在'}), 404
 
     name = school.name
+    from backend.services.announcement_sources import preserve_shared_articles
+    preserve_shared_articles([d.id for d in school.departments])
     db.session.delete(school)
     db.session.commit()
     logger.info(f"已删除学校: {name}")
@@ -141,83 +176,38 @@ def api_school_departments(school_id):
 @bp.route('/api/departments', methods=['POST'])
 @admin_required
 def api_add_department():
-    """添加部门"""
-    data = request.get_json()
-    if not data or not data.get('name') or not data.get('school_id'):
-        return jsonify({'error': '部门名称和学校ID不能为空'}), 400
-
-    dept = Department(
-        school_id=data['school_id'],
-        name=data['name'],
-        list_url=data.get('list_url', ''),
-        list_selector=data.get('list_selector', ''),
-        title_selector=data.get('title_selector', ''),
-        link_selector=data.get('link_selector', ''),
-        date_selector=data.get('date_selector', ''),
-        content_selector=data.get('content_selector', ''),
-        group_name=data.get('group_name', ''),
-    )
-    db.session.add(dept)
-    db.session.commit()
-    logger.info(f"已添加部门: {dept.name}")
-    return jsonify(dept.to_dict()), 201
+    """Submit a source for independent verification before it becomes active."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or type(data.get('school_id')) is not int:
+        return jsonify(error='请提供学校与来源配置'), 400
+    if not db.session.get(School, data['school_id']):
+        return jsonify(error='学校不存在'), 404
+    from backend.services.source_governance import queue_source_review
+    try:
+        result = queue_source_review(data['school_id'], data, requested_by=g.user.id)
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400
+    return jsonify(success=True, **result), 202
 
 
 @bp.route('/api/departments/<int:dept_id>', methods=['PUT'])
 @admin_required
 def api_update_department(dept_id):
-    """更新部门信息"""
+    """Preserve the current working version while reviewing a replacement."""
     dept = db.session.get(Department, dept_id)
     if not dept:
-        return jsonify({'error': '部门不存在'}), 404
-
-    data = request.get_json()
-    selector_fields = ['list_selector', 'title_selector', 'link_selector',
-                       'date_selector', 'content_selector']
-    old_selectors = {f: getattr(dept, f) for f in selector_fields}
-    for field in ['name', 'list_url', 'list_selector', 'title_selector',
-                  'link_selector', 'date_selector', 'content_selector',
-                  'group_name']:
-        if field in data:
-            setattr(dept, field, data[field])
-
-    db.session.commit()
-
-    # 人工改选择器留痕（审计日志），并清除该部门的复核标记
-    if any(f in data and data[f] != old_selectors[f] for f in selector_fields):
-        from backend.scraper.selector_monitor import (
-            record_selector_change, clear_review)
-        record_selector_change(
-            dept, old_selectors,
-            {f: getattr(dept, f) for f in selector_fields},
-            'human', '管理界面修改')
-        clear_review(dept)
-    return jsonify(dept.to_dict())
-
-
-@bp.route('/api/selector-audit', methods=['GET'])
-@admin_required
-def api_selector_audit():
-    """选择器审计：变更日志 + 待人工复核列表"""
-    from backend.scraper.selector_monitor import get_audit_changes, get_review_list
-    return jsonify({
-        'changes': get_audit_changes(50),
-        'review': get_review_list(),
-    })
-
-
-@bp.route('/api/departments/<int:dept_id>/selector-rollback', methods=['POST'])
-@admin_required
-def api_selector_rollback(dept_id):
-    """回滚部门选择器到审计日志中最近一次变更前的状态"""
-    dept = db.session.get(Department, dept_id)
-    if not dept:
-        return jsonify({'error': '部门不存在'}), 404
-    from backend.scraper.selector_monitor import rollback_selectors
-    if rollback_selectors(dept):
-        return jsonify({'success': True, 'message': f'已回滚 {dept.name} 的选择器',
-                        'department': dept.to_dict()})
-    return jsonify({'success': False, 'error': '该部门没有可回滚的变更记录'}), 404
+        return jsonify(error='部门不存在'), 404
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(error='来源配置格式不正确'), 400
+    from backend.services.source_governance import queue_source_review, source_config, FIELDS
+    candidate = source_config(dept)
+    candidate.update({key: value for key, value in data.items() if key in FIELDS})
+    try:
+        result = queue_source_review(dept.school_id, candidate, department_id=dept.id, requested_by=g.user.id)
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400
+    return jsonify(success=True, **result), 202
 
 
 @bp.route('/api/departments/<int:dept_id>', methods=['DELETE'])
@@ -228,6 +218,8 @@ def api_delete_department(dept_id):
     if not dept:
         return jsonify({'error': '部门不存在'}), 404
 
+    from backend.services.announcement_sources import preserve_shared_articles
+    preserve_shared_articles([dept.id])
     db.session.delete(dept)
     db.session.commit()
     return jsonify({'message': f'已删除: {dept.name}'}), 200
@@ -247,16 +239,17 @@ def api_test_selectors():
     if not url or not list_selector:
         return jsonify({'error': 'URL 和 list_selector 为必填项'}), 400
 
+    from backend.scraper.http_client import validate_public_url
+    from backend.services.tasks import enqueue
+    import hashlib
     try:
-        from backend.scraper.engine import _fetch_html
-        html = _fetch_html(url)
-        if not html:
-            return jsonify({'error': '无法获取页面内容，请检查URL是否正确'}), 400
-
-        from backend.scraper.detectors.list_detector import test_selectors
-        result = test_selectors(html, url, list_selector,
-                                title_selector, link_selector, date_selector)
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"选择器测试失败: {e}")
-        return jsonify({'error': f'测试失败: {str(e)}'}), 500
+        validate_public_url(url, resolve=False)
+        payload = {k: data.get(k, '') for k in ('url', 'list_selector', 'title_selector', 'link_selector', 'date_selector')}
+        if any(not isinstance(v, str) or len(v) > 2000 for v in payload.values()):
+            raise ValueError('选择器字段无效')
+        import json
+        key = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+        task = enqueue('selectors', key, payload)
+        return jsonify(success=True, task_id=task.id, message='测试已加入队列'), 202
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400

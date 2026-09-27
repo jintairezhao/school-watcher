@@ -8,7 +8,7 @@ import logging
 import re
 from urllib.parse import urljoin, urlparse
 
-from curl_cffi import requests
+from backend.scraper.http_client import requests
 from bs4 import BeautifulSoup
 
 from backend.scraper.detectors.dom_analyzer import find_navigation_area, find_notice_list_page_links
@@ -359,7 +359,7 @@ def _is_org_structure_table(table):
 def _extract_org_structure_entities(table, base_url):
     """从组织机构三列表格提取父单位（列0）+ 子单位（列1/2，含链接）。
 
-    子单位名以「父名-子名」拼接，与 build_dept_tree 的 "-" 前缀约定一致。
+    子单位名以「父名-子名」拼接，保留官网中的隶属关系。
     跳过新闻文章页（/c/YYYY-MM-DD/）以及与父 URL 相同的链接；不在此处按
     _is_dept_like_name 强过滤子单位，交给下游探针判断是否真发通知。
     """

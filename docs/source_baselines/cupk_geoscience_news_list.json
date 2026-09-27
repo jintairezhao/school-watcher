@@ -1,0 +1,27 @@
+{
+  "id": "cupk-geoscience-news-2026-09-20",
+  "root_url": "https://www.cupk.edu.cn/",
+  "reference_url": "https://www.cupk.edu.cn/syxy/ynxw/",
+  "reference_hash": "1c29913f29089680d1ff8a4a43634e936b5b4354e19cf44a64ec80e2550bbbd4",
+  "scope": "地球科学与工程学院院内新闻列表首页及其全部 6 个条目",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-20",
+  "review_method": "独立读取官网当前位置导航的末项名称和链接，逐条核对正文列表的 6 个原文地址。院内新闻在学院首页的入口文字为学院新闻；保留两个官网名称，不推断额外栏目。本范围不覆盖历史翻页、其他学院菜单或整校来源。",
+  "scope_selector": ".c-main__right > .middleArticle__art",
+  "entries": [
+    {
+      "id": "news",
+      "name": "院内新闻",
+      "url": "https://www.cupk.edu.cn/syxy/ynxw/",
+      "scope_selector": ".c-main__right > .middleArticle__art",
+      "article_urls": [
+        "https://www.cupk.edu.cn/syxy/c/2026-08-29/538025.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-08-28/538018.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-08-26/538020.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-08-18/537705.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-07-04/535101.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-06-10/534685.shtml"
+      ]
+    }
+  ]
+}

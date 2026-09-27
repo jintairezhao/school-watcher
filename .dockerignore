@@ -1,0 +1,17 @@
+.git
+.env
+*.env
+.venv
+venv
+data
+__pycache__
+*.pyc
+.pytest_cache
+.codex
+.agents
+node_modules
+deploy/server.env
+*.log
+docs/PRIVACY_LOG.*
+test_admin_perms.py
+.impeccable/review

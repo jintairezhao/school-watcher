@@ -1,0 +1,76 @@
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string",
+      "maxLength": 3000
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "audience",
+              "deadline",
+              "event_time",
+              "publication_time",
+              "action",
+              "condition",
+              "link",
+              "other"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "kind",
+          "text",
+          "evidence_ids"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "paragraph_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "attachments_included": {
+          "const": false
+        }
+      },
+      "required": [
+        "paragraph_ids",
+        "attachments_included"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "summary",
+    "facts",
+    "coverage"
+  ],
+  "additionalProperties": false
+}

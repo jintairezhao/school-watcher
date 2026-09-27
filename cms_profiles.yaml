@@ -34,6 +34,34 @@
 #   date_selector    日期选择器（默认 'span'）
 #   content_selector 正文内容选择器（默认通用 div.article-content）
 selector_profiles:
+  - name: '学院通知日期块（日与年月分行）'
+    list_selector: '.notice > .con > dl:has(dt > em):has(dd > a[href])'
+    title_selector: 'dd > a[href]'
+    link_selector: 'dd > a[href]'
+    date_selector: 'dt'
+    content_selector: 'div.v_news_content, #vsb_content, article'
+
+  - name: 'ZCMS 学院首页新闻（独立标题和日期）'
+    list_selector: 'li.c-shiyouxueyuan-new-module__half-li'
+    title_selector: '.c-shiyouxueyuan-new-module__detail-content-words'
+    link_selector: 'a[href]'
+    date_selector: '.c-shiyouxueyuan-new-module__detail-content-date'
+    content_selector: 'div.c-main__right'
+
+  - name: 'ZCMS 学院首页通知（每项独立列表）'
+    list_selector: 'div.c-shiyouxueyuan-new-module__half-width > div.c-shiyouxueyuan-new-module__detail:has(.c-shiyouxueyuan-new-module__notice-ul)'
+    title_selector: '.c-shiyouxueyuan-new-module__half-li-box-right-title a'
+    link_selector: '.c-shiyouxueyuan-new-module__half-li-box-right-title a'
+    date_selector: '.c-shiyouxueyuan-new-module__half-li-box-left'
+    content_selector: 'div.c-main__right'
+
+  - name: '博达图文列表（文章地址、标题与时间）'
+    list_selector: 'li:has(a[href*="info/"]):has(.name):has(.time)'
+    title_selector: '.name'
+    link_selector: 'a[href*="info/"]'
+    date_selector: '.time'
+    content_selector: 'div.v_news_content, #vsb_content, article'
+
   - name: 'ZCMS 首页通知 (c-notice)'
     list_selector: 'li.c-notice__half-li'
     title_selector: 'a'
@@ -175,6 +203,55 @@ selector_profiles:
     content_selector: 'div.article-content, div.content, article'
 
   # ---- 自建 CMS 模板 ----
+  - name: '学院摘要卡片（标题与摘要分离）'
+    list_selector: 'li:has(> a > .time > p):has(> a > .time > span):has(> a > .info > .tit)'
+    title_selector: '.info > .tit'
+    link_selector: 'a'
+    date_selector: '.time'
+    content_selector: 'article, .article-content, .content, .ny_content'
+
+  - name: '学院日历列表（年月与日分行）'
+    list_selector: 'li:has(> a > .time > p):has(> a > .time > span):has(> a > .txt)'
+    title_selector: '.txt'
+    link_selector: 'a'
+    date_selector: '.time'
+    content_selector: 'article, .article-content, .content, .ny_content'
+
+  - name: '通知卡片（独立标题与日历日期）'
+    list_selector: '.announcement-list > a.item:has(.calendar):has(.text-box > .title), .announcement-list > a.announcement-item:has(.calendar-box):has(.text-box > .title)'
+    title_selector: '.text-box > .title'
+    link_selector: 'a'
+    date_selector: '.calendar, .calendar-box'
+    content_selector: 'article, .article-content, .article-body'
+
+  - name: '教学通知列表（月日与年份分行）'
+    list_selector: 'li:has(> a > .time > .p1):has(> a > .time > .p2):has(> a > .txt)'
+    title_selector: '.txt'
+    link_selector: 'a'
+    date_selector: '.time'
+    content_selector: 'article, .article-content, .content, .ny_content'
+
+  - name: '学院文字列表（独立标题与时间）'
+    list_selector: '#textList .list-page > a.list-item-wrapper:has(.i-title):has(.i-time), #list .list-page > a:has(.i-title):has(.i-time)'
+    title_selector: '.i-title'
+    link_selector: 'a'
+    date_selector: '.i-time'
+    content_selector: 'article, .article-content, .content'
+
+  - name: '图文新闻卡片（独立标题与完整日期）'
+    list_selector: 'li:has(.newsText > h3):has(.newsText > strong)'
+    title_selector: '.newsText > h3'
+    link_selector: 'a:has(.newsText > h3)'
+    date_selector: '.newsText > strong'
+    content_selector: 'div.article-content, div.content, article'
+
+  - name: 'jFlex 新闻轮播（日期属性与标题）'
+    list_selector: '.flex > ul.slides > li[data-title]:has(.slideTitle h3 a)'
+    title_selector: '.slideTitle h3 a'
+    link_selector: '.slideTitle h3 a'
+    date_selector: 'li[data-title]'
+    content_selector: 'div.article-content, div.content, article'
+
   - name: '北大新闻列表 (articleList01)'
     list_selector: 'div.articleList01 li'
     title_selector: 'div.item-txt a'
@@ -209,6 +286,10 @@ selector_profiles:
 #   year-month             2 组：年/月，日缺省为 1（如 2026-05）
 # 可选字段 flags：正则标志（如 'IGNORECASE'，用于英文月份忽略大小写）
 date_patterns:
+  # 明确的日期块分两行显示“日 年-月”，须先于仅有年月的回退规则。
+  - pattern: '^\s*(\d{1,2})\s*(20\d{2})[-/.](\d{1,2})\s*$'
+    format: 'day-year-month'
+
   - pattern: '(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})日?'
     format: 'year-month-day'
 

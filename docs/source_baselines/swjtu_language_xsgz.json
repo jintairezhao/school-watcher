@@ -1,0 +1,41 @@
+{
+  "id": "swjtu_language_xsgz",
+  "root_url": "https://www.swjtu.edu.cn/",
+  "reference_url": "http://sfl.swjtu.edu.cn/tzgg/xsgz.htm",
+  "reference_hash": "1c9582ea9f82fbfb15eb83fc51332edd05425900b54baeb1af3b5bcc241838d1",
+  "reviewed_at": "2026-09-21",
+  "scope": "外国语学院学生工作通知列表第一页",
+  "category": "publication_columns",
+  "scope_selector": ".xnewlist > ul.rightnew",
+  "entries": [
+    {
+      "id": "list",
+      "name": "学生工作",
+      "url": "http://sfl.swjtu.edu.cn/tzgg/xsgz.htm",
+      "group_name": "通知公告",
+      "scope_selector": ".xnewlist > ul.rightnew",
+      "article_urls": [
+        "http://sfl.swjtu.edu.cn/info/1272/38325.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/38425.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/30825.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/21835.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/21125.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/19045.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/16955.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/16605.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/16315.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14716.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14632.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14473.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14472.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14368.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14363.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14281.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14173.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14149.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/14070.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/13924.htm"
+      ]
+    }
+  ]
+}

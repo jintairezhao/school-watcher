@@ -1,0 +1,44 @@
+<div class="scrape-log-page">
+    <header class="scrape-log-heading">
+        <h2>抓取记录</h2>
+        <p>近一周按学校完整展示，更早的记录按需展开。时间按北京时间显示。</p>
+    </header>
+    <form id="logRetentionForm" class="log-retention-form">
+        <div>
+            <label for="logRetentionDays">记录保留时长</label>
+            <select class="form-input" id="logRetentionDays" name="days">
+                <option value="7">7 天</option>
+                <option value="30" selected>30 天</option>
+                <option value="90">90 天</option>
+                <option value="180">180 天</option>
+                <option value="365">1 年</option>
+                <option value="0">永久保留</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" type="submit" id="saveLogRetention">保存保留时长</button>
+        <p>每日清理超期的已结束记录；通知、收藏和正在进行的抓取不受影响。</p>
+        <span id="logRetentionStatus" role="status" aria-live="polite"></span>
+    </form>
+    <div class="scrape-log-filters">
+        <div>
+            <label for="logSchoolFilter">查看学校</label>
+            <select id="logSchoolFilter" class="form-input">
+                <option value="">全部学校</option>
+                {% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <button class="btn btn-outline" type="button" id="reloadScrapeLogs">刷新记录</button>
+    </div>
+    <section class="scrape-log-period" aria-labelledby="recentLogTitle">
+        <h3 id="recentLogTitle">近一周 <span id="recentLogCount"></span></h3>
+        <p id="recentLogStatus" role="status" aria-live="polite">打开后加载记录。</p>
+        <div id="recentLogSchools"></div>
+        <button class="btn btn-outline" type="button" id="retryRecentLogs" hidden>继续加载记录</button>
+    </section>
+    <details class="scrape-log-archive" id="archiveLogSection">
+        <summary>一周以前的记录 <span id="archiveLogCount"></span></summary>
+        <p id="archiveLogStatus" role="status" aria-live="polite">展开后加载较早记录。</p>
+        <div id="archiveLogSchools"></div>
+        <button class="btn btn-outline" type="button" id="loadMoreArchiveLogs" hidden>加载更早记录</button>
+    </details>
+</div>

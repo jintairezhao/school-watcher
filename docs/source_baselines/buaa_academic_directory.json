@@ -1,0 +1,463 @@
+{
+  "id": "buaa-academic-directory-2026-09-21",
+  "root_url": "https://www.buaa.edu.cn/",
+  "reference_url": "https://www.buaa.edu.cn/jgsz/jxkyjg02.htm",
+  "reference_hash": "37741cbd435a2a28485e4e61414ee526e450c03e7b012c54718279654f3f1c3a",
+  "scope": "北航教学科研机构页六个官网分组、50 个原始条目及一组并列关系，共 57 个结构位置；包含五个模板隐藏条目，不等于现行学院数。",
+  "category": "academic_units",
+  "reviewed_at": "2026-09-21",
+  "review_method": "独立逐项抄录官网六个分组下的名称、链接、同一条目及 xbt 附加列示位置。2026-09-21 重新读取官网，HTML 与保存快照一致。五个 display:none 条目保留隐藏提示，不能据此确认有效或撤销；国际通用工程学院的 javascript 入口按无链接保留。沈元学院附加入口的四个名称保持一个原始标签，不推断四个独立单位或别名。附加列示和并列关系只表示官网展示结构，不代表行政隶属；本范围不覆盖逐院发布栏目及整校发布责任。",
+  "scope_selector": ".kyjg > .kyjg-box",
+  "entries": [
+    {
+      "id": "航空航天学科群",
+      "name": "航空航天学科群",
+      "url": "",
+      "kind": "group",
+      "relation": "academic_group"
+    },
+    {
+      "id": "航空航天学科群|材料科学与工程学院",
+      "name": "材料科学与工程学院",
+      "url": "http://mse.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|可靠性与系统工程学院",
+      "name": "可靠性与系统工程学院",
+      "url": "http://rse.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|能源与动力工程学院",
+      "name": "能源与动力工程学院",
+      "url": "http://sepe.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|宇航学院",
+      "name": "宇航学院",
+      "url": "http://www.sa.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|航空科学与工程学院",
+      "name": "航空科学与工程学院",
+      "url": "http://www.ase.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|中国商飞-北航大飞机研究院",
+      "name": "中国商飞-北航大飞机研究院",
+      "url": "https://icat.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "hidden_directory_entry",
+      "parent": "航空航天学科群|航空科学与工程学院"
+    },
+    {
+      "id": "航空航天学科群|飞行学院",
+      "name": "飞行学院",
+      "url": "https://aviation.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|机械工程及自动化学院",
+      "name": "机械工程及自动化学院",
+      "url": "http://www.me.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|具身智能机器人研究院",
+      "name": "具身智能机器人研究院",
+      "url": "",
+      "kind": "unit",
+      "relation": "hidden_directory_entry",
+      "parent": "航空航天学科群|机械工程及自动化学院"
+    },
+    {
+      "id": "航空航天学科群|无人系统研究院",
+      "name": "无人系统研究院",
+      "url": "http://wrj.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|交通科学与工程学院",
+      "name": "交通科学与工程学院",
+      "url": "http://transportation.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "航空航天学科群|航空发动机研究院",
+      "name": "航空发动机研究院",
+      "url": "http://riae.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "航空航天学科群"
+    },
+    {
+      "id": "信息学科群",
+      "name": "信息学科群",
+      "url": "",
+      "kind": "group",
+      "relation": "academic_group"
+    },
+    {
+      "id": "信息学科群|电子信息工程学院",
+      "name": "电子信息工程学院",
+      "url": "http://www.ee.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "信息学科群"
+    },
+    {
+      "id": "信息学科群|软件学院",
+      "name": "软件学院",
+      "url": "http://soft.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "信息学科群"
+    },
+    {
+      "id": "信息学科群|自动化科学与电气工程学院",
+      "name": "自动化科学与电气工程学院",
+      "url": "http://dept3.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "信息学科群"
+    },
+    {
+      "id": "信息学科群|空天仿生智能研究院",
+      "name": "空天仿生智能研究院",
+      "url": "",
+      "kind": "unit",
+      "relation": "hidden_directory_entry",
+      "parent": "信息学科群|自动化科学与电气工程学院"
+    },
+    {
+      "id": "信息学科群|网络空间安全学院",
+      "name": "网络空间安全学院",
+      "url": "http://cst.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "信息学科群"
+    },
+    {
+      "id": "信息学科群|计算机学院",
+      "name": "计算机学院",
+      "url": "http://scse.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "信息学科群"
+    },
+    {
+      "id": "信息学科群|集成电路科学与工程学院",
+      "name": "集成电路科学与工程学院",
+      "url": "https://ic.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "信息学科群"
+    },
+    {
+      "id": "信息学科群|仪器科学与光电工程学院",
+      "name": "仪器科学与光电工程学院",
+      "url": "http://yqgdxy.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "信息学科群"
+    },
+    {
+      "id": "信息学科群|大科学装置研究院",
+      "name": "大科学装置研究院",
+      "url": "https://piqs.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "hidden_directory_entry",
+      "parent": "信息学科群|仪器科学与光电工程学院"
+    },
+    {
+      "id": "信息学科群|人工智能学院",
+      "name": "人工智能学院",
+      "url": "http://iai.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "信息学科群"
+    },
+    {
+      "id": "理科学科群",
+      "name": "理科学科群",
+      "url": "",
+      "kind": "group",
+      "relation": "academic_group"
+    },
+    {
+      "id": "理科学科群|数学科学学院",
+      "name": "数学科学学院",
+      "url": "http://math.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "理科学科群"
+    },
+    {
+      "id": "理科学科群|化学学院",
+      "name": "化学学院",
+      "url": "http://sce.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "理科学科群"
+    },
+    {
+      "id": "理科学科群|物理学院",
+      "name": "物理学院",
+      "url": "http://physics.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "理科学科群"
+    },
+    {
+      "id": "理科学科群|空间与地球科学学院",
+      "name": "空间与地球科学学院",
+      "url": "http://sse.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "理科学科群"
+    },
+    {
+      "id": "文科学科群",
+      "name": "文科学科群",
+      "url": "",
+      "kind": "group",
+      "relation": "academic_group"
+    },
+    {
+      "id": "文科学科群|经济管理学院",
+      "name": "经济管理学院",
+      "url": "http://sem.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "文科学科群"
+    },
+    {
+      "id": "文科学科群|新媒体艺术与设计学院",
+      "name": "新媒体艺术与设计学院",
+      "url": "http://art.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "文科学科群"
+    },
+    {
+      "id": "文科学科群|美育中心",
+      "name": "美育中心",
+      "url": "",
+      "kind": "unit",
+      "relation": "hidden_directory_entry",
+      "parent": "文科学科群|新媒体艺术与设计学院"
+    },
+    {
+      "id": "文科学科群|人文社会科学学院",
+      "name": "人文社会科学学院",
+      "url": "http://www.hss.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "文科学科群"
+    },
+    {
+      "id": "文科学科群|马克思主义学院",
+      "name": "马克思主义学院",
+      "url": "http://ipth.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "文科学科群"
+    },
+    {
+      "id": "文科学科群|外国语学院",
+      "name": "外国语学院",
+      "url": "http://fld.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "文科学科群"
+    },
+    {
+      "id": "文科学科群|人文与社会科学高等研究院",
+      "name": "人文与社会科学高等研究院",
+      "url": "http://gyy.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "文科学科群"
+    },
+    {
+      "id": "文科学科群|法学院",
+      "name": "法学院",
+      "url": "http://fxy.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "文科学科群"
+    },
+    {
+      "id": "医工交叉学科群",
+      "name": "医工交叉学科群",
+      "url": "",
+      "kind": "group",
+      "relation": "academic_group"
+    },
+    {
+      "id": "医工交叉学科群|生物与医学工程学院",
+      "name": "生物与医学工程学院",
+      "url": "http://bme.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "医工交叉学科群"
+    },
+    {
+      "id": "医工交叉学科群|医学科学与工程学院",
+      "name": "医学科学与工程学院",
+      "url": "http://ygy.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "医工交叉学科群"
+    },
+    {
+      "id": "融合创新示范区",
+      "name": "融合创新示范区",
+      "url": "",
+      "kind": "group",
+      "relation": "academic_group"
+    },
+    {
+      "id": "融合创新示范区|北航学院",
+      "name": "北航学院",
+      "url": "http://bhc.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "融合创新示范区"
+    },
+    {
+      "id": "融合创新示范区|国际学院",
+      "name": "国际学院",
+      "url": "http://is.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "融合创新示范区"
+    },
+    {
+      "id": "融合创新示范区|沈元学院",
+      "name": "沈元学院",
+      "url": "https://hc.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "融合创新示范区"
+    },
+    {
+      "id": "融合创新示范区|高等理工学院/未来空天技术学院/国家卓越工程师学院/量子科技学院",
+      "name": "高等理工学院/未来空天技术学院/国家卓越工程师学院/量子科技学院",
+      "url": "https://hc.buaa.edu.cn/",
+      "kind": "group",
+      "relation": "shared_directory_label",
+      "parent": "融合创新示范区|沈元学院"
+    },
+    {
+      "id": "融合创新示范区|北京学院",
+      "name": "北京学院",
+      "url": "https://beijing.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "融合创新示范区"
+    },
+    {
+      "id": "融合创新示范区|中法工程师学院 / 国际通用工程学院",
+      "name": "中法工程师学院 / 国际通用工程学院",
+      "url": "",
+      "kind": "group",
+      "relation": "shared_directory_row",
+      "parent": "融合创新示范区"
+    },
+    {
+      "id": "融合创新示范区|中法工程师学院",
+      "name": "中法工程师学院",
+      "url": "http://ecpkn.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "same_directory_row",
+      "parent": "融合创新示范区|中法工程师学院 / 国际通用工程学院"
+    },
+    {
+      "id": "融合创新示范区|国际通用工程学院",
+      "name": "国际通用工程学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "same_directory_row",
+      "parent": "融合创新示范区|中法工程师学院 / 国际通用工程学院"
+    },
+    {
+      "id": "融合创新示范区|体育部",
+      "name": "体育部",
+      "url": "http://tyb.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "融合创新示范区"
+    },
+    {
+      "id": "融合创新示范区|国际创新学院",
+      "name": "国际创新学院",
+      "url": "https://h3i.buaa.edu.cn/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "融合创新示范区"
+    },
+    {
+      "id": "融合创新示范区|中法航空学院",
+      "name": "中法航空学院",
+      "url": "https://zfai.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_companion_entry",
+      "parent": "融合创新示范区|国际创新学院"
+    },
+    {
+      "id": "融合创新示范区|中法未来科技学院",
+      "name": "中法未来科技学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_companion_entry",
+      "parent": "融合创新示范区|国际创新学院"
+    },
+    {
+      "id": "融合创新示范区|中西智能学院",
+      "name": "中西智能学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_companion_entry",
+      "parent": "融合创新示范区|国际创新学院"
+    },
+    {
+      "id": "融合创新示范区|继续教育学院",
+      "name": "继续教育学院",
+      "url": "http://cce.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "融合创新示范区"
+    },
+    {
+      "id": "融合创新示范区|国际前沿交叉科学研究院",
+      "name": "国际前沿交叉科学研究院",
+      "url": "https://iiif.buaa.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "融合创新示范区"
+    }
+  ]
+}

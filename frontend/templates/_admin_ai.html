@@ -1,0 +1,36 @@
+<div class="setting-card">
+    <div class="setting-card-header"><h3>AI 服务</h3><p>本实例共用一套配置。目录识别与通知摘要可使用不同服务；本地部署由本机管理员配置。</p></div>
+    <div class="setting-card-body">
+        <p id="aiStatus" role="status" aria-live="polite">加载中…</p>
+        <div id="aiProfiles"></div>
+        <form id="aiProfileForm">
+            <input id="aiProfileId" type="hidden">
+            <div class="form-group"><label for="aiName">配置名称</label><input id="aiName" class="form-input" maxlength="100" required placeholder="例如：目录识别服务"></div>
+            <div class="form-group"><label for="aiProvider">服务商</label><select id="aiProvider" class="form-input" required></select></div>
+            <div class="form-group"><label for="aiRegion">服务区域</label><select id="aiRegion" class="form-input" required></select></div>
+            <div class="form-group"><label for="aiModel">模型或接入点标识</label><input id="aiModel" class="form-input" maxlength="160" required placeholder="填写服务商控制台中的标识"></div>
+            <div class="form-group"><label for="aiKey">API 密钥</label><input id="aiKey" type="password" class="form-input" autocomplete="new-password" aria-describedby="aiKeyHelp"><p id="aiKeyHelp" class="text-muted">密钥加密保存，不会回显。编辑现有配置时留空可保留原密钥。</p></div>
+            <button class="btn btn-primary" type="submit">保存配置</button>
+            <button class="btn btn-ghost" type="button" id="aiReset">新建配置</button>
+        </form>
+        <hr>
+        <form id="aiBindingForm">
+            <div class="form-group"><label for="aiDirectory">目录识别使用</label><select id="aiDirectory" class="form-input"></select></div>
+            <div class="form-group"><label for="aiSummary">通知摘要使用</label><select id="aiSummary" class="form-input"></select></div>
+            <p class="text-muted">保存配置不会调用模型。请在上方手动测试后选择用途；测试会产生一次 API 调用。</p>
+            <button class="btn btn-primary" type="submit">保存用途</button>
+        </form>
+        <details>
+            <summary>用量与并发设置（可选）</summary>
+            <form id="aiLimitsForm">
+                <p class="text-muted">按实例统计每月 token 用量。0 表示不设消费上限；没有个人账号消费额度。</p>
+                <div class="form-group"><label for="aiTotalLimit">每月总上限</label><input type="number" id="aiTotalLimit" class="form-input" min="0" step="1" value="0" required></div>
+                <div class="form-group"><label for="aiDirectoryLimit">目录识别每月上限</label><input type="number" id="aiDirectoryLimit" class="form-input" min="0" step="1" value="0" required></div>
+                <div class="form-group"><label for="aiSummaryLimit">摘要每月上限</label><input type="number" id="aiSummaryLimit" class="form-input" min="0" step="1" value="0" required></div>
+                <div class="form-group"><label for="aiConcurrent">同时执行数量</label><input type="number" id="aiConcurrent" class="form-input" min="1" max="16" step="1" value="2" required></div>
+                <p id="aiUsage" class="text-muted"></p>
+                <button class="btn btn-outline" type="submit">保存用量设置</button>
+            </form>
+        </details>
+    </div>
+</div>

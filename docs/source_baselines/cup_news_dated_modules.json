@@ -1,0 +1,76 @@
+{
+  "id": "cup-news-dated-modules-2026-09-21",
+  "root_url": "https://www.cup.edu.cn/",
+  "reference_url": "https://www.cup.edu.cn/news/",
+  "reference_hash": "6863be133a1640a7408090a1feb283d8cec5ed036feb4bf73858066645cd6eb1",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "新闻网要闻轮播、要闻图文卡片、时讯左右列表、风华石大；五个展示范围，23个文章位置，19个不同原文地址。",
+  "scope_selector": ".Wrapmode01, .articleList03, .articleList10",
+  "review_method": "独立逐行查看官网 HTML，抄录五个范围的所有原文地址并核对日期。只读查看官网 jFlex 脚本，确认 data-title 内容复制至可见轮播标题；没有执行脚本。未包含无日期的荐读、聚焦、学习、星光、视点、博览、光影，以及音频、专题、动态排行榜，不代表新闻网或学校全部发布来源达到90%。",
+  "entries": [
+    {
+      "id": "top-carousel",
+      "name": "要闻",
+      "url": "https://www.cup.edu.cn/news/syxw/index.htm",
+      "scope_selector": ".Wrapmode01 .flex > ul.slides",
+      "article_urls": [
+        "https://www.cup.edu.cn/news/sx/1d8210e03d334f7dbe3efe945bb6b600.htm",
+        "https://www.cup.edu.cn/news/sx/30257c1f2f5742f9bb55257b2b3af24d.htm",
+        "https://www.cup.edu.cn/news/sx/bdfbb8b3bd0d49efa2c50abb454f215b.htm",
+        "https://www.cup.edu.cn/news/sx/a6402c7171ed4ebc89af972f51350617.htm",
+        "https://www.cup.edu.cn/news/sx/345bf5a534a84af1936b5bd50b9adeb2.htm",
+        "https://www.cup.edu.cn/news/sx/ab3d4c783a3046598b2cd2e32a62be85.htm"
+      ]
+    },
+    {
+      "id": "top-cards",
+      "name": "要闻",
+      "url": "https://www.cup.edu.cn/news/syxw/index.htm",
+      "scope_selector": ".articleList02 > ul",
+      "article_urls": [
+        "https://www.cup.edu.cn/news/sx/169af5c9c2ef45dbb2ccf3c414ab5ae8.htm",
+        "https://www.cup.edu.cn/news/sx/babdf952884345b4b857e5447b177e26.htm",
+        "https://www.cup.edu.cn/news/sx/a0d2beb1b2cc47e1bc2ebf222b8d7459.htm",
+        "https://www.cup.edu.cn/news/sx/fcbdc375327b4d73b0c49481c1deb467.htm",
+        "https://www.cup.edu.cn/news/sx/752b782565a24aa2843ce602ec07bf42.htm"
+      ]
+    },
+    {
+      "id": "updates-left",
+      "name": "时讯",
+      "url": "https://www.cup.edu.cn/news/sx/index.htm",
+      "scope_selector": ".articleList03 .listText > ul.left",
+      "article_urls": [
+        "https://www.cup.edu.cn/news/sx/4cdf43fd80ee4e9b866aec2dd664318a.htm",
+        "https://www.cup.edu.cn/news/sx/169af5c9c2ef45dbb2ccf3c414ab5ae8.htm",
+        "https://www.cup.edu.cn/news/sx/babdf952884345b4b857e5447b177e26.htm",
+        "https://www.cup.edu.cn/news/sx/8cc5aa45e7af4c83b33841ee74d664e6.htm"
+      ]
+    },
+    {
+      "id": "updates-right",
+      "name": "时讯",
+      "url": "https://www.cup.edu.cn/news/sx/index.htm",
+      "scope_selector": ".articleList03 .listText > ul.right",
+      "article_urls": [
+        "https://www.cup.edu.cn/news/sx/0a235c2eb8104a1f8818c8b6d118ff24.htm",
+        "https://www.cup.edu.cn/news/sx/e577135cd6184b77bbdc36821abb33d2.htm",
+        "https://www.cup.edu.cn/news/sx/a0d2beb1b2cc47e1bc2ebf222b8d7459.htm",
+        "https://www.cup.edu.cn/news/sx/fcbdc375327b4d73b0c49481c1deb467.htm"
+      ]
+    },
+    {
+      "id": "campus-cards",
+      "name": "风华石大",
+      "url": "https://www.cup.edu.cn/news/fhsd/index.htm",
+      "scope_selector": ".articleList10 > ul",
+      "article_urls": [
+        "https://www.cup.edu.cn/news/sx/6efe91d6c33f4680b154dee5c20a4b32.htm",
+        "https://www.cup.edu.cn/news/sx/5a0ce307c9b74200949a8240ae15bf10.htm",
+        "https://www.cup.edu.cn/news/sx/4cebf70eeb7144fbacf3f9426007cac0.htm",
+        "https://www.cup.edu.cn/news/sx/174097baba164353acbec3924b30446e.htm"
+      ]
+    }
+  ]
+}

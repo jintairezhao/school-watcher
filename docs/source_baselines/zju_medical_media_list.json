@@ -1,0 +1,33 @@
+{
+  "id": "zju-medical-media_list-2026-09-21",
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/mtkzy/list.htm",
+  "reference_hash": "7a420eb011313f9e1420a2db201d5d5da232472f860f9af8ff210db2e40348a7",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "医学院媒体看浙医列表第一页，12 个媒体原文入口；包括首页同名但缺失链接的两篇报道，此处原链接单独留证，不按名称覆写首页。",
+  "scope_selector": ".news-content-box",
+  "review_method": "独立逐行阅读官网原始列表，抄录栏目名、当前页面或分类入口和全部文章地址。与首页相同的新闻和教师招聘地址沿用已独立抄录的原地址，并重新逐项对读本页。只核对本次响应的列表范围，不证明历史分页、原文发布责任或整体 90% 匹配。列表中有完整年月日才记发布日期，讲座举办时间和网址日期不补作发布日期。",
+  "entries": [
+    {
+      "id": "媒体看浙医",
+      "name": "媒体看浙医",
+      "url": "http://www.cmm.zju.edu.cn/mtkzy/list.htm",
+      "scope_selector": ".news-content-box",
+      "article_urls": [
+        "https://mp.weixin.qq.com/s?__biz=MzU4ODAxMzI4NQ==&mid=2247529806&idx=1&sn=ffdb92429d6f9cd8293274d07727b56b&chksm=fc8f9649dce671c908e2fa22dab749938e9d44169895bbba0f52f44e1e2f09f841469a6d86c3&mpshare=1&scene=1&srcid=0808CKyq5t8pLCoXeimJ5fDn&sharer_shareinfo=abadd969573b8ed6aa20dc23efe4dc03&sharer_shareinfo_first=abadd969573b8ed6aa20dc23efe4dc03",
+        "https://mp.weixin.qq.com/s/_-1hX3iv8Eq7Sq-lwpuj7Q",
+        "https://mp.weixin.qq.com/s/HxaeHCf8uJV2bGwEy9HbDQ",
+        "https://www.peopleapp.com/column/30049039124-500006253224",
+        "https://mp.weixin.qq.com/s/45nNg9pMl-t2U8s0v7d97g",
+        "https://h.xinhuaxmt.com/vh512/share/12477208?docid=12477208&newstype=1001&d=134ff22&channel=weixin&time=1743573910053",
+        "https://app2.gmdaily.cn/as/opened/n/7ab8683174d14060b3b5584bd11dc6ac",
+        "https://www.peopleapp.com/column/30047549738-500005964645",
+        "https://www.peopleapp.com/column/30047361688-500005917608",
+        "https://h.xinhuaxmt.com/vh512/share/12273051?d=134dad7&channel=weixin&time=1731303895726",
+        "https://www.peopleapp.com/column/30047172084-500005876980",
+        "https://xhpfmapi.xinhuaxmt.com/vh512/share/12181825?channel=weixin"
+      ]
+    }
+  ]
+}

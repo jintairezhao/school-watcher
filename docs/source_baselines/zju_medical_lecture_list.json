@@ -1,0 +1,33 @@
+{
+  "id": "zju-medical-lecture_list-2026-09-21",
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/38677/list.htm",
+  "reference_hash": "e71cf289ffeda17bec58a847ccb2efbe741776fe8855331bf5e76b295e6eabef",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "医学院学术讲座列表第一页，12 个文章入口；页面日期为讲座举办时间，发布日期保持待核实。",
+  "scope_selector": ".news-content-box",
+  "review_method": "独立逐行阅读官网原始列表，抄录栏目名、当前页面或分类入口和全部文章地址。与首页相同的新闻和教师招聘地址沿用已独立抄录的原地址，并重新逐项对读本页。只核对本次响应的列表范围，不证明历史分页、原文发布责任或整体 90% 匹配。列表中有完整年月日才记发布日期，讲座举办时间和网址日期不补作发布日期。",
+  "entries": [
+    {
+      "id": "学术讲座",
+      "name": "学术讲座",
+      "url": "http://www.cmm.zju.edu.cn/38677/list.htm",
+      "scope_selector": ".news-content-box",
+      "article_urls": [
+        "http://www.cmm.zju.edu.cn/2026/0917/c38677a3204674/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0917/c38677a3204365/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0917/c38677a3204341/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0826/c38677a3196956/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0616/c38677a3179275/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0612/c38677a3177983/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0601/c38677a3168809/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0526/c38677a3166617/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0522/c38677a3165421/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0518/c38677a3163715/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0518/c38677a3163672/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0513/c38677a3161886/page.htm"
+      ]
+    }
+  ]
+}

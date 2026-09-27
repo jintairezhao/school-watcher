@@ -25,7 +25,7 @@
         </div>
         <div class="manage-actions">
             <button class="btn btn-sm btn-accent" onclick="startDiscovery({{ school.id }})" title="自动发现部门">
-                🔍 自动发现
+                自动发现
             </button>
             <button class="btn btn-sm btn-outline" onclick="manageDept({{ school.id }})" title="管理部门">
                 部门
@@ -44,9 +44,8 @@
     {% endfor %}
     {% else %}
     <div class="empty-state">
-        <div class="empty-icon">🏫</div>
         <h3>还没有添加学校</h3>
-        <p>点击上方按钮添加你的第一所学校，然后用「🔍 自动发现」一键识别所有部门</p>
+        <p>点击上方按钮添加学校，再使用“自动发现”识别部门。</p>
     </div>
     {% endif %}
 </div>
@@ -57,14 +56,14 @@
 <div class="modal-overlay" id="discoveryModal" style="display:none;">
     <div class="modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
-            <h3 id="discoveryTitle">🔍 自动发现部门</h3>
+            <h3 id="discoveryTitle">自动发现部门</h3>
             <button class="modal-close" onclick="closeDiscovery()">&times;</button>
         </div>
         <div class="modal-body" id="discoveryBody">
             <!-- 进度阶段 -->
             <div id="discoveryPhase">
                 <div id="discoveryProgressBar" style="height:6px;background:#e0e0e0;border-radius:3px;margin-bottom:16px;">
-                    <div id="discoveryProgressFill" style="height:100%;width:0;background:linear-gradient(90deg,#6366F1,#8B5CF6);border-radius:3px;transition:width 0.5s;"></div>
+                    <div id="discoveryProgressFill" style="height:100%;width:100%;border-radius:3px;transform:scaleX(0);transform-origin:left;transition:transform 0.5s;"></div>
                 </div>
                 <div id="discoveryStatus" style="text-align:center;color:#666;padding:20px;">
                     准备开始...
@@ -101,7 +100,7 @@
     <hr style="margin: 24px 0;">
     <div class="page-header">
         <h2 id="deptSchoolName"></h2>
-        <button class="btn btn-outline" onclick="startDiscovery(currentDeptSchoolId)" style="margin-right:8px;">🔍 重新发现</button>
+        <button class="btn btn-outline" onclick="startDiscovery(currentDeptSchoolId)" style="margin-right:8px;">重新发现</button>
         <button class="btn btn-primary" onclick="showAddDept()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             添加部门
@@ -159,7 +158,7 @@
             </div>
             <div style="margin-top:8px;">
                 <button type="button" class="btn btn-sm btn-outline" onclick="testCurrentSelectors()" id="testSelectorsBtn">
-                    🧪 测试选择器
+                    测试选择器
                 </button>
                 <span id="testSelectorsResult" style="margin-left:8px;font-size:13px;"></span>
             </div>
@@ -230,7 +229,7 @@ async function saveSchool() {
         });
         const data = await resp.json();
         if (resp.ok) {
-            showToast('success', id ? '学校已更新' : '学校已添加。点击「🔍 自动发现」开始识别部门');
+            showToast('success', id ? '学校已更新' : '学校已添加。点击“自动发现”开始识别部门');
             closeModal();
             setTimeout(() => location.reload(), 800);
         } else {
@@ -309,10 +308,10 @@ async function startDiscovery(schoolId) {
     document.getElementById('discoveryPhase').style.display = 'block';
     document.getElementById('discoveryResults').style.display = 'none';
     document.getElementById('discoveryError').style.display = 'none';
-    document.getElementById('discoveryProgressFill').style.width = '0';
+    document.getElementById('discoveryProgressFill').style.transform = 'scaleX(0)';
     document.getElementById('discoveryStatus').innerHTML = '<div class="spinner"></div><p>正在启动发现...</p>';
     document.getElementById('discoveryLog').innerHTML = '';
-    document.getElementById('discoveryTitle').textContent = '🔍 自动发现部门';
+    document.getElementById('discoveryTitle').textContent = '自动发现部门';
     document.getElementById('discoveryModal').style.display = 'flex';
 
     // 关闭旧 SSE 连接
@@ -416,7 +415,7 @@ function startPolling(schoolId) {
 
 function updateDiscoveryPhase(data) {
     const pct = data.progress_pct || 0;
-    document.getElementById('discoveryProgressFill').style.width = pct + '%';
+    document.getElementById('discoveryProgressFill').style.transform = 'scaleX(' + (pct / 100) + ')';
 
     const phaseLabels = {
         'fetching_homepage': '🌐 正在获取学校首页...',
@@ -459,7 +458,7 @@ function showDiscoveryResults(data) {
                        style="margin-top:3px;transform:scale(1.2);">
                 <div style="flex:1;">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <strong>${escHtml(d.name)}</strong>
+                        <strong>${d.column_group_name && d.column_group_name !== d.name ? escHtml(d.column_group_name) + ' · ' : ''}${escHtml(d.name)}</strong>
                         <span style="font-size:12px;padding:2px 8px;border-radius:12px;background:${d.confidence >= 0.7 ? '#c6f6d5' : d.confidence >= 0.5 ? '#fefcbf' : '#fed7d7'};color:${d.confidence >= 0.7 ? '#276749' : d.confidence >= 0.5 ? '#975a16' : '#c53030'};">
                             ${Math.round(d.confidence * 100)}%
                         </span>
@@ -483,7 +482,7 @@ function showDiscoveryResults(data) {
 
     document.getElementById('discoveryResults').style.display = 'block';
     document.getElementById('discoveryTitle').textContent =
-        '🔍 发现结果 — ' + depts.length + ' 个候选部门';
+        '发现结果 — ' + depts.length + ' 个候选部门';
 }
 
 function showDiscoveryError(msg) {
@@ -492,7 +491,7 @@ function showDiscoveryError(msg) {
     document.getElementById('discoveryError').style.display = 'block';
     document.getElementById('discoveryError').innerHTML =
         '<p style="font-size:18px;">❌</p><p>' + msg + '</p>';
-    document.getElementById('discoveryTitle').textContent = '🔍 发现失败';
+    document.getElementById('discoveryTitle').textContent = '发现失败';
 
     if (eventSource) { eventSource.close(); eventSource = null; }
 }
@@ -584,23 +583,15 @@ async function loadDepts(schoolId) {
         const container = document.getElementById('deptList');
 
         if (!depts || depts.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>该学校还没有部门，使用「🔍 自动发现」或手动添加</p></div>';
+            container.innerHTML = '<div class="empty-state"><p>该学校还没有部门，请使用“自动发现”或手动添加。</p></div>';
             return;
         }
-
-        // 选择器健康：待人工复核的部门挂徽标 + 回滚按钮
-        let reviewMap = {};
-        try {
-            const ar = await fetch('/api/selector-audit');
-            const audit = await ar.json();
-            (audit.review || []).forEach(r => { reviewMap[r.dept_id] = r.reason || '待复核'; });
-        } catch(e) {}
 
         container.innerHTML = depts.map(d => `
             <div class="manage-card">
                 <div class="manage-info">
                     <div class="manage-detail">
-                        <h4>${escHtml(d.name)} ${d.group_name ? '<span style="font-size:11px;color:#6366F1;background:#EEF2FF;padding:2px 6px;border-radius:4px;">'+escHtml(d.group_name)+'</span>' : ''} ${reviewMap[d.id] ? '<span style="font-size:11px;color:#B45309;background:#FEF3C7;padding:2px 6px;border-radius:4px;" title="'+escAttr(reviewMap[d.id])+'">⚠ 待复核</span>' : ''}</h4>
+                        <h4>${escHtml(d.name)} ${d.group_name ? '<span style="font-size:11px;color:#6366F1;background:#EEF2FF;padding:2px 6px;border-radius:4px;">'+escHtml(d.group_name)+'</span>' : ''}</h4>
                         <span class="text-muted">${escHtml(d.list_url || '')}</span>
                         <span class="text-muted">
                             列表: ${escHtml(d.list_selector || '—')} |
@@ -611,7 +602,6 @@ async function loadDepts(schoolId) {
                     </div>
                 </div>
                 <div class="manage-actions">
-                    ${reviewMap[d.id] ? '<button class="btn btn-sm btn-outline" onclick="rollbackDept('+d.id+')">回滚选择器</button>' : ''}
                     <button class="btn btn-sm btn-outline" onclick="editDept(${d.id}, '${escAttr(d.name)}', '${escAttr(d.group_name||'')}', '${escAttr(d.list_url||'')}', '${escAttr(d.list_selector||'')}', '${escAttr(d.title_selector||'')}', '${escAttr(d.link_selector||'')}', '${escAttr(d.date_selector||'')}', '${escAttr(d.content_selector||'')}')">
                         编辑
                     </button>
@@ -647,18 +637,6 @@ function editDept(id, name, group_name, list_url, list_sel, title_sel, link_sel,
     document.getElementById('deptContentSel').value = content_sel;
     document.getElementById('deptModal').style.display = 'flex';
     document.getElementById('testSelectorsResult').textContent = '';
-}
-
-async function rollbackDept(id) {
-    if (!confirm('回滚该部门选择器到最近一次变更前的状态？')) return;
-    try {
-        const resp = await fetch('/api/departments/' + id + '/selector-rollback', { method: 'POST' });
-        const data = await resp.json();
-        showToast(data.success ? 'success' : 'error', data.message || data.error);
-        if (data.success && typeof currentDeptSchoolId !== 'undefined') loadDepts(currentDeptSchoolId);
-    } catch(e) {
-        showToast('error', '回滚失败');
-    }
 }
 
 async function deleteDept(id) {
@@ -721,7 +699,7 @@ async function testCurrentSelectors() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({url, list_selector: list_sel, title_selector: title_sel, link_selector: link_sel, date_selector: date_sel})
         });
-        const data = await resp.json();
+        const data = await waitForQueuedTask(await resp.json());
         if (resp.ok) {
             if (data.item_count > 0) {
                 resultEl.innerHTML = '<span>匹配 ' + data.item_count + ' 条</span>';
@@ -741,7 +719,7 @@ async function testCurrentSelectors() {
         resultEl.innerHTML = '<span style="color:#e53e3e;">❌ ' + e.message + '</span>';
     } finally {
         btn.disabled = false;
-        btn.textContent = '🧪 测试选择器';
+        btn.textContent = '测试选择器';
     }
 }
 

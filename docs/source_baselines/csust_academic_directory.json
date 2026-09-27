@@ -1,0 +1,195 @@
+{
+  "id": "csust_academic_directory",
+  "root_url": "https://www.csust.edu.cn/",
+  "reference_url": "https://www.csust.edu.cn/jgsz/jxy.htm",
+  "reference_hash": "5b4cf16444561d43cb5d90777e4667b89a68ae9744050b3b1a2367178c6ebfc2",
+  "reviewed_at": "2026-09-21",
+  "scope": "长沙理工大学教学院正文完整目录：26个官网条目",
+  "category": "academic_units",
+  "scope_selector": "#vsb_content > table.jgsz_table",
+  "reference_kind": "directory",
+  "entries": [
+    {
+      "id": "unit-1",
+      "name": "交通学院",
+      "url": "https://www.csust.edu.cn/jtysgcxy/",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-2",
+      "name": "物理与电子科学学院",
+      "url": "https://www.csust.edu.cn/wdxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-3",
+      "name": "土木与环境工程学院",
+      "url": "https://www.csust.edu.cn/tmjz/",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-4",
+      "name": "化学与医药工程学院",
+      "url": "https://www.csust.edu.cn/hxhgxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-5",
+      "name": "电气与信息工程学院",
+      "url": "https://www.csust.edu.cn/dq/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-6",
+      "name": "材料科学与工程学院",
+      "url": "https://www.csust.edu.cn/clgcxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-7",
+      "name": "经济与管理学院",
+      "url": "https://www.csust.edu.cn/jgxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-8",
+      "name": "马克思主义学院",
+      "url": "https://www.csust.edu.cn/mksxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-9",
+      "name": "水利与海洋工程学院",
+      "url": "https://www.csust.edu.cn/slgc/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-10",
+      "name": "文学与新闻传播学院",
+      "url": "https://www.csust.edu.cn/wfxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-11",
+      "name": "机械与运载工程学院",
+      "url": "https://www.csust.edu.cn/qjxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-12",
+      "name": "法学院",
+      "url": "https://www.csust.edu.cn/cslgfxx/",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-13",
+      "name": "能源与动力工程学院",
+      "url": "https://www.csust.edu.cn/ndxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-14",
+      "name": "外国语学院",
+      "url": "https://www.csust.edu.cn/wgyxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-15",
+      "name": "计算机学院",
+      "url": "https://www.csust.edu.cn/jtxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-16",
+      "name": "设计艺术学院",
+      "url": "https://www.csust.edu.cn/ysxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-17",
+      "name": "航空工程学院",
+      "url": "https://www.csust.edu.cn/hkgcxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-18",
+      "name": "体育学院",
+      "url": "https://www.csust.edu.cn/tyxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-19",
+      "name": "人工智能学院",
+      "url": "https://www.csust.edu.cn/rgznxy/",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-20",
+      "name": "国际工学院",
+      "url": "https://www.csust.edu.cn/gjxy/",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-21",
+      "name": "建筑学院",
+      "url": "https://www.csust.edu.cn/jzxy/",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-22",
+      "name": "卓越工程师学院",
+      "url": "https://www.csust.edu.cn/cxcyjyxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-23",
+      "name": "食品与生物工程学院",
+      "url": "https://www.csust.edu.cn/spyswgcxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-24",
+      "name": "继续教育学院",
+      "url": "https://www.csust.edu.cn/jxjyxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-25",
+      "name": "数学与统计学院",
+      "url": "https://www.csust.edu.cn/stxy/index.htm",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-26",
+      "name": "城南学院",
+      "url": "https://www.csust.edu.cn/cnxy/",
+      "kind": "unit",
+      "relation": "directory_entry"
+    }
+  ]
+}

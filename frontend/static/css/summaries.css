@@ -1,0 +1,20 @@
+.shared-summary { margin-block: 1.5rem; padding-block: 1rem; border-block: 1px solid var(--color-border); }
+.shared-summary-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.shared-summary-heading h3 { margin: 0; color: var(--color-text); font-size: var(--text-body); font-weight: 600; }
+.shared-summary-text { margin: 12px 0 0; line-height: 1.8; white-space: pre-line; overflow-wrap: anywhere; }
+.shared-summary-status { margin: 8px 0 0; font-size: var(--text-meta); color: var(--color-text-secondary); line-height: 1.7; }
+.shared-summary-history { margin-top: 12px; font-size: var(--text-meta); }
+.shared-summary-history summary { cursor: pointer; width: fit-content; color: var(--color-text-secondary); padding-block: 6px; }
+.shared-summary-history p { margin: 8px 0; overflow-wrap: anywhere; }
+.shared-summary[data-summary-compact="true"] { padding-block: .5rem; margin-block: 1rem; }
+.shared-summary[data-summary-compact="true"] .shared-summary-heading h3 { font-size: var(--text-control); font-weight: 500; color: var(--color-text-secondary); }
+.shared-summary[data-summary-compact="true"] .shared-summary-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.shared-summary-text { font-size: var(--text-prose, 1.0625rem); }
+.shared-summary [hidden] { display: none; }
+#sourcePicker { margin-block: 24px; }
+#sourcePicker h3 { margin-bottom: 8px; }
+#sourcePicker .header-actions { margin-block: 16px; }
+#pickerFrame { display: block; width: 100%; height: 420px; border: 1px solid var(--color-border); border-radius: 10px; background: white; margin-block: 16px; }
+#pickerSelections { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; font-size: var(--text-meta); }
+#pickerSelections dd { margin: 0; overflow-wrap: anywhere; }
+#sourceVersionList p, #proposalEvidence summary { overflow-wrap: anywhere; }

@@ -1,0 +1,8 @@
+{% macro article_signature(provenance) %}
+{% if provenance and provenance.labels %}
+<div class="article-origin">
+    <p><span>原文署名来源：</span>{{ provenance.labels|join('；') }}</p>
+    {% if provenance.labels|length > 1 %}<small>原文有多处来源署名，分别保留。</small>{% endif %}
+</div>
+{% endif %}
+{% endmacro %}

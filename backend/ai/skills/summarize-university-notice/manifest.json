@@ -1,0 +1,26 @@
+{
+  "id": "summarize-university-notice",
+  "version": "1.0.0",
+  "contract_version": "1",
+  "input_schema": "input.schema.json",
+  "modes": {
+    "summary": {
+      "references": [
+        "references/summary.md"
+      ],
+      "schema": "output.schema.json"
+    },
+    "extract": {
+      "references": [
+        "references/extract.md"
+      ],
+      "schema": "output.schema.json"
+    },
+    "synthesize": {
+      "references": [
+        "references/synthesize.md"
+      ],
+      "schema": "output.schema.json"
+    }
+  }
+}

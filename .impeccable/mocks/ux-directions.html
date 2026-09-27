@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>学校通知 · UX 重构方向</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #152033;
+      --muted: #667085;
+      --line: #d9e0ea;
+      --soft: #f4f7fb;
+      --panel: #ffffff;
+      --accent: #2457d6;
+      --accent-soft: #e9efff;
+      --good: #17845c;
+      --warn: #b65f17;
+      --shadow: 0 18px 48px rgba(25, 40, 72, .12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(36, 87, 214, .10), transparent 30rem),
+        #eef2f7;
+      font-family: "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+    }
+
+    .page {
+      width: min(1520px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 44px 0 72px;
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 26px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 900px;
+      font-size: clamp(30px, 4vw, 54px);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+    }
+
+    .intro p {
+      margin: 14px 0 0;
+      max-width: 820px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .criteria {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      max-width: 420px;
+    }
+
+    .criteria span {
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #4b5870;
+      background: rgba(255,255,255,.7);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .options {
+      display: grid;
+      gap: 28px;
+    }
+
+    .option {
+      overflow: hidden;
+      border: 1px solid rgba(196, 207, 222, .9);
+      border-radius: 22px;
+      background: rgba(255,255,255,.78);
+      box-shadow: 0 10px 32px rgba(25, 40, 72, .08);
+    }
+
+    .option.recommended { border: 2px solid var(--accent); }
+
+    .option-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 440px);
+      gap: 24px;
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.72);
+    }
+
+    .option-titleline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .letter {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      color: white;
+      background: var(--ink);
+      font-weight: 800;
+    }
+
+    .recommended .letter { background: var(--accent); }
+    h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+    .tag {
+      padding: 4px 8px;
+      border-radius: 999px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .option-head p { margin: 10px 0 0; color: var(--muted); line-height: 1.6; font-size: 14px; }
+    .tradeoffs { display: grid; gap: 8px; align-content: center; }
+    .tradeoff { display: grid; grid-template-columns: 72px 1fr; gap: 10px; font-size: 13px; line-height: 1.45; }
+    .tradeoff b { color: var(--ink); }
+    .tradeoff span { color: var(--muted); }
+
+    .mock-wrap { padding: 24px; background: #edf1f6; }
+    .browser {
+      overflow: hidden;
+      min-height: 590px;
+      border: 1px solid #cbd4e2;
+      border-radius: 16px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+
+    .browserbar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      height: 36px;
+      padding: 0 12px;
+      border-bottom: 1px solid #dfe5ee;
+      background: #f7f9fc;
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #bdc7d5; }
+    .address { width: 28%; height: 12px; margin-left: 10px; border-radius: 6px; background: #e4e9f1; }
+
+    .app-shell { display: grid; min-height: 554px; }
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      height: 58px;
+      padding: 0 20px;
+      border-bottom: 1px solid #e1e6ee;
+      background: white;
+    }
+
+    .brand { margin-right: 10px; font-weight: 800; letter-spacing: -.02em; }
+    .navitem { color: #667085; font-size: 13px; font-weight: 650; }
+    .navitem.active { color: var(--accent); }
+    .mode-switch { display: flex; gap: 3px; margin-left: auto; padding: 3px; border-radius: 9px; background: #eef2f7; }
+    .mode-switch span { padding: 5px 9px; border-radius: 7px; color: #6a7485; font-size: 11px; font-weight: 700; }
+    .mode-switch .on { color: var(--ink); background: white; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .admin-entry { margin-left: auto; padding: 6px 9px; border: 1px solid #d8e0ea; border-radius: 7px; color: #536075; font-size: 10px; font-weight: 700; }
+    .avatar { width: 26px; height: 26px; border-radius: 50%; background: #dbe4f5; }
+
+    .workspace-a { display: grid; grid-template-columns: 198px minmax(380px, 1fr) minmax(280px, .72fr); min-height: 496px; }
+    .side { padding: 18px 14px; border-right: 1px solid #e1e6ee; background: #f8fafc; }
+    .side-title { margin: 0 8px 11px; color: #8a94a5; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+    .side-link { display: flex; justify-content: space-between; margin: 3px 0; padding: 9px 10px; border-radius: 9px; color: #536075; font-size: 12px; }
+    .side-link.on { color: var(--accent); background: var(--accent-soft); font-weight: 750; }
+    .side-select { display: flex; justify-content: space-between; margin: 0 0 18px; padding: 9px 10px; border: 1px solid #d8e0ea; border-radius: 9px; color: #344054; background: white; font-size: 11px; font-weight: 700; }
+    .side-link.nested { padding: 7px 8px; font-size: 10px; }
+    .count { color: #8a94a5; font-variant-numeric: tabular-nums; }
+
+    .feed { padding: 18px; background: white; }
+    .feed-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+    .feed-head h3 { margin: 0; font-size: 20px; }
+    .feed-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .search { width: 150px; height: 32px; margin-left: auto; border: 1px solid #d8e0ea; border-radius: 9px; background: #f7f9fc; }
+    .chips { display: flex; gap: 6px; margin-bottom: 12px; }
+    .chip { padding: 6px 9px; border: 1px solid #dbe2eb; border-radius: 999px; color: #687386; font-size: 10px; }
+    .chip.on { border-color: #b9c9f2; color: var(--accent); background: var(--accent-soft); }
+
+    .notice { display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; gap: 11px; padding: 14px 4px; border-top: 1px solid #edf0f4; }
+    .notice:first-of-type { border-top: 0; }
+    .unread { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--accent); }
+    .read { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: #d8dee7; }
+    .notice h4 { margin: 0 0 6px; font-size: 13px; line-height: 1.45; }
+    .notice p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+    .notice time { color: #8b95a5; font-size: 9px; }
+    .notice.selected { margin: 0 -8px; padding-left: 12px; padding-right: 12px; border-radius: 10px; background: #f5f8ff; }
+
+    .reader { padding: 20px; border-left: 1px solid #e1e6ee; background: #fbfcfe; }
+    .reader-meta { color: var(--accent); font-size: 10px; font-weight: 750; }
+    .reader h3 { margin: 10px 0 12px; font-size: 18px; line-height: 1.35; }
+    .summary { margin-bottom: 15px; padding: 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); color: #3e4e69; font-size: 11px; line-height: 1.7; }
+    .text-line { height: 7px; margin: 8px 0; border-radius: 4px; background: #e4e9f0; }
+    .text-line.short { width: 67%; }
+    .reader-actions { display: flex; gap: 6px; margin-top: 18px; }
+    .mini-btn { padding: 7px 9px; border-radius: 7px; color: #5c687c; background: #edf1f6; font-size: 9px; font-weight: 700; }
+    .mini-btn.primary { color: white; background: var(--accent); }
+
+    .workspace-b { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 496px; background: #f4f7fb; }
+    .workspace-b .side { background: #172238; color: white; border: 0; }
+    .workspace-b .side-title { color: #8290a7; }
+    .workspace-b .side-link { color: #b9c4d5; }
+    .workspace-b .side-link.on { color: white; background: #2b3d61; }
+    .dashboard { padding: 22px; }
+    .dash-head { display: flex; align-items: center; gap: 12px; }
+    .dash-head h3 { margin: 0; font-size: 21px; }
+    .dash-head .mini-btn { margin-left: auto; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+    .metric { padding: 14px; border: 1px solid #dfe5ed; border-radius: 12px; background: white; }
+    .metric b { display: block; margin-bottom: 5px; font-size: 23px; }
+    .metric span { color: var(--muted); font-size: 10px; }
+    .dash-grid { display: grid; grid-template-columns: 1.45fr .8fr; gap: 12px; }
+    .box { padding: 16px; border: 1px solid #dfe5ed; border-radius: 12px; background: white; }
+    .box h4 { margin: 0 0 11px; font-size: 13px; }
+    .status-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px 0; border-top: 1px solid #edf0f4; font-size: 10px; }
+    .status-row:first-of-type { border-top: 0; }
+    .status { color: var(--good); font-weight: 750; }
+    .status.warn { color: var(--warn); }
+
+    .workspace-c { min-height: 496px; background: white; }
+    .focus-head { display: flex; align-items: end; gap: 14px; padding: 28px 32px 18px; }
+    .focus-head h3 { margin: 0; font-size: 28px; letter-spacing: -.03em; }
+    .focus-head p { margin: 7px 0 0; color: var(--muted); font-size: 11px; }
+    .focus-head .search { margin-left: auto; width: 230px; }
+    .focus-toolbar { display: flex; align-items: center; gap: 8px; padding: 0 32px 14px; border-bottom: 1px solid #e7ebf1; }
+    .focus-list { width: min(940px, calc(100% - 64px)); margin: 0 auto; }
+    .focus-list .notice { grid-template-columns: 9px minmax(0, 1fr) 110px; padding: 18px 4px; }
+    .focus-list .notice h4 { font-size: 15px; }
+    .focus-list .notice p { font-size: 11px; }
+    .school-badge { margin-bottom: 6px; color: var(--accent); font-size: 9px; font-weight: 750; }
+    .focus-footer { padding: 14px 32px; color: #929baa; font-size: 10px; text-align: center; }
+
+    .decision {
+      position: sticky;
+      bottom: 16px;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: fit-content;
+      max-width: calc(100% - 24px);
+      margin: 24px auto 0;
+      padding: 12px 14px;
+      border: 1px solid rgba(197, 207, 220, .9);
+      border-radius: 14px;
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 12px 36px rgba(25, 40, 72, .18);
+      backdrop-filter: blur(14px);
+    }
+
+    .decision strong { font-size: 13px; }
+    .decision span { color: var(--muted); font-size: 12px; }
+
+    @media (max-width: 980px) {
+      .intro, .option-head { grid-template-columns: 1fr; }
+      .criteria { justify-content: flex-start; }
+      .workspace-a { grid-template-columns: 160px 1fr; }
+      .workspace-a .reader { display: none; }
+      .workspace-b { grid-template-columns: 170px 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      .page { width: min(100% - 20px, 1520px); padding-top: 24px; }
+      .mock-wrap { padding: 10px; }
+      .browser { min-height: 530px; }
+      .nav { gap: 12px; padding: 0 12px; }
+      .navitem:nth-of-type(3) { display: none; }
+      .workspace-a, .workspace-b { display: block; }
+      .workspace-a .side, .workspace-b .side { display: none; }
+      .feed { padding: 14px; }
+      .reader { display: none; }
+      .dashboard { padding: 14px; }
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .metrics .metric:last-child { grid-column: 1 / -1; }
+      .dash-grid { grid-template-columns: 1fr; }
+      .focus-head { display: block; padding: 20px 18px 14px; }
+      .focus-head .search { width: 100%; margin-top: 14px; }
+      .focus-toolbar { overflow-x: auto; padding: 0 18px 12px; }
+      .focus-list { width: calc(100% - 36px); }
+      .focus-list .notice { grid-template-columns: 9px minmax(0, 1fr) auto; }
+      .decision { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="intro">
+      <div>
+        <p class="eyebrow">UX reconstruction · information architecture</p>
+        <h1>让通知成为主角，让管理退到清晰的工作区。</h1>
+        <p>三套方案都保留现有功能，但重新分配注意力。学生与管理员同等重要，不意味着两类任务必须挤在同一个界面里。</p>
+      </div>
+      <div class="criteria" aria-label="评估标准">
+        <span>通知优先</span><span>一步可达</span><span>低认知负担</span><span>手机可用</span>
+      </div>
+    </header>
+
+    <section class="options" aria-label="UX 方向">
+      <article class="option recommended">
+        <header class="option-head">
+          <div>
+            <div class="option-titleline"><span class="letter">A</span><h2>通知收件箱 + 独立系统管理页</h2><span class="tag">已选择</span></div>
+            <p>默认进入跨学校通知流；选择一所学校后，部门筛选自动切换为该校的发布部门，并可结合时间条件。点开通知时在右侧阅读，不丢失列表位置。系统管理是独立页面，入口仅对管理员显示。</p>
+          </div>
+          <div class="tradeoffs">
+            <div class="tradeoff"><b>最适合</b><span>高频扫读、处理未读、跨学校追踪；同时保持后台专业化。</span></div>
+            <div class="tradeoff"><b>代价</b><span>需要新增统一通知流查询与桌面端分栏阅读状态。</span></div>
+          </div>
+        </header>
+        <div class="mock-wrap">
+          <div class="browser">
+            <div class="browserbar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span class="address"></span></div>
+            <div class="app-shell">
+              <nav class="nav"><span class="brand">校讯</span><span class="navitem active">通知</span><span class="navitem">学校</span><span class="navitem">搜索</span><span class="admin-entry" title="仅管理员可见">系统管理 ↗</span><span class="avatar"></span></nav>
+              <div class="workspace-a">
+                <aside class="side">
+                  <p class="side-title">学校</p>
+                  <div class="side-select"><span>中国石油大学</span><span>⌄</span></div>
+                  <p class="side-title">部门</p>
+                  <div class="side-link nested on"><span>✓ 教务部</span><span class="count">3</span></div>
+                  <div class="side-link nested"><span>学生工作部</span><span class="count">2</span></div>
+                  <div class="side-link nested"><span>图书馆</span><span class="count">4</span></div>
+                  <div class="side-link nested"><span>研究生院</span><span class="count">6</span></div>
+                </aside>
+                <section class="feed">
+                  <div class="feed-head"><div><h3>收件箱</h3><p>9 月 2 日 · 24 条更新</p></div><span class="search"></span></div>
+                  <div class="chips"><span class="chip on">近一周</span><span class="chip">未读</span><span class="chip">教务部</span><span class="chip">更多筛选</span></div>
+                  <div class="notice selected"><i class="unread"></i><div><h4>关于开展 2026 年秋季学期本科生选课工作的通知</h4><p>教务部 · AI 摘要：选课分三阶段进行，第一阶段于 9 月 5 日截止…</p></div><time>10:24</time></div>
+                  <div class="notice"><i class="unread"></i><div><h4>国家奖学金评审材料提交说明</h4><p>学生工作部 · 申请材料须在 9 月 8 日前完成线上提交。</p></div><time>09:10</time></div>
+                  <div class="notice"><i class="read"></i><div><h4>图书馆中秋节期间开放安排</h4><p>图书馆 · 开放时间与自习区域有所调整。</p></div><time>昨天</time></div>
+                  <div class="notice"><i class="read"></i><div><h4>创新创业训练计划项目中期检查</h4><p>创新创业学院 · 请各项目负责人准备中期报告。</p></div><time>昨天</time></div>
+                </section>
+                <aside class="reader">
+                  <div class="reader-meta">中国石油大学（北京） · 教务部</div>
+                  <h3>关于开展 2026 年秋季学期本科生选课工作的通知</h3>
+                  <div class="summary">选课分为预选、正选和补退选三个阶段。首阶段于 9 月 5 日截止，学生需提前确认培养方案。</div>
+                  <div class="text-line"></div><div class="text-line"></div><div class="text-line short"></div>
+                  <div class="text-line"></div><div class="text-line"></div><div class="text-line short"></div>
+                  <div class="reader-actions"><span class="mini-btn primary">查看完整通知</span><span class="mini-btn">收藏</span><span class="mini-btn">原文</span></div>
+                </aside>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="option">
+        <header class="option-head">
+          <div>
+            <div class="option-titleline"><span class="letter">B</span><h2>双门户工作台</h2></div>
+            <p>登录后先选择“我的通知”或“平台管理”，两者各有完整首页。角色边界最明确，管理员的健康状态、抓取任务和学校管理更容易扩展。</p>
+          </div>
+          <div class="tradeoffs">
+            <div class="tradeoff"><b>最适合</b><span>管理员占比高、后台任务复杂、希望彻底隔离两种心智模式。</span></div>
+            <div class="tradeoff"><b>代价</b><span>模式切换更重；管理员日常查看通知时会多一次跳转。</span></div>
+          </div>
+        </header>
+        <div class="mock-wrap">
+          <div class="browser">
+            <div class="browserbar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span class="address"></span></div>
+            <div class="app-shell">
+              <nav class="nav"><span class="brand">校讯 · 管理</span><span class="navitem active">工作台</span><span class="navitem">学校</span><span class="navitem">抓取任务</span><span class="navitem">用户</span><span class="mode-switch"><span>我的通知</span><span class="on">平台管理</span></span><span class="avatar"></span></nav>
+              <div class="workspace-b">
+                <aside class="side">
+                  <p class="side-title">管理空间</p>
+                  <div class="side-link on">运行概览</div><div class="side-link">学校与部门</div><div class="side-link">抓取队列</div><div class="side-link">选择器健康</div><div class="side-link">AI 摘要</div><div class="side-link">用户与权限</div>
+                </aside>
+                <section class="dashboard">
+                  <div class="dash-head"><div><h3>运行概览</h3><p style="margin:6px 0 0;color:var(--muted);font-size:11px">系统状态与待处理事项</p></div><span class="mini-btn primary">立即抓取</span></div>
+                  <div class="metrics"><div class="metric"><b>3</b><span>活跃学校</span></div><div class="metric"><b>1,610</b><span>已收录通知</span></div><div class="metric"><b>2</b><span>需要处理</span></div></div>
+                  <div class="dash-grid">
+                    <div class="box"><h4>学校状态</h4><div class="status-row"><span>中国石油大学（北京）</span><span class="status">运行正常</span></div><div class="status-row"><span>克拉玛依校区</span><span class="status">运行正常</span></div><div class="status-row"><span>华中科技大学</span><span class="status warn">1 项待复核</span></div><div class="status-row"><span>下次计划抓取</span><span>11:00</span></div></div>
+                    <div class="box"><h4>待处理</h4><div class="status-row"><span>选择器待复核</span><b>1</b></div><div class="status-row"><span>摘要生成失败</span><b>1</b></div><div class="status-row"><span>新学校申请</span><b>0</b></div></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="option">
+        <header class="option-head">
+          <div>
+            <div class="option-titleline"><span class="letter">C</span><h2>极简通知流 + 完全独立后台</h2></div>
+            <p>用户端只剩通知、学校、搜索三件事，所有筛选压缩成顶部工具条；后台通过个人菜单进入另一套界面。阅读体验最轻，几乎没有界面噪声。</p>
+          </div>
+          <div class="tradeoffs">
+            <div class="tradeoff"><b>最适合</b><span>手机优先、读通知远高于管理频率、追求最轻学习成本。</span></div>
+            <div class="tradeoff"><b>代价</b><span>学校很多时筛选效率不如 A；桌面大屏利用率较低。</span></div>
+          </div>
+        </header>
+        <div class="mock-wrap">
+          <div class="browser">
+            <div class="browserbar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span class="address"></span></div>
+            <div class="app-shell">
+              <nav class="nav"><span class="brand">校讯</span><span class="navitem active">通知</span><span class="navitem">学校</span><span class="navitem">搜索</span><span style="margin-left:auto" class="avatar"></span></nav>
+              <section class="workspace-c">
+                <div class="focus-head"><div><h3>最新通知</h3><p>来自你订阅的 3 所学校 · 17 条未读</p></div><span class="search"></span></div>
+                <div class="focus-toolbar"><span class="chip on">全部</span><span class="chip">未读 17</span><span class="chip">今天</span><span class="chip">学校</span><span class="chip">部门</span><span class="mini-btn" style="margin-left:auto">全部已读</span></div>
+                <div class="focus-list">
+                  <div class="notice"><i class="unread"></i><div><div class="school-badge">中国石油大学（北京） · 教务部</div><h4>关于开展 2026 年秋季学期本科生选课工作的通知</h4><p>选课分为预选、正选和补退选三个阶段，第一阶段于 9 月 5 日截止…</p></div><time>10:24</time></div>
+                  <div class="notice"><i class="unread"></i><div><div class="school-badge">克拉玛依校区 · 学生工作部</div><h4>国家奖学金评审材料提交说明</h4><p>申请材料须在 9 月 8 日前完成线上提交。</p></div><time>09:10</time></div>
+                  <div class="notice"><i class="read"></i><div><div class="school-badge">华中科技大学 · 图书馆</div><h4>图书馆中秋节期间开放安排</h4><p>开放时间与自习区域有所调整，请提前规划。</p></div><time>昨天</time></div>
+                  <div class="notice"><i class="read"></i><div><div class="school-badge">克拉玛依校区 · 创新创业学院</div><h4>创新创业训练计划项目中期检查</h4><p>请各项目负责人准备中期报告及展示材料。</p></div><time>昨天</time></div>
+                </div>
+                <div class="focus-footer">继续滚动加载更早通知</div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="decision"><strong>请回到对话中选择：</strong><span>A、B、C，或者告诉我你想组合哪些部分。</span></div>
+  </main>
+</body>
+</html>

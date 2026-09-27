@@ -1,0 +1,61 @@
+/* Shared typography: Inter for Latin, Noto Sans SC for Chinese.
+   Font declarations live in fonts.css; no runtime font CDN is required. */
+:root {
+    --font-sans: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    --font-numeric: var(--font-sans);
+    --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --text-display: clamp(2rem, 4vw, 3rem);
+    --text-page-title: 1.875rem;
+    --text-section-title: 1.25rem;
+    --text-subheading: 1.125rem;
+    --text-reader-title: 1.75rem;
+    --text-body: 1rem;
+    --text-prose: 1.0625rem;
+    --text-control: .875rem;
+    --text-meta: .8125rem;
+    --text-caption: .8125rem;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --leading-ui: 1.5;
+    --leading-body: 1.7;
+    --leading-prose: 1.8;
+    --leading-heading: 1.35;
+    --tracking-ui: 0;
+}
+
+html { font-size: 100%; -webkit-text-size-adjust: 100%; }
+body {
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    font-weight: var(--weight-regular);
+    line-height: var(--leading-body);
+    letter-spacing: var(--tracking-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+button, input, select, textarea, optgroup, option {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: var(--leading-ui);
+    letter-spacing: inherit;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-heading);
+    letter-spacing: var(--tracking-ui);
+}
+strong, b { font-weight: var(--weight-semibold); }
+code, kbd, samp, pre { font-family: var(--font-mono); }
+
+/* Avoid mobile focus zoom while preserving the user's browser text scaling. */
+@media (max-width: 760px) {
+    :root { --text-page-title: 1.625rem; }
+    :root :is(input:not([type]), input[type="text"], input[type="search"],
+        input[type="password"], input[type="email"], input[type="url"],
+        input[type="number"], textarea) {
+        font-size: var(--text-body);
+    }
+}

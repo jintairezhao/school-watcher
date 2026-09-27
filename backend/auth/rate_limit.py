@@ -16,21 +16,15 @@ def check_rate_limit(key: str, max_count: int, window_seconds: int):
 
     时间统一用 naive UTC（SQLite DateTime 不存时区，读回为 naive）。
     """
+    from sqlalchemy import case
+    from backend.database.dialect import insert
     now = datetime.utcnow()
-    bucket = db.session.get(RateBucket, key)
-
-    if bucket is None:
-        db.session.add(RateBucket(key=key, count=1, window_start=now))
-        db.session.commit()
-        return True, max_count - 1
-
-    if now - bucket.window_start > timedelta(seconds=window_seconds):
-        bucket.window_start = now
-        bucket.count = 1
-        db.session.commit()
-        return True, max_count - 1
-
-    bucket.count += 1
+    expired = RateBucket.window_start <= now - timedelta(seconds=window_seconds)
+    statement = insert(RateBucket).values(key=key, count=1, window_start=now).on_conflict_do_update(
+        index_elements=['key'], set_={
+            'count': case((expired, 1), else_=RateBucket.count + 1),
+            'window_start': case((expired, now), else_=RateBucket.window_start),
+        }).returning(RateBucket.count)
+    count = db.session.execute(statement).scalar_one()
     db.session.commit()
-    allowed = bucket.count <= max_count
-    return allowed, max(0, max_count - bucket.count)
+    return count <= max_count, max(0, max_count - count)

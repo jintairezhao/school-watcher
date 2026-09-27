@@ -1,0 +1,33 @@
+{
+  "id": "zju-medical-notice_list-2026-09-21",
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/38678/list.htm",
+  "reference_hash": "a81152cc91cc8fe3eab6b4d58f2fe5af0c6c014304ce694090a344c27b632e9f",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "医学院通知公告列表第一页，12 个文章入口；日期由同一条目内日和年月组成。",
+  "scope_selector": ".news-content-box",
+  "review_method": "独立逐行阅读官网原始列表，抄录栏目名、当前页面或分类入口和全部文章地址。与首页相同的新闻和教师招聘地址沿用已独立抄录的原地址，并重新逐项对读本页。只核对本次响应的列表范围，不证明历史分页、原文发布责任或整体 90% 匹配。列表中有完整年月日才记发布日期，讲座举办时间和网址日期不补作发布日期。",
+  "entries": [
+    {
+      "id": "通知公告",
+      "name": "通知公告",
+      "url": "http://www.cmm.zju.edu.cn/38678/list.htm",
+      "scope_selector": ".news-content-box",
+      "article_urls": [
+        "http://www.cmm.zju.edu.cn/2026/0918/c38678a3204959/page.htm",
+        "https://mp.weixin.qq.com/s/6YLMIrBsLuhm1Ai7Ogwn2w",
+        "https://mp.weixin.qq.com/s/Y7sqp1uQ9-PVmwodcuwgeg",
+        "https://mp.weixin.qq.com/s/gBurWnkOiHP-i9Vr2lzzpw",
+        "https://mp.weixin.qq.com/s/d-ixhyPMqunElizXONhsQw",
+        "https://mp.weixin.qq.com/s/HAuvW4ZOx4DqjkHoZ_Gqug",
+        "https://mp.weixin.qq.com/s/M8fpM1dsTmJYzdSlfIDmvw",
+        "https://mp.weixin.qq.com/s/_Ii7oNOLbI7dS-G6O8iAGg",
+        "https://mp.weixin.qq.com/s/mRxxgMCR0w8jwiJrEp2hrw",
+        "http://www.cmm.zju.edu.cn/2026/0430/c38678a3157434/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0512/c38678a3161454/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0317/c38678a3141643/page.htm"
+      ]
+    }
+  ]
+}

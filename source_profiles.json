@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "url": "https://www.sjtu.edu.cn/",
+      "purpose": "directory",
+      "version": "sjtu-directory-20260924-1",
+      "readiness_selector": "a[href*='/yxsz/']",
+      "evidence_url": "https://www.sjtu.edu.cn/resource/assets/js/headersy.js",
+      "notes": "The homepage injects its school/college navigation with headersy.js; static news is insufficient for directory discovery."
+    }
+  ]
+}

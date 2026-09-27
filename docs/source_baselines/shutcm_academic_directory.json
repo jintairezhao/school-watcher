@@ -1,0 +1,132 @@
+{
+  "id": "shutcm_academic_directory",
+  "root_url": "https://www.shutcm.edu.cn/",
+  "reference_url": "https://www.shutcm.edu.cn/ejxy/list.htm",
+  "reference_hash": "8122867919e473be42147de7c48169480324f2d1885f0f76e3eea8db38550894",
+  "reviewed_at": "2026-09-21",
+  "scope": "上海中医药大学二级学院正文完整目录：17个官网条目",
+  "category": "academic_units",
+  "scope_selector": ".inn_com.jg > ul.flex",
+  "reference_kind": "directory",
+  "entries": [
+    {
+      "id": "unit-1",
+      "name": "中医学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147550&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-2",
+      "name": "中西医结合学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147538&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-3",
+      "name": "中药学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147549&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-4",
+      "name": "针灸推拿学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147548&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-5",
+      "name": "护理学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147547&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-6",
+      "name": "公共健康学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147546&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-7",
+      "name": "康复医学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147545&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-8",
+      "name": "国际教育学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147544&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-9",
+      "name": "继续教育学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147543&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-10",
+      "name": "马克思主义学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147542&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-11",
+      "name": "中医药人工智能学院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=167712&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-12",
+      "name": "科技人文研究院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147541&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-13",
+      "name": "交叉科学研究院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147540&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-14",
+      "name": "创新中药研究院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147539&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-15",
+      "name": "上海市中医药国际标准化研究院",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=170939&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-16",
+      "name": "体育部",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147537&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "unit-17",
+      "name": "外语教学中心",
+      "url": "https://www.shutcm.edu.cn/_redirect?articleId=147536&columnId=6641&siteId=2",
+      "kind": "unit",
+      "relation": "directory_entry"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "zju-medical-research_list-2026-09-21",
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/kycx/list.htm",
+  "reference_hash": "92d25b4d12f3bed9ad5c5bcf7141d534b338686cc945975f87ed32c782acee98",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "医学院科研进展列表第一页，12 个文章入口。",
+  "scope_selector": ".news-content-box",
+  "review_method": "独立逐行阅读官网原始列表，抄录栏目名、当前页面或分类入口和全部文章地址。与首页相同的新闻和教师招聘地址沿用已独立抄录的原地址，并重新逐项对读本页。只核对本次响应的列表范围，不证明历史分页、原文发布责任或整体 90% 匹配。列表中有完整年月日才记发布日期，讲座举办时间和网址日期不补作发布日期。",
+  "entries": [
+    {
+      "id": "科研进展",
+      "name": "科研进展",
+      "url": "http://www.cmm.zju.edu.cn/kycx/list.htm",
+      "scope_selector": ".news-content-box",
+      "article_urls": [
+        "https://mp.weixin.qq.com/s/N--Vl8D61pBxA2-SwXCTFA",
+        "https://mp.weixin.qq.com/s/8BAP8s6XA0F0GMJESekEcg",
+        "https://mp.weixin.qq.com/s/Gdh_jGskG653bW-yXi5LBw",
+        "https://mp.weixin.qq.com/s/16xq-tecMXyNaOJ4glYKig",
+        "https://mp.weixin.qq.com/s/Zr4yivnfW73QFPBc9P53-w",
+        "https://mp.weixin.qq.com/s/veMTPaRvlWCMv2wpQf-R2A",
+        "https://mp.weixin.qq.com/s/_BLVksRGpjNd4CwkNP9jJA?click_id=4",
+        "https://mp.weixin.qq.com/s/eej3ehidivXwn6A3RWz3mg",
+        "https://mp.weixin.qq.com/s/2xfQMf9GDEwB0_zyeAOsrg",
+        "http://www.cmm.zju.edu.cn/2025/0402/c55058a3033975/page.htm",
+        "https://mp.weixin.qq.com/s/s-yOKo5FSMqQ3okSlHg7eg",
+        "https://mp.weixin.qq.com/s/bADfUeJLlMmvlsEi_bJhdA"
+      ]
+    }
+  ]
+}

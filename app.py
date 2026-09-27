@@ -1,11 +1,12 @@
 """
-学校通知扒取工具 — 入口
+学校官网信息订阅 — 入口
 ===============================
 跨平台 Web 应用，用于聚合多所学校官网通知，
-接入 DeepSeek API 生成摘要，支持移动端访问。
+按官网栏目订阅、阅读与管理信息，支持移动端访问。
 """
 
 import logging
+import os
 
 from dotenv import load_dotenv
 
@@ -25,28 +26,9 @@ app = create_app()
 
 
 if __name__ == '__main__':
-    print("""
-+==================================================+
-|       School Notification Watcher v1.0            |
-|                                                  |
-|  Local:  http://localhost:5000                   |
-|  Mobile: Use ngrok or other tunnel tool          |
-|                                                  |
-|  First time setup:                               |
-|  1. Open http://localhost:5000/settings          |
-|  2. Configure DeepSeek API Key                   |
-|  3. Add target schools                           |
-+==================================================+
-    """)
-
-    # 检查 Playwright 可用性（用于 JS 渲染页面回退）
-    try:
-        from backend.scraper.fetchers.playwright_fetcher import is_playwright_available
-        if is_playwright_available():
-            print("[OK] Playwright Chromium — JS 渲染回退已就绪")
-        else:
-            print("[INFO] Playwright 未安装 — JS 页面将使用纯静态模式")
-    except Exception:
-        print("[INFO] Playwright 未安装 — JS 页面将使用纯静态模式")
-
-    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+    from waitress import serve
+    host = os.environ.get('WATCHER_HOST', '127.0.0.1')
+    port = int(os.environ.get('WATCHER_PORT', '5000'))
+    print(f'School Watcher: http://localhost:{port}', flush=True)
+    print('Choose a school in the directory to subscribe. Press Ctrl+C to stop.', flush=True)
+    serve(app, host=host, port=port, threads=max(2, min(64, int(os.environ.get('WATCHER_WEB_THREADS', '4')))))

@@ -1,0 +1,117 @@
+{
+  "id": "swjtu_language_notice_tabs",
+  "root_url": "https://www.swjtu.edu.cn/",
+  "reference_url": "http://sfl.swjtu.edu.cn/",
+  "reference_hash": "8e7fcaa4948a0a432aa87dfb54d25d419761fe5cbc1e325c0071406e76fef8ed",
+  "reviewed_at": "2026-09-21",
+  "scope": "外国语学院首页通知公告：七个分类及其入口",
+  "category": "publication_columns",
+  "scope_selector": ".product-wrap2",
+  "entries": [
+    {
+      "id": "tab-0",
+      "name": "通知公告",
+      "url": "http://sfl.swjtu.edu.cn/tzgg.htm",
+      "group_name": "通知公告",
+      "scope_selector": ".product-wrap2 > .product:nth-of-type(1)",
+      "article_urls": [
+        "http://sfl.swjtu.edu.cn/info/1272/38325.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/39295.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/39215.htm",
+        "http://sfl.swjtu.edu.cn/info/1270/39145.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/39075.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/38975.htm"
+      ]
+    },
+    {
+      "id": "tab-1",
+      "name": "党政办公",
+      "url": "http://sfl.swjtu.edu.cn/tzgg/dzbg.htm",
+      "group_name": "通知公告",
+      "scope_selector": ".product-wrap2 > .product:nth-of-type(2)",
+      "article_urls": [
+        "http://sfl.swjtu.edu.cn/info/1269/38135.htm",
+        "http://sfl.swjtu.edu.cn/info/1269/33475.htm",
+        "http://sfl.swjtu.edu.cn/info/1269/33325.htm",
+        "http://sfl.swjtu.edu.cn/info/1269/32155.htm",
+        "http://sfl.swjtu.edu.cn/info/1269/30615.htm",
+        "http://sfl.swjtu.edu.cn/info/1269/28695.htm"
+      ]
+    },
+    {
+      "id": "tab-2",
+      "name": "本科生教育",
+      "url": "http://sfl.swjtu.edu.cn/tzgg/bksjy.htm",
+      "group_name": "通知公告",
+      "scope_selector": ".product-wrap2 > .product:nth-of-type(3)",
+      "article_urls": [
+        "http://sfl.swjtu.edu.cn/info/1270/39145.htm",
+        "http://sfl.swjtu.edu.cn/info/1270/38305.htm",
+        "http://sfl.swjtu.edu.cn/info/1270/38295.htm",
+        "http://sfl.swjtu.edu.cn/info/1270/37415.htm",
+        "http://sfl.swjtu.edu.cn/info/1270/37385.htm",
+        "http://sfl.swjtu.edu.cn/info/1270/37295.htm"
+      ]
+    },
+    {
+      "id": "tab-3",
+      "name": "研究生教育",
+      "url": "http://sfl.swjtu.edu.cn/tzgg/yjsjy.htm",
+      "group_name": "通知公告",
+      "scope_selector": ".product-wrap2 > .product:nth-of-type(4)",
+      "article_urls": [
+        "http://sfl.swjtu.edu.cn/info/1271/39295.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/39215.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/39075.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/38975.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/38415.htm",
+        "http://sfl.swjtu.edu.cn/info/1271/37515.htm"
+      ]
+    },
+    {
+      "id": "tab-4",
+      "name": "学生工作",
+      "url": "http://sfl.swjtu.edu.cn/tzgg/xsgz.htm",
+      "group_name": "通知公告",
+      "scope_selector": ".product-wrap2 > .product:nth-of-type(5)",
+      "article_urls": [
+        "http://sfl.swjtu.edu.cn/info/1272/38325.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/38425.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/30825.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/21835.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/21125.htm",
+        "http://sfl.swjtu.edu.cn/info/1272/19045.htm"
+      ]
+    },
+    {
+      "id": "tab-5",
+      "name": "国际交流",
+      "url": "http://sfl.swjtu.edu.cn/tzgg/gjjl.htm",
+      "group_name": "通知公告",
+      "scope_selector": ".product-wrap2 > .product:nth-of-type(6)",
+      "article_urls": [
+        "http://sfl.swjtu.edu.cn/info/1273/19525.htm",
+        "http://sfl.swjtu.edu.cn/info/1273/14583.htm",
+        "http://sfl.swjtu.edu.cn/info/1273/14519.htm",
+        "http://sfl.swjtu.edu.cn/info/1273/14491.htm",
+        "http://sfl.swjtu.edu.cn/info/1273/14402.htm",
+        "http://sfl.swjtu.edu.cn/info/1273/13562.htm"
+      ]
+    },
+    {
+      "id": "tab-6",
+      "name": "学术研究",
+      "url": "http://sfl.swjtu.edu.cn/tzgg/xsyj.htm",
+      "group_name": "通知公告",
+      "scope_selector": ".product-wrap2 > .product:nth-of-type(7)",
+      "article_urls": [
+        "http://sfl.swjtu.edu.cn/info/1274/35475.htm",
+        "http://sfl.swjtu.edu.cn/info/1274/30515.htm",
+        "http://sfl.swjtu.edu.cn/info/1274/21475.htm",
+        "http://sfl.swjtu.edu.cn/info/1274/19535.htm",
+        "http://sfl.swjtu.edu.cn/info/1274/18675.htm",
+        "http://sfl.swjtu.edu.cn/info/1274/15545.htm"
+      ]
+    }
+  ]
+}

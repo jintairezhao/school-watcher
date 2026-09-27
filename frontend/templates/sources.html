@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ school.name }} · 栏目订阅{% endblock %}
+{% block content %}
+<div class="sources-page">
+    {% from '_school_header.html' import school_header with context %}
+    {{ school_header(school, 'sources', '选择接收范围，保存后应用到你的订阅。') }}
+    <div class="source-sync" role="status">
+        {% if latest and latest.status == 'running' %}正在同步学校官网，栏目会在接入后出现。
+        {% elif latest and latest.status == 'failed' %}最近一次同步未完成，稍后会自动重试。已保存的通知仍可阅读。
+        {% elif latest and latest.finished_at %}上次同步：{{ latest.finished_at.strftime('%Y-%m-%d %H:%M') }} UTC · 本次新增 {{ latest.new_count }} 条
+        {% else %}已订阅，正在等待首次同步。首次接入可能需要几分钟。{% endif %}
+        <a href="{{ request.path }}">刷新状态</a>
+    </div>
+    {% if onboarding %}
+    <p role="status">目录核对：{{ {'not_checked': '尚未核对', 'discovering': '正在检查', 'partial': '部分栏目已核实', 'needs_review': '需要核实', 'ready': '覆盖已核实'}.get(onboarding.state, '等待核实') }} · 已检查 {{ onboarding.checked_pages }} 页{% if onboarding.pending_pages %}，剩余 {{ onboarding.pending_pages }} 页{% endif %}。{% if not onboarding.coverage_verified %}现有栏目可继续使用，尚未认定全校覆盖完成。{% endif %}</p>
+    {% if current_user.is_admin %}<p><a href="{{ url_for('source_governance.review_page') }}">处理待核实来源</a></p>{% endif %}
+    {% endif %}
+    <form method="post" class="sources-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <fieldset class="source-mode"><legend>接收范围</legend>
+            <label><input type="radio" name="mode" value="all" {% if subscription.department_ids is none %}checked{% endif %}> 全部栏目（包括今后发现的新栏目）</label>
+            <label><input type="radio" name="mode" value="selected" {% if subscription.department_ids is not none %}checked{% endif %}> 只接收下面勾选的栏目</label>
+        </fieldset>
+        <p class="source-path-help">学院、推免招生和教务相关入口优先排列，其他栏目仍可订阅。展开“官网层级”可查看分组依据；官网导航分组不一定代表行政隶属。</p>
+        <div id="sourceChoices">
+        {% for group_name, departments in groups.items() %}
+        <fieldset class="source-group"><legend>{{ group_name }}</legend>
+            {% for dept in departments %}
+            <div class="source-entry" data-source-id="{{ dept.id }}">
+            <div class="source-choice"><label><input type="checkbox" name="department" value="{{ dept.id }}" {% if subscription.department_ids is none or dept.id in subscription.department_ids %}checked{% endif %}><span>{{ dept.name }}</span></label>{% if dept.list_url %}<a href="{{ dept.list_url }}" target="_blank" rel="noopener noreferrer" aria-label="打开{{ dept.name }}官网栏目">官网栏目</a>{% endif %}</div>
+            {% if source_paths.get(dept.id) %}
+            <details class="source-paths"><summary>官网层级 · {{ source_paths[dept.id]|length }} 条路径</summary>
+                {% for path in source_paths[dept.id] %}<div class="source-path">
+                    <ol aria-label="官网列示路径">
+                        {% for node in path.nodes %}<li>{{ node.name }}{% if node.relation == 'sub_unit' %}<small>下属单位</small>{% elif node.relation == 'attached_unit' %}<small>挂靠单位</small>{% elif node.relation == 'non_entity_directory_entry' %}<small>官网标注：非实体学院</small>{% elif node.relation == 'campus_group' %}<small>官网校区分组</small>{% elif node.relation == 'shared_table_row' %}<small>官网同列多个单位，具体归属待核实</small>{% elif node.relation == 'academic_group' %}<small>官网教学科研分组</small>{% elif node.relation == 'directory_group' %}<small>官网机构分类</small>{% elif node.relation == 'shared_directory_row' %}<small>官网同一条目并列，不代表上下级</small>{% elif node.relation == 'directory_companion_entry' %}<small>官网附加列示，隶属关系待核实</small>{% endif %}</li>
+                        {% else %}<li>学校主页</li>{% endfor %}
+                        {% for node in path.entry_nodes %}<li>{{ node.name }}<small>导航分组</small></li>{% endfor %}
+                        <li>{{ path.entry_names|join(' / ') if path.entry_names else dept.name }}</li>
+                    </ol>
+                    <ul class="source-path-references" aria-label="路径出处">{% for reference in path.references %}<li><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=reference.url) }}">查看{{ reference.title }}的结构</a> · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer">官网出处</a><span>检查于 {{ reference.checked_at[:10] }}</span></li>{% endfor %}</ul>
+                </div>{% endfor %}
+            </details>
+            {% else %}<p class="source-path-pending">单位与栏目关系待核实</p>{% endif %}
+            </div>
+            {% endfor %}
+        </fieldset>
+        {% else %}<p class="source-sync">官网栏目尚在发现中。你已订阅全部栏目，接入成功后会自动收到通知。</p>{% endfor %}
+        </div>
+        <div class="source-save"><button class="btn btn-primary" type="submit">保存栏目订阅</button><a href="{{ url_for('pages.index', school=school.id) }}">查看通知</a></div>
+    </form>
+    <details class="directory-note"><summary>官网还有其他栏目？补充栏目地址</summary>
+        <p>复制学校官网上该栏目的名称与列表页链接。分组请沿用官网的名称；没有分组可留空。</p>
+        <form method="post" action="{{ url_for('subscriptions.add_official_source', school_id=school.id) }}" class="source-add-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div><label for="sourceName">官网栏目名称</label><input class="form-input" name="name" id="sourceName" required maxlength="200" placeholder="例如：本科招生"></div>
+            <div><label for="sourceURL">官网栏目列表页</label><input class="form-input" name="url" id="sourceURL" required type="url" maxlength="1000" placeholder="https://…"></div>
+            <div><label for="sourceGroup">官网分组（选填）</label><input class="form-input" name="group" id="sourceGroup" maxlength="200" placeholder="例如：招生就业"></div>
+            <button class="btn btn-primary" type="submit">添加并订阅栏目</button>
+        </form>
+    </details>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+(function () {
+    function updateChoices() {
+        var all = document.querySelector('[name="mode"]:checked').value === 'all';
+        document.querySelectorAll('[name="department"]').forEach(function (input) { input.disabled = all; });
+    }
+    document.querySelectorAll('[name="mode"]').forEach(function (input) { input.addEventListener('change', updateChoices); });
+    updateChoices();
+})();
+</script>{% endblock %}

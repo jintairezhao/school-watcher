@@ -1,0 +1,749 @@
+{
+  "id": "sdu-campus-directory-2026-09-21",
+  "root_url": "https://www.sdu.edu.cn/",
+  "reference_url": "https://www.sdu.edu.cn/zzjg/xysz.htm",
+  "reference_hash": "b5bf5f16ec4e352eaca2e3c1e1c9de34e488738132b58d9d1b00bd3e17688dad",
+  "scope": "山东大学学院设置页全部 8 个校区分组和 85 个列示位置，共 93 项。列示位置包含重复出现在不同校区的同一学院和中加合作办学项目，不等于学院数量。",
+  "category": "academic_units",
+  "reviewed_at": "2026-09-21",
+  "review_method": "独立读取官网原始目录，逐个校区抄录标题、全部下级名称和链接，并保留三个外层链接包裹的校区标题。各校区列示数依次为 25、2、9、7、6、8、13、15。出版学院的 # 入口按无实际链接记录；同院跨校区列示分别保留，项目不改为学院。校区按地理位置分组，不据此推断行政隶属。本范围不覆盖逐学院发布栏目及整校发布责任。",
+  "scope_selector": ".nygljg > .wp > dl",
+  "entries": [
+    {
+      "id": "中心校区",
+      "name": "中心校区",
+      "url": "",
+      "kind": "group",
+      "relation": "campus_group"
+    },
+    {
+      "id": "中心校区|哲学与社会发展学院",
+      "name": "哲学与社会发展学院",
+      "url": "http://www.sps.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|经济学院",
+      "name": "经济学院",
+      "url": "http://www.econ.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|文学院",
+      "name": "文学院",
+      "url": "http://www.lit.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|历史学院",
+      "name": "历史学院",
+      "url": "http://www.history.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|考古学院",
+      "name": "考古学院",
+      "url": "https://www.archaeology.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|数学学院",
+      "name": "数学学院",
+      "url": "http://www.math.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|物理学院",
+      "name": "物理学院",
+      "url": "http://www.phy.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|化学与化工学院",
+      "name": "化学与化工学院",
+      "url": "http://www.chem.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|管理学院",
+      "name": "管理学院",
+      "url": "http://www.glxy.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|马克思主义学院",
+      "name": "马克思主义学院",
+      "url": "https://marx.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|国际教育学院",
+      "name": "国际教育学院",
+      "url": "http://www.cie.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|新闻传播学院",
+      "name": "新闻传播学院",
+      "url": "http://www.jc.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|经济研究院",
+      "name": "经济研究院",
+      "url": "http://www.cer.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|儒学高等研究院（文史哲研究院）",
+      "name": "儒学高等研究院（文史哲研究院）",
+      "url": "http://www.rxgdyjy.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|外国语学院（大学外语教学部）",
+      "name": "外国语学院（大学外语教学部）",
+      "url": "http://sden.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|晶体材料研究院",
+      "name": "晶体材料研究院",
+      "url": "https://jty.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|中泰证券金融研究院",
+      "name": "中泰证券金融研究院",
+      "url": "http://mathfinance.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|新一代半导体材料研究院",
+      "name": "新一代半导体材料研究院",
+      "url": "https://dpt.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|人工智能学院",
+      "name": "人工智能学院",
+      "url": "http://www.ai.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|国家卓越工程师学院",
+      "name": "国家卓越工程师学院",
+      "url": "https://gsee.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|出版学院",
+      "name": "出版学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|教育高等研究院",
+      "name": "教育高等研究院",
+      "url": "https://iase.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|黄河国家战略研究院",
+      "name": "黄河国家战略研究院",
+      "url": "http://www.hhzlyjy.sdu.edu.cn/index.htm",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|智能通信技术研究院",
+      "name": "智能通信技术研究院",
+      "url": "https://iict.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "中心校区|教师教育学院",
+      "name": "教师教育学院",
+      "url": "https://ste.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "中心校区"
+    },
+    {
+      "id": "洪家楼校区",
+      "name": "洪家楼校区",
+      "url": "",
+      "kind": "group",
+      "relation": "campus_group"
+    },
+    {
+      "id": "洪家楼校区|外国语学院",
+      "name": "外国语学院",
+      "url": "http://www.flc.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "洪家楼校区"
+    },
+    {
+      "id": "洪家楼校区|艺术学院",
+      "name": "艺术学院",
+      "url": "http://www.art.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "洪家楼校区"
+    },
+    {
+      "id": "趵突泉校区",
+      "name": "趵突泉校区",
+      "url": "http://www.qlyxb.sdu.edu.cn/",
+      "kind": "group",
+      "relation": "campus_group"
+    },
+    {
+      "id": "趵突泉校区|基础医学院",
+      "name": "基础医学院",
+      "url": "http://www.bms.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "趵突泉校区|公共卫生学院",
+      "name": "公共卫生学院",
+      "url": "http://www.sph.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "趵突泉校区|口腔医学院",
+      "name": "口腔医学院",
+      "url": "http://www.dent.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "趵突泉校区|护理与康复学院",
+      "name": "护理与康复学院",
+      "url": "http://www.nursing.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "趵突泉校区|药学院",
+      "name": "药学院",
+      "url": "http://www.pharm.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "趵突泉校区|第一临床学院",
+      "name": "第一临床学院",
+      "url": "https://www.qiluhospital.com/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "趵突泉校区|第二临床学院",
+      "name": "第二临床学院",
+      "url": "https://www.sdey.net/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "趵突泉校区|高等医学研究院",
+      "name": "高等医学研究院",
+      "url": "http://www.amri.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "趵突泉校区|医学融合与实践中心",
+      "name": "医学融合与实践中心",
+      "url": "https://www.medicine.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "趵突泉校区"
+    },
+    {
+      "id": "千佛山校区",
+      "name": "千佛山校区",
+      "url": "",
+      "kind": "group",
+      "relation": "campus_group"
+    },
+    {
+      "id": "千佛山校区|材料科学与工程学院",
+      "name": "材料科学与工程学院",
+      "url": "http://www.cmse.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "千佛山校区"
+    },
+    {
+      "id": "千佛山校区|机械工程学院",
+      "name": "机械工程学院",
+      "url": "http://www.mech.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "千佛山校区"
+    },
+    {
+      "id": "千佛山校区|控制科学与工程学院",
+      "name": "控制科学与工程学院",
+      "url": "http://control.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "千佛山校区"
+    },
+    {
+      "id": "千佛山校区|核科学与能源动力学院",
+      "name": "核科学与能源动力学院",
+      "url": "http://www.epe.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "千佛山校区"
+    },
+    {
+      "id": "千佛山校区|电气工程学院",
+      "name": "电气工程学院",
+      "url": "http://www.ee.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "千佛山校区"
+    },
+    {
+      "id": "千佛山校区|土建与水利学院",
+      "name": "土建与水利学院",
+      "url": "http://www.tjsl.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "千佛山校区"
+    },
+    {
+      "id": "千佛山校区|体育学院",
+      "name": "体育学院",
+      "url": "http://www.tyb.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "千佛山校区"
+    },
+    {
+      "id": "软件园校区",
+      "name": "软件园校区",
+      "url": "",
+      "kind": "group",
+      "relation": "campus_group"
+    },
+    {
+      "id": "软件园校区|软件学院",
+      "name": "软件学院",
+      "url": "http://www.sc.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "软件园校区"
+    },
+    {
+      "id": "软件园校区|集成电路学院",
+      "name": "集成电路学院",
+      "url": "http://ic.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "软件园校区"
+    },
+    {
+      "id": "软件园校区|中加合作办学项目",
+      "name": "中加合作办学项目",
+      "url": "http://www.gsp.sdu.edu.cn/",
+      "kind": "group",
+      "relation": "campus_directory_entry",
+      "parent": "软件园校区"
+    },
+    {
+      "id": "软件园校区|人工智能国际联合研究院",
+      "name": "人工智能国际联合研究院",
+      "url": "https://cfair.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "软件园校区"
+    },
+    {
+      "id": "软件园校区|智能创新研究院",
+      "name": "智能创新研究院",
+      "url": "https://aii.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "软件园校区"
+    },
+    {
+      "id": "软件园校区|密码科学与工程学院",
+      "name": "密码科学与工程学院",
+      "url": "https://cse.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "软件园校区"
+    },
+    {
+      "id": "兴隆山校区",
+      "name": "兴隆山校区",
+      "url": "",
+      "kind": "group",
+      "relation": "campus_group"
+    },
+    {
+      "id": "兴隆山校区|材料科学与工程学院",
+      "name": "材料科学与工程学院",
+      "url": "http://www.cmse.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "兴隆山校区"
+    },
+    {
+      "id": "兴隆山校区|机械工程学院",
+      "name": "机械工程学院",
+      "url": "http://www.mech.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "兴隆山校区"
+    },
+    {
+      "id": "兴隆山校区|控制科学与工程学院",
+      "name": "控制科学与工程学院",
+      "url": "http://control.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "兴隆山校区"
+    },
+    {
+      "id": "兴隆山校区|核科学与能源动力学院",
+      "name": "核科学与能源动力学院",
+      "url": "http://www.epe.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "兴隆山校区"
+    },
+    {
+      "id": "兴隆山校区|电气工程学院",
+      "name": "电气工程学院",
+      "url": "http://www.ee.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "兴隆山校区"
+    },
+    {
+      "id": "兴隆山校区|土建与水利学院",
+      "name": "土建与水利学院",
+      "url": "http://www.tjsl.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "兴隆山校区"
+    },
+    {
+      "id": "兴隆山校区|齐鲁交通学院",
+      "name": "齐鲁交通学院",
+      "url": "http://www.qltrans.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "兴隆山校区"
+    },
+    {
+      "id": "兴隆山校区|未来技术学院",
+      "name": "未来技术学院",
+      "url": "https://sft.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "兴隆山校区"
+    },
+    {
+      "id": "威海校区",
+      "name": "威海校区",
+      "url": "https://www.wh.sdu.edu.cn/",
+      "kind": "group",
+      "relation": "campus_group"
+    },
+    {
+      "id": "威海校区|东北亚学院",
+      "name": "东北亚学院",
+      "url": "https://snea.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|翻译学院",
+      "name": "翻译学院",
+      "url": "https://fyxy.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|空间科学与技术学院",
+      "name": "空间科学与技术学院",
+      "url": "https://apd.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|商学院",
+      "name": "商学院",
+      "url": "https://shxy.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|艺术学院",
+      "name": "艺术学院",
+      "url": "https://art.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|数学与统计学院",
+      "name": "数学与统计学院",
+      "url": "https://math.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|纪检监察学院",
+      "name": "纪检监察学院",
+      "url": "https://dis.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|海洋学院",
+      "name": "海洋学院",
+      "url": "https://mc.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|文化传播学院",
+      "name": "文化传播学院",
+      "url": "https://whcb.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|低空科学与工程学院",
+      "name": "低空科学与工程学院",
+      "url": "https://ie.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|马克思主义学院",
+      "name": "马克思主义学院",
+      "url": "http://mlb.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|山东大学澳国立联合理学院",
+      "name": "山东大学澳国立联合理学院",
+      "url": "https://jsc.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "威海校区|体育教学部",
+      "name": "体育教学部",
+      "url": "https://tyb.wh.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "威海校区"
+    },
+    {
+      "id": "青岛校区",
+      "name": "青岛校区",
+      "url": "http://www.qdxq.sdu.edu.cn/",
+      "kind": "group",
+      "relation": "campus_group"
+    },
+    {
+      "id": "青岛校区|政治学与公共管理学院",
+      "name": "政治学与公共管理学院",
+      "url": "http://pspa.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|法学院",
+      "name": "法学院",
+      "url": "http://www.law.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|信息科学与工程学院",
+      "name": "信息科学与工程学院",
+      "url": "http://www.ise.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|计算机科学与技术学院",
+      "name": "计算机科学与技术学院",
+      "url": "http://www.cs.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|生命科学学院",
+      "name": "生命科学学院",
+      "url": "https://lifesci.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|环境科学与工程学院",
+      "name": "环境科学与工程学院",
+      "url": "http://www.huanke.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|国际创新转化学院",
+      "name": "国际创新转化学院",
+      "url": "https://isie.qd.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|网络空间安全学院",
+      "name": "网络空间安全学院",
+      "url": "https://cst.qd.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|前沿交叉科学青岛研究院",
+      "name": "前沿交叉科学青岛研究院",
+      "url": "https://frontier.qd.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|人文艺术研究院",
+      "name": "人文艺术研究院",
+      "url": "https://rwys.qd.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|微生物技术研究院",
+      "name": "微生物技术研究院",
+      "url": "http://www.mbtechinst.qd.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|环境研究院",
+      "name": "环境研究院",
+      "url": "https://www.hj.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|海洋研究院",
+      "name": "海洋研究院",
+      "url": "http://www.imst.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|数学与交叉科学研究中心",
+      "name": "数学与交叉科学研究中心",
+      "url": "http://www.mis.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    },
+    {
+      "id": "青岛校区|海信光电研究院",
+      "name": "海信光电研究院",
+      "url": "https://ori.sdu.edu.cn/",
+      "kind": "unit",
+      "relation": "campus_directory_entry",
+      "parent": "青岛校区"
+    }
+  ]
+}

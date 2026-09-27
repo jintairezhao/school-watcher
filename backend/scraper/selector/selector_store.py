@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 # ============================================================
 
 # 签名存储目录
-SIGNATURES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data', 'scrapling_sigs')
+from backend.core.config import DATA_DIR
+SIGNATURES_DIR = str(DATA_DIR / 'scrapling_sigs')
 
 
 def _get_signatures_db_path(school_id):
@@ -48,6 +49,8 @@ def save_element_signatures(html, school_id, url, selectors_dict):
     Returns:
         bool: 是否成功保存
     """
+    if os.environ.get('WATCHER_ADAPTIVE') != '1':
+        return False
     try:
         from scrapling.parser import Selector
         from scrapling.core.storage import SQLiteStorageSystem
@@ -204,6 +207,8 @@ def auto_heal_selectors(html, school_id, url, department_name=''):
     Returns:
         dict or None: 修复后的 selectors_dict，或 None（无法自愈）
     """
+    if os.environ.get('WATCHER_ADAPTIVE') != '1':
+        return None
     try:
         from scrapling.parser import Selector
         from scrapling.core.storage import SQLiteStorageSystem

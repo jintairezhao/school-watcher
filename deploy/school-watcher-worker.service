@@ -1,0 +1,24 @@
+[Unit]
+Description=School Watcher collection worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=school-watcher
+Group=school-watcher
+WorkingDirectory=/opt/school-watcher
+EnvironmentFile=/etc/school-watcher.env
+ExecStart=/opt/school-watcher/.venv/bin/python /opt/school-watcher/scripts/run_worker.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=45
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/school-watcher
+
+[Install]
+WantedBy=multi-user.target

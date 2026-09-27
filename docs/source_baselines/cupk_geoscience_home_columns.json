@@ -1,0 +1,41 @@
+{
+  "id": "cupk-geoscience-home-columns-2026-09-20",
+  "root_url": "https://www.cupk.edu.cn/",
+  "reference_url": "https://www.cupk.edu.cn/syxy/",
+  "reference_hash": "7b10f66f757bbcf2f3501eee12894ccdd3191258afa5f088f8d7e082bb2e1681",
+  "scope": "地球科学与工程学院官网首页的学院新闻、通知公告两栏及其全部 12 个展示条目",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-20",
+  "review_method": "逐项读取保存的官网 HTML，独立核对两个明确标题、各自 more 链接以及 8 条新闻和 4 条通知的地址。官网头部存在模板错误，仍保留该异常。首页轮播新闻卡片将地址指向学院首页，不将其视为可识别文章或新增发布栏目。本基准不包含菜单内其他发布栏目，不代表整学院栏目已经完整核对。",
+  "scope_selector": ".c-shiyouxueyuan-new-module__down-part",
+  "entries": [
+    {
+      "id": "news",
+      "name": "学院新闻",
+      "url": "https://www.cupk.edu.cn/syxy/ynxw/",
+      "scope_selector": ".c-shiyouxueyuan-new-module__half-width:has(.c-shiyouxueyuan-new-module__head-title-words:-soup-contains(\"学院新闻\"))",
+      "article_urls": [
+        "https://www.cupk.edu.cn/syxy/c/2026-08-29/538025.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-08-28/538018.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-08-26/538020.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-08-18/537705.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-07-04/535101.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-06-10/534685.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-05-21/534423.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-05-19/534342.shtml"
+      ]
+    },
+    {
+      "id": "notices",
+      "name": "通知公告",
+      "url": "https://www.cupk.edu.cn/syxy/tzgg/",
+      "scope_selector": ".c-shiyouxueyuan-new-module__half-width:has(.c-shiyouxueyuan-new-module__head-title-words:-soup-contains(\"通知公告\"))",
+      "article_urls": [
+        "https://www.cupk.edu.cn/syxy/c/2026-09-19/538656.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-09-17/538602.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-09-17/538582.shtml",
+        "https://www.cupk.edu.cn/syxy/c/2026-09-17/538579.shtml"
+      ]
+    }
+  ]
+}

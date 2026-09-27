@@ -1,0 +1,58 @@
+{% macro column_choice(column, selected, counts, sync_states) %}
+{% set department = column.department %}
+{% set sync = sync_states.get(department.id, {}) %}
+{% set status_label = '官网未提供链接' if column.unavailable else sync.get('status_label', '') %}
+{% set count = counts.get(department.id, 0) %}
+{% set count_known = count > 0 or sync.get('state') in ('done', 'saved') %}
+<label class="department-option" data-source-label="{{ department.name }} {{ column.label }}" title="{{ department.name }}{% if status_label %} · {{ status_label }}{% endif %}{% if sync.get('message') %}：{{ sync.message }}{% endif %}">
+    <input type="checkbox" value="{{ department.id }}" data-department aria-label="{{ department.name }}" {% if column.unavailable %}disabled{% elif department.id in selected %}checked{% endif %}>
+    <span class="checkbox-mark" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6"/></svg></span>
+    <span class="department-name">{{ column.label }}<small class="source-sync-label" data-source-status {% if not status_label %}hidden{% endif %}>{{ status_label }}</small></span>
+    <span class="department-count" data-saved-count="{{ count }}" aria-label="{{ (count ~ ' 条已保存通知') if count_known else '尚未取得通知，数量未知' }}">{{ count if count_known else '—' }}</span>
+</label>
+{% endmacro %}
+
+{% macro unit_view(unit, selected, counts, sync_states) %}
+{% if unit.expandable %}
+{% set selectable = unit.columns|rejectattr('unavailable')|list %}
+{% set selected_columns = selectable|map(attribute='department.id')|select('in', selected)|list %}
+<div class="source-unit" data-source-unit="{{ unit.key }}" data-source-unit-name="{{ unit.name }}">
+    <div class="source-unit-row">
+        <label class="unit-select">
+            <input type="checkbox" data-unit-select aria-label="选择{{ unit.name }}的全部{{ '单位' if unit.directory else '栏目' }}" {% if not selectable %}disabled{% elif selected_columns|length == selectable|length %}checked{% endif %}>
+            <span class="checkbox-mark" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6"/></svg></span>
+        </label>
+        <button type="button" class="source-unit-toggle" aria-expanded="{{ 'true' if selected_columns else 'false' }}" aria-controls="unit-columns-{{ unit.key }}">
+            <span class="source-unit-name">{{ unit.name }}<small>{{ unit.columns|length }} 个{{ '单位' if unit.directory else '栏目' }}</small></span>
+            <svg class="unit-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+    </div>
+    <div class="source-unit-columns" id="unit-columns-{{ unit.key }}" {% if not selected_columns %}hidden{% endif %}>
+        {% for column in unit.own_columns %}{{ column_choice(column, selected, counts, sync_states) }}{% endfor %}
+        {% for child in unit.children %}{{ unit_view(child, selected, counts, sync_states) }}{% endfor %}
+    </div>
+</div>
+{% else %}
+    {% for column in unit.own_columns %}{{ column_choice(column, selected, counts, sync_states) }}{% endfor %}
+{% endif %}
+{% endmacro %}
+
+{% macro source_tree_view(groups, selected, counts, current_group='', sync_states={}) %}
+<div class="department-list">
+    {% for group, units in groups.items() %}
+    {% set selected_ids = units|map(attribute='columns')|sum(start=[])|map(attribute='department.id')|unique|select('in', selected)|list %}
+    {% set expanded = selected_ids|length > 0 or current_group == group %}
+    <section class="inbox-source-group" data-source-group="{{ group }}" aria-label="{{ group }}">
+        <h3><button type="button" class="source-group-toggle" aria-expanded="{{ 'true' if expanded else 'false' }}" aria-controls="source-group-{{ loop.index }}">
+            <span>{{ group }}</span>
+            <small data-group-selection {% if not selected_ids %}hidden{% endif %}>已选 {{ selected_ids|length }}</small>
+            <svg class="group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button></h3>
+        <div class="source-group-items" id="source-group-{{ loop.index }}" {% if not expanded %}hidden{% endif %}>
+        <button type="button" class="text-button source-group-all" data-source-group-filter="{{ group }}" aria-pressed="{{ 'true' if current_group == group else 'false' }}">查看本组全部</button>
+        {% for unit in units %}{{ unit_view(unit, selected, counts, sync_states) }}{% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+</div>
+{% endmacro %}

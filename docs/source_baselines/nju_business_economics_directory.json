@@ -1,0 +1,60 @@
+{
+  "id": "nju-economics-directory-2026-09-21",
+  "root_url": "https://www.nju.edu.cn/",
+  "reference_url": "http://nubs.nju.edu.cn/njdxjjxy/list.htm",
+  "reference_hash": "c24099f86b3f3861010477adeff4726adb848910fa080a9cf83a200c39060de0",
+  "scope": "南京大学商学院经济学院介绍页侧栏完整学院及系所分支，共 6 项；目录列示不等于各单位独立发布栏目。",
+  "category": "academic_units",
+  "reviewed_at": "2026-09-21",
+  "review_method": "独立读取商学院官网侧栏的学院标题、全部嵌套系所及原始相对链接。实际 HTTP 访问跳转至 HTTPS，按已观察到的最终地址解析相对链接。学院介绍正文显示内容正在更新，但侧栏目录仍明确列示；各系所介绍页另行读取，有正文且共享商学院公共导航，不能仅凭单位名称与页面标题一致确认新闻栏目属于该单位。原学校总目录的旧地址保留，不建立未经证实的网址别名。",
+  "scope_selector": ".col_list .wp_listcolumn > li.column-6",
+  "entries": [
+    {
+      "id": "经济学院",
+      "name": "经济学院",
+      "url": "https://nubs.nju.edu.cn/njdxjjxy/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry"
+    },
+    {
+      "id": "经济学系",
+      "name": "经济学系",
+      "url": "https://nubs.nju.edu.cn/jjxx/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "经济学院"
+    },
+    {
+      "id": "国际经济贸易系",
+      "name": "国际经济贸易系",
+      "url": "https://nubs.nju.edu.cn/gjjjmyx/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "经济学院"
+    },
+    {
+      "id": "金融与保险学系",
+      "name": "金融与保险学系",
+      "url": "https://nubs.nju.edu.cn/jrybxxx/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "经济学院"
+    },
+    {
+      "id": "产业经济学系",
+      "name": "产业经济学系",
+      "url": "https://nubs.nju.edu.cn/cyjjxx/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "经济学院"
+    },
+    {
+      "id": "人口研究所",
+      "name": "人口研究所",
+      "url": "https://nubs.nju.edu.cn/rkyjs/list.htm",
+      "kind": "unit",
+      "relation": "unit_profile_entry",
+      "parent": "经济学院"
+    }
+  ]
+}

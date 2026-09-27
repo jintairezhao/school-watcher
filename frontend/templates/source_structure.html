@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ school.name }} · 官网来源结构{% endblock %}
+{% macro branch(node, depth=0) %}
+<li class="structure-node">
+    {% if node.children %}<details {% if depth == 0 %}open{% endif %}><summary><span>{{ node.name }}</span><small>{{ node.relation_label }} · {{ node.children|length }} 个条目</small></summary>
+    {% else %}<div class="structure-leaf"><span>{{ node.name }}</span><small>{{ node.relation_label }}</small></div>{% endif %}
+    <div class="structure-node-meta">
+        {% if node.urls %}{% for source_url in node.urls %}<a href="{{ source_url }}" target="_blank" rel="noopener noreferrer">{{ '官网入口' if loop.first else '官网入口 ' ~ loop.index }}</a>{% endfor %}<span>{{ node.health_label }}</span>{% else %}<span>{{ '分组' if node.kind == 'group' else '官网未提供独立入口' }}</span>{% endif %}
+        {% if node.cycle %}<span>存在循环引用，关系待核实</span>{% endif %}
+        {% if node.node_key in programme_attributes %}<span>{% for label, value in programme_attributes[node.node_key].items() %}{{ label }}：{{ value }}{% if not loop.last %} · {% endif %}{% endfor %}</span>{% endif %}
+    </div>
+    {% if node.children %}<ul>{% for child in node.children %}{{ branch(child, depth+1) }}{% endfor %}</ul></details>{% endif %}
+</li>
+{% endmacro %}
+{% block content %}
+<div class="sources-page structure-page">
+    {% from '_school_header.html' import school_header with context %}
+    {{ school_header(school, 'structure', '查看院系、专业与通知来源的官网依据。') }}
+    {% if report %}
+    <div class="source-sync">
+        <strong>{% if report.accepted %}已通过来源核验{% else %}来源仍在核对，尚未达到 {{ report.match_threshold }}% 验收标准{% endif %}</strong>
+        <p>优先核对院系、专业、培养、选课和考试等学生相关来源。历史清单共检查 {{ report.states.get('fetched', 0) }} 个页面，保留 {{ report.states.get('pending', 0) + report.states.get('running', 0) }} 个待查入口；这些总数包含其它领域，不能当作学生相关来源的覆盖率。</p>
+        <p>单位覆盖率、栏目覆盖率和来源准确率：{% if not report.accepted %}未完成独立基准核对{% else %}均已通过{% endif %}。<a href="{{ request.full_path }}">刷新进度</a></p>
+        {% if report.reference_checks %}
+        <details><summary>已核对的目录范围</summary>
+            {% for check in report.reference_checks %}
+            <p><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=check.reference_url) }}">{{ check.scope }}</a><br>
+            {% if check.reference_current %}{{ '栏目名称、入口及列表范围一致' if check.category == 'publication_columns' else '名称、入口及官网列示关系一致' }}：{{ check.matched }} / {{ check.total }} 项{% if check.unexpected %}；另有 {{ check.unexpected|length }} 个未匹配入口{% endif %}。
+            {% else %}官网证据或结构解析已变化，需要重新核对。
+            {% endif %}核对日期：{{ check.reviewed_at }}。</p>
+            {% endfor %}
+            <p>上述结果仅适用于列出的范围，学生相关单位与通知来源仍需分别核验；综合新闻的核对结果不代替教务和专业来源的覆盖率。</p>
+        </details>
+        {% endif %}
+    </div>
+    {% if references %}
+    <form class="structure-reference" method="get">
+        <label for="structureReference">按官网页面查看原始层级</label>
+        <div><select class="form-input" name="reference" id="structureReference">{% for ref in references %}<option value="{{ ref.url }}" {% if selected and selected.url == ref.url %}selected{% endif %}>{{ ref.label }}</option>{% endfor %}</select><button class="btn btn-outline">查看结构</button></div>
+    </form>
+    {% if selected %}<p class="structure-origin">出处：<a href="{{ selected.url }}" target="_blank" rel="noopener noreferrer">{{ selected.title or selected.label }}</a> · 检查于 {{ selected.checked_at }}</p>{% endif %}
+    {% if major_owners %}
+    <div class="structure-origin"><p>该专业目录的学院官网入口路径：</p>
+        {% for owner in major_owners %}<p>{% for part in owner.nodes %}{{ part.name }} → {% endfor %}{% for part in owner.entry_nodes %}{{ part.name }} → {% endfor %}{{ selected.label }}<br>
+            依据：{% for ref in owner.references %}<a href="{{ ref.url }}" target="_blank" rel="noopener noreferrer">{{ ref.title }}</a>{% if not loop.last %}、{% endif %}{% endfor %}</p>{% endfor %}
+        <p>保留官网列示路径；专业介绍不等于独立的通知发布单位。</p>
+    </div>
+    {% endif %}
+    <p class="structure-explanation">缩进保留官网中的分组与嵌套。“挂靠单位”“下属单位”只在官网有明确依据时标出；导航位置不直接代表行政隶属。</p>
+    {% if directory_link_issues %}<details class="directory-note" id="directoryLinkIssues">
+        <summary>官网目录中的异常入口（{{ directory_link_issues|length }} 项）</summary>
+        <ul>{% for entry in directory_link_issues %}<li><strong>{{ entry.name }}</strong>：{{ '链接回到当前目录，尚未提供独立网站入口。' if entry.reason == 'self_link' else '原链接缺少网址协议，浏览器会打开目录下的相对地址，正确入口待核实。' }}</li>{% endfor %}</ul>
+    </details>{% endif %}
+    {% if directory_variants %}<details class="directory-note" id="directoryDifferences">
+        <summary>官网不同目录的差异（{{ directory_variants|length }} 项）</summary>
+        <p>以下版本来自同一官网页面。保留各自列示的单位、上下级和网址，具体差异仍待核实。</p>
+        <ul>{% for entry in directory_variants %}<li><strong>{% if entry.parent %}{{ entry.parent }} → {% endif %}{{ entry.name }}</strong>
+                <ul>{% for version in entry.versions %}<li>{{ version.name }}：{% if not version.present %}此目录未列出{% else %}{% for target in version.urls %}{% if target %}<a href="{{ target }}" target="_blank" rel="noopener noreferrer">{{ target }}</a>{% else %}官网未提供链接{% endif %}{% if not loop.last %}；{% endif %}{% endfor %}{% if version.relationship %}；{{ version.relationship }}{% endif %}{% endif %}</li>{% endfor %}</ul>
+        </li>{% endfor %}</ul>
+    </details>{% endif %}
+    {% if major_tree %}
+    {% for context in programme_contexts %}<div class="directory-note"><strong>{{ context.scope }}{% if context.period %} · 原目录标注 {{ context.period }}{% endif %}</strong><p>{{ context.notice }}</p>{% if context.legend %}<p>{{ context.legend }}</p>{% endif %}</div>{% endfor %}
+    <ul class="structure-tree">{% for node in major_tree %}{{ branch(node) }}{% endfor %}</ul>
+    <details class="directory-note"><summary>查看本页其它官网导航</summary>
+        <ul class="structure-tree">{% for node in tree %}{{ branch(node) }}{% endfor %}</ul>
+    </details>
+    {% else %}
+    <ul class="structure-tree">{% for node in tree %}{{ branch(node) }}{% endfor %}</ul>
+    {% endif %}
+    {% else %}<p>尚未取得可解析的组织目录，已知入口仍保留，等待继续核对。</p>{% endif %}
+    {% if issues %}<details class="directory-note" id="sourceIssues" {% if request.args.get('issues_page') %}open{% endif %}><summary>需要复查的来源（{{ issue_total }} 项）</summary>
+        <ul class="structure-issues">{% for source in issues %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.label }}</a><span>{{ source.health_label }}</span></li>{% endfor %}</ul>
+        {% if issue_pages > 1 %}<nav class="pagination-bar" aria-label="待复查来源翻页">
+            {% if issue_page > 1 %}<a rel="prev" href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=selected.url if selected else None, issues_page=issue_page-1) }}#sourceIssues">上一页</a>{% else %}<span>上一页</span>{% endif %}
+            <span>第 {{ issue_page }} / {{ issue_pages }} 页</span>
+            {% if issue_page < issue_pages %}<a rel="next" href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=selected.url if selected else None, issues_page=issue_page+1) }}#sourceIssues">下一页</a>{% else %}<span>下一页</span>{% endif %}
+        </nav>{% endif %}
+    </details>{% endif %}
+    {% else %}
+    <div class="source-sync"><strong>这所学校尚未完成深度来源核对</strong><p>当前订阅栏目不能代表完整院系框架。官网单位及发布栏目仍需逐层核实。</p></div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% macro summary_panel(ann, state, user) %}
+{% set state = state or {} %}
+{% set active = state.get('status') in ['pending', 'running', 'waiting_content'] %}
+<section class="shared-summary" data-summary-panel="{{ ann.id }}" data-summary-status="{{ state.get('status', 'none') }}" data-summary-compact="{{ 'true' if user and not active and not state.get('summary') and not state.get('error') and not state.get('historical') and state.get('status', 'none') == 'none' else 'false' }}" aria-labelledby="summary-title-{{ ann.id }}">
+    <div class="shared-summary-heading">
+        <h3 id="summary-title-{{ ann.id }}">内容摘要</h3>
+        {% if user %}
+        <button type="button" class="btn btn-sm btn-outline" data-summary-generate {% if active or state.get('status') == 'uncertain' %}disabled{% endif %} {% if state.get('summary') %}hidden{% endif %}>{{ '正在生成…' if active else '生成摘要' }}</button>
+        {% if user.is_admin %}<button type="button" class="text-button" data-summary-force {% if active or (not state.get('summary') and state.get('status') != 'uncertain') %}hidden{% endif %}>重新生成</button>{% endif %}
+        {% endif %}
+    </div>
+    <p class="shared-summary-text" data-summary-text {% if not state.get('summary') %}hidden{% endif %}>{{ state.get('summary', '') }}</p>
+    <p class="shared-summary-status" data-summary-message role="status" aria-live="polite">{% if active %}{{ '正在读取官网正文…' if state.get('status') == 'waiting_content' else '正在生成，完成后会显示在这里。' }}{% elif state.get('error') %}{{ state['error'] }}{% elif state.get('summary') %}根据正文生成，附件未纳入摘要。{% elif user %}点击后生成，所有读者共享这份摘要。{% else %}登录后可生成摘要。{% endif %}</p>
+    {% if state.get('historical') %}
+    <details class="shared-summary-history">
+        <summary>查看历史摘要</summary>
+        <p>以下摘要尚未与当前正文版本核对。</p>
+        {% for item in state['historical'] %}<p>{{ item.summary }}</p>{% endfor %}
+    </details>
+    {% endif %}
+</section>
+{% endmacro %}

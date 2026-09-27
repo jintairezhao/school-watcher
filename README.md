@@ -1,208 +1,143 @@
-# 🏫 学校通知扒取工具（School Notification Watcher）
+# School Watcher · 学校通知
 
-聚合多所大学官网通知，**DeepSeek AI 智能摘要**，自动发现院系栏目，干净美观的 Web UI，手机电脑都能用。
-**多用户 + 订阅驱动**：注册账户、订阅学校，有人订阅才抓取；每用户独立已读状态。
+> [公共目录与实例 AI 的本轮实现、测试及待验收项](docs/ONBOARDING_AI_IMPLEMENTATION.md)。本轮新增来源统一核实、实例级 API 和按需共享摘要；全名单覆盖与真实服务器容量仍需验收。
 
-## ✨ 功能特点
+轻量的高校官网信息收件箱。订阅学校或官网栏目，在一处阅读、搜索、收藏和归档通知。
 
-- 🔍 **自动站点发现** — 无需手写选择器，输入学校官网即可自动分析导航结构、识别院系栏目、探测通知列表
-- 🧠 **通用 DOM 结构分析** — 启发式算法自动识别任意网站的通知列表、正文区域、翻页方式，不依赖硬编码模板
-- 🤖 **AI 智能摘要** — DeepSeek 为每条通知生成 ≤100 字摘要
-- 🕷️ **双重反爬引擎** — `curl_cffi` 模拟 Chrome TLS 指纹 + Playwright Chromium 渲染 JS 页面（智能回退）
-- 🩹 **选择器自愈** — Scrapling 保存元素签名，网站改版后自动修复失效选择器
-- 🔄 **智能变更检测** — 内容哈希 + URL 指纹 + 日期比较，不遗漏更新
-- ⚡ **增量抓取** — 连续命中已存在通知即停止翻页，二次全校抓取从 25 分钟降至秒级
-- 📂 **部门树归类** — 通知按「导航分组 → 部门 → 年月」三级归档，父子部门收展
-- 📰 **DAILY NEWS** — 近 7 天全校通知速览，按今天/昨天/前天滚动归类
-- ✅ **一键已读** — 首页 / 学校页一键标记全部未读
-- 🔒 **安全认证** — 密码登录 + 密保问题找回 + HTML 清洗 + 安全响应头
-- 📱 **移动优先** — 响应式设计，手机浏览体验完美
-- ⏰ **定时抓取** — APScheduler 后台定时检查更新（默认 30 分钟，可配置）
+**统一抓取版本**：Windows 本机 SQLite 与 Linux 多人 PostgreSQL 共用业务代码，动态页面由独立 Playwright 服务执行，管理员可以处理访问验证。部署、完整搬迁、备份恢复和验收范围见 [运行手册](docs/UNIFIED_FETCH_RUNTIME.md) 与 [验收记录](docs/RUNTIME_ACCEPTANCE.md)。
 
-## 🛠️ 技术栈
+## 日常使用
 
-| 层 | 技术 |
-|------|------|
-| 后端 | Python 3 + Flask（应用工厂 + 蓝图） |
-| 数据库 | SQLite + Flask-SQLAlchemy + Flask-Migrate（Alembic） |
-| 爬取 | BeautifulSoup4 + lxml + curl_cffi（TLS 指纹）+ Scrapling（选择器自愈）+ Playwright（JS 回退） |
-| AI | DeepSeek API（OpenAI 兼容 SDK，`deepseek-chat`） |
-| 调度 | APScheduler（后台定时任务） |
-| 前端 | Jinja2 模板 + 原生 JS/CSS + SSE（实时进度） |
+1. 注册或登录账户，进入「学校目录」。
+2. 按全称、简称或地区查找学校，点击「订阅学校」。
+3. 在「选择栏目」中接收全部栏目，或只勾选需要的栏目。
+4. 回到收件箱，按学校、官网分组、栏目、时间和阅读状态筛选。
+5. 打开通知查看正文与官网原文；重要内容收藏，处理完的内容归档。归档可撤销，退订不会删除收藏。
+6. 官网栏目未自动发现时，可在栏目订阅页补充同校官网的栏目列表地址。
 
-## 🚀 快速开始
+分类沿用学校实际名称，例如「人才培养 / 本科教育」「科学研究 / 学术活动」。没有原始分组时显示「其他栏目」，不猜测学校分类，也不通过个人偏好重写官网分类。
 
-### 1. 安装
+## 学校范围
 
-双击 `setup.bat`，自动完成依赖安装、数据库迁移和 Playwright Chromium 安装。
+内置 200 个高校官网入口，包含教育部 2022 年第二轮双一流名单的全部 147 所高校，以及 53 所补充本科高校；支持手动补充其他高校官网。
 
-> 依赖安装到全局 Python（`python` / `pip`），无需 venv。
+- [教育部第二轮双一流名单通知](https://www.moe.gov.cn/srcsite/A22/s7065/202202/t20220211_598710.html)
+- 上海体育大学使用现校名，对应名单中的上海体育学院。
+- 地区按学校主要办学所在地展示；独立校区可以单独添加。
+- “一本”是招生批次，因省份、年份和专业而异。补充目录不是全国一本名单或招生资格认证。
+- **列入目录不等于已经验证全部栏目可抓取。** 每所学校订阅后才开始接入，首次同步情况在栏目订阅页展示。
+- 仅采集公开网页。需要校内登录、仅内网可用或受访问限制的来源可能无法接入。
 
-或手动：
+## 安装和启动
 
-```bash
-pip install -r requirements.txt
+本版验证环境为 Python 3.14.3。本机版不需要 Redis、独立数据库服务或 AI API Key；浏览器渲染需要安装对应 Chromium。Linux 多人版使用 PostgreSQL 与 Docker Compose。
 
-# 数据库迁移
-flask --app app db upgrade
+Windows：
 
-# 可选：安装 Playwright Chromium（用于 JS 渲染页面回退）
+1. 双击 `scripts/setup.bat`：建立项目内的 `.venv`、安装基础依赖并迁移数据库。
+2. 安装下文浏览器依赖后，双击 `scripts/run.bat` 或现有桌面快捷方式：自动检查数据库版本，分别启动网站、采集与浏览器服务。
+3. 打开 [本地网站](http://localhost:5000)，注册普通账户后即可订阅。
+4. 桌面启动在后台运行；重复点击不会多开。需要在终端控制启动、停止时，使用下面的手动方式。
+
+手动启动（在项目根目录）：
+
+```sh
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/macOS: source .venv/bin/activate
+python -m pip install -r requirements.txt
+python scripts/migrate_safely.py
+python app.py
+# 第二个终端（同一虚拟环境）
+python scripts/run_worker.py
+```
+
+基础运行使用 Flask + SQLite + Waitress，前端为 Jinja 模板、原生 JavaScript 和 CSS。默认只监听本机 127.0.0.1:5000。若需同一局域网访问，可在 `.env` 设置 `WATCHER_HOST=0.0.0.0`，端口用 `WATCHER_PORT` 调整。
+
+已有管理员账户和密码继续有效。新部署的普通用户可直接注册；需要管理员权限时，在本机运行 `python -m flask --app app promote-user 用户名` 将已注册账户设为管理员。
+
+## 轻量模式
+
+默认行为：
+
+- 只同步有人订阅的学校；若所有订阅者都选择了部分栏目，只同步这些栏目的并集。
+- 新学校先使用精简目录中已发现的栏目；缺失或失效来源进入有页数、深度和存储限制的适配任务。学校页保留官网层级、多处归属和待复查状态。
+- 已订阅来源每日检查健康状态，学校目录每月检查变化；不再每五分钟扩展官网调查。
+- 每个栏目每轮最多 3 页；已同步栏目会增量检查。
+- 采集由独立进程领取持久任务，默认两个任务线程、最多两个并发官网请求；支持去重、失败重试和中断恢复。
+- 列表每页 40 条，目录每页 30 所。通知仅保存标题、日期、来源、链接及已有摘要；阅读时补取正文，收藏后长期保留。图片、附件保留官网链接。
+- 未收藏正文默认上限 150MB／30 天，调查缓存默认上限 100MB／7 天；管理员可调整保留天数。缓存淘汰不删除通知、用户记录和收藏。搜索覆盖标题、摘要及已保存正文。
+- 同步间隔默认 30 分钟，设置变更由采集进程每 30 秒读取；网页请求只排队，不启动采集。
+- 每日备份默认保留最近七份，可调整保留份数并复制到独立存储。管理员可在「系统管理 → 存储管理」查看用量、手动清理、导出数据备份及合并导入。
+
+### 存储管理与数据合并
+
+管理员访问 `/admin/storage`，可设置正文缓存、调查网页缓存的保留天数（0–3650，0 表示不按时间清理，容量上限仍生效），以及抓取记录保留时长和自动备份份数（1–100）。规则保存到数据库，网页和独立后台进程共同读取；保存规则本身不会执行清理。抓取记录设置与原抓取记录页面同步。
+
+手动清理可选择按已保存规则清理，或清空所有未收藏正文及调查网页缓存；两种方式都会清理超期已结束记录和超出保留份数的自动备份。清理前有明确确认，收藏正文、通知标题/日期/原文链接、用户、订阅及正在运行的任务保留。数据库空闲空间可供后续写入复用，文件大小不一定立即减少。
+
+「导出数据备份」下载 ZIP，包含学校、部门、通知、已缓存正文、摘要及来源/目录关系，不包含账户密码、配置密钥、个人收藏或阅读状态，也不下载未缓存正文、图片及附件。需要保留旧正文时先导出再清理。原有每日完整数据库备份继续独立运行。
+
+「导入并合并」支持上述 ZIP 和原有 `watcher-*.zip` 自动数据库备份（上传请求最多 100MB、解压后最多 256MB、每表最多 20 万行）。按规范化原文链接去重，保留有实际含义的查询参数及网页应用路由；无链接记录按学校、部门、标题和发布时间（缺失时使用创建时间）匹配。重复项保留当前内容并补全缺失正文、摘要、日期和来源关系，历史独有通知追加，当前独有通知保留；不按当前官网列表筛除历史记录，不按备份中的编号覆盖新库。新导入学校不会自动订阅。校验失败不写入，合并过程中数据库错误会整体回滚。完整恢复账户及运行目录仍使用下述运维备份流程。
+
+无链接且发布时间、创建时间均缺失的历史记录，使用内容指纹辅助去重；备份会保留该指纹，因此清理正文缓存后再次导入仍可匹配。
+
+若确实需要更多覆盖，可选择开启：
+
+| 环境变量 | 默认值 | 用途 |
+| --- | --- | --- |
+| `WATCHER_MAX_PAGES` | `3` | 每栏目每轮最多页数，范围 1–50 |
+| `WATCHER_BROWSER` | 桌面启动器与 Compose 为 `1` | 设为 0 只运行静态采集 |
+| `WATCHER_ENHANCED_HTTP` | `0` | 设为 1 使用可选的 curl_cffi |
+| `WATCHER_ADAPTIVE` | `0` | 设为 1 启用可选的 Scrapling 自适应签名 |
+
+浏览器增强依赖：
+
+```sh
+python -m pip install -r requirements-browser.txt
 python -m playwright install chromium
 ```
 
-### 2. 启动
+浏览器服务必须与网站、采集进程使用相同调用凭证。桌面启动器自动配置；手动启动请按[运行手册](docs/UNIFIED_FETCH_RUNTIME.md)配置。管理员入口位于“系统管理 → 处理访问验证”。
 
-双击 `run.bat`（自动启动服务并打开浏览器），或在终端：
+AI 摘要独立可选：
 
-```bash
+```sh
+python -m pip install -r requirements-ai.txt
+```
+
+随后由管理员在「系统管理」配置 API Key。没有 Key 时跳过摘要，不影响订阅、分类、搜索与阅读。每批最多处理 50 条待摘要通知。
+
+## 旧版本升级
+
+先停止旧服务，再执行：
+
+```sh
+python scripts/migrate_safely.py
 python app.py
+# 第二个终端
+python scripts/run_worker.py
 ```
 
-浏览器访问 **http://localhost:5000**
+升级助手先通过 SQLite 在线备份生成带时间戳的数据库副本，再应用迁移。现有学校、通知、订阅和已读记录保留；现有整校订阅默认继续接收全部栏目。
 
-### 3. 首次使用
+备份位于数据库旁的 `*.backup-时间戳`。数据库和 `.env` 含账户与配置，均不纳入版本控制。回滚时停止服务，将备份复制到新的数据库文件，通过 `DATABASE_URL=sqlite:///绝对路径` 指向副本，并配合升级前代码使用；不要手工覆盖正在运行的 SQLite 文件。
 
-1. **登录**：多用户体系。存量部署的原访问密码自动成为 `admin` 账户密码；新用户可注册
-2. **订阅学校**：「学校目录」订阅学校；提交新学校 = 创建 + 自动订阅 + 立即首抓（订阅驱动抓取）
-3. **设置 API Key**：admin 打开「平台设置」填入 DeepSeek API Key（加密存储，需设 `FIELD_ENC_KEY` 环境变量启用加密）
-   - 在 https://platform.deepseek.com 注册获取（以 `sk-` 开头）
-4. **自动发现部门**：管理页「🔍 自动发现」→ 预览候选部门 → 勾选并应用
-5. **抓取**：订阅后的学校按定时间隔自动抓取；admin 可手动「刷新」
-6. **生产部署**：`waitress-serve --threads=8 --port=5000 app:app`（跨平台）；多进程时调度器自动文件锁单实例
+已有大体积官网调查库的迁移采用「生成精简目录 → 核验 → 停服切换 → 压缩回退归档」流程，参见[部署与迁移说明](docs/DEPLOYMENT.md)。不要直接删除旧调查库。公开试运营的 Caddy、systemd、环境变量、日志和恢复配置位于 `deploy/`；本地启动不代表已发布公网。
 
-### 4. 在手机上访问
+## 验证与维护
 
-#### 方法一：同一 WiFi（免费）
-
-手机和电脑连同一 WiFi，手机浏览器访问：
-
-```
-http://你的电脑IP:5000
+```sh
+python -m unittest discover -s tests -v
+python tests/check_migration.py
+python tests/check_minimal_runtime.py
+# 可选：需要 Playwright 和本机 Edge，仅操作隔离测试数据
+python tests/check_browser.py
+# 可选联网，只读官网检查
+python scripts/verify_sources.py
+python scripts/check_live_ingestion.py
 ```
 
-查看电脑 IP：终端运行 `ipconfig`，找 IPv4 地址。
+[公开试运营、备份和验收](docs/DEPLOYMENT.md) · [实现说明和历史验证记录](docs/LIGHTWEIGHT.md) · [原项目文档](docs/README.md)
 
-#### 方法二：ngrok 内网穿透（推荐，免费）
-
-1. 在 https://ngrok.com 注册，下载 ngrok
-2. 运行：`ngrok http 5000`
-3. 手机上访问 ngrok 生成的公网地址（如 `https://xxxx.ngrok-free.app`）
-
-## 🧩 配置说明
-
-### 学校配置（config.yaml）
-
-`config.yaml` 作为种子配置，**启动时自动导入数据库**（只增不更新）。也可在「管理」页面通过 UI 或自动发现添加学校。
-
-```yaml
-schools:
-  - name: "中国石油大学（北京）克拉玛依校区"
-    url: "https://www.cupk.edu.cn"
-    enabled: true
-    departments:
-      - name: "校区通知公告"
-        list_url: "https://www.cupk.edu.cn"
-        list_selector: "li.c-notice__half-li"
-        title_selector: "a"
-        link_selector: "a"
-        date_selector: ".c-notice__left-date"
-        content_selector: "div.c-main__right"
-```
-
-> ⚠️ YAML 只增不更新，修改已有部门请通过 API `PUT /api/departments/<id>` 或管理界面完成。
-
-### CSS 选择器字段说明
-
-| 字段 | 说明 | 示例 |
-|------|------|------|
-| 列表项选择器 | 每条通知的容器 | `li.news-item` 或 `div.news-list > div` |
-| 标题选择器 | 标题元素（相对列表项） | `a.news-title` 或 `h3 a` |
-| 链接选择器 | 链接元素 | 同上 |
-| 日期选择器 | 日期元素 | `span.date` 或 `.time` |
-| 正文选择器 | 详情页正文容器 | `div.article-content` 或 `.entry-content` |
-
-> 💡 管理界面内置「🧪 测试选择器」按钮，可实时验证 CSS 选择器是否匹配到条目。自动发现会自动完成以上配置，无需手动填写。
-
-## 📁 项目结构
-
-```
-school-watcher/
-├── app.py                     # Flask 入口
-├── config.yaml                # 学校配置种子文件（启动时导入）
-├── requirements.txt
-├── scripts/                   # Windows 启动 / 安装脚本
-│   ├── setup.bat              # 一键安装
-│   ├── run.bat                # 一键启动
-│   └── school-notifier.bat    # 桌面快捷方式指向的启动脚本
-├── backend/                   # 后端包（分层）
-│   ├── __init__.py            # create_app 应用工厂
-│   ├── core/                  # 核心：路径常量 + YAML 导入 + 扩展单例
-│   │   ├── config.py
-│   │   └── extensions.py
-│   ├── auth/                  # 认证与安全
-│   │   ├── auth.py            # 密码 / 密保 / 速率限制 / 钩子
-│   │   └── security.py        # 安全响应头
-│   ├── ai/                    # DeepSeek 摘要
-│   ├── database/              # ORM 模型 + db（5 张表）
-│   ├── routes/                # 蓝图：页面 + API
-│   ├── scheduler/             # APScheduler 定时任务
-│   ├── scraper/               # 爬虫（按职责分包）
-│   │   ├── engine.py          # 核心引擎
-│   │   ├── change_detector.py # 变更检测
-│   │   ├── sanitizer.py       # HTML 清洗
-│   │   ├── fetchers/          # 抓取器（Playwright / Selenium）
-│   │   ├── detectors/         # DOM 检测 / 分析器
-│   │   ├── discovery/         # 站点发现
-│   │   ├── selector/          # 选择器学习 / 自愈
-│   │   └── progress/          # 抓取进度
-│   └── services/              # 部门树构建 + 发现编排
-├── frontend/                  # 前端
-│   ├── static/                # CSS + JS + 图片
-│   └── templates/             # HTML 模板（登录/首页/学校/通知/管理/设置/找回）
-├── migrations/                # Alembic 数据库迁移
-├── data/                      # SQLite 数据库 + 抓取数据（已 gitignore）
-└── docs/                      # 项目文档（见 docs/README.md 文档导航）
-```
-
-## 🔌 主要 API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/scrape/<id>` | 手动触发爬取（后台 + SSE 进度） |
-| POST | `/api/scrape/all` | 触发全部启用学校爬取 |
-| GET | `/api/scrape/<id>/events` | SSE 实时进度流 |
-| POST | `/api/summarize` | 批量生成 AI 摘要 |
-| GET/POST | `/api/schools` | 学校列表 / 添加学校 |
-| GET | `/api/schools/suggest-url` | 校名 → 官网 URL 建议 |
-| POST | `/api/schools/<id>/discover` | 触发站点自动发现 |
-| POST | `/api/schools/<id>/discover/apply` | 应用发现的部门 |
-| POST | `/api/departments/test-selectors` | 测试 CSS 选择器 |
-| POST | `/api/announcements/read-all` | 一键已读 |
-
-## 🧑‍💻 开发
-
-```bash
-# 修改 models.py 后生成迁移
-python -m flask --app app db migrate -m "描述这次变更"
-
-# 应用迁移
-python -m flask --app app db upgrade
-```
-
-> 文档导航见 [docs/README.md](docs/README.md)，详细架构见 [docs/DATABASE.md](docs/DATABASE.md)，踩坑与历史见 [docs/HANDOFF.md](docs/HANDOFF.md)。
-
-## ❓ 常见问题
-
-**Q: 爬取不到通知？**
-- 先确认学校/部门已通过「自动发现」配置好（空选择器时首次抓取会自动探测）
-- 部分学校网站有反爬机制，可尝试在设置中调整；JS 渲染页面会自动触发 Playwright 回退
-
-**Q: 摘要生成失败？**
-- 确认 DeepSeek API Key 有效（以 `sk-` 开头）且余额充足
-- 检查网络是否能访问 api.deepseek.com
-
-**Q: 如何添加更多学校？**
-- 「管理」页面 → 添加学校 → 「🔍 自动发现」→ 勾选应用 → 「刷新」
-
-**Q: 忘记登录密码？**
-- 登录页 →「忘记密码」→ 回答密保问题重置（需先在设置页配置密保问题）
+官网会改版，静态采集无法保证覆盖每所高校的所有页面。优先通过「补充栏目地址」指定公开列表页；复杂网页可由管理员维护选择器或开启可选增强功能。

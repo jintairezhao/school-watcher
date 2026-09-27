@@ -1,0 +1,22 @@
+[Unit]
+Description=School Watcher website
+After=network.target
+
+[Service]
+Type=simple
+User=school-watcher
+Group=school-watcher
+WorkingDirectory=/opt/school-watcher
+EnvironmentFile=/etc/school-watcher.env
+ExecStart=/opt/school-watcher/.venv/bin/python /opt/school-watcher/app.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/school-watcher
+
+[Install]
+WantedBy=multi-user.target

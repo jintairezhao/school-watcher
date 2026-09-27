@@ -1,0 +1,86 @@
+{
+  "id": "zju-medical-home-columns-2026-09-21",
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/",
+  "reference_hash": "525a58ade21de9db9078bd4fd4abf3184ca38e268d876fed23657fe3f7b32fc0",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "医学院首页正文中六个有原文入口的发布模块，共 25 个不同文章地址。",
+  "scope_selector": ".m-content-block",
+  "review_method": "逐项独立抄录学院新闻 10、科研进展 5、人才招聘 4、通知公告 3、学术讲座 2、视听浙医 1 个文章地址和各模块查看更多入口。新闻主列表包含旁侧四张新闻卡片的全部文章，不重复计数。只有新闻显示完整年月日；月日、讲座举办时间及网址日期不作为发布日期。视听模块含实际 video 和独立文章链接，短标题《为医的答案》保留。媒体看浙医两个标题未提供链接，不生成首页原文；交流合作为概况介绍，专题栏目为入口列表，首页轮播未给出栏目标题，均不纳入这六个已核对模块。此局部基准不证明医学院全部发布来源或整体 90% 匹配。",
+  "entries": [
+    {
+      "id": "学院新闻",
+      "name": "学院新闻",
+      "url": "http://www.cmm.zju.edu.cn/38670/list.htm",
+      "scope_selector": ".first-news-box",
+      "article_urls": [
+        "https://mp.weixin.qq.com/s/v53f2WsgZDO1B0lRpQpguw",
+        "https://mp.weixin.qq.com/s/QU98LjAwWd-ZNNv-kx-UqA",
+        "https://mp.weixin.qq.com/s/RwKZWjlZXMRAyVqbaGZXTg",
+        "https://mp.weixin.qq.com/s/N36VC0q4J3oRvy7vjF1lXA",
+        "http://www.cmm.zju.edu.cn/2026/0917/c38670a3204419/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0917/c38670a3204347/page.htm",
+        "https://mp.weixin.qq.com/s/I_IInHmyq17ctEoLWW5cvA",
+        "https://mp.weixin.qq.com/s?__biz=MzU4ODAxMzI4NQ==&mid=2247530428&idx=1&sn=3e918ddbe11030fd6b55c91d8212856d&chksm=fc8189bdbaaf419b80704fe595feacfd6889a0818322dc8c680cebcc50b2b99b9dd7cf9b80b7&mpshare=1&scene=1&srcid=09123oMQc5Oq7VMNFdy6jYmK&sharer_shareinfo=7dd489f090900c686a6d5eff7a675e69&sharer_shareinfo_first=7dd489f090900c686a6d5eff7a675e69",
+        "https://mp.weixin.qq.com/s?__biz=MzU4ODAxMzI4NQ==&mid=2247530427&idx=1&sn=90bfaa7a11b27689db13003ba960d553&chksm=fc8c7a4b25f18d3e39fc528526eee5096a22f60f76f91389118df5c9f8dd1a458d3a0821f888&mpshare=1&scene=1&srcid=0912xKiymZlNja9NNyqDitRG&sharer_shareinfo=ff389f0aafa7e6b7fd7aacc9f5481df3&sharer_shareinfo_first=ff389f0aafa7e6b7fd7aacc9f5481df3",
+        "https://mp.weixin.qq.com/s?__biz=MzU4ODAxMzI4NQ==&mid=2247530426&idx=1&sn=669081cb690d74571c4bdb92b1bde7ef&chksm=fcd84ddfad06ee0a593fa85e7ed652bc7a9d0ab557c64a32d096d59419982f10bc68d90a7400&mpshare=1&scene=1&srcid=0912jdmjii15HayClgBfph1S&sharer_shareinfo=8b19349a8fedac99e59e3a08ae20176d&sharer_shareinfo_first=8b19349a8fedac99e59e3a08ae20176d"
+      ]
+    },
+    {
+      "id": "科研进展",
+      "name": "科研进展",
+      "url": "http://www.cmm.zju.edu.cn/kycx/list.htm",
+      "scope_selector": ".add-research-box",
+      "article_urls": [
+        "https://mp.weixin.qq.com/s/N--Vl8D61pBxA2-SwXCTFA",
+        "https://mp.weixin.qq.com/s/8BAP8s6XA0F0GMJESekEcg",
+        "https://mp.weixin.qq.com/s/Gdh_jGskG653bW-yXi5LBw",
+        "https://mp.weixin.qq.com/s/16xq-tecMXyNaOJ4glYKig",
+        "https://mp.weixin.qq.com/s/Zr4yivnfW73QFPBc9P53-w"
+      ]
+    },
+    {
+      "id": "人才招聘",
+      "name": "人才招聘",
+      "url": "http://www.cmm.zju.edu.cn/rczp/list.htm",
+      "scope_selector": ".add-communication-box .rt-block",
+      "article_urls": [
+        "https://mp.weixin.qq.com/s/kWXAsM9HGK7mSOg1Kq4Tuw",
+        "https://mp.weixin.qq.com/s/6AGz2Y2vt4l9E1rUKzHdwg?scene=1&click_id=1",
+        "https://mp.weixin.qq.com/s/pczcqZdljQJ49T17Omshig",
+        "https://mp.weixin.qq.com/s/1_uTNxihuLqflDNSBysRbA"
+      ]
+    },
+    {
+      "id": "通知公告",
+      "name": "通知公告",
+      "url": "http://www.cmm.zju.edu.cn/38678/list.htm",
+      "scope_selector": ".second-notice-box .ft-block",
+      "article_urls": [
+        "http://www.cmm.zju.edu.cn/2026/0918/c38678a3204959/page.htm",
+        "https://mp.weixin.qq.com/s/6YLMIrBsLuhm1Ai7Ogwn2w",
+        "https://mp.weixin.qq.com/s/Y7sqp1uQ9-PVmwodcuwgeg"
+      ]
+    },
+    {
+      "id": "学术讲座",
+      "name": "学术讲座",
+      "url": "http://www.cmm.zju.edu.cn/38677/list.htm",
+      "scope_selector": ".second-notice-box .rt-block",
+      "article_urls": [
+        "http://www.cmm.zju.edu.cn/2026/0917/c38677a3204674/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0917/c38677a3204365/page.htm"
+      ]
+    },
+    {
+      "id": "视听浙医",
+      "name": "视听浙医",
+      "url": "http://www.cmm.zju.edu.cn/stzy/list.htm",
+      "scope_selector": ".ft-audio-visual",
+      "article_urls": [
+        "http://www.cmm.zju.edu.cn/2025/0625/c55113a3064477/page.htm"
+      ]
+    }
+  ]
+}

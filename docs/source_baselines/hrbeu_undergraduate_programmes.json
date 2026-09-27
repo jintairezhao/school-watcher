@@ -1,0 +1,780 @@
+{
+  "id": "hrbeu_undergraduate_programmes",
+  "root_url": "https://www.hrbeu.edu.cn/",
+  "reference_url": "http://ugs.hrbeu.edu.cn/2819/list.htm",
+  "reference_hash": "ca81faa16d4ff84580db25adf65c0d128b0d819fff4e8a66cdacaf400a07eddc",
+  "scope": "哈尔滨工程大学本科专业表：59个专业条目及代码、门类、专业类、学位；原表未列学院，不推断学院归属",
+  "scope_selector": ".wp_articlecontent .paging_content > table",
+  "category": "major_directories",
+  "reviewed_at": "2026-09-21",
+  "review_method": "逐行查看原表字段或逐组查看招生目录的学院标题、专业名称与实际链接，独立记录，未使用专业识别器输出。无链接保持为空，重复专业位置分别保留。",
+  "entries": [
+    {
+      "id": "081901:船舶与海洋工程",
+      "name": "船舶与海洋工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "081901",
+        "学科门类": "工学",
+        "专业类": "海洋工程类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "081103:港口航道与海岸工程",
+      "name": "港口航道与海岸工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "081103",
+        "学科门类": "工学",
+        "专业类": "水利类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "081904T:海洋机器人",
+      "name": "海洋机器人",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "081904T",
+        "学科门类": "工学",
+        "专业类": "海洋工程类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080102:工程力学",
+      "name": "工程力学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080102",
+        "学科门类": "工学",
+        "专业类": "力学类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "081001:土木工程",
+      "name": "土木工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "081001",
+        "学科门类": "工学",
+        "专业类": "土木类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "081002:建筑环境与能源应用工程",
+      "name": "建筑环境与能源应用工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "081002",
+        "学科门类": "工学",
+        "专业类": "土木类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "081003:给排水科学与工程",
+      "name": "给排水科学与工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "081003",
+        "学科门类": "工学",
+        "专业类": "土木类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082002:飞行器设计与工程",
+      "name": "飞行器设计与工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082002",
+        "学科门类": "工学",
+        "专业类": "航空航天类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082004:飞行器动力工程",
+      "name": "飞行器动力工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082004",
+        "学科门类": "工学",
+        "专业类": "航空航天类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082006T:飞行器质量与可靠性",
+      "name": "飞行器质量与可靠性",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082006T",
+        "学科门类": "工学",
+        "专业类": "航空航天类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080501:能源与动力工程",
+      "name": "能源与动力工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080501",
+        "学科门类": "工学",
+        "专业类": "能源动力类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "081804K:轮机工程",
+      "name": "轮机工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "081804K",
+        "学科门类": "工学",
+        "专业类": "交通运输类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080301:测控技术与仪器",
+      "name": "测控技术与仪器",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080301",
+        "学科门类": "工学",
+        "专业类": "仪器类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080601:电气工程及其自动化",
+      "name": "电气工程及其自动化",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080601",
+        "学科门类": "工学",
+        "专业类": "电气类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080801:自动化",
+      "name": "自动化",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080801",
+        "学科门类": "工学",
+        "专业类": "自动化类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082103:探测制导与控制技术",
+      "name": "探测制导与控制技术",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082103",
+        "学科门类": "工学",
+        "专业类": "兵器类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082601:生物医学工程",
+      "name": "生物医学工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082601",
+        "学科门类": "工学",
+        "专业类": "生物医学工程类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080803T:机器人工程",
+      "name": "机器人工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080803T",
+        "学科门类": "工学",
+        "专业类": "自动化类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080701:电子信息工程（水声）",
+      "name": "电子信息工程（水声）",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080701",
+        "学科门类": "工学",
+        "专业类": "电子信息类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080708T:水声工程",
+      "name": "水声工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080708T",
+        "学科门类": "工学",
+        "专业类": "电子信息类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080901:计算机科学与技术",
+      "name": "计算机科学与技术",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080901",
+        "学科门类": "工学",
+        "专业类": "计算机类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080905:物联网工程",
+      "name": "物联网工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080905",
+        "学科门类": "工学",
+        "专业类": "计算机类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080902:软件工程",
+      "name": "软件工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080902",
+        "学科门类": "工学",
+        "专业类": "计算机类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080904K:信息安全",
+      "name": "信息安全",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080904K",
+        "学科门类": "工学",
+        "专业类": "计算机类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "120106TK:保密管理",
+      "name": "保密管理",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "120106TK",
+        "学科门类": "管理学",
+        "专业类": "管理科学与工程类",
+        "授予学位": "管理学"
+      }
+    },
+    {
+      "id": "080202:机械设计制造及其自动化",
+      "name": "机械设计制造及其自动化",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080202",
+        "学科门类": "工学",
+        "专业类": "机械类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080205:工业设计",
+      "name": "工业设计",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080205",
+        "学科门类": "工学",
+        "专业类": "机械类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "130504:产品设计",
+      "name": "产品设计",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "130504",
+        "学科门类": "艺术学",
+        "专业类": "设计学类",
+        "授予学位": "艺术学"
+      }
+    },
+    {
+      "id": "080701:电子信息工程",
+      "name": "电子信息工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080701",
+        "学科门类": "工学",
+        "专业类": "电子信息类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080703:通信工程",
+      "name": "通信工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080703",
+        "学科门类": "工学",
+        "专业类": "电子信息类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080704:微电子科学与工程",
+      "name": "微电子科学与工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080704",
+        "学科门类": "工学",
+        "专业类": "电子信息类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080712T:电磁场与无线技术",
+      "name": "电磁场与无线技术",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080712T",
+        "学科门类": "工学",
+        "专业类": "电子信息类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082107:信息对抗技术",
+      "name": "信息对抗技术",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082107",
+        "学科门类": "工学",
+        "专业类": "兵器类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "020101:经济学",
+      "name": "经济学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "020101",
+        "学科门类": "经济学",
+        "专业类": "经济学类",
+        "授予学位": "经济学"
+      }
+    },
+    {
+      "id": "020301K:金融学",
+      "name": "金融学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "020301K",
+        "学科门类": "经济学",
+        "专业类": "金融学类",
+        "授予学位": "经济学"
+      }
+    },
+    {
+      "id": "020401:国际经济与贸易",
+      "name": "国际经济与贸易",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "020401",
+        "学科门类": "经济学",
+        "专业类": "经济与贸易类",
+        "授予学位": "经济学"
+      }
+    },
+    {
+      "id": "120201K:工商管理",
+      "name": "工商管理",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "120201K",
+        "学科门类": "管理学",
+        "专业类": "工商管理类",
+        "授予学位": "管理学"
+      }
+    },
+    {
+      "id": "120401:公共事业管理",
+      "name": "公共事业管理",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "120401",
+        "学科门类": "管理学",
+        "专业类": "公共管理类",
+        "授予学位": "管理学"
+      }
+    },
+    {
+      "id": "120801:电子商务",
+      "name": "电子商务",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "120801",
+        "学科门类": "管理学",
+        "专业类": "电子商务类",
+        "授予学位": "管理学"
+      }
+    },
+    {
+      "id": "070302:应用化学",
+      "name": "应用化学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "070302",
+        "学科门类": "理学",
+        "专业类": "化学类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080401:材料科学与工程",
+      "name": "材料科学与工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080401",
+        "学科门类": "工学",
+        "专业类": "材料类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080402:材料物理",
+      "name": "材料物理",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080402",
+        "学科门类": "工学",
+        "专业类": "材料类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080403:材料化学",
+      "name": "材料化学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080403",
+        "学科门类": "工学",
+        "专业类": "材料类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "081301:化学工程与工艺",
+      "name": "化学工程与工艺",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "081301",
+        "学科门类": "工学",
+        "专业类": "化工与制药类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082502:环境工程",
+      "name": "环境工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082502",
+        "学科门类": "工学",
+        "专业类": "环境科学与工程类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "070101:数学与应用数学",
+      "name": "数学与应用数学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "070101",
+        "学科门类": "理学",
+        "专业类": "数学类",
+        "授予学位": "理学"
+      }
+    },
+    {
+      "id": "070102:信息与计算科学",
+      "name": "信息与计算科学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "070102",
+        "学科门类": "理学",
+        "专业类": "数学类",
+        "授予学位": "理学"
+      }
+    },
+    {
+      "id": "080702:电子科学与技术",
+      "name": "电子科学与技术",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080702",
+        "学科门类": "工学",
+        "专业类": "电子信息类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "080705:光电信息科学与工程",
+      "name": "光电信息科学与工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "080705",
+        "学科门类": "工学",
+        "专业类": "电子信息类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "050201:英语",
+      "name": "英语",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "050201",
+        "学科门类": "文学",
+        "专业类": "外国语言文学类",
+        "授予学位": "文学"
+      }
+    },
+    {
+      "id": "030101K:法学",
+      "name": "法学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "030101K",
+        "学科门类": "法学",
+        "专业类": "法学类",
+        "授予学位": "法学"
+      }
+    },
+    {
+      "id": "030301:社会学",
+      "name": "社会学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "030301",
+        "学科门类": "法学",
+        "专业类": "社会学类",
+        "授予学位": "法学"
+      }
+    },
+    {
+      "id": "071102:应用心理学",
+      "name": "应用心理学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "071102",
+        "学科门类": "理学",
+        "专业类": "心理学类",
+        "授予学位": "教育学"
+      }
+    },
+    {
+      "id": "082201:核工程与核技术",
+      "name": "核工程与核技术",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082201",
+        "学科门类": "工学",
+        "专业类": "核工程类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082202:辐射防护与核安全",
+      "name": "辐射防护与核安全",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082202",
+        "学科门类": "工学",
+        "专业类": "核工程类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "082204:核化工与核燃料工程",
+      "name": "核化工与核燃料工程",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "082204",
+        "学科门类": "工学",
+        "专业类": "核工程类",
+        "授予学位": "工学"
+      }
+    },
+    {
+      "id": "050101:汉语言文学",
+      "name": "汉语言文学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "050101",
+        "学科门类": "文学",
+        "专业类": "中国语言文学类",
+        "授予学位": "文学"
+      }
+    },
+    {
+      "id": "030201:政治学与行政学",
+      "name": "政治学与行政学",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "030201",
+        "学科门类": "法学",
+        "专业类": "政治学类",
+        "授予学位": "法学"
+      }
+    },
+    {
+      "id": "030503:思想政治教育",
+      "name": "思想政治教育",
+      "kind": "major",
+      "url": "",
+      "relation": "major_directory_entry",
+      "fields": {
+        "专业代码": "030503",
+        "学科门类": "法学",
+        "专业类": "马克思主义理论类",
+        "授予学位": "法学"
+      }
+    }
+  ]
+}

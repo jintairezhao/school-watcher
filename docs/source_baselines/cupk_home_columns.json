@@ -1,0 +1,68 @@
+{
+  "id": "cupk-home-columns-2026-09-19",
+  "root_url": "https://www.cupk.edu.cn/",
+  "reference_url": "https://www.cupk.edu.cn/",
+  "reference_hash": "e0219163a3d1f1f26ee85d40a845fefebf6c0e77622f1dc5af6fc882231d355b",
+  "scope": "校区官网首页的 4 个发布栏目及其 24 个展示条目",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "review_method": "逐区核对官网的校区新闻、校区动态、通知公告、活动预告四个标题和更多入口。各区均为 6 个条目；条目 URL 从独立的人工选定区域读取，不使用发布列表检测器。范围不包含各学院或其他栏目。 2026-09-21重新查看当前官网缓存：目录逐行名称、链接、父级保持一致；首页各栏目按当前六条更新展示地址。",
+  "entries": [
+    {
+      "id": "校区新闻",
+      "name": "校区新闻",
+      "url": "https://www.cupk.edu.cn/xyxw/",
+      "scope_selector": "div.c-campus-news:has(.c-campus-news__title-box:-soup-contains(\"校区新闻\"))",
+      "article_urls": [
+        "https://www.cupk.edu.cn/c/2026-09-15/538542.shtml",
+        "https://www.cupk.edu.cn/c/2026-09-17/538588.shtml",
+        "https://www.cupk.edu.cn/c/2026-09-18/538607.shtml",
+        "https://www.cupk.edu.cn/c/2026-09-18/538652.shtml",
+        "https://www.cupk.edu.cn/c/2026-09-20/538675.shtml",
+        "https://www.cupk.edu.cn/c/2026-09-21/538683.shtml"
+      ]
+    },
+    {
+      "id": "校区动态",
+      "name": "校区动态",
+      "url": "https://www.cupk.edu.cn/jtjz/",
+      "scope_selector": ".c-notice__half-left",
+      "article_urls": [
+        "https://www.cupk.edu.cn/c/2026-09-10/538441.shtml",
+        "https://www.cupk.edu.cn/gsxy/c/2026-09-19/538661.shtml",
+        "https://www.cupk.edu.cn/sgxy/c/2026-09-09/538379.shtml",
+        "https://www.cupk.edu.cn/sgxy/c/2026-09-20/538664.shtml",
+        "https://www.cupk.edu.cn/smxy/c/2026-09-08/538341.shtml",
+        "https://www.cupk.edu.cn/wlxy/c/2026-09-14/538529.shtml"
+      ]
+    },
+    {
+      "id": "通知公告",
+      "name": "通知公告",
+      "url": "https://www.cupk.edu.cn/tzgg/",
+      "scope_selector": ".c-notice__half-right",
+      "article_urls": [
+        "https://www.cupk.edu.cn/c/2026-05-03/534152.shtml",
+        "https://www.cupk.edu.cn/c/2026-05-22/534439.shtml",
+        "https://www.cupk.edu.cn/c/2026-05-27/534534.shtml",
+        "https://www.cupk.edu.cn/c/2026-06-18/534843.shtml",
+        "https://www.cupk.edu.cn/c/2026-07-03/535091.shtml",
+        "https://www.cupk.edu.cn/sgxy/c/2026-08-07/537638.shtml"
+      ]
+    },
+    {
+      "id": "活动预告",
+      "name": "活动预告",
+      "url": "https://www.cupk.edu.cn/yxdt/",
+      "scope_selector": "div.c-campus-news:has(.c-campus-news__title-box:-soup-contains(\"活动预告\"))",
+      "article_urls": [
+        "https://www.cupk.edu.cn/c/2026-06-09/534675.shtml",
+        "https://www.cupk.edu.cn/c/2026-06-11/534700.shtml",
+        "https://www.cupk.edu.cn/c/2026-06-12/534719.shtml",
+        "https://www.cupk.edu.cn/c/2026-06-24/534915.shtml",
+        "https://www.cupk.edu.cn/c/2026-06-29/535017.shtml",
+        "https://www.cupk.edu.cn/c/2026-07-01/535051.shtml"
+      ]
+    }
+  ]
+}

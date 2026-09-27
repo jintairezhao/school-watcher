@@ -1,0 +1,255 @@
+{
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/55144/list.htm",
+  "reference_hash": "c1651e70bffec6b60fa3912fb905243e21e8c63f71a6ab2e49576dfd304d8a76",
+  "category": "academic_units",
+  "reviewed_at": "2026-09-21",
+  "id": "zju-medical-academic-directory-2026-09-21",
+  "scope": "浙大医学院院系设置页 6 个分组、25 个具体条目，共 31 个目录位置。",
+  "scope_selector": ".departments_setup",
+  "review_method": "独立逐项抄录全部六组及其条目，并阅读原始内联脚本：sublist_title 中的标题复制到 items h2，原 sublist_title 随后移除。因此标题保留为无链接分组，模板中的隐藏标题地址另存参考。口腔医学院、护理系的标题与同名条目不是两个上下级单位；临床医学院亦是此处的分组名称。干细胞与再生医学系、神经生物学系所指向的共享页面保留，不推断独立发布归属。普通文档锚点保存在原始快照，页面地址按现有规范去除。机构名称与组织机构正文不同，不自动替换。",
+  "entries": [
+    {
+      "id": "分组:基础医学系",
+      "name": "基础医学系",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "解剖与组织胚胎学系",
+      "name": "解剖与组织胚胎学系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993265/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "细胞生物学系",
+      "name": "细胞生物学系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993253/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "生理学系",
+      "name": "生理学系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993262/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "病理学与病理生理学系",
+      "name": "病理学与病理生理学系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993263/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "生物化学系",
+      "name": "生物化学系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993264/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "免疫学系",
+      "name": "免疫学系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993259/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "微生物学系",
+      "name": "微生物学系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993254/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "药理学系",
+      "name": "药理学系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993256/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "干细胞与再生医学系",
+      "name": "干细胞与再生医学系",
+      "url": "https://bms.zju.edu.cn/85114/list.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "生物物理系",
+      "name": "生物物理系",
+      "url": "https://bms.zju.edu.cn/2018/0307/c85114a2993266/page.htm",
+      "kind": "unit",
+      "parent": "分组:基础医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "分组:脑科学与脑医学系",
+      "name": "脑科学与脑医学系",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "神经生物学系",
+      "name": "神经生物学系",
+      "url": "http://www.neuroscience.zju.edu.cn/main.htm",
+      "kind": "unit",
+      "parent": "分组:脑科学与脑医学系",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "分组:公共卫生学院",
+      "name": "公共卫生学院",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "大数据健康科学系",
+      "name": "大数据健康科学系",
+      "url": "http://www.phs.zju.edu.cn/2019/0816/c47211a2000620/page.htm",
+      "kind": "unit",
+      "parent": "分组:公共卫生学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "流行病学与统计学系",
+      "name": "流行病学与统计学系",
+      "url": "http://www.phs.zju.edu.cn/2018/1108/c47211a2000619/page.htm",
+      "kind": "unit",
+      "parent": "分组:公共卫生学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "环境医学系",
+      "name": "环境医学系",
+      "url": "http://www.phs.zju.edu.cn/2018/1108/c47211a2000618/page.htm",
+      "kind": "unit",
+      "parent": "分组:公共卫生学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "毒理学系",
+      "name": "毒理学系",
+      "url": "http://www.phs.zju.edu.cn/2018/1108/c47211a2000616/page.htm",
+      "kind": "unit",
+      "parent": "分组:公共卫生学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "营养与食品卫生学系",
+      "name": "营养与食品卫生学系",
+      "url": "http://www.phs.zju.edu.cn/2018/1108/c47211a2000617/page.htm",
+      "kind": "unit",
+      "parent": "分组:公共卫生学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "社会医学系",
+      "name": "社会医学系",
+      "url": "http://www.phs.zju.edu.cn/2018/1108/c47211a2000615/page.htm",
+      "kind": "unit",
+      "parent": "分组:公共卫生学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "分组:临床医学院",
+      "name": "临床医学院",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "第一临床医学院",
+      "name": "第一临床医学院",
+      "url": "https://www.zy91.com/teaching",
+      "kind": "unit",
+      "parent": "分组:临床医学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "第二临床医学院",
+      "name": "第二临床医学院",
+      "url": "https://www.z2hospital.com/",
+      "kind": "unit",
+      "parent": "分组:临床医学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "第三临床医学院",
+      "name": "第三临床医学院",
+      "url": "https://www.srrsh.com/jypx",
+      "kind": "unit",
+      "parent": "分组:临床医学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "第四临床医学院",
+      "name": "第四临床医学院",
+      "url": "https://www.zju4h.com/list/49.html",
+      "kind": "unit",
+      "parent": "分组:临床医学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "妇产科学院",
+      "name": "妇产科学院",
+      "url": "https://www.womanhospital.cn/",
+      "kind": "unit",
+      "parent": "分组:临床医学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "儿科学院",
+      "name": "儿科学院",
+      "url": "https://www.zjuch.cn/pediatric_teaching/index",
+      "kind": "unit",
+      "parent": "分组:临床医学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "分组:口腔医学院",
+      "name": "口腔医学院",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "口腔医学院",
+      "name": "口腔医学院",
+      "url": "https://www.zjuss.cn/",
+      "kind": "unit",
+      "parent": "分组:口腔医学院",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "分组:护理系",
+      "name": "护理系",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "护理系",
+      "name": "护理系",
+      "url": "http://www.cmm.zju.edu.cn/2021/0915/c62770a2421369/page.htm",
+      "kind": "unit",
+      "parent": "分组:护理系",
+      "relation": "nested_directory_entry"
+    }
+  ]
+}

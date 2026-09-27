@@ -1,0 +1,12 @@
+{% macro school_header(school, active, description) %}
+<a href="{{ url_for('pages.explore') }}" class="surface-back">学校目录</a>
+<header class="surface-heading school-heading">
+    <div><h1>{{ school.name }}</h1><p>{{ description }}</p></div>
+    <div class="surface-heading-actions">{% if caller is defined %}{{ caller() }}{% endif %}<a class="btn btn-outline" href="{{ school.url }}" target="_blank" rel="noopener noreferrer">学校官网</a></div>
+</header>
+<nav class="surface-tabs school-tabs" aria-label="学校信息">
+    <a href="{{ url_for('pages.school_detail', school_id=school.id) }}" {% if active == 'preview' %}aria-current="page"{% endif %}>学校通知</a>
+    {% if current_user %}<a href="{{ url_for('subscriptions.manage_sources', school_id=school.id) }}" {% if active == 'sources' %}aria-current="page"{% endif %}>栏目订阅</a>{% endif %}
+    <a href="{{ url_for('source_structure.school_structure', school_id=school.id) }}" {% if active == 'structure' %}aria-current="page"{% endif %}>官网结构</a>
+</nav>
+{% endmacro %}

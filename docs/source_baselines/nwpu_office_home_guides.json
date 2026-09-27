@@ -1,0 +1,26 @@
+{
+  "id": "nwpu-office-home-guides-2026-09-21",
+  "root_url": "https://www.nwpu.edu.cn/",
+  "reference_url": "https://dangzheng.nwpu.edu.cn/",
+  "reference_hash": "78a86e52478d8aa29a5bb37f3bd2bb1662d96beb357910462e2ac79ac28e7974",
+  "scope": "党政办公室首页办事指南栏目及全部五个展示条目",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "review_method": "独立逐项读取 sect2-l 的办事指南标题、查看更多入口和五个条目，包括之前因短标题规则漏掉的会议扫码签到说明（2024-05-10，wbnewsid=3761）。条目树编号与文章编号从原始 href 分别抄录，不使用解析结果生成预期集合。此基准核对首页列表范围，不代表栏目全部历史文章或实际发布责任已完成审核。",
+  "scope_selector": ".sect2-l",
+  "entries": [
+    {
+      "id": "guides",
+      "name": "办事指南",
+      "url": "https://dangzheng.nwpu.edu.cn/list.jsp?urltype=tree.TreeTempUrl&wbtreeid=1021",
+      "scope_selector": ".sect2-l",
+      "article_urls": [
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1271&wbnewsid=2351",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1261&wbnewsid=2391",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1271&wbnewsid=2341",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1281&wbnewsid=3761",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1281&wbnewsid=3751"
+      ]
+    }
+  ]
+}

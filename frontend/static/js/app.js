@@ -31,7 +31,12 @@
         var meta = document.getElementById('themeColor');
         if (!meta) return;
         var bg = getComputedStyle(document.body).backgroundColor;
-        meta.setAttribute('content', bg || '#6366f1');
+        meta.setAttribute('content', bg || '#f5f5f7');
+        var toggle = document.getElementById('themeToggle');
+        if (toggle) {
+            toggle.setAttribute('aria-label', effectiveDark() ? '切换为浅色外观' : '切换为深色外观');
+            toggle.title = toggle.getAttribute('aria-label');
+        }
     }
     function apply(next) {
         document.documentElement.setAttribute('data-theme', next);
@@ -39,6 +44,7 @@
         syncThemeColor();
     }
     document.addEventListener('DOMContentLoaded', function () {
+        syncThemeColor();
         var btn = document.getElementById('themeToggle');
         if (!btn) return;
         btn.addEventListener('click', function () {
@@ -53,14 +59,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const links = document.getElementById('navLinks');
 
     if (toggle && links) {
+        const setOpen = open => {
+            links.classList.toggle('open', open);
+            toggle.setAttribute('aria-expanded', String(open));
+            toggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+        };
         toggle.addEventListener('click', function() {
-            links.classList.toggle('open');
+            setOpen(!links.classList.contains('open'));
         });
 
         // 点击页面其他地方关闭菜单
         document.addEventListener('click', function(e) {
             if (!toggle.contains(e.target) && !links.contains(e.target)) {
-                links.classList.remove('open');
+                setOpen(false);
+            }
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && links.classList.contains('open')) {
+                setOpen(false);
+                toggle.focus();
             }
         });
     }

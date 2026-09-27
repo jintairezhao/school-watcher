@@ -1,0 +1,3 @@
+-r requirements.txt
+-r requirements-browser.txt
+psycopg[binary]==3.3.6

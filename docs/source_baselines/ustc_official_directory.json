@@ -1,0 +1,788 @@
+{
+  "id": "ustc-official-directory-2026-09-20",
+  "root_url": "https://www.ustc.edu.cn/",
+  "reference_url": "https://www.ustc.edu.cn/yxjs.htm",
+  "reference_hash": "604b58901fea87f0b6ab8a1595548664cb734e3abc723e6090fe560cf6924df1",
+  "reviewed_at": "2026-09-20",
+  "category": "academic_units",
+  "scope": "中国科学技术大学院系介绍页完整97行：学部/学院、国家级科研平台、校地合作机构三组及94个列示单位；按原表边框行和加粗标题保留学部—学院—系的视觉层级。共用网址和无链接单位分别保留，此范围不是整校发布栏目或行政隶属审核。",
+  "scope_selector": ".wp_articlecontent > table",
+  "entries": [
+    {
+      "id": "row-0",
+      "parent": null,
+      "name": "学部/学院",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "row-1",
+      "parent": "row-0",
+      "name": "少年班学院",
+      "url": "https://sgy.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-2",
+      "parent": "row-0",
+      "name": "数学科学学院",
+      "url": "https://math.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-3",
+      "parent": "row-2",
+      "name": "数学系",
+      "url": "https://math.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-4",
+      "parent": "row-2",
+      "name": "计算与应用数学系",
+      "url": "https://math.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-5",
+      "parent": "row-2",
+      "name": "概率统计系",
+      "url": "https://math.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-6",
+      "parent": "row-0",
+      "name": "物理学院",
+      "url": "https://physics.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-7",
+      "parent": "row-6",
+      "name": "物理系",
+      "url": "https://phys.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-8",
+      "parent": "row-6",
+      "name": "近代物理系",
+      "url": "https://mphy.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-9",
+      "parent": "row-6",
+      "name": "光学与光学工程系",
+      "url": "https://physics.ustc.edu.cn/2010/1014/c3617a31842/page.htm",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-10",
+      "parent": "row-6",
+      "name": "天文学系",
+      "url": "https://astro.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-11",
+      "parent": "row-6",
+      "name": "工程与应用物理系",
+      "url": "https://eap.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-12",
+      "parent": "row-0",
+      "name": "化学与材料科学学院",
+      "url": "https://scms.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-13",
+      "parent": "row-12",
+      "name": "化学物理系",
+      "url": "https://dcp.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-14",
+      "parent": "row-12",
+      "name": "应用化学系",
+      "url": "https://applchem.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-15",
+      "parent": "row-12",
+      "name": "材料科学与工程系",
+      "url": "https://mse.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-16",
+      "parent": "row-12",
+      "name": "化学系",
+      "url": "https://chem.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-17",
+      "parent": "row-12",
+      "name": "高分子科学与工程系",
+      "url": "https://polymer.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-18",
+      "parent": "row-0",
+      "name": "工程科学学院",
+      "url": "https://ses.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-19",
+      "parent": "row-18",
+      "name": "近代力学系",
+      "url": "https://mech.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-20",
+      "parent": "row-18",
+      "name": "精密机械与精密仪器系",
+      "url": "https://pmpi.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-21",
+      "parent": "row-18",
+      "name": "热科学和能源工程系",
+      "url": "https://tsee.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-22",
+      "parent": "row-18",
+      "name": "安全科学与工程系",
+      "url": "https://safetyse.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-23",
+      "parent": "row-0",
+      "name": "信息与智能学部",
+      "url": "https://iid.ustc.edu.cn/main.htm",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-24",
+      "parent": "row-23",
+      "name": "信息科学技术学院",
+      "url": "https://sist.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-25",
+      "parent": "row-24",
+      "name": "电子工程与信息科学系",
+      "url": "https://eeis.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-26",
+      "parent": "row-24",
+      "name": "自动化系",
+      "url": "https://auto.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-27",
+      "parent": "row-23",
+      "name": "计算机科学与技术学院",
+      "url": "https://cs.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-28",
+      "parent": "row-23",
+      "name": "人工智能与数据科学学院",
+      "url": "https://saids.ustc.edu.cn",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-29",
+      "parent": "row-23",
+      "name": "网络空间安全学院",
+      "url": "https://cybersec.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-30",
+      "parent": "row-23",
+      "name": "集成电路学院(国家示范性微电子学院)",
+      "url": "https://sme.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-31",
+      "parent": "row-23",
+      "name": "软件学院",
+      "url": "https://sse.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-32",
+      "parent": "row-0",
+      "name": "地球和空间科学学院",
+      "url": "https://ess.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-33",
+      "parent": "row-32",
+      "name": "地球物理与空间科学技术系",
+      "url": "https://ess.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-34",
+      "parent": "row-32",
+      "name": "地球化学与行星科学系",
+      "url": "https://ess.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-35",
+      "parent": "row-0",
+      "name": "生命科学与医学部",
+      "url": "https://biomed.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-36",
+      "parent": "row-35",
+      "name": "生命科学学院",
+      "url": "https://biox.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-37",
+      "parent": "row-36",
+      "name": "分子生物学与细胞生物学系",
+      "url": "https://biox.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-38",
+      "parent": "row-36",
+      "name": "神经生物学与生物物理学系",
+      "url": "https://biox.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-39",
+      "parent": "row-36",
+      "name": "系统生物学系",
+      "url": "https://biox.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-40",
+      "parent": "row-36",
+      "name": "医药生物技术系",
+      "url": "https://biox.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-41",
+      "parent": "row-35",
+      "name": "基础医学院",
+      "url": "https://jcyx.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-42",
+      "parent": "row-35",
+      "name": "临床医学院",
+      "url": "https://lcyx.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-43",
+      "parent": "row-35",
+      "name": "附属第一医院",
+      "url": "https://www.ahslyy.com.cn/index.html",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-44",
+      "parent": "row-35",
+      "name": "生物医学工程学院",
+      "url": "https://bme.ustc.edu.cn",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-45",
+      "parent": "row-0",
+      "name": "科技商学院、管理学院",
+      "url": "https://som.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-46",
+      "parent": "row-45",
+      "name": "工商管理系",
+      "url": "https://som.ustc.edu.cn/dba/list.htm",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-47",
+      "parent": "row-45",
+      "name": "管理科学系",
+      "url": "https://som.ustc.edu.cn/dms/list.htm",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-48",
+      "parent": "row-45",
+      "name": "统计与金融系",
+      "url": "https://som.ustc.edu.cn/dsf/list.htm",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-49",
+      "parent": "row-0",
+      "name": "公共管理学院",
+      "url": "https://sppm.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-50",
+      "parent": "row-0",
+      "name": "人文与社会科学学院",
+      "url": "https://hsss.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-51",
+      "parent": "row-50",
+      "name": "科技史与科技考古系",
+      "url": "https://hsta.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-52",
+      "parent": "row-50",
+      "name": "科技传播系",
+      "url": "https://stc.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-53",
+      "parent": "row-50",
+      "name": "科技哲学系",
+      "url": "https://sts.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-54",
+      "parent": "row-50",
+      "name": "心理学系（筹）",
+      "url": "https://psy.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-55",
+      "parent": "row-0",
+      "name": "马克思主义学院",
+      "url": "https://marx.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-56",
+      "parent": "row-0",
+      "name": "环境学院",
+      "url": "https://soe.ustc.edu.cn",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-57",
+      "parent": "row-0",
+      "name": "核科学技术学院",
+      "url": "https://www.snst.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-58",
+      "parent": "row-57",
+      "name": "加速器科学与工程物理系",
+      "url": "https://www.snst.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-59",
+      "parent": "row-57",
+      "name": "等离子体物理与聚变工程系",
+      "url": "https://www.snst.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-60",
+      "parent": "row-57",
+      "name": "核科学与工程系",
+      "url": "https://www.snst.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-61",
+      "parent": "row-0",
+      "name": "未来技术学院",
+      "url": "http://set.ustc.edu.cn",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-62",
+      "parent": "row-0",
+      "name": "国家卓越工程师学院",
+      "url": "https://see.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-63",
+      "parent": "row-0",
+      "name": "公共教学部",
+      "url": "",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-64",
+      "parent": "row-63",
+      "name": "通识教育中心",
+      "url": "https://ge.ustc.edu.cn",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-65",
+      "parent": "row-63",
+      "name": "外语教学中心",
+      "url": "https://le.ustc.edu.cn",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-66",
+      "parent": "row-63",
+      "name": "体育教学中心",
+      "url": "https://www.tj.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-67",
+      "parent": "row-63",
+      "name": "艺术教学中心",
+      "url": "https://arts.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-68",
+      "parent": "row-0",
+      "name": "科学岛分院",
+      "url": "https://www.hf.cas.cn/sbpy/yjsc/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-69",
+      "parent": "row-0",
+      "name": "环境科学与光电技术学院（科教融合学院）",
+      "url": "https://env.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-70",
+      "parent": "row-0",
+      "name": "材料科学与工程学院（科教融合学院）",
+      "url": "https://www.gs.imr.ac.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-71",
+      "parent": "row-0",
+      "name": "天文与空间科学学院（科教融合学院）",
+      "url": "https://www.pmo.cas.cn/gs/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-72",
+      "parent": "row-0",
+      "name": "纳米技术与纳米仿生学院（科教融合学院）",
+      "url": "http://yjsb.sinano.ac.cn/index.aspx",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-73",
+      "parent": "row-0",
+      "name": "应用化学与工程学院（科教融合学院）",
+      "url": "https://www.ciac.cas.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-74",
+      "parent": "row-0",
+      "name": "生物医学工程学院（苏州）（科教融合学院）",
+      "url": "https://www.sibet.ac.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-75",
+      "parent": "row-0",
+      "name": "能源科学与技术学院（科教融合学院）",
+      "url": "https://www.giec.ac.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-76",
+      "parent": "row-0",
+      "name": "稀土学院（科教融合学院）",
+      "url": "https://www.gia.cas.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-77",
+      "parent": null,
+      "name": "国家级科研平台",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "row-78",
+      "parent": "row-77",
+      "name": "国家同步辐射实验室",
+      "url": "https://www.nsrl.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-79",
+      "parent": "row-77",
+      "name": "合肥微尺度物质科学国家研究中心",
+      "url": "https://www.hfnl.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-80",
+      "parent": "row-77",
+      "name": "火灾安全全国重点实验室",
+      "url": "https://sklfs.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-81",
+      "parent": "row-77",
+      "name": "精准智能化学全国重点实验室",
+      "url": "https://pichem.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-82",
+      "parent": "row-77",
+      "name": "免疫应答与免疫治疗全国重点实验室",
+      "url": "https://immune.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-83",
+      "parent": "row-77",
+      "name": "核探测与核电子学国家重点实验室",
+      "url": "https://sklpde.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-84",
+      "parent": "row-77",
+      "name": "语音及语言信息处理国家工程研究中心",
+      "url": "https://nelslip.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-85",
+      "parent": "row-77",
+      "name": "类脑智能技术及应用国家工程实验室",
+      "url": "https://leinao.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-86",
+      "parent": "row-77",
+      "name": "热安全技术国家地方联合工程研究中心",
+      "url": "https://erctst.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-87",
+      "parent": "row-77",
+      "name": "大尺度火灾国际联合研究中心",
+      "url": "",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-88",
+      "parent": "row-77",
+      "name": "中国科学院量子信息与量子科技创新研究院",
+      "url": "http://www.quantumcas.ac.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-89",
+      "parent": "row-77",
+      "name": "国家高性能计算中心（合肥）",
+      "url": "",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-90",
+      "parent": "row-77",
+      "name": "安徽蒙城地球物理国家野外科学观测研究站",
+      "url": "https://mengo.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-91",
+      "parent": null,
+      "name": "校地合作机构",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "row-92",
+      "parent": "row-91",
+      "name": "苏州高等研究院",
+      "url": "https://sz.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-93",
+      "parent": "row-91",
+      "name": "上海研究院",
+      "url": "https://sias.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-94",
+      "parent": "row-91",
+      "name": "北京研究院",
+      "url": "https://ustc-bj.ustc.edu.cn",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-95",
+      "parent": "row-91",
+      "name": "先进技术研究院",
+      "url": "https://iat.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "row-96",
+      "parent": "row-91",
+      "name": "国际金融研究院",
+      "url": "https://iif.ustc.edu.cn/",
+      "kind": "unit",
+      "relation": "nested_directory_entry"
+    }
+  ]
+}

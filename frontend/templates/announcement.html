@@ -1,123 +1,16 @@
 {% extends "base.html" %}
 {% block title %}{{ announcement.title|truncate(30) }}{% endblock %}
-
-{# base 标签已移除：爬取时 engine.py 已将正文中的相对链接转为绝对链接，无需 base 补全。
-   且 base 会劫持导航栏等页面链接，导致首页/设置等跳转 404。 #}
-
+{% block main_class %}standalone-reading{% endblock %}
 {% block content %}
-<div class="page-header">
+<nav class="standalone-reader-toolbar" aria-label="阅读操作">
     <a href="{{ back_url }}" class="back-link">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
         返回通知列表
     </a>
-</div>
-
-<article class="announcement-detail">
-    <!-- 标题区 -->
-    <header class="detail-header">
-        <h1 class="detail-title">{{ announcement.title }}</h1>
-        <div class="detail-meta">
-            <span class="meta-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                {{ announcement.department.name if announcement.department else '未分类' }}
-            </span>
-            <span class="meta-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                {% if announcement.published_at %}
-                {{ announcement.published_at.strftime('%Y年%m月%d日 %H:%M') }}
-                {% else %}
-                时间未知
-                {% endif %}
-            </span>
-            {% if announcement.url %}
-            <a href="{{ announcement.url }}" target="_blank" rel="noopener noreferrer" class="meta-item meta-link">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                查看原文
-            </a>
-            {% endif %}
-        </div>
-    </header>
-
-    <!-- AI 摘要卡片 -->
-    <div class="summary-card">
-        <div class="summary-card-inner">
-            <div class="summary-header">
-                <span class="summary-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.4L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.6z"/></svg>
-                </span>
-                <span class="summary-label">AI 摘要</span>
-                <span class="summary-powered">Powered by DeepSeek</span>
-            </div>
-            <div class="summary-body">
-                {% if announcement.summary %}
-                <p>{{ announcement.summary }}</p>
-                {% else %}
-                <div class="summary-empty">
-                    <span class="spinner"></span>
-                    <span>正在生成摘要...</span>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- 正文内容 -->
-    <div class="detail-content">
-        <h2 class="content-heading">📄 通知正文</h2>
-        {% if announcement.content_html %}
-        <div class="content-body content-html">
-            {{ announcement.content_html|safe }}
-        </div>
-        {% elif announcement.content_text %}
-        <div class="content-body content-text">
-            {% for paragraph in announcement.content_text.split('\n\n') %}
-            {% if paragraph.strip() %}
-            <p>{{ paragraph.strip() }}</p>
-            {% endif %}
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="content-body content-unavailable">
-            <div class="unavailable-icon">🚫</div>
-            <p class="unavailable-reason">服务器端限制，无法获取正文</p>
-            <p class="unavailable-hint">请自行前往相关网站查看：</p>
-            <a href="{{ announcement.url }}" target="_blank" rel="noopener noreferrer" class="unavailable-link">
-                {{ announcement.url }}
-            </a>
-        </div>
-        {% endif %}
-    </div>
+    {% if announcement.url %}<a class="text-button" href="{{ announcement.url }}" target="_blank" rel="noopener noreferrer">查看原文</a>{% endif %}
+</nav>
+<article class="announcement-detail reader-document">
+    {% from '_reader_document.html' import reader_document %}
+    {{ reader_document(announcement, display_source, sources, provenance, summary_state, current_user) }}
 </article>
-{% endblock %}
-
-{% block scripts %}
-<script>
-// 如果摘要为空，5秒后轮询检查
-{% if not announcement.summary %}
-(function pollSummary() {
-    let attempts = 0;
-    const maxAttempts = 12;
-    const interval = setInterval(async () => {
-        attempts++;
-        try {
-            const resp = await fetch(window.location.href);
-            const html = await resp.text();
-            if (html.includes('Powered by DeepSeek') && !html.includes('正在生成摘要')) {
-                location.reload();
-            }
-        } catch(e) {}
-        if (attempts >= maxAttempts) {
-            clearInterval(interval);
-            document.querySelector('.summary-empty').innerHTML = '<p class="text-muted">摘要生成超时，请稍后刷新页面</p>';
-        }
-    }, 5000);
-})();
-{% endif %}
-
-// 正文中的链接和文件在新标签页打开
-document.querySelectorAll('.content-body a').forEach(function(link) {
-    link.setAttribute('target', '_blank');
-    link.setAttribute('rel', 'noopener noreferrer');
-});
-</script>
 {% endblock %}

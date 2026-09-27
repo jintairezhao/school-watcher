@@ -95,7 +95,7 @@ def upgrade():
     bind.execute(sa.text(
         "INSERT INTO user_reads (user_id, announcement_id, read_at) "
         "SELECT :uid, id, COALESCE(created_at, :now) FROM announcements "
-        "WHERE is_read=1"), {'uid': uid, 'now': now})
+        "WHERE is_read IS TRUE"), {'uid': uid, 'now': now})
     # 4) 全局密保迁入 admin 账户；app_password 键保留作回滚兜底，不删
     q = bind.execute(sa.text(
         "SELECT value FROM app_config WHERE key='security_question'")).scalar()

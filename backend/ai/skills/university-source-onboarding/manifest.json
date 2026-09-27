@@ -1,0 +1,27 @@
+{
+  "id": "university-source-onboarding",
+  "version": "1.0.0",
+  "contract_version": "1",
+  "input_schema": "input.schema.json",
+  "modes": {
+    "classify": {
+      "references": [
+        "references/classify.md"
+      ],
+      "schema": "classification.schema.json"
+    },
+    "extraction": {
+      "references": [
+        "references/extraction.md"
+      ],
+      "schema": "extraction.schema.json"
+    },
+    "review": {
+      "references": [
+        "references/classify.md",
+        "references/review.md"
+      ],
+      "schema": "classification.schema.json"
+    }
+  }
+}

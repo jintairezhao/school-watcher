@@ -2,8 +2,8 @@
 {% block title %}登录 — 学校通知{% endblock %}
 
 {% block card %}
-    <div class="login-icon">🔒</div>
-    <h1 class="login-title">学校通知</h1>
+    <div class="login-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+    <h1 class="login-title">登录学校通知</h1>
     <p class="login-subtitle">登录你的账户</p>
 
     {% if error %}
@@ -32,7 +32,7 @@
         · <a href="/register" class="login-forgot">注册账户</a>
     </p>
 
-    <p class="login-footer">🏫 高校通知聚合 · 订阅你关注的学校</p>
+    <p class="login-footer">登录后只展示你订阅学校的通知。</p>
 {% endblock %}
 
 {% block scripts %}

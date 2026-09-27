@@ -1,16 +1,17 @@
 {% extends "base.html" %}
-{% block title %}搜索「{{ q }}」 — 学校通知扒取工具{% endblock %}
+{% block title %}搜索「{{ q }}」 — 学校通知{% endblock %}
 
 {% macro ann_card(ann, show_school=False) %}
-<a href="{{ url_for('pages.announcement_detail', ann_id=ann.id) }}?from={{ request.full_path|urlencode }}" class="ann-card {% if current_user and ann.id not in read_ids %}ann-unread{% endif %}">
+{% set source = display_sources.get(ann.id) %}
+<a href="{{ url_for('pages.announcement_detail', ann_id=ann.id, source=source.id if source else None, **{'from': request.full_path}) }}" class="ann-card {% if current_user and ann.id not in read_ids %}ann-unread{% endif %}">
     <div class="ann-main">
         <div class="ann-left">
             <span class="ann-dot {% if current_user and ann.id not in read_ids %}ann-dot-unread{% endif %}"></span>
         </div>
         <div class="ann-body">
             <h4 class="ann-title">{{ ann.title|highlight(q) }}</h4>
-            {% if ann.summary %}
-            <p class="ann-summary">{{ ann.summary|highlight(q) }}</p>
+            {% if summary_texts.get(ann.id) %}
+            <p class="ann-summary">{{ summary_texts.get(ann.id)|highlight(q) }}</p>
             {% endif %}
             {% set snip = ann.content_text|snippet(q) %}
             {% if snip %}
@@ -18,9 +19,10 @@
             {% endif %}
             <div class="ann-meta">
                 {% if show_school %}
-                <span class="ann-school">🏫 {{ ann.school.name }}</span>
+                <span class="ann-school">{{ source.school.name if source else '' }}</span>
                 {% endif %}
-                <span class="ann-dept">{{ ann.department.name if ann.department else '未分类' }}</span>
+                <span class="ann-dept">{{ source.name if source else '未分类' }}</span>
+                {% if announcement_sources.get(ann.id, [])|length > 1 %}<span>{{ announcement_sources[ann.id]|length }} 个官网栏目</span>{% endif %}
                 {% if ann.published_at %}
                 <span class="ann-date">{{ ann.published_at.strftime('%Y-%m-%d') }}</span>
                 {% endif %}
@@ -44,7 +46,7 @@
         返回 {{ school.name }}
     </a>
     {% endif %}
-    <h1>🔍 搜索结果</h1>
+    <h1>搜索结果</h1>
     {% if q %}
     <p class="page-subtitle">
         找到 <strong>{{ total }}</strong> 条匹配「{{ q }}」的通知{% if school %}（{{ school.name }}）{% endif %}
@@ -59,7 +61,7 @@
         <input type="search" name="q" value="{{ q }}" placeholder="输入关键词，空格分隔多个词" autofocus autocomplete="off">
         <button type="submit" class="btn btn-primary">搜索</button>
     </form>
-    <span class="form-hint">匹配标题、AI 摘要与正文；多个关键词用空格分隔（需全部命中）</span>
+    <span class="form-hint">匹配标题、内容摘要与正文；多个关键词用空格分隔（需全部命中）</span>
 </div>
 
 {% if q and results %}
@@ -75,7 +77,7 @@
     {% for school_obj, anns in grouped_by_school.items() %}
     <div class="search-school-group">
         <a href="{{ url_for('pages.school_detail', school_id=school_obj.id) }}" class="search-school-title">
-            🏫 {{ school_obj.name }}
+            {{ school_obj.name }}
             <span class="month-count">{{ anns|length }} 条</span>
         </a>
         <div class="announcement-list">
@@ -101,7 +103,6 @@
 
 {% elif q %}
 <div class="empty-state">
-    <div class="empty-icon">🔍</div>
     <h3>没有找到匹配的通知</h3>
     <p>换个关键词试试，或用空格分隔多个关键词缩小范围</p>
 </div>

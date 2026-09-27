@@ -40,7 +40,7 @@ def is_duplicate(url: str, title: str, content_text: str) -> bool:
     return False
 
 
-def detect_update(url: str, title: str, content_text: str):
+def detect_update(url: str, title: str, content_text: str | None = None):
     """检测是否有内容更新，返回 (existing_announcement, is_updated)"""
     if not url:
         return None, False
@@ -48,6 +48,11 @@ def detect_update(url: str, title: str, content_text: str):
     existing = Announcement.query.filter_by(url=url).first()
     if not existing:
         return None, False
+
+    # A listing-only visit has not observed the article body. It cannot prove a
+    # content change and must never erase the previously fetched document.
+    if content_text is None:
+        return existing, False
 
     new_hash = compute_hash(title, content_text)
     if existing.content_hash != new_hash:

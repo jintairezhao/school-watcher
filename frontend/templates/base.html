@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#6366f1" id="themeColor">
+    <meta name="theme-color" content="#f5f5f7" id="themeColor">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}学校通知扒取工具{% endblock %}</title>
     <script>
@@ -13,17 +13,24 @@
     (function () {
         try {
             var t = localStorage.getItem('theme');
-            if (t === 'light' || t === 'dark') {
-                document.documentElement.setAttribute('data-theme', t);
-            }
+            document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
         } catch (e) {}
     })();
     </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/typography.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/library.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/icon.svg') }}">
     {% block head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/inbox-surface.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supporting-surfaces.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/summaries.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reader.css') }}">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Shared navigation stays separate from each page's working controls. -->
     <!-- 顶部导航栏 -->
     <nav class="navbar">
         <div class="nav-inner">
@@ -37,7 +44,7 @@
                 {% if current_user %}
                 <a href="{{ url_for('pages.index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    我的订阅
+                    通知
                 </a>
                 {% endif %}
                 <a href="{{ url_for('pages.explore') }}" class="nav-link {% if request.path == '/explore' %}active{% endif %}">
@@ -45,10 +52,13 @@
                     学校目录
                 </a>
             </div>
-            <form class="nav-search" action="{{ url_for('search.search') }}" method="get" role="search">
+            {% if request.endpoint != 'pages.index' %}
+            <form class="nav-search" action="{{ url_for('pages.index') if current_user else url_for('search.search') }}" method="get" role="search">
+                <input type="hidden" name="period" value="all">
                 <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="search" name="q" placeholder="搜索通知…" value="{{ request.args.get('q', '') }}" autocomplete="off">
+                <input type="search" name="q" aria-label="{{ '搜索我的订阅' if current_user else '搜索公开通知' }}" placeholder="{{ '搜索我的订阅…' if current_user else '搜索公开通知…' }}" value="{{ request.args.get('q', '') }}" autocomplete="off">
             </form>
+            {% endif %}
             <div class="nav-actions">
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换深浅主题" title="切换深浅主题">
                     <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -61,7 +71,8 @@
                 {% if current_user %}
                 <div class="nav-item has-menu" id="settingsNavItem">
                     <button type="button" class="nav-tab nav-tab--menu" aria-haspopup="true" aria-expanded="false" aria-controls="nav-menu-settings">
-                        <span class="nav-settings-label">👤 {{ current_user.username }}</span>
+                        <span class="nav-user-mark" aria-hidden="true">{{ current_user.username[0]|upper }}</span>
+                        <span class="nav-settings-label">{{ current_user.username }}</span>
                         <svg class="nav-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="nav-menu nav-menu--right" id="nav-menu-settings">
@@ -70,7 +81,7 @@
                         </a>
                         {% if current_user.is_admin %}
                         <a class="nav-menu-item {% if request.path.startswith('/admin') %}is-active{% endif %}" href="{{ url_for('admin.admin_page') }}">
-                            <span class="nav-menu-label">后台管理</span>
+                            <span class="nav-menu-label">系统管理</span>
                         </a>
                         {% endif %}
                         <div class="nav-menu-divider"></div>
@@ -105,14 +116,16 @@
     {% endwith %}
 
     <!-- 主内容区 -->
-    <main class="main-content">
+    <main class="main-content {% block main_class %}{% endblock %}">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Toast 通知容器 -->
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/content.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/summaries.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

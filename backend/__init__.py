@@ -1,5 +1,6 @@
 """学校通知扒取工具 — 应用工厂"""
 import logging
+import os
 from datetime import timedelta
 
 from flask import Flask, render_template
@@ -10,7 +11,7 @@ from backend.core import db, migrate
 logger = logging.getLogger(__name__)
 
 
-def create_app():
+def create_app(test_config=None):
     """创建并配置 Flask 应用实例"""
     app = Flask(
         __name__,
@@ -26,10 +27,39 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = get_database_uri()
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JSON_AS_ASCII'] = False
-    # SQLite 多线程访问：禁用同线程校验，并加长等待锁的时间，避免后台线程写库时报错
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'connect_args': {'check_same_thread': False, 'timeout': 30},
-    }
+    app.config.update(
+        SESSION_COOKIE_SECURE=os.environ.get('WATCHER_ENV') == 'production',
+        SOURCE_CATALOG_PATH=str(DATA_DIR / 'source_catalog.sqlite3'),
+        DISCOVERY_CACHE_PATH=str(DATA_DIR / 'discovery_cache.sqlite3'),
+        BODY_CACHE_BYTES=150 * 1024 * 1024,
+        BODY_CACHE_DAYS=30,
+        BACKUP_DIR=os.environ.get('WATCHER_BACKUP_DIR', str(DATA_DIR / 'backups')),
+        BACKUP_COPY_DIR=os.environ.get('WATCHER_BACKUP_COPY_DIR', ''),
+        BROWSER_SERVICE_URL=os.environ.get('WATCHER_BROWSER_URL', 'http://127.0.0.1:8765'),
+        BROWSER_SERVICE_TOKEN=os.environ.get('WATCHER_BROWSER_TOKEN', ''),
+        FETCH_EVIDENCE_DIR=os.environ.get('WATCHER_FETCH_EVIDENCE_DIR', str(DATA_DIR / 'fetch-evidence')),
+        BROWSER_ENABLED=os.environ.get('WATCHER_BROWSER', '0') == '1',
+    )
+    if test_config:
+        app.config.update(test_config)
+    from pathlib import Path
+    app.config.setdefault('SOURCE_GOVERNANCE_EVIDENCE_PATH', os.environ.get('WATCHER_SOURCE_EVIDENCE_DIR') or
+        str(Path(app.config.get('SOURCE_INVENTORY_PATH') or app.config['SOURCE_CATALOG_PATH']).parent / 'source-governance-evidence'))
+    if not app.config.get('TESTING'):
+        from backend.core.config import ensure_field_encryption_key
+        ensure_field_encryption_key()
+    if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite:'):
+        app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {
+            'connect_args': {'check_same_thread': False, 'timeout': 30}})
+    else:
+        app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {
+            'pool_size': int(os.environ.get('WATCHER_DB_POOL_SIZE', '4')),
+            'max_overflow': int(os.environ.get('WATCHER_DB_POOL_OVERFLOW', '4')),
+            'pool_timeout': 15, 'pool_pre_ping': True, 'pool_recycle': 1800,
+            'connect_args': {'options': '-c timezone=UTC'}})
+    if os.environ.get('WATCHER_TRUST_PROXY') == '1':
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # ---- 扩展 ----
     db.init_app(app)
@@ -37,6 +67,9 @@ def create_app():
 
     # ---- 模型（确保表结构注册） ----
     from backend.database import models  # noqa: F401
+    from backend.database import school_registry_models, source_governance_models  # noqa: F401
+    from backend.ai import models as ai_models, summary_models  # noqa: F401
+    from backend.services import announcement_identity  # noqa: F401
 
     # ---- 蓝图 ----
     from backend.routes import register_blueprints
@@ -52,6 +85,9 @@ def create_app():
     register_hooks(app)
     register_security_headers(app)
 
+    from backend.services.source_labels import source_breadcrumb
+    app.jinja_env.filters['source_breadcrumb'] = source_breadcrumb
+
     # ---- 错误处理 ----
     @app.errorhandler(404)
     def not_found(e):
@@ -62,22 +98,11 @@ def create_app():
         return render_template('base.html', content='<div class="empty-state"><h2>500</h2><p>服务器内部错误</p></div>'), 500
 
     # ---- 从 YAML 导入学校配置（表不存在时静默跳过，迁移生成阶段会触发） ----
-    try:
-        with app.app_context():
-            load_config_yaml()
-    except Exception as e:
-        logger.warning(f"YAML 种子导入跳过: {e}")
-
-    # ---- 清理上次进程中断遗留的 running 抓取记录（避免成功率失真） ----
-    try:
-        with app.app_context():
-            from backend.database.models import ScrapeLog
-            stuck = ScrapeLog.query.filter_by(status='running').update(
-                {'status': 'failed', 'error_message': '进程中断（启动时清理）'})
-            if stuck:
-                db.session.commit()
-                logger.info(f"已清理 {stuck} 条中断的抓取记录")
-    except Exception:
-        pass
+    if not app.config.get('TESTING') and os.environ.get('WATCHER_SEED_ON_START', '1') == '1':
+        try:
+            with app.app_context():
+                load_config_yaml()
+        except Exception as e:
+            logger.warning(f"YAML 种子导入跳过: {e}")
 
     return app

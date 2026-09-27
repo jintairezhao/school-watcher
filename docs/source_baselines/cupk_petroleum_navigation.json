@@ -1,0 +1,402 @@
+{
+  "id": "cupk-petroleum-navigation-2026-09-20",
+  "root_url": "https://www.cupk.edu.cn/",
+  "reference_url": "https://www.cupk.edu.cn/sgxy/",
+  "reference_hash": "e6d0d9b48dc6c3f13f2531fe3163c093fcdd68ae2dab2c8c5f17b75446ee93e6",
+  "reviewed_at": "2026-09-20",
+  "category": "navigation_structure",
+  "scope": "石油工程学院首页十组导航：50 个不同层级身份；国际教育的同名同址重复入口保留链接证据，不生成自循环。此范围包含静态介绍入口，不代表全部发布栏目覆盖率。",
+  "scope_selector": ".c-header_lib_s:has(> ul)",
+  "entries": [
+    {
+      "id": "overview",
+      "name": "学院概况",
+      "url": "https://www.cupk.edu.cn/sgxy/xygk/xyjj/",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "overview-1",
+      "name": "学院简介",
+      "url": "https://www.cupk.edu.cn/sgxy/xygk/xyjj/",
+      "kind": "group",
+      "parent": "overview",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "overview-2",
+      "name": "学院领导",
+      "url": "https://www.cupk.edu.cn/sgxy/xyld/",
+      "kind": "group",
+      "parent": "overview",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "overview-3",
+      "name": "规章制度",
+      "url": "https://www.cupk.edu.cn/sgxy/gzzd/",
+      "kind": "channel",
+      "parent": "overview",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "organization",
+      "name": "组织机构",
+      "url": "https://www.cupk.edu.cn/sgxy/zzjg/sygcx/",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "organization-1",
+      "name": "石油工程系",
+      "url": "https://www.cupk.edu.cn/sgxy/zzjg/sygcx/",
+      "kind": "unit",
+      "parent": "organization",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "organization-2",
+      "name": "油气储运工程系",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-07-15/536075.shtml",
+      "kind": "unit",
+      "parent": "organization",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "organization-3",
+      "name": "学院办公室",
+      "url": "https://www.cupk.edu.cn/sgxy/zzjg/xybgs/",
+      "kind": "unit",
+      "parent": "organization",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "organization-4",
+      "name": "学生工作办公室",
+      "url": "https://www.cupk.edu.cn/sgxy/zzjg/xsgzbgs/",
+      "kind": "unit",
+      "parent": "organization",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "faculty",
+      "name": "师资队伍",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-08-03/537589.shtml",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "faculty-1",
+      "name": "高层次人才",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-08-03/537589.shtml",
+      "kind": "group",
+      "parent": "faculty",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "faculty-2",
+      "name": "教授",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-07-08/535305.shtml",
+      "kind": "group",
+      "parent": "faculty",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "faculty-3",
+      "name": "副教授",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-07-08/535306.shtml",
+      "kind": "group",
+      "parent": "faculty",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "faculty-4",
+      "name": "援建/银龄教师",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-07-08/535303.shtml",
+      "kind": "group",
+      "parent": "faculty",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "faculty-5",
+      "name": "讲师",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-07-08/535307.shtml",
+      "kind": "group",
+      "parent": "faculty",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "faculty-6",
+      "name": "实验员",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-07-08/535309.shtml",
+      "kind": "group",
+      "parent": "faculty",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "faculty-7",
+      "name": "企业兼职教师",
+      "url": "https://www.cupk.edu.cn/sgxy/c/2026-07-08/535312.shtml",
+      "kind": "group",
+      "parent": "faculty",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "undergraduate",
+      "name": "本科生教育",
+      "url": "https://www.cupk.edu.cn/sgxy/bksjy/bkzysz/",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "undergraduate-1",
+      "name": "本科专业设置",
+      "url": "https://www.cupk.edu.cn/sgxy/bksjy/bkzysz/",
+      "kind": "group",
+      "parent": "undergraduate",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "undergraduate-2",
+      "name": "教学通知",
+      "url": "https://www.cupk.edu.cn/sgxy/bksjy/jxtz/",
+      "kind": "channel",
+      "parent": "undergraduate",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "undergraduate-3",
+      "name": "实践教学",
+      "url": "https://www.cupk.edu.cn/sgxy/bksjy/sjjx/",
+      "kind": "group",
+      "parent": "undergraduate",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "undergraduate-4",
+      "name": "教学成果",
+      "url": "https://www.cupk.edu.cn/sgxy/bksjy/jxcg/",
+      "kind": "channel",
+      "parent": "undergraduate",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "graduate",
+      "name": "研究生教育",
+      "url": "https://www.cupk.edu.cn/sgxy/sssds/",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "graduate-1",
+      "name": "研究生导师",
+      "url": "https://www.cupk.edu.cn/sgxy/sssds/",
+      "kind": "group",
+      "parent": "graduate",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "graduate-2",
+      "name": "重要通知",
+      "url": "https://www.cupk.edu.cn/sgxy/zytz/",
+      "kind": "channel",
+      "parent": "graduate",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "research",
+      "name": "科学研究",
+      "url": "https://www.cupk.edu.cn/sgxy/xsyj/zyyjfx/",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "research-1",
+      "name": "主要研究方向",
+      "url": "https://www.cupk.edu.cn/sgxy/xsyj/zyyjfx/",
+      "kind": "group",
+      "parent": "research",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "research-2",
+      "name": "科研成果",
+      "url": "https://www.cupk.edu.cn/sgxy/xsyj/kycg/",
+      "kind": "channel",
+      "parent": "research",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "research-3",
+      "name": "学术交流",
+      "url": "https://www.cupk.edu.cn/sgxy/xsyj/xsjl/",
+      "kind": "group",
+      "parent": "research",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "party",
+      "name": "党建工作",
+      "url": "https://www.cupk.edu.cn/sgxy/dqgz/zzjs/",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "party-1",
+      "name": "组织建设",
+      "url": "https://www.cupk.edu.cn/sgxy/dqgz/zzjs/",
+      "kind": "group",
+      "parent": "party",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "party-2",
+      "name": "支部活动",
+      "url": "https://www.cupk.edu.cn/sgxy/dqgz/zbhd/",
+      "kind": "group",
+      "parent": "party",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "party-3",
+      "name": "党员风采",
+      "url": "https://www.cupk.edu.cn/sgxy/dqgz/dyfc/",
+      "kind": "group",
+      "parent": "party",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "party-4",
+      "name": "公示公告",
+      "url": "https://www.cupk.edu.cn/sgxy/gsgg/",
+      "kind": "channel",
+      "parent": "party",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "union",
+      "name": "工会活动",
+      "url": "https://www.cupk.edu.cn/sgxy/ghhd/tzyxw/",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "union-1",
+      "name": "通知与新闻",
+      "url": "https://www.cupk.edu.cn/sgxy/ghhd/tzyxw/",
+      "kind": "channel",
+      "parent": "union",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "union-2",
+      "name": "教代会专栏",
+      "url": "https://www.cupk.edu.cn/sgxy/ghhd/jdhzl/",
+      "kind": "group",
+      "parent": "union",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "union-3",
+      "name": "获奖专栏",
+      "url": "https://www.cupk.edu.cn/sgxy/ghhd/hjzl/",
+      "kind": "group",
+      "parent": "union",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "union-4",
+      "name": "健康小知识",
+      "url": "https://www.cupk.edu.cn/sgxy/ghhd/jkxzs/",
+      "kind": "group",
+      "parent": "union",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "students",
+      "name": "学生工作",
+      "url": "https://www.cupk.edu.cn/sgxy/xsgz/tzgg/",
+      "kind": "group",
+      "parent": null
+    },
+    {
+      "id": "students-1",
+      "name": "通知公告",
+      "url": "https://www.cupk.edu.cn/sgxy/xsgz/tzgg/",
+      "kind": "channel",
+      "parent": "students",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "students-2",
+      "name": "学工动态",
+      "url": "https://www.cupk.edu.cn/sgxy/xsgz/xgdt/",
+      "kind": "channel",
+      "parent": "students",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "students-3",
+      "name": "就业指导",
+      "url": "https://www.cupk.edu.cn/sgxy/xsgz/jyzd/",
+      "kind": "channel",
+      "parent": "students",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "students-4",
+      "name": "规章制度",
+      "url": "https://www.cupk.edu.cn/sgxy/xsgz/gzzd/",
+      "kind": "channel",
+      "parent": "students",
+      "relation": "unit_channel"
+    },
+    {
+      "id": "students-5",
+      "name": "思政教育",
+      "url": "https://www.cupk.edu.cn/sgxy/szjy/",
+      "kind": "group",
+      "parent": "students",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "students-6",
+      "name": "社会实践",
+      "url": "https://www.cupk.edu.cn/sgxy/shsj/",
+      "kind": "group",
+      "parent": "students",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "students-7",
+      "name": "创新创业",
+      "url": "https://www.cupk.edu.cn/sgxy/cxcy/",
+      "kind": "group",
+      "parent": "students",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "students-8",
+      "name": "志愿服务",
+      "url": "https://www.cupk.edu.cn/sgxy/zyfw/",
+      "kind": "group",
+      "parent": "students",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "students-9",
+      "name": "学生资助",
+      "url": "https://www.cupk.edu.cn/sgxy/xszz/",
+      "kind": "group",
+      "parent": "students",
+      "relation": "navigation_entry"
+    },
+    {
+      "id": "international",
+      "name": "国际教育",
+      "url": "https://www.cupk.edu.cn/sgxy/gjjyy/gjjy/",
+      "kind": "group",
+      "parent": null
+    }
+  ]
+}

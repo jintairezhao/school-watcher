@@ -1,0 +1,27 @@
+{
+  "id": "ysu-journal-recommended-2026-09-21",
+  "root_url": "https://www.ysu.edu.cn/",
+  "reference_url": "http://journal.ysu.edu.cn/",
+  "reference_hash": "b550a24de016b2a57b8be5575276248b494be89c85177633460bd0a0708fa068",
+  "scope": "燕山大学期刊社首页文章推荐标题、查看更多入口及六个推荐文章地址",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "review_method": "独立读取 .tit 内文章推荐 h1 和 wztj.htm 链接；下方 qkwrap/qklist/tj 的六条文章逐项核对各自期刊域名及动态 ArticleID。布局容器不作为新的栏目父级。期刊卷期不是明确发布日期，本基准不验证全文、发布日期或实际发布责任，也不涵盖官网全部栏目。",
+  "scope_selector": ".w1400:has(> .qkwrap)",
+  "entries": [
+    {
+      "id": "recommended",
+      "name": "文章推荐",
+      "url": "http://journal.ysu.edu.cn/wztj.htm",
+      "scope_selector": "#tj",
+      "article_urls": [
+        "http://jxyj.ysu.edu.cn/#/digest?ArticleID=2436",
+        "http://jxyj.ysu.edu.cn/#/digest?ArticleID=2431",
+        "http://xuebao.ysu.edu.cn/#/digest?ArticleID=1491",
+        "http://xuebao.ysu.edu.cn/#/digest?ArticleID=1487",
+        "http://xbskb.ysu.edu.cn/#/digest?ArticleID=1767",
+        "http://jxyj.ysu.edu.cn/#/digest?ArticleID=2311"
+      ]
+    }
+  ]
+}

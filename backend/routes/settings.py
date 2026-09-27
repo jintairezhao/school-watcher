@@ -25,11 +25,7 @@ def api_save_settings():
         return jsonify({'error': '无效数据'}), 400
 
     if 'api_key' in data:
-        key = data['api_key'].strip()
-        if not key.startswith('sk-'):
-            return jsonify({'error': 'API Key 格式错误，必须以 sk- 开头'}), 400
-        from backend.core.secrets import encrypt_field
-        AppConfig.set('deepseek_api_key', encrypt_field(key))
+        return jsonify(error='请在系统管理的 AI 服务中配置、测试并选择用途'), 409
 
     if 'interval' in data:
         try:
@@ -39,24 +35,29 @@ def api_save_settings():
         if not 5 <= interval <= 720:
             return jsonify({'error': '间隔需在 5-720 分钟之间'}), 400
         AppConfig.set('scrape_interval', str(interval))
-        try:
-            from backend.scheduler.jobs import restart_scheduler
-            restart_scheduler()
-        except Exception as e:
-            logger.warning(f"重启调度器失败: {e}")
+        # The independent worker rereads this persisted setting on every tick.
 
     return jsonify({'success': True, 'message': '设置已保存'})
 
-
-# 注：已读语义将于阶段 4 切换为 per-user（user_reads 表），
-# 现阶段仍写全局 is_read 以保持阶段间可用。
 
 @bp.route('/api/announcements/<int:ann_id>/read', methods=['POST'])
 @login_required
 def api_mark_read(ann_id):
     """标记为已读（仅本人）"""
     from backend.services import read_state
+    from backend.services.announcement_sources import source_expression
+    if not Announcement.query.filter(Announcement.id == ann_id, source_expression()).first():
+        return jsonify(error='通知不存在'), 404
     read_state.mark_read(g.user.id, ann_id)
+    return jsonify({'success': True})
+
+
+@bp.route('/api/announcements/<int:ann_id>/read', methods=['DELETE'])
+@login_required
+def api_mark_unread(ann_id):
+    """撤销已读（仅本人）"""
+    from backend.services import read_state
+    read_state.mark_unread(g.user.id, ann_id)
     return jsonify({'success': True})
 
 

@@ -1,0 +1,266 @@
+{
+  "id": "muc_academic_directory",
+  "root_url": "https://www.muc.edu.cn/",
+  "reference_url": "https://www.muc.edu.cn/zzjg/jxhkydw1.htm",
+  "reference_kind": "directory",
+  "reference_hash": "0a7fab1cff27dea7883405f03e961c723e6a01d4eedcb5fecb50b519cc3fb960",
+  "scope": "中央民族大学教学和科研单位正文42个平级目录条目，含明确标注的非独立科研平台；不根据相邻位置推断隶属",
+  "scope_selector": ".n_znbm > ul.list_box9",
+  "category": "academic_units",
+  "reviewed_at": "2026-09-21",
+  "review_method": "逐项查看官网正文及原始链接独立记录名称和分组。缺失链接保留为空，回指目录和缺少协议的原链接按浏览器实际目标保留并待复查。仅验证目录呈现，不代表单位网站身份或学生通知来源覆盖率。",
+  "entries": [
+    {
+      "id": "中华民族共同体学院",
+      "name": "中华民族共同体学院",
+      "url": "",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "民族学与社会学学院",
+      "name": "民族学与社会学学院",
+      "url": "https://msy.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "中国语言文学学部",
+      "name": "中国语言文学学部",
+      "url": "",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "中国少数民族语言文学学院",
+      "name": "中国少数民族语言文学学院",
+      "url": "https://scemll.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "文学院",
+      "name": "文学院",
+      "url": "https://sla.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "历史文化学院",
+      "name": "历史文化学院",
+      "url": "https://history.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "哲学与宗教学学院",
+      "name": "哲学与宗教学学院",
+      "url": "https://phil.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "新闻与传播学院",
+      "name": "新闻与传播学院",
+      "url": "https://xinchuan.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "外国语学院",
+      "name": "外国语学院",
+      "url": "https://sfs.muc.edu.cn/index.jsp",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "马克思主义学院",
+      "name": "马克思主义学院",
+      "url": "https://marxism.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "经济学院",
+      "name": "经济学院",
+      "url": "https://eco.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "管理学院",
+      "name": "管理学院",
+      "url": "https://ms.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "法学院",
+      "name": "法学院",
+      "url": "https://law.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "生命与环境科学学院",
+      "name": "生命与环境科学学院",
+      "url": "https://cles.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "药学院",
+      "name": "药学院",
+      "url": "https://yxy.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "理学院",
+      "name": "理学院",
+      "url": "https://lxy.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "信息工程学院",
+      "name": "信息工程学院",
+      "url": "https://xingong.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "音乐学院",
+      "name": "音乐学院",
+      "url": "https://yyxy.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "舞蹈学院",
+      "name": "舞蹈学院",
+      "url": "https://wd.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "美术学院",
+      "name": "美术学院",
+      "url": "https://art.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "体育学院",
+      "name": "体育学院",
+      "url": "https://sport.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "教育学院",
+      "name": "教育学院",
+      "url": "https://edu.muc.edu.cn/index.htm",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "国际教育学院",
+      "name": "国际教育学院",
+      "url": "https://cie.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "海南国际学院",
+      "name": "海南国际学院",
+      "url": "https://muchnic.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "预科教育学院",
+      "name": "预科教育学院",
+      "url": "https://www.muc.edu.cn/zzjg/yuke.muc.edu.cn",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "继续教育学院（干部培训部）",
+      "name": "继续教育学院（干部培训部）",
+      "url": "https://sce.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "铸牢中华民族共同体意识研究院",
+      "name": "铸牢中华民族共同体意识研究院",
+      "url": "https://www.muc.edu.cn/zzjg/jxhkydw1.htm",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "藏学研究院",
+      "name": "藏学研究院",
+      "url": "",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "中国少数民族研究中心",
+      "name": "中国少数民族研究中心",
+      "url": "https://myzx.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "国家安全研究院",
+      "name": "国家安全研究院",
+      "url": "https://gjaqyjy.muc.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "人工智能研究院",
+      "name": "人工智能研究院",
+      "url": "",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "中国式现代化研究院",
+      "name": "中国式现代化研究院",
+      "url": "https://www.muc.edu.cn/zzjg/icm.muc.edu.cn",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）中国民族理论与民族政策研究院",
+      "name": "（非独立科研平台）中国民族理论与民族政策研究院",
+      "url": "",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）世界民族学与人类学研究中心",
+      "name": "（非独立科研平台）世界民族学与人类学研究中心",
+      "url": "",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）\"一带一路\"与民族发展研究院",
+      "name": "（非独立科研平台）\"一带一路\"与民族发展研究院",
+      "url": "",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）中国民族语言文字应用研究院",
+      "name": "（非独立科研平台）中国民族语言文字应用研究院",
+      "url": "https://scemll.muc.edu.cn/mzyw/index.htm",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）中华文化研究院",
+      "name": "（非独立科研平台）中华文化研究院",
+      "url": "",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）宗教研究院",
+      "name": "（非独立科研平台）宗教研究院",
+      "url": "",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）中国兴边富民战略研究院",
+      "name": "（非独立科研平台）中国兴边富民战略研究院",
+      "url": "https://vbep.muc.edu.cn/",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）质谱成像与系统生物学研究中心",
+      "name": "（非独立科研平台）质谱成像与系统生物学研究中心",
+      "url": "https://mmsi.muc.edu.cn/",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "（非独立科研平台）转化神经科学中心",
+      "name": "（非独立科研平台）转化神经科学中心",
+      "url": "",
+      "relation": "non_entity_directory_entry"
+    },
+    {
+      "id": "(共建科研机构)国家语言资源监测与研究民族语言中心",
+      "name": "(共建科研机构)国家语言资源监测与研究民族语言中心",
+      "url": "https://nmlr.muc.edu.cn/",
+      "relation": "directory_entry"
+    }
+  ]
+}

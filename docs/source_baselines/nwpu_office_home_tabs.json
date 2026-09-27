@@ -1,0 +1,45 @@
+{
+  "id": "nwpu-office-home-tabs-2026-09-21",
+  "root_url": "https://www.nwpu.edu.cn/",
+  "reference_url": "https://dangzheng.nwpu.edu.cn/",
+  "reference_hash": "78a86e52478d8aa29a5bb37f3bd2bb1662d96beb357910462e2ac79ac28e7974",
+  "scope": "党政办公室首页时政要闻、部门动态两个切换列表及各自八个文章地址",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "review_method": "逐项读取两个标题 span、两个查看更多链接和两个 ul 内全部八个条目；另读取官网 mouseenter 脚本，确认标题索引同时控制对应 ul 和查看更多链接。条目编号独立抄录，未从解析结果生成。只覆盖这一首页切换区，不代表整校发布来源或转载文章责任核验。",
+  "scope_selector": ".sect1-r",
+  "entries": [
+    {
+      "id": "politics",
+      "name": "时政要闻",
+      "url": "https://dangzheng.nwpu.edu.cn/list.jsp?urltype=tree.TreeTempUrl&wbtreeid=1051",
+      "scope_selector": ".sect1-r .s1-qh > ul:nth-of-type(1)",
+      "article_urls": [
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1051&wbnewsid=4541",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1051&wbnewsid=4511",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1051&wbnewsid=4481",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1051&wbnewsid=4431",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1051&wbnewsid=4441",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1051&wbnewsid=4451",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1051&wbnewsid=4461",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1051&wbnewsid=4471"
+      ]
+    },
+    {
+      "id": "office",
+      "name": "部门动态",
+      "url": "https://dangzheng.nwpu.edu.cn/pic_list.jsp?urltype=tree.TreeTempUrl&wbtreeid=1061",
+      "scope_selector": ".sect1-r .s1-qh > ul:nth-of-type(2)",
+      "article_urls": [
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1061&wbnewsid=4521",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1061&wbnewsid=4421",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1061&wbnewsid=4371",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1061&wbnewsid=4341",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1061&wbnewsid=4151",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1061&wbnewsid=4121",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1061&wbnewsid=4101",
+        "https://dangzheng.nwpu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1061&wbnewsid=4051"
+      ]
+    }
+  ]
+}

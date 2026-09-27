@@ -1,135 +1,89 @@
-{% extends "base.html" %}
-{% block title %}后台管理 — 学校通知{% endblock %}
+{% extends "admin_base.html" %}
+{% block title %}系统管理 — 学校通知{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-logs.css') }}">{% endblock %}
 
-{% block head %}
-<style>
-    /* ---- 后台标签页 ---- */
-    .admin-tabs {
-        display: flex; flex-wrap: wrap; gap: 6px;
-        padding: 6px; margin-bottom: 18px;
-        background: var(--surface-card-glass);
-        border: 1px solid var(--surface-card-border-glass);
-        border-radius: var(--radius-card);
-    }
-    .admin-tab {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 7px 14px; border: none; border-radius: var(--radius-btn);
-        background: transparent; color: var(--color-text-secondary);
-        font-size: 0.86rem; font-weight: 500; font-family: inherit;
-        cursor: pointer;
-        transition: background 0.15s var(--ease), color 0.15s var(--ease);
-    }
-    .admin-tab:hover { background: var(--color-surface-2); color: var(--color-text); }
-    .admin-tab.is-active { background: var(--color-primary-subtle); color: var(--color-primary); font-weight: 600; }
-    .admin-tab-panel[hidden] { display: none; }
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
-    .stat-card { background: var(--surface-card-glass); border: 1px solid var(--surface-card-border-glass); border-radius: var(--radius-card); padding: 14px; }
-    .stat-card .n { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .stat-card .l { font-size: 0.78rem; color: var(--color-text-muted); }
-    .review-card { border: 1px solid var(--color-warning, #B45309); background: var(--color-warning-bg, #FEF3C7); color: #78350F; border-radius: var(--radius-card); padding: 10px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
-    html[data-theme="dark"] .review-card { background: rgba(180, 83, 9, 0.15); color: #FCD34D; }
-</style>
-{% endblock %}
+
 
 {% block content %}
-<div class="page-header">
-    <h1>️ 后台管理</h1>
-    <p class="page-subtitle">开发者控制台 · 仅管理员可见</p>
-</div>
-
-<nav class="admin-tabs" role="tablist">
-    <button class="admin-tab is-active" data-tab="overview" role="tab">📊 概览</button>
-    <button class="admin-tab" data-tab="schools" role="tab">🏫 学校管理</button>
-    <button class="admin-tab" data-tab="users" role="tab">👥 用户</button>
-    <button class="admin-tab" data-tab="scrape" role="tab">️ 抓取</button>
-    <button class="admin-tab" data-tab="selectors" role="tab">🩹 选择器健康</button>
-    <button class="admin-tab" data-tab="platform" role="tab">⚙️ 平台设置</button>
-</nav>
+<header class="surface-heading admin-page-header">
+    <div><h1 id="adminPageTitle">系统概览</h1><p id="adminPageDescription">先处理需要介入的事项，再查看近期运行情况。</p></div>
+    <span class="admin-access-label">仅管理员</span>
+</header>
 
 <!-- ================= 概览 ================= -->
 <section class="admin-tab-panel" id="panel-overview">
+    <section class="admin-attention" aria-labelledby="attentionTitle">
+        <h2 id="attentionTitle">需要关注</h2>
+        <div class="attention-list">
+            <a href="{{ url_for('source_governance.review_page') }}"><span><strong>核实部门与栏目</strong><small>核对官网依据，让待确认的来源继续接入。</small></span><span aria-hidden="true">→</span></a>
+            <a href="{{ url_for('browser_sessions.page') }}"><span><strong>处理访问验证</strong><small>查看需要人工验证的官网，完成后继续同步。</small></span><span aria-hidden="true">→</span></a>
+            <a href="#logs"><span><strong>检查抓取异常</strong><small id="attentionLogStatus">查看未完成的任务与具体原因。</small></span><span aria-hidden="true">→</span></a>
+        </div>
+    </section>
+    <h2 class="admin-section-title">运行概况</h2>
     <div class="stat-grid" id="statGrid"><p class="text-muted">加载中…</p></div>
+    <p class="text-muted" id="scrapeRateExplanation" hidden></p>
     <div class="setting-card">
-        <div class="setting-card-header"><h3>📋 最近抓取</h3><p>最近 10 条抓取记录</p></div>
+        <div class="setting-card-header"><h3>最近抓取</h3><p>最近 10 条已结束的抓取记录 · <a href="#logs">查看完整记录</a></p></div>
         <div class="setting-card-body"><div id="recentLogs" class="log-list"><p class="text-muted">加载中…</p></div></div>
     </div>
 </section>
 
+<section class="admin-tab-panel" id="panel-logs" hidden>
+    {% include '_admin_scrape_logs.html' %}
+</section>
+
 <!-- ================= 学校管理 ================= -->
 <section class="admin-tab-panel" id="panel-schools" hidden>
-    <div class="page-header" style="margin-bottom:8px;">
+    <div class="admin-section-actions">
         <div class="header-actions">
-            <button class="btn btn-primary" onclick="showAddSchool()">+ 添加学校</button>
+            <button class="btn btn-primary" onclick="showAddSchool()">添加学校</button>
         </div>
     </div>
+    <p><a href="{{ url_for('source_governance.review_page') }}">核实待确认的部门与栏目</a></p>
     {% include '_admin_schools.html' %}
 </section>
 
 <!-- ================= 用户 ================= -->
 <section class="admin-tab-panel" id="panel-users" hidden>
     <div class="setting-card">
-        <div class="setting-card-header"><h3>👥 用户管理</h3><p>重置密码 / 角色切换（不能改自己）</p></div>
+        <div class="setting-card-header"><h3>用户管理</h3><p>重置密码与角色；不能修改自己的角色</p></div>
         <div class="setting-card-body"><div id="userList" class="text-muted">加载中…</div></div>
     </div>
 </section>
 
 <!-- ================= 抓取 ================= -->
 <section class="admin-tab-panel" id="panel-scrape" hidden>
-    <div class="settings-grid" style="max-width:none;">
+    <div class="settings-grid">
         <div class="setting-card">
-            <div class="setting-card-header"><h3>⏱️ 爬取设置</h3><p>定时抓取间隔</p></div>
+            <div class="setting-card-header"><h3>抓取设置</h3><p>定时抓取间隔</p></div>
             <div class="setting-card-body">
                 <div class="form-group">
-                    <label for="interval">爬取间隔（分钟）</label>
-                    <select id="interval" class="form-input">
-                        <option value="15">15 分钟</option>
-                        <option value="30" selected>30 分钟</option>
-                        <option value="60">1 小时</option>
-                        <option value="120">2 小时</option>
-                        <option value="360">6 小时</option>
-                        <option value="720">12 小时</option>
-                    </select>
+                    <label for="interval">检查间隔（分钟）</label>
+                    <input type="number" id="interval" class="form-input" min="5" max="720" step="1" value="30" aria-describedby="interval-help">
+                    <p id="interval-help" class="text-muted">可设为 5–720 分钟，默认 30 分钟。任务排队时会合并更新请求。</p>
                 </div>
                 <button class="btn btn-primary" onclick="saveInterval()">保存间隔</button>
             </div>
         </div>
         <div class="setting-card">
-            <div class="setting-card-header"><h3>🚀 手动任务</h3><p>立即触发抓取 / 摘要</p></div>
+            <div class="setting-card-header"><h3>手动任务</h3><p>立即触发抓取或重新生成摘要</p></div>
             <div class="setting-card-body manual-actions">
                 <button class="btn btn-primary" onclick="triggerScrapeAll()" id="btnScrapeAll">立即抓取全部（活跃学校）</button>
-                <button class="btn btn-outline" onclick="triggerSummarize()" id="btnSummarize">重新生成所有摘要</button>
+                <label for="summaryIds">批量生成摘要：填写通知编号（逗号分隔，最多 50 条）</label>
+                <input id="summaryIds" class="form-input" placeholder="例如：9226, 9227" inputmode="numeric">
+                <button class="btn btn-outline" onclick="triggerSummarize()" id="btnSummarize">生成所选通知摘要</button>
             </div>
         </div>
-    </div>
-</section>
-
-<!-- ================= 选择器健康 ================= -->
-<section class="admin-tab-panel" id="panel-selectors" hidden>
-    <div class="setting-card" style="margin-bottom:18px;">
-        <div class="setting-card-header"><h3>⚠️ 待人工复核</h3><p>监督器标记：结构损坏重探不达标 / 抓错 / WAF 壳页</p></div>
-        <div class="setting-card-body"><div id="reviewList"><p class="text-muted">加载中…</p></div></div>
-    </div>
-    <div class="setting-card">
-        <div class="setting-card-header"><h3>📜 选择器变更审计</h3><p>最近 50 条（auto=监督器自动，human=人工/回滚）</p></div>
-        <div class="setting-card-body"><div id="auditList" class="log-list"><p class="text-muted">加载中…</p></div></div>
     </div>
 </section>
 
 <!-- ================= 平台设置 ================= -->
 <section class="admin-tab-panel" id="panel-platform" hidden>
-    <div class="settings-grid" style="max-width:none;">
+    <div class="settings-grid">
+        {% include '_admin_ai.html' %}
         <div class="setting-card">
-            <div class="setting-card-header"><h3>🔑 DeepSeek API</h3><p>AI 摘要服务（加密存储）</p></div>
-            <div class="setting-card-body">
-                <div class="form-group">
-                    <label for="apiKey">API Key</label>
-                    <input type="password" id="apiKey" class="form-input" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off">
-                </div>
-                <button class="btn btn-primary" onclick="saveApiKey()">保存 API Key</button>
-            </div>
-        </div>
-        <div class="setting-card">
-            <div class="setting-card-header"><h3>🚦 服务开关</h3><p>保存即生效，可一键降级回私有工具</p></div>
+            <div class="setting-card-header"><h3>服务开关</h3><p>控制注册与匿名阅读，保存后立即生效</p></div>
             <div class="setting-card-body">
                 <div class="form-group"><label><input type="checkbox" id="tgReg"> 开放注册（关闭后仅存量用户可登录）</label></div>
                 <div class="form-group"><label><input type="checkbox" id="tgPub"> 匿名可浏览（关闭后整站仅登录可读）</label></div>
@@ -144,8 +98,21 @@
 <script>
 // ---- 标签页切换（hash 记忆） ----
 function showTab(name) {
+    var headings = {
+        overview: ['系统概览', '先处理需要介入的事项，再查看近期运行情况。'],
+        schools: ['学校与部门', '维护学校、官网栏目与来源关系。'],
+        scrape: ['抓取任务', '设置检查间隔，或主动更新已订阅的来源。'],
+        logs: ['抓取记录', '按学校查看同步结果、时间和未完成的原因。'],
+        users: ['用户管理', '管理账户权限和密码。'],
+        platform: ['平台设置', '配置共享 AI 服务与平台访问方式。']
+    };
+    var heading = headings[name] || headings.overview;
+    document.getElementById('adminPageTitle').textContent = heading[0];
+    document.getElementById('adminPageDescription').textContent = heading[1];
     document.querySelectorAll('.admin-tab').forEach(function (t) {
-        t.classList.toggle('is-active', t.dataset.tab === name);
+        var active = t.dataset.tab === name;
+        t.classList.toggle('is-active', active);
+        if (active) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
     });
     document.querySelectorAll('.admin-tab-panel').forEach(function (p) {
         p.hidden = p.id !== 'panel-' + name;
@@ -153,17 +120,23 @@ function showTab(name) {
     if (name === 'overview') loadStats();
     if (name === 'users') loadUsers();
     if (name === 'scrape') loadInterval();
-    if (name === 'selectors') { loadReview(); loadAudit(); }
-    if (name === 'platform') loadToggles();
+    if (name === 'logs' && window.loadScrapeLogHistory) window.loadScrapeLogHistory();
+    if (name === 'platform') { loadToggles(); if (window.loadAISettings) window.loadAISettings(); }
 }
-document.querySelectorAll('.admin-tab').forEach(function (t) {
-    t.addEventListener('click', function () {
-        location.hash = t.dataset.tab;
-        showTab(t.dataset.tab);
+document.querySelectorAll('.admin-tab[data-tab]').forEach(function (t) {
+    t.addEventListener('click', function (event) {
+        event.preventDefault();
+        if (location.hash === '#' + t.dataset.tab) showTab(t.dataset.tab);
+        else location.hash = t.dataset.tab;
     });
 });
 function applyHash() {
     var h = (location.hash || '#overview').slice(1);
+    // Existing bookmarks now open the actionable collection history.
+    if (h === 'selectors') {
+        h = 'logs';
+        history.replaceState(null, '', location.pathname + location.search + '#logs');
+    }
     showTab(document.getElementById('panel-' + h) ? h : 'overview');
 }
 window.addEventListener('hashchange', applyHash);
@@ -173,26 +146,35 @@ document.addEventListener('DOMContentLoaded', applyHash);
 async function loadStats() {
     try {
         var r = await fetch('/api/admin/stats');
+        if (!r.ok) throw new Error('stats unavailable');
         var s = await r.json();
+        var failed = (s.recent_logs || []).filter(function (log) { return log.status !== 'success'; }).length;
+        document.getElementById('attentionLogStatus').textContent = failed ? '最近 ' + (s.recent_logs || []).length + ' 条已结束记录中，有 ' + failed + ' 条未完整完成。查看原因。' : '最近已结束记录中未发现异常；完整历史仍可查看。';
+        var outcomes = s.scrape_outcomes_7d || {};
+        var explanation = document.getElementById('scrapeRateExplanation');
+        explanation.textContent = '近 7 天：成功 ' + (outcomes.success || 0) + '、部分完成 ' + (outcomes.partial || 0) + '、失败 ' + (outcomes.failed || 0) + '、中断 ' + (outcomes.interrupted || 0) + '。成功率只统计已结束记录，运行与排队不计入，重试分别计数。';
+        explanation.hidden = false;
         var cards = [
-            ['用户', s.users, '其中 admin ' + s.admins],
+            ['用户', s.users, '其中管理员 ' + s.admins],
             ['学校', s.schools, '上架 ' + s.schools_enabled + ' · 活跃 ' + s.schools_active],
             ['订阅', s.subscriptions, '订阅驱动抓取'],
             ['通知', s.announcements, '近24h +' + s.announcements_24h],
-            ['抓取(7d)', s.scrapes_7d, '成功率 ' + (s.scrape_success_rate == null ? '—' : Math.round(s.scrape_success_rate * 100) + '%'), ' +' + s.scrape_new_7d + ' 条'],
-            ['选择器', s.selector_changes, '待复核 ' + s.selector_review],
+            ['已结束抓取（7天）', s.scrapes_7d, '完整成功率 ' + (s.scrape_success_rate == null ? '—' : (s.scrape_success_rate * 100).toFixed(1) + '%'), ' +' + s.scrape_new_7d + ' 条'],
         ];
         document.getElementById('statGrid').innerHTML = cards.map(function (c) {
             return '<div class="stat-card"><div class="n">' + c[1] + '</div><div class="l">' + c[0] + (c[2] ? ' · ' + c[2] : '') + (c[3] || '') + '</div></div>';
         }).join('');
         document.getElementById('recentLogs').innerHTML = (s.recent_logs || []).map(function (l) {
-            return '<div class="log-item"><span class="log-status log-' + l.status + '">' + l.status + '</span>' +
+            var statusName = { success: '成功', failed: '失败', partial: '部分完成', interrupted: '已中断' }[l.status] || l.status;
+            return '<div class="log-item"><span class="log-status log-' + l.status + '">' + statusName + '</span>' +
                 '<span class="log-info">学校#' + (l.school_id || '-') + ' 新增 ' + l.new_count + ' / 检查 ' + l.total_count +
                 (l.error_message ? ' <span class="log-error">' + escHtml(l.error_message).slice(0, 60) + '</span>' : '') + '</span>' +
                 '<span class="log-time">' + (l.started_at || '').slice(5, 16).replace('T', ' ') + '</span></div>';
         }).join('') || '<p class="text-muted">暂无记录</p>';
     } catch (e) {
-        document.getElementById('statGrid').innerHTML = '<p class="text-muted">加载失败</p>';
+        document.getElementById('scrapeRateExplanation').hidden = true;
+        document.getElementById('statGrid').innerHTML = '<p class="text-muted">运行概况加载失败，请刷新页面重试。</p>';
+        document.getElementById('recentLogs').textContent = '近期记录暂时无法读取，请前往抓取记录重试。';
     }
 }
 
@@ -203,9 +185,10 @@ async function loadUsers() {
         var resp = await fetch('/api/admin/users');
         var users = await resp.json();
         box.innerHTML = users.map(function (u) {
-            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--color-border);">' +
-                '<span>' + escHtml(u.username) + ' <span class="text-muted">(' + u.role + ' · 注册 ' + (u.created_at || '').slice(0, 10) + ')</span></span>' +
-                '<span><button class="btn btn-xs btn-outline" onclick="resetPw(' + u.id + ')">重置密码</button> ' +
+            var roleName = u.role === 'admin' ? '管理员' : '普通用户';
+            return '<div class="admin-user-row">' +
+                '<span class="admin-user-identity"><strong>' + escHtml(u.username) + '</strong><small>' + roleName + ' · 注册于 ' + (u.created_at || '').slice(0, 10) + '</small></span>' +
+                '<span class="admin-user-actions"><button class="btn btn-xs btn-outline" onclick="resetPw(' + u.id + ')">重置密码</button>' +
                 '<button class="btn btn-xs btn-ghost" onclick="setRole(' + u.id + ',\'' + (u.role === 'admin' ? 'user' : 'admin') + '\')">' + (u.role === 'admin' ? '取消管理员' : '设为管理员') + '</button></span></div>';
         }).join('');
     } catch (e) { box.textContent = '加载失败'; }
@@ -247,46 +230,19 @@ async function triggerScrapeAll() {
     btn.disabled = false;
 }
 async function triggerSummarize() {
-    var btn = document.getElementById('btnSummarize');
-    btn.disabled = true;
-    var resp = await fetch('/api/summarize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-    var d = await resp.json();
-    showToast(d.success ? 'success' : 'error', d.message || d.error);
-    btn.disabled = false;
-}
-
-// ---- 选择器健康 ----
-async function loadReview() {
-    var r = await fetch('/api/selector-audit');
-    var d = await r.json();
-    var box = document.getElementById('reviewList');
-    box.innerHTML = (d.review || []).map(function (x) {
-        return '<div class="review-card"><span><b>' + escHtml(x.dept_name) + '</b>：' + escHtml(x.reason) + '</span>' +
-            '<span><button class="btn btn-xs btn-outline" onclick="rollbackDept(' + x.dept_id + ')">回滚选择器</button></span></div>';
-    }).join('') || '<p class="text-muted">暂无待复核部门 ✅</p>';
-}
-async function loadAudit() {
-    var r = await fetch('/api/selector-audit');
-    var d = await r.json();
-    document.getElementById('auditList').innerHTML = (d.changes || []).map(function (c) {
-        return '<div class="log-item"><span class="log-status log-' + (c.source === 'auto' ? 'running' : 'success') + '">' + c.source + '</span>' +
-            '<span class="log-info">' + escHtml(c.dept_name) + ' · ' + escHtml(c.reason) + '</span>' +
-            '<span class="log-time">' + (c.ts || '').slice(5, 16).replace('T', ' ') + '</span></div>';
-    }).join('') || '<p class="text-muted">暂无变更记录</p>';
+    var ids = document.getElementById('summaryIds').value.split(/[,，\s]+/).filter(Boolean).map(Number);
+    if (!ids.length || ids.length > 50 || ids.some(i => !Number.isSafeInteger(i) || i < 1)) {
+        showToast('error', '请填写 1–50 个有效通知编号'); return;
+    }
+    var btn = document.getElementById('btnSummarize'); btn.disabled = true;
+    try {
+        var resp = await fetch('/api/summarize', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ids: ids})});
+        var d = await resp.json(); showToast(resp.ok ? 'success' : 'error', d.message || d.error);
+    } catch (e) { showToast('error', '提交失败，请重试'); }
+    finally { btn.disabled = false; }
 }
 
 // ---- 平台设置 ----
-async function saveApiKey() {
-    var key = document.getElementById('apiKey').value.trim();
-    if (!key) { showToast('error', '请输入 API Key'); return; }
-    if (!key.startsWith('sk-')) { showToast('error', 'API Key 格式错误，应以 sk- 开头'); return; }
-    var resp = await fetch('/api/settings', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api_key: key }) });
-    var d = await resp.json();
-    showToast(d.success ? 'success' : 'error', d.message || d.error);
-    if (d.success) document.getElementById('apiKey').value = '';
-}
 async function loadToggles() {
     var r = await fetch('/api/admin/toggles');
     var t = await r.json();
@@ -304,4 +260,6 @@ async function saveToggles() {
     showToast(d.success ? 'success' : 'error', d.success ? '开关已保存' : (d.error || '失败'));
 }
 </script>
+<script src="{{ url_for('static', filename='js/admin-logs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin-ai.js') }}"></script>
 {% endblock %}

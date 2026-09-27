@@ -1,3 +1,4 @@
+from backend.services.summaries import current_summaries, summary_expression
 """搜索路由：全局 / 学校内关键词搜索通知 + 关键词高亮过滤器"""
 import re
 import html as _html
@@ -74,12 +75,15 @@ def search():
     pagination = None
     school = None
     grouped_by_school = OrderedDict()
+    display_sources = {}
+    announcement_sources = {}
 
     if q:
-        query = Announcement.query
+        from backend.services.announcement_sources import source_expression, sources_for, preferred_source
+        query = Announcement.query.filter(source_expression())
         if school_id:
             school = db.session.get(School, school_id)
-            query = query.filter(Announcement.school_id == school_id)
+            query = query.filter(source_expression(school_ids=[school_id]))
 
         # 空格分隔多关键词，词与词之间 AND，标题 / 摘要 / 正文任一命中即可
         keywords = [k for k in q.split() if k.strip()]
@@ -88,8 +92,8 @@ def search():
             like = f'%{kw}%'
             word_conditions.append(or_(
                 Announcement.title.ilike(like),
-                Announcement.summary.ilike(like),
                 Announcement.content_text.ilike(like),
+                summary_expression().ilike(like),
             ))
         if word_conditions:
             query = query.filter(and_(*word_conditions))
@@ -103,11 +107,14 @@ def search():
         )
         results = pagination.items
         total = pagination.total
+        announcement_sources = sources_for([a.id for a in results])
+        display_sources = {a.id: preferred_source(a, announcement_sources.get(a.id, []), school_id)
+                           for a in results}
 
         # 全局搜索按学校分组展示
         if results and not school_id:
             for ann in results:
-                grouped_by_school.setdefault(ann.school, []).append(ann)
+                grouped_by_school.setdefault(display_sources[ann.id].school, []).append(ann)
 
     from backend.services import read_state
     read_ids = (read_state.read_ids_for(g.user.id, [a.id for a in results])
@@ -119,8 +126,11 @@ def search():
         school=school,
         school_id=school_id,
         results=results,
+        summary_texts=current_summaries(results),
         total=total,
         pagination=pagination,
         grouped_by_school=grouped_by_school,
         read_ids=read_ids,
+        display_sources=display_sources,
+        announcement_sources=announcement_sources,
     )

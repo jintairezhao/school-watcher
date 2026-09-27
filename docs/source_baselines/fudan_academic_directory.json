@@ -1,0 +1,388 @@
+{
+  "id": "fudan-academic-directory-2026-09-21",
+  "root_url": "https://www.fudan.edu.cn/",
+  "reference_url": "https://www.fudan.edu.cn/489/list.htm",
+  "reference_hash": "cfd8a92551966f0ad3a614414cfd6bf7b4e245035c65fe30aeeea98ad3480710",
+  "scope": "复旦大学院系专业页正文院系分组及全部 46 个院系列示项，共 47 个结构位置；包括系、学院、研究所组合名称及教学中心，不等于学院总数。",
+  "category": "academic_units",
+  "reviewed_at": "2026-09-21",
+  "review_method": "独立逐项抄录正文院系专业分支，并与顶部导航、页脚院系目录的各 46 项对照。正文现代物理研究所/核科学与技术系、智能机器人与先进制造创新学院被省略号截断；同页同网址的导航和页脚提供一致完整名称。只据此补全名称，不替换正文原地址。七个 # 占位条目按无链接保留。三种目录在 11 个单位的地址上存在差异，另在版本差异证据中保留；不把其中一种地址自动视作正确或建立别名。单位名中的斜线、括号保留，不拆成推测的上下级。本范围不覆盖党政部门、科研类别内的全部具体机构、附属医院及各单位发布栏目。",
+  "scope_selector": ".col_news_list .part_xy > li.column-1",
+  "entries": [
+    {
+      "id": "院系专业",
+      "name": "院系专业",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "中国语言文学系",
+      "name": "中国语言文学系",
+      "url": "http://chinese.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "外国语言文学学院",
+      "name": "外国语言文学学院",
+      "url": "http://dfll.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "历史学系",
+      "name": "历史学系",
+      "url": "http://history.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "旅游学系",
+      "name": "旅游学系",
+      "url": "http://tourism.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "文物与博物馆学系",
+      "name": "文物与博物馆学系",
+      "url": "http://www.chm.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "哲学学院",
+      "name": "哲学学院",
+      "url": "http://philosophy.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "法学院",
+      "name": "法学院",
+      "url": "http://www.law.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "国际关系与公共事务学院",
+      "name": "国际关系与公共事务学院",
+      "url": "http://www.sirpa.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "社会发展与公共政策学院",
+      "name": "社会发展与公共政策学院",
+      "url": "http://www.ssdpp.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "新闻学院",
+      "name": "新闻学院",
+      "url": "https://xwxy.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "经济学院",
+      "name": "经济学院",
+      "url": "https://econ.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "国际金融学院",
+      "name": "国际金融学院",
+      "url": "https://fisf.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "管理学院",
+      "name": "管理学院",
+      "url": "http://www.fdsm.fudan.edu.cn/AboutUs/index.aspx",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "马克思主义学院",
+      "name": "马克思主义学院",
+      "url": "https://som.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "国际文化交流学院",
+      "name": "国际文化交流学院",
+      "url": "http://www.ices.fudan.edu.cn/main.htm",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "数学科学学院",
+      "name": "数学科学学院",
+      "url": "http://math.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "物理学系",
+      "name": "物理学系",
+      "url": "http://phys.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "现代物理研究所/核科学与技术系",
+      "name": "现代物理研究所/核科学与技术系",
+      "url": "http://imp.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "化学系",
+      "name": "化学系",
+      "url": "http://www.chemistry.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "高分子科学系",
+      "name": "高分子科学系",
+      "url": "http://polymer.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "环境科学与工程系",
+      "name": "环境科学与工程系",
+      "url": "http://environment.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "大气与海洋科学系",
+      "name": "大气与海洋科学系",
+      "url": "https://aos.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "微电子学院",
+      "name": "微电子学院",
+      "url": "https://sme.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "航空航天系",
+      "name": "航空航天系",
+      "url": "https://aero-mech.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "生命科学学院",
+      "name": "生命科学学院",
+      "url": "http://life.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "大数据学院",
+      "name": "大数据学院",
+      "url": "http://www.sds.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "集成电路与微纳电子创新学院",
+      "name": "集成电路与微纳电子创新学院",
+      "url": "https://icmne.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "计算与智能创新学院",
+      "name": "计算与智能创新学院",
+      "url": "https://ai.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "生物医学工程与技术创新学院",
+      "name": "生物医学工程与技术创新学院",
+      "url": "https://bme-college.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "智能机器人与先进制造创新学院",
+      "name": "智能机器人与先进制造创新学院",
+      "url": "https://ciram.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "智能材料与未来能源创新学院",
+      "name": "智能材料与未来能源创新学院",
+      "url": "https://icome.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "未来信息创新学院",
+      "name": "未来信息创新学院",
+      "url": "https://fit.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "基础医学院",
+      "name": "基础医学院",
+      "url": "http://basicmed.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "中山临床医学院",
+      "name": "中山临床医学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "华山临床医学院",
+      "name": "华山临床医学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "公共卫生学院",
+      "name": "公共卫生学院",
+      "url": "http://sph.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "药学院",
+      "name": "药学院",
+      "url": "http://spfdu.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "护理学院",
+      "name": "护理学院",
+      "url": "http://nursing.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "口腔医学院",
+      "name": "口腔医学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "法医学与法庭科学学院",
+      "name": "法医学与法庭科学学院",
+      "url": "https://sfms.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "卓越工程师学院",
+      "name": "卓越工程师学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "国际传播与全球领导力学院",
+      "name": "国际传播与全球领导力学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "生物技术学院",
+      "name": "生物技术学院",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "艺术教育中心",
+      "name": "艺术教育中心",
+      "url": "",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "体育教学部",
+      "name": "体育教学部",
+      "url": "http://www.fdty.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    },
+    {
+      "id": "终身教育集团(终身教育学院)",
+      "name": "终身教育集团(终身教育学院)",
+      "url": "http://www.cce.fudan.edu.cn/",
+      "kind": "unit",
+      "relation": "directory_entry",
+      "parent": "院系专业"
+    }
+  ]
+}

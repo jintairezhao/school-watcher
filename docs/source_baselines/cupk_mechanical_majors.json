@@ -1,0 +1,33 @@
+{
+  "id": "cupk_mechanical_majors",
+  "root_url": "https://www.cupk.edu.cn/",
+  "reference_url": "https://www.cupk.edu.cn/jdxy/bkjy/zysz/jxsjzzjqzdh/",
+  "reference_hash": "9eb146c06f1d3b6df69377c650f25f36ac4511383276a3bfb564936137044aa4",
+  "reviewed_at": "2026-09-21",
+  "scope": "机电工程学院专业介绍（两处专业导航）",
+  "category": "majors",
+  "scope_selector": "ul.middleTop__nav, .middleArticle__nav > ul",
+  "entries": [
+    {
+      "id": "major-1",
+      "name": "机械设计制造及其自动化",
+      "url": "https://www.cupk.edu.cn/jdxy/bkjy/zysz/jxsjzzjqzdh/",
+      "kind": "major",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "major-2",
+      "name": "过程装备与控制工程",
+      "url": "https://www.cupk.edu.cn/jdxy/bkjy/zysz/gczbykzgc/",
+      "kind": "major",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "major-3",
+      "name": "自动化",
+      "url": "https://www.cupk.edu.cn/jdxy/zdh/",
+      "kind": "major",
+      "relation": "major_directory_entry"
+    }
+  ]
+}

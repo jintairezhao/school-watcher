@@ -1,0 +1,61 @@
+{
+  "id": "gzhu-home-tabs-2026-09-20",
+  "root_url": "https://www.gzhu.edu.cn/",
+  "reference_url": "https://www.gzhu.edu.cn/",
+  "reference_hash": "4442d0b6fcc97662a6501ccbed006432c06f84eba40aa9572f7513434e4e04e7",
+  "scope": "广州大学首页教育教学、科学研究、学术动态、高水平大学建设四个切换栏目及16个展示条目；保留学术动态和高水平大学建设的移动端副本，不包括首页其他区域或全校栏目。",
+  "scope_selector": ".main-part2",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-20",
+  "review_method": "直接阅读官网原始HTML中的四个标题、链接、bbb0至bbb3的全部文章地址及ccc0/ccc1副本。核对内联selectSwtich函数确实以showContentPrefix加showContentIndex选择面板。文章清单独立抄录，不由发布列表检测器生成；重新访问官网所得内容摘要与保存快照一致。",
+  "entries": [
+    {
+      "id": "teaching",
+      "name": "教育教学",
+      "url": "http://www.gzhu.edu.cn/z__l/jyjx.htm",
+      "scope_selector": "#bbb0",
+      "article_urls": [
+        "https://www.gzhu.edu.cn/info/1070/27417.htm",
+        "https://www.gzhu.edu.cn/info/1070/27407.htm",
+        "https://www.gzhu.edu.cn/info/1070/27397.htm",
+        "https://www.gzhu.edu.cn/info/1070/27387.htm"
+      ]
+    },
+    {
+      "id": "research",
+      "name": "科学研究",
+      "url": "http://www.gzhu.edu.cn/z__l/kxyj.htm",
+      "scope_selector": "#bbb1",
+      "article_urls": [
+        "https://mp.weixin.qq.com/s/uCOEO7xubJXgoa4-ZRCw0g",
+        "https://mp.weixin.qq.com/s/OsqipY6zobkRVJwpYiOxYA",
+        "https://mp.weixin.qq.com/s/RV8B7iwHqJNs26fXSFTd8g",
+        "https://mp.weixin.qq.com/s/shbXj7-U33YoZy5f7yspVg"
+      ]
+    },
+    {
+      "id": "academics",
+      "name": "学术动态",
+      "url": "http://www.gzhu.edu.cn/z__l/xsdt.htm",
+      "scope_selector": "#bbb2",
+      "article_urls": [
+        "https://www.gzhu.edu.cn/info/1071/14847.htm",
+        "https://www.gzhu.edu.cn/info/1071/12641.htm",
+        "https://www.gzhu.edu.cn/info/1071/12640.htm",
+        "https://mp.weixin.qq.com/s/rZdV9wXTX56wJloW4YvPQQ"
+      ]
+    },
+    {
+      "id": "development",
+      "name": "高水平大学建设",
+      "url": "http://www.gzhu.edu.cn/z__l/gspdxjs.htm",
+      "scope_selector": "#bbb3",
+      "article_urls": [
+        "http://news.gzhu.edu.cn/info/1016/35607.htm",
+        "http://news.gzhu.edu.cn/info/1002/33027.htm",
+        "http://news.gzhu.edu.cn/info/1016/33107.htm",
+        "http://news.gzhu.edu.cn/info/1016/27397.htm"
+      ]
+    }
+  ]
+}

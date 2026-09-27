@@ -1,0 +1,127 @@
+{
+  "type": "object",
+  "properties": {
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "decision": {
+            "enum": [
+              "propose",
+              "review"
+            ]
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "list_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "list_selector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "title_selector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "link_selector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "date_selector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "content_selector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "group_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "pagination_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "list_url",
+              "list_selector",
+              "title_selector",
+              "link_selector",
+              "date_selector",
+              "content_selector",
+              "group_name",
+              "pagination_url"
+            ],
+            "additionalProperties": false
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "needed_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            }
+          }
+        },
+        "required": [
+          "candidate_id",
+          "decision",
+          "config",
+          "evidence_ids",
+          "reason",
+          "needed_evidence"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "proposals"
+  ],
+  "additionalProperties": false
+}

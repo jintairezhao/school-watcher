@@ -1,0 +1,53 @@
+<aside class="source-panel" id="sourcePanel" data-source-scope="{{ current_user.id }}:{{ current_school_id or 0 }}" aria-labelledby="sourcePanelTitle" hidden inert>
+    <div class="source-panel-controls">
+        <div class="source-panel-head">
+            <h2 id="sourcePanelTitle">通知来源</h2>
+            <button class="text-button source-pin" type="button" id="pinSources" aria-label="将来源面板固定在左侧">固定</button>
+            <button class="icon-button" type="button" id="closeFilters" aria-label="关闭来源筛选">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+        </div>
+        <div class="filter-field">
+            <label for="schoolFilter">学校</label>
+            <div class="select-wrap">
+                <select id="schoolFilter" data-filter="school" title="{{ source_school }}">
+                    <option value="">全部学校</option>
+                    {% for school in schools %}<option value="{{ school.id }}" {% if current_school_id == school.id %}selected{% endif %}>{{ school.name }}</option>{% endfor %}
+                </select>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <p class="source-school-name">{{ source_school }}</p>
+        </div>
+        {% if current_school and departments %}
+        <div class="source-search">
+            <label class="sr-only" for="sourceQuery">搜索当前学校的部门或栏目</label>
+            <input id="sourceQuery" type="search" placeholder="搜索部门或栏目" autocomplete="off" maxlength="100">
+            <button class="icon-button" id="clearSourceSearch" type="button" aria-label="清除目录搜索" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        </div>
+        {% endif %}
+        <div class="filter-label-row source-selection-head">
+            <span>部门与栏目<span id="sourceSelectionCount"></span></span>
+            <button type="button" id="clearDepartments" {% if not selected_dept_ids and not current_group %}hidden{% endif %}>清除筛选</button>
+        </div>
+    </div>
+    <div class="source-tree-scroll" id="sourceTreeScroll">
+        {% if current_school %}
+            {% if departments %}
+                {% from '_inbox_sources.html' import source_tree_view %}
+                {{ source_tree_view(source_tree, selected_dept_ids, dept_counts, current_group, source_sync_states) }}
+                <p class="filter-helper" id="sourceSearchEmpty" role="status" hidden>没有找到匹配的部门或栏目。试试更短的名称。</p>
+            {% else %}<p class="filter-helper">这所学校还没有可用的发布部门。</p>{% endif %}
+        {% else %}<p class="filter-helper">选择一所学校后，可继续按该校部门筛选。</p>{% endif %}
+    </div>
+    <footer class="source-panel-footer">
+        <div id="sourcePanelFeedback" class="source-panel-feedback" hidden>
+            <p id="sourcePanelStatus" role="status" aria-live="polite"></p>
+            <button class="text-button" type="button" data-retry-source hidden>重试筛选</button>
+        </div>
+        <div class="source-management-links">
+            {% if current_school_id in subscribed_school_ids %}<a class="source-manage" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">调整本校栏目订阅</a>{% endif %}
+            <a class="source-manage" href="{{ url_for('pages.explore') }}">管理订阅学校</a>
+        </div>
+        <button class="btn btn-primary source-done" type="button" data-close-sources>完成</button>
+    </footer>
+</aside>

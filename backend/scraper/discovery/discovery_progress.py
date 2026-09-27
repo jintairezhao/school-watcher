@@ -92,7 +92,7 @@ class DiscoverySession:
         self.result = result
         self.emit({
             'type': 'completed',
-            'message': f'发现完成：{len(self.found_departments)} 个候选部门',
+            'message': (result or {}).get('message', f'本轮发现结束：{len(self.found_departments)} 个候选来源'),
             'result': result,
         })
         # 发送完成信号

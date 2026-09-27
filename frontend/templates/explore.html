@@ -1,152 +1,61 @@
 {% extends "base.html" %}
 {% block title %}学校目录 — 学校通知{% endblock %}
-
 {% block content %}
-<div class="page-header">
-    <h1>学校目录</h1>
-    <p class="page-subtitle">浏览全部上架学校 · 订阅驱动抓取 · 提交新学校</p>
-    <div class="header-actions">
-        {% if current_user %}
-        <button class="btn btn-primary" onclick="showSubmitSchool()">+ 提交新学校</button>
-        {% else %}
-        <a class="btn btn-outline" href="{{ url_for('auth.login_page', next=request.path) }}">登录后可订阅/提交</a>
-        {% endif %}
-    </div>
-</div>
-
-<div class="school-grid">
-    {% for s in schools %}
-    <div class="school-card" data-name="{{ s.name }}">
-        <div class="card-header">
-            <div class="school-avatar">{{ s.name[0] }}</div>
-            <div class="school-info">
-                <h3 class="school-name">
-                    <a href="{{ url_for('pages.school_detail', school_id=s.id) }}" style="color:inherit;text-decoration:none;">{{ s.name }}</a>
-                </h3>
-                <span class="school-url">{{ s.url|replace('https://', '')|replace('http://', '')|truncate(30) }}</span>
+<div class="directory-page">
+    <header class="surface-heading directory-heading">
+        <div><h1>学校目录</h1><p>订阅官网信息，再按学校原有栏目选择关注范围。</p></div>
+        {% if current_user %}<a class="btn btn-outline" href="{{ url_for('pages.index') }}">返回收件箱</a>{% endif %}
+    </header>
+    <form class="directory-filters" method="get" role="search">
+        <div><label for="catalogQuery">学校名称或简称</label><input id="catalogQuery" name="q" type="search" value="{{ q }}" placeholder="例如：清华、武汉大学" class="form-input"></div>
+        <div><label for="catalogProvince">所在地区</label><select id="catalogProvince" name="province" class="form-input"><option value="">全部地区</option>{% for p in provinces %}<option {% if p == province %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></div>
+        <div><label for="catalogLevel">学校范围</label><select id="catalogLevel" name="level" class="form-input"><option value="all">全部学校</option><option value="double" {% if level == 'double' %}selected{% endif %}>双一流（2022 名单）</option><option value="subscribed" {% if level == 'subscribed' %}selected{% endif %}>我已订阅</option></select></div>
+        <button class="btn btn-primary" type="submit">查找学校</button>
+    </form>
+    <div class="directory-summary"><p>{{ total }} 所匹配学校 · 目录共 {{ total_catalog }} 所</p><a href="{{ url_for('pages.explore') }}">重置筛选</a></div>
+    <div class="directory-list">
+    {% for entry in entries %}
+        {% set school = entry.school %}
+        <article class="directory-row">
+            <div class="directory-school">
+                <h2>{% if school %}<a href="{{ url_for('pages.school_detail', school_id=school.id) }}">{{ entry.name }}</a>{% else %}{{ entry.name }}{% endif %}</h2>
+                <p>{% if entry.province %}{{ entry.province }} · {% endif %}{% if entry.double_first_class %}双一流{% else %}其他本科高校{% endif %} · <a href="{{ entry.url }}" target="_blank" rel="noopener noreferrer">学校官网 <span class="sr-only">（新窗口）</span></a></p>
             </div>
-            {% if s.subscriber_count == 0 %}
-            <span class="badge badge-paused">暂无订阅 · 暂停中</span>
-            {% endif %}
-        </div>
-        <div class="card-stats">
-            <div class="stat">
-                <span class="stat-number">{{ totals.get(s.id, 0) }}</span>
-                <span class="stat-label">通知</span>
+            <p class="directory-status">{% if school and totals.get(school.id, 0) %}{{ counts.get(school.id, 0) }} 个栏目 · {{ totals.get(school.id, 0) }} 条通知{% elif school and school.subscriber_count %}已订阅 · 尚无通知{% else %}订阅后接入官网{% endif %}</p>
+            <div class="directory-actions">
+                {% if current_user %}
+                    {% if school and school.id in my_subs %}
+                    <a class="btn btn-outline" href="{{ url_for('subscriptions.manage_sources', school_id=school.id) }}">已订阅 · 选择栏目</a>
+                    <button class="text-button" data-unsubscribe="{{ school.id }}" aria-label="取消订阅{{ entry.name }}">退订</button>
+                    {% else %}
+                    <button class="btn btn-primary" data-subscribe-name="{{ entry.name }}" {% if school %}data-school-id="{{ school.id }}"{% endif %} aria-label="订阅{{ entry.name }}">订阅学校</button>
+                    {% endif %}
+                {% else %}<a class="btn btn-outline" href="{{ url_for('auth.login_page', next=request.full_path) }}">登录后订阅</a>{% endif %}
             </div>
-            <div class="stat">
-                <span class="stat-number">{{ s.subscriber_count }}</span>
-                <span class="stat-label">订阅</span>
-            </div>
-            <div class="stat">
-                <span class="stat-number">{{ s.departments.count() }}</span>
-                <span class="stat-label">部门</span>
-            </div>
-        </div>
-        <div class="manage-actions" style="padding:0 16px 14px;">
-            {% if current_user %}
-                {% if s.id in my_subs %}
-                <button class="btn btn-sm btn-outline" onclick="toggleSub({{ s.id }}, false, this)">✓ 已订阅 · 点击退订</button>
-                {% else %}
-                <button class="btn btn-sm btn-primary" onclick="toggleSub({{ s.id }}, true, this)">订阅</button>
-                {% endif %}
-            {% else %}
-            <a class="btn btn-sm btn-outline" href="{{ url_for('auth.login_page', next=request.path) }}">登录即可订阅</a>
-            {% endif %}
-        </div>
-    </div>
+        </article>
+    {% else %}
+        <div class="notice-empty"><h2>没有找到匹配的学校</h2><p>试试学校全称，或清除地区和范围筛选。</p><a href="{{ url_for('pages.explore') }}">查看全部学校</a></div>
     {% endfor %}
-</div>
-
-<!-- 提交新学校模态框 -->
-<div class="modal-overlay" id="submitOverlay" style="display:none;" onclick="closeSubmitSchool(event)">
-    <div class="modal" onclick="event.stopPropagation()">
-        <h2>提交新学校</h2>
-        <p class="text-muted" style="margin-bottom:12px;">提交后你将自动订阅该校，系统立即开始首次抓取与自动发现</p>
-        <div class="form-group">
-            <label>学校名称</label>
-            <input id="subName" class="form-input" placeholder="如：中国石油大学（北京）" oninput="suggestUrl()">
-        </div>
-        <div class="form-group">
-            <label>官网 URL</label>
-            <input id="subUrl" class="form-input" placeholder="https://…">
-        </div>
-        <div id="subErr" class="login-error" style="display:none;"></div>
-        <div class="modal-actions">
-            <button class="btn btn-outline" onclick="closeSubmitSchool()">取消</button>
-            <button class="btn btn-primary" onclick="submitSchool()" id="btnSubmit">提交</button>
-        </div>
     </div>
+    {% if pages > 1 %}<nav class="pagination-bar" aria-label="学校目录翻页">
+        {% if page > 1 %}<a href="{{ url_for('pages.explore', q=q, province=province, level=level, page=page-1) }}">上一页</a>{% else %}<span>上一页</span>{% endif %}
+        <span>第 {{ page }} / {{ pages }} 页</span>
+        {% if page < pages %}<a href="{{ url_for('pages.explore', q=q, province=province, level=level, page=page+1) }}">下一页</a>{% else %}<span>下一页</span>{% endif %}
+    </nav>{% endif %}
+    <details class="directory-note"><summary>目录范围与接入说明</summary>
+        <p>双一流标记依据<a href="https://www.moe.gov.cn/srcsite/A22/s7065/202202/t20220211_598710.html" target="_blank" rel="noopener noreferrer">教育部 2022 年第二轮名单</a>（147 所）。其他本科高校为补充目录，不代表完整的一本院校名单。“一本”属于各省招生批次，请以相应省份、年份的招生信息为准。</p>
+        <p>目录列出官网入口，不代表每所学校都已完成信息接入。订阅后才开始同步；可在“选择栏目”查看同步状态。校内登录页面和无法公开访问的内容不会展示。</p>
+    </details>
+    {% if current_user %}
+    <details class="directory-note" id="addSchool"><summary>没找到学校？补充官网入口</summary>
+        <form id="submitSchoolForm" class="source-add-form">
+            <div><label for="subName">学校全称</label><input class="form-input" id="subName" required maxlength="200" placeholder="填写学校全称"></div>
+            <div><label for="subUrl">学校官网</label><input class="form-input" id="subUrl" required type="url" placeholder="https://www.example.edu.cn"></div>
+            <button class="btn btn-primary" type="submit">添加并订阅</button>
+            <p class="form-feedback" role="status" id="submitFeedback"></p>
+        </form>
+    </details>
+    {% endif %}
 </div>
 {% endblock %}
-
-{% block scripts %}
-<script>
-var suggestTimer = null;
-function showSubmitSchool() { document.getElementById('submitOverlay').style.display = 'flex'; }
-function closeSubmitSchool(e) {
-    if (!e || e.target.id === 'submitOverlay')
-        document.getElementById('submitOverlay').style.display = 'none';
-}
-function suggestUrl() {
-    clearTimeout(suggestTimer);
-    suggestTimer = setTimeout(async function () {
-        var name = document.getElementById('subName').value.trim();
-        if (name.length < 2) return;
-        try {
-            var r = await fetch('/api/schools/suggest-url?name=' + encodeURIComponent(name));
-            var d = await r.json();
-            if (d.found && !document.getElementById('subUrl').value)
-                document.getElementById('subUrl').value = d.url;
-        } catch (e) {}
-    }, 600);
-}
-async function toggleSub(schoolId, on, btn) {
-    btn.disabled = true;
-    try {
-        var resp = on ? await fetch('/api/subscriptions', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({school_id: schoolId})
-        }) : await fetch('/api/subscriptions/' + schoolId, {method: 'DELETE'});
-        var d = await resp.json();
-        if (d.success) {
-            showToast('success', on ? (d.scrape_started ? '已订阅，首抓已启动' : '已订阅') : '已退订');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            showToast('error', d.error || '操作失败');
-            btn.disabled = false;
-        }
-    } catch (e) {
-        showToast('error', '请求失败: ' + e.message);
-        btn.disabled = false;
-    }
-}
-async function submitSchool() {
-    var name = document.getElementById('subName').value.trim();
-    var url = document.getElementById('subUrl').value.trim();
-    var err = document.getElementById('subErr');
-    err.style.display = 'none';
-    if (!name) { err.textContent = '请填写学校名称'; err.style.display = 'block'; return; }
-    document.getElementById('btnSubmit').disabled = true;
-    try {
-        var resp = await fetch('/api/schools', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({name: name, url: url})
-        });
-        var d = await resp.json();
-        if (resp.ok) {
-            showToast('success', '已提交并订阅，首抓已启动');
-            setTimeout(function() { location.href = '/school/' + d.id; }, 800);
-        } else {
-            err.textContent = d.error || '提交失败';
-            err.style.display = 'block';
-            document.getElementById('btnSubmit').disabled = false;
-        }
-    } catch (e) {
-        err.textContent = '请求失败: ' + e.message;
-        err.style.display = 'block';
-        document.getElementById('btnSubmit').disabled = false;
-    }
-}
-</script>
-{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/directory.js') }}"></script>{% endblock %}

@@ -1,10 +1,10 @@
-"""选择器健康监督器 — 质量触发的反馈闭环
+"""内部抓取规则检查 — 质量触发的反馈闭环
 
 设计原则（用户确认的漏洞纠正方案）：
 - 触发信号是「结构性」的，不是「0 新增」：安静但结构好的部门绝不碰。
   * 旧选择器匹配数 < 3          → 结构坏了 → 自动重探测换选择器
   * 旧选择器匹配但垃圾标题 > 0  → 抓错了   → 只标记人工复核，不自动换
-- 选择器变更全部留痕（审计日志），可回滚。
+- 选择器变更全部留痕，供内部排查；不提供独立健康面板或网页回滚操作。
 - 重探测前先识别 WAF 挑战壳页，避免对着壳页空转。
 """
 
@@ -84,43 +84,16 @@ def clear_review(department):
         _save_audit(data)
 
 
-def get_review_list() -> list:
-    data = _load_audit()
-    return [{'dept_id': int(k), **v} for k, v in data['review'].items()]
-
-
-def get_audit_changes(limit: int = 50) -> list:
-    return _load_audit()['changes'][-limit:][::-1]
-
-
-def rollback_selectors(department) -> bool:
-    """回滚到审计日志中该部门最近一次变更前的选择器。"""
-    data = _load_audit()
-    for entry in reversed(data['changes']):
-        if entry.get('dept_id') == department.id and entry.get('old'):
-            old = entry['old']
-            for field in ('list_selector', 'title_selector', 'link_selector',
-                          'date_selector', 'content_selector'):
-                if field in old:
-                    setattr(department, field, old[field])
-            from backend.database.db import db
-            db.session.commit()
-            record_selector_change(department, entry['new'], old,
-                                   'human', '回滚自审计日志')
-            clear_review(department)
-            return True
-    return False
-
-
 # ------------------------------------------------------------------
 # 健康评估与修复
 # ------------------------------------------------------------------
 
 def is_challenge_shell(html: str) -> bool:
-    """WAF 挑战壳页（瑞数 $_ts 等）或空壳，不可用于重探测。"""
-    if not html:
-        return True
-    return '$_ts' in html[:50000] or len(html) < 2000
+    """Only content evidence can identify a shell; short valid lists are valid."""
+    from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
+    result = classify_result(FetchRequest('https://example.edu.cn/', purpose='list'),
+                             FetchResult('https://example.edu.cn/', status=200, html=html))
+    return result.outcome in ('requires_render', 'needs_manual', 'denied') or not html.strip()
 
 
 def _quick_stats(html: str, department):
@@ -128,6 +101,9 @@ def _quick_stats(html: str, department):
     from bs4 import BeautifulSoup
     from backend.scraper.detectors.title_quality import (
         is_junk_title, extract_best_title, clean_title)
+    from backend.scraper.discovery.publication_lists import select_node
+    from backend.scraper.change_detector import parse_date
+    from urllib.parse import urljoin
 
     if not department.list_selector:
         return None
@@ -138,14 +114,18 @@ def _quick_stats(html: str, department):
         return None
     junk = 0
     for item in items[:10]:
+        anchor = select_node(item, department.link_selector or 'a[href]')
+        date_el = select_node(item, department.date_selector) if department.date_selector else None
+        dated = parse_date(date_el.get_text(strip=True)) if date_el is not None else None
+        article_url = urljoin(getattr(department, '_fetch_final_url', department.list_url), anchor.get('href', '')) if anchor is not None and dated else ''
         el = item.select_one(department.title_selector) if department.title_selector else item
         title = ''
         if el:
             attr = (el.get('title') or el.get('data-title') or '').strip()
             title = clean_title(attr or el.get_text(strip=True))
-        if is_junk_title(title):
-            title = clean_title(extract_best_title(item))
-        if is_junk_title(title) or not title:
+        if is_junk_title(title, article_url=article_url):
+            title = clean_title(extract_best_title(item, article_url=article_url))
+        if is_junk_title(title, article_url=article_url) or not title:
             junk += 1
     return {'matched': len(items), 'junk': junk}
 
@@ -162,7 +142,7 @@ def evaluate_and_repair(department, html: str) -> dict:
     if stats is None:
         return {'action': 'skip'}
 
-    if stats['matched'] >= BROKEN_MATCH_THRESHOLD and stats['junk'] == 0:
+    if stats['matched'] >= 1 and stats['junk'] == 0:
         clear_review(department)
         return {'action': 'healthy', **stats}
 
@@ -181,32 +161,18 @@ def evaluate_and_repair(department, html: str) -> dict:
     from backend.scraper.cms_registry import load_selector_profiles
     from backend.scraper.detectors.title_quality import is_junk_title as _is_junk
 
-    result = detect_notice_list(html, department.list_url or '',
+    result = detect_notice_list(html, getattr(department, '_fetch_final_url', department.list_url) or '',
                                 existing_profiles=load_selector_profiles())
     if (result and result['confidence'] >= REPAIR_MIN_CONFIDENCE
             and result['list_selector'] != department.list_selector
             and result.get('sample_titles')
             and sum(1 for t in result['sample_titles'] if _is_junk(t)) == 0):
-        old = {f: getattr(department, f) for f in (
-            'list_selector', 'title_selector', 'link_selector',
-            'date_selector', 'content_selector')}
-        department.list_selector = result['list_selector']
-        department.title_selector = result['title_selector']
-        department.link_selector = result['link_selector']
-        department.date_selector = result['date_selector']
-        department.content_selector = result.get('content_selector',
-                                                 department.content_selector)
-        from backend.database.db import db
-        db.session.commit()
-        record_selector_change(department, old, {
-            'list_selector': department.list_selector,
-            'title_selector': department.title_selector,
-            'link_selector': department.link_selector,
-            'date_selector': department.date_selector,
-            'content_selector': department.content_selector,
-        }, 'auto', f"结构损坏(匹配{stats['matched']})→重探测 conf={result['confidence']}")
-        clear_review(department)
-        return {'action': 'repaired', **stats}
+        from backend.services.source_governance import propose_detected_source
+        from backend.services.tasks import enqueue
+        proposal = propose_detected_source(department, result, html)
+        enqueue('source_review', proposal.id, {'proposal_id': proposal.id})
+        mark_needs_review(department, '已形成栏目修复建议，等待独立网页复测与归属检查')
+        return {'action': 'needs_review', 'proposal_id': proposal.id, **stats}
 
     mark_needs_review(department,
                       f"结构损坏(匹配{stats['matched']})且重探测不达标"

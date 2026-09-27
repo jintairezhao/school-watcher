@@ -1,0 +1,469 @@
+{
+  "id": "cqmu_undergraduate_programmes",
+  "root_url": "https://www.cqmu.edu.cn/",
+  "reference_url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy.htm",
+  "reference_hash": "30d0154564912392c9a0ae003e0085864fc09eff57482024cc335d4f82504c9b",
+  "scope": "重庆医科大学招生目录：16个学院或联合分组与43个专业/培养方向位置，保留不同学院下的重复专业；不等同当前全校专业清单",
+  "scope_selector": ".content_box2 > div",
+  "category": "major_directories",
+  "reviewed_at": "2026-09-21",
+  "review_method": "逐行查看原表字段或逐组查看招生目录的学院标题、专业名称与实际链接，独立记录，未使用专业识别器输出。无链接保持为空，重复专业位置分别保留。",
+  "entries": [
+    {
+      "id": "第一临床学院+人工智能医学学院",
+      "name": "第一临床学院+人工智能医学学院",
+      "kind": "group",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy_rgznyxxy1.htm",
+      "relation": "programme_joint_group"
+    },
+    {
+      "id": "第一临床学院+人工智能医学学院:临床医学(AI医学创新班）",
+      "name": "临床医学(AI医学创新班）",
+      "parent": "第一临床学院+人工智能医学学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy_rgznyxxy1/lcyx_AIyxcxb_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第一临床学院",
+      "name": "第一临床学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "第一临床学院:临床医学(AI医学创新班）",
+      "name": "临床医学(AI医学创新班）",
+      "parent": "第一临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1/lcyx_AIyxcxb_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第一临床学院:临床医学（钱惪班）",
+      "name": "临床医学（钱惪班）",
+      "parent": "第一临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1/lcyx_qdb_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第一临床学院:临床医学（5+3一体化）",
+      "name": "临床医学（5+3一体化）",
+      "parent": "第一临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1/lcyx_5_3yth_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第一临床学院:临床医学（五年制）",
+      "name": "临床医学（五年制）",
+      "parent": "第一临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1/lcyx_wnz_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第一临床学院:麻醉学",
+      "name": "麻醉学",
+      "parent": "第一临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1/mzx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第一临床学院:精神医学",
+      "name": "精神医学",
+      "parent": "第一临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1/jsyx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第一临床学院:医学影像技术",
+      "name": "医学影像技术",
+      "parent": "第一临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1/yxyxjs.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第一临床学院:听力与言语康复学",
+      "name": "听力与言语康复学",
+      "parent": "第一临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dylcxy1/tlyyykfx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第二临床学院",
+      "name": "第二临床学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/delcxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "第二临床学院:临床医学（5+3一体化）",
+      "name": "临床医学（5+3一体化）",
+      "parent": "第二临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/delcxy/lcyx_5_3yth_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第二临床学院:临床医学（五年制）",
+      "name": "临床医学（五年制）",
+      "parent": "第二临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/delcxy/lcyx_wnz_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第二临床学院:医学影像学",
+      "name": "医学影像学",
+      "parent": "第二临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/delcxy/yxyxx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第二临床学院:康复治疗学",
+      "name": "康复治疗学",
+      "parent": "第二临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/delcxy/kfzlx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "儿科学院",
+      "name": "儿科学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ekxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "儿科学院:临床医学（“5+3”一体化，硕士段培养方向儿科学）",
+      "name": "临床医学（“5+3”一体化，硕士段培养方向儿科学）",
+      "parent": "儿科学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ekxy/lcyx__5_3_yth_ssdpyfxekx_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "儿科学院:儿科学",
+      "name": "儿科学",
+      "parent": "儿科学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ekxy/ekx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "口腔医学院",
+      "name": "口腔医学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/kqyxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "口腔医学院:口腔医学",
+      "name": "口腔医学",
+      "parent": "口腔医学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/kqyxy/kqyx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "口腔医学院:口腔医学技术",
+      "name": "口腔医学技术",
+      "parent": "口腔医学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/kqyxy/kqyxjs.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第四临床学院",
+      "name": "第四临床学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dslcxy1.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "第四临床学院:中西医临床医学",
+      "name": "中西医临床医学",
+      "parent": "第四临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dslcxy1/zxylcyx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第五临床学院",
+      "name": "第五临床学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dwlcxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "第五临床学院:眼视光医学",
+      "name": "眼视光医学",
+      "parent": "第五临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dwlcxy/ysgyx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "第五临床学院:临床医学(免费医学定向生)",
+      "name": "临床医学(免费医学定向生)",
+      "parent": "第五临床学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/dwlcxy/lcyx_mfyxdxs_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "重庆医科大学莱斯特大学联合学院",
+      "name": "重庆医科大学莱斯特大学联合学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/zqykdxlstdxlhxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "重庆医科大学莱斯特大学联合学院:临床医学(中外合作办学)",
+      "name": "临床医学(中外合作办学)",
+      "parent": "重庆医科大学莱斯特大学联合学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/zqykdxlstdxlhxy/lcyx_zwhzbx_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "重庆医科大学莱斯特大学联合学院:精神医学(中外合作办学)",
+      "name": "精神医学(中外合作办学)",
+      "parent": "重庆医科大学莱斯特大学联合学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/zqykdxlstdxlhxy/jsyx_zwhzbx_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "重庆医科大学莱斯特大学联合学院:康复治疗学(中外合作办学)",
+      "name": "康复治疗学(中外合作办学)",
+      "parent": "重庆医科大学莱斯特大学联合学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/zqykdxlstdxlhxy/kfzlx_zwhzbx_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "基础医学院",
+      "name": "基础医学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/jcyxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "基础医学院:基础医学",
+      "name": "基础医学",
+      "parent": "基础医学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/jcyxy/jcyx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "基础医学院:法医学",
+      "name": "法医学",
+      "parent": "基础医学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/jcyxy/fyx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "基础医学院:医学实验技术",
+      "name": "医学实验技术",
+      "parent": "基础医学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/jcyxy/yxsyjs.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "检验医学院",
+      "name": "检验医学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/jyyxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "检验医学院:医学检验技术",
+      "name": "医学检验技术",
+      "parent": "检验医学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/jyyxy/yxjyjs.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "检验医学院:临床医学(检验医师培养试验班)",
+      "name": "临床医学(检验医师培养试验班)",
+      "parent": "检验医学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/jyyxy/lcyx_jyyspysyb_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "公共卫生学院",
+      "name": "公共卫生学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ggwsxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "公共卫生学院:预防医学",
+      "name": "预防医学",
+      "parent": "公共卫生学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ggwsxy/yfyx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "公共卫生学院:卫生检验与检疫",
+      "name": "卫生检验与检疫",
+      "parent": "公共卫生学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ggwsxy/wsjyyjy.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "公共卫生学院:公共事业管理",
+      "name": "公共事业管理",
+      "parent": "公共卫生学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ggwsxy/ggsygl.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "公共卫生学院:应用统计学",
+      "name": "应用统计学",
+      "parent": "公共卫生学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ggwsxy/yytjx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "公共卫生学院:健康与医疗保障",
+      "name": "健康与医疗保障",
+      "parent": "公共卫生学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/ggwsxy/jkyylbz.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "药学院",
+      "name": "药学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/yxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "药学院:临床药学",
+      "name": "临床药学",
+      "parent": "药学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/yxy/lcyx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "药学院:药学",
+      "name": "药学",
+      "parent": "药学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/yxy/yx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "生物医学工程学院",
+      "name": "生物医学工程学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/swyxgcxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "生物医学工程学院:生物医学工程",
+      "name": "生物医学工程",
+      "parent": "生物医学工程学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/swyxgcxy/swyxgc.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "护理学院",
+      "name": "护理学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/hlxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "护理学院:护理学",
+      "name": "护理学",
+      "parent": "护理学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/hlxy/hlx.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "人工智能医学学院",
+      "name": "人工智能医学学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/rgznyxxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "人工智能医学学院:临床医学(AI医学创新班）",
+      "name": "临床医学(AI医学创新班）",
+      "parent": "人工智能医学学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/rgznyxxy/lcyx_AIyxcxb_.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "人工智能医学学院:信息管理与信息系统",
+      "name": "信息管理与信息系统",
+      "parent": "人工智能医学学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/rgznyxxy/xxglyxxxt.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "人工智能医学学院:医学信息工程",
+      "name": "医学信息工程",
+      "parent": "人工智能医学学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/rgznyxxy/yxxxgc.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "人工智能医学学院:智能医学工程",
+      "name": "智能医学工程",
+      "parent": "人工智能医学学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/rgznyxxy/znyxgc.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "人工智能医学学院:生物信息学",
+      "name": "生物信息学",
+      "parent": "人工智能医学学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/rgznyxxy/swxxx1.htm",
+      "relation": "major_directory_entry"
+    },
+    {
+      "id": "外国语学院",
+      "name": "外国语学院",
+      "kind": "unit",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/wgyxy.htm",
+      "relation": "programme_college"
+    },
+    {
+      "id": "外国语学院:英语",
+      "name": "英语",
+      "parent": "外国语学院",
+      "kind": "major",
+      "url": "https://bzkzs.cqmu.edu.cn/xxgk/xyzy/wgyxy/yy.htm",
+      "relation": "major_directory_entry"
+    }
+  ]
+}

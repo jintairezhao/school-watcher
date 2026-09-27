@@ -1,171 +1,128 @@
-"""爬取与摘要 API"""
+"""Collection APIs enqueue durable work; progress is read across processes."""
 import json
-import logging
-import threading
-
-from flask import Blueprint, request, jsonify, Response, current_app
-
+from flask import Blueprint, request, jsonify, Response, g
 from backend.database.db import db
 from backend.database.models import School
-from backend.auth import admin_required
-
-logger = logging.getLogger(__name__)
+from backend.auth import admin_required, login_required
+from backend.services.tasks import enqueue, task_status
 
 bp = Blueprint('scrape', __name__)
+
+
+@bp.route('/api/inbox/refresh', methods=['GET', 'POST'])
+@login_required
+def inbox_refresh():
+    from backend.services.inbox_refresh import (resolve_scope, queue_sources, refresh_status,
+                                                restore_refresh_status, remember_refresh_scope,
+                                                refresh_tracking_baseline)
+    if request.method == 'GET' and request.args.get('resume') == '1':
+        response = jsonify(restore_refresh_status(g.user.id))
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+    if request.method == 'POST':
+        if not g.user.is_admin:
+            return jsonify(error='只有管理员可以手动抓取；刷新页面即可查看已有通知。'), 403
+        payload = request.get_json(silent=True)
+    else:
+        try:
+            payload = {'scope': request.args.get('scope', 'current'),
+                       'school_id': int(request.args['school']) if request.args.get('school') else None,
+                       'department_ids': [int(i) for i in request.args.getlist('dept')],
+                       'group': request.args.get('group', '')}
+        except ValueError:
+            return jsonify(error='刷新范围格式不正确'), 400
+    departments = resolve_scope(g.user.id, payload)
+    if request.method == 'POST':
+        from backend.auth.rate_limit import check_rate_limit
+        if not check_rate_limit(f'inbox-refresh:{g.user.id}', 30, 60)[0]:
+            return jsonify(error='操作较频繁，请稍后刷新；正在进行的更新会继续。'), 429
+        baseline = refresh_tracking_baseline(g.user.id)
+        queue_sources(departments, manual=True)
+        remember_refresh_scope(g.user.id, departments, payload.get('scope', 'current'), baseline=baseline)
+        data = restore_refresh_status(g.user.id)
+    else:
+        data = refresh_status(departments)
+    response = jsonify(data)
+    response.headers['Cache-Control'] = 'no-store'
+    return response, 202 if request.method == 'POST' else 200
+
+
+@bp.route('/api/inbox/sync', methods=['POST'])
+@login_required
+def inbox_sync():
+    """An open-site check can reuse work, but cannot bypass the shared interval."""
+    from backend.database.models import BackgroundTask
+    from backend.services.inbox_refresh import (resolve_scope, queue_sources,
+        refresh_tracking_baseline, remember_refresh_scope, restore_refresh_status)
+    from backend.auth.rate_limit import check_rate_limit
+    payload = request.get_json(silent=True)
+    if isinstance(payload, dict):
+        payload = {'scope': 'all', **payload}
+    departments = resolve_scope(g.user.id, payload)
+    if not check_rate_limit(f'inbox-sync:{g.user.id}', 30, 60)[0]:
+        return jsonify(error='检查较频繁，请稍后重试；已有通知仍可查看。'), 429
+    baseline = refresh_tracking_baseline(g.user.id)
+    jobs = queue_sources(departments)
+    if jobs:
+        tracked_ids = {t.payload.get('department_id') for t in
+                       BackgroundTask.query.filter(BackgroundTask.id.in_(jobs))}
+        remember_refresh_scope(g.user.id, [d for d in departments if d.id in tracked_ids],
+                               payload['scope'], baseline=baseline)
+    data = restore_refresh_status(g.user.id)
+    data['scheduled'] = len(jobs)
+    response = jsonify(data)
+    response.headers['Cache-Control'] = 'no-store'
+    return response, 202 if jobs else 200
+
+
+def event_response(kind, key):
+    data = task_status(kind, key)
+    event = dict(data, type=data['status'] if data['status'] in ('completed', 'failed') else 'phase',
+                 progress_pct=data.get('progress', 0), current_phase=data.get('phase', 'pending'))
+    return Response('retry: 2000\ndata: ' + json.dumps(event, ensure_ascii=False) + '\n\n',
+                    mimetype='text/event-stream', headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
 
 
 @bp.route('/api/scrape/<int:school_id>', methods=['POST'])
 @admin_required
 def api_trigger_scrape(school_id):
-    """手动触发爬取（后台执行 + SSE 进度推送）"""
-    school = db.session.get(School, school_id)
-    if not school:
-        return jsonify({'success': False, 'error': '学校不存在'}), 404
-
-    from backend.scraper.engine import scrape_school
-    from backend.scraper.progress.scrape_progress import create_session as create_scrape_session
-    from backend.ai.summarizer import batch_summarize
-
-    session = create_scrape_session(school_id, school.name)
-    app = current_app._get_current_object()
-
-    def _run():
-        app.app_context().push()
-        try:
-            # 在后台线程中重新获取 school，避免 detached instance 问题
-            school_obj = db.session.get(School, school_id)
-            log = scrape_school(school_obj, progress_session=session)
-            if log.new_count > 0:
-                # 摘要阶段可能耗时数分钟，发事件让前端按钮显示状态，避免「74/74 空转」
-                session.emit({'type': 'summarizing',
-                              'message': f'抓取完成，正在为 {log.new_count} 条新通知生成 AI 摘要…'})
-                # 摘要生成失败不应把整次爬取标记为失败，单独兜底
-                try:
-                    batch_summarize()
-                except Exception as e:
-                    logger.error(f"摘要生成失败 [school {school_id}]: {e}")
-            session.complete(
-                new_count=log.new_count,
-                message=f'爬取完成，新增 {log.new_count} 条通知'
-            )
-        except Exception as e:
-            logger.error(f"手动爬取失败 [school {school_id}]: {e}")
-            session.fail(str(e))
-
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
-
-    return jsonify({
-        'success': True,
-        'session_id': session.session_id,
-        'message': '抓取已启动',
-    })
+    db.get_or_404(School, school_id)
+    task = enqueue('scrape', school_id, {'school_id': school_id, 'manual': True},
+                   min_interval=60, expedite=True)
+    return jsonify(success=True, session_id=str(task.id), task_id=task.id, message='已加入同步队列'), 202
 
 
 @bp.route('/api/scrape/<int:school_id>/events')
 @admin_required
 def api_scrape_events(school_id):
-    """SSE 端点：实时推送抓取进度"""
-    from backend.scraper.progress.scrape_progress import get_school_session as get_scrape_session
-
-    session = get_scrape_session(school_id)
-    if not session:
-        def no_session():
-            yield f"data: {json.dumps({'type': 'error', 'message': '没有活跃的抓取会话'}, ensure_ascii=False)}\n\n"
-        return Response(no_session(), mimetype='text/event-stream',
-                        headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
-
-    return Response(
-        session.events_generator(),
-        mimetype='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no',
-        }
-    )
+    return event_response('scrape', school_id)
 
 
 @bp.route('/api/scrape/<int:school_id>/status')
 @admin_required
 def api_scrape_status(school_id):
-    """获取抓取会话状态（SSE 轮询回退）"""
-    from backend.scraper.progress.scrape_progress import get_school_session as get_scrape_session
-
-    session = get_scrape_session(school_id)
-    if not session:
-        return jsonify({'status': 'none', 'message': '没有活跃的抓取会话'})
-
-    return jsonify(session.to_dict())
+    return jsonify(task_status('scrape', school_id))
 
 
 @bp.route('/api/scrape/all', methods=['POST'])
 @admin_required
 def api_trigger_scrape_all():
-    """手动触发全部爬取（后台执行 + SSE 进度推送）"""
-    from backend.scraper.engine import scrape_school, active_schools_query
-    from backend.scraper.progress.scrape_progress import create_session as create_scrape_session
-    from backend.ai.summarizer import batch_summarize
-
-    schools = active_schools_query().all()
-    if not schools:
-        return jsonify({'success': False, 'error': '没有启用且有订阅的学校'}), 400
-
-    # 为每所学校创建会话（前端按 school_id 查询）
-    sessions = {}
-    for school in schools:
-        sessions[school.id] = create_scrape_session(school.id, school.name)
-
-    app = current_app._get_current_object()
-
-    def _run():
-        app.app_context().push()
-        total_all_new = 0
-        for school in schools:
-            sess = sessions[school.id]
-            try:
-                # 在后台线程中重新获取 school，避免 detached instance 问题
-                school_obj = db.session.get(School, school.id)
-                log = scrape_school(school_obj, progress_session=sess)
-                total_all_new += log.new_count
-                sess.complete(
-                    new_count=log.new_count,
-                    message=f'{school.name} 爬取完成，新增 {log.new_count} 条'
-                )
-            except Exception as e:
-                logger.error(f"全量爬取失败 [{school.name}]: {e}")
-                sess.fail(str(e))
-
-        if total_all_new > 0:
-            for sess in sessions.values():
-                sess.emit({'type': 'summarizing',
-                           'message': f'抓取完成，正在为 {total_all_new} 条新通知生成 AI 摘要…'})
-            try:
-                batch_summarize()
-            except Exception as e:
-                logger.error(f"全量爬取摘要生成失败: {e}")
-
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
-
-    return jsonify({
-        'success': True,
-        'session_ids': {school_id: sess.session_id for school_id, sess in sessions.items()},
-        'message': f'全量抓取已启动（{len(schools)} 所学校）',
-    })
+    schools = School.query.filter(School.enabled.is_(True), School.subscriber_count > 0).all()
+    sessions = {s.id: str(enqueue('scrape', s.id, {'school_id': s.id, 'manual': True},
+                                 min_interval=60, expedite=True).id) for s in schools}
+    return jsonify(success=True, session_ids=sessions, message='已将订阅中的学校加入同步队列'), 202
 
 
 @bp.route('/api/summarize', methods=['POST'])
 @admin_required
 def api_trigger_summarize():
-    """触发批量摘要生成"""
-    from backend.ai.summarizer import batch_summarize
-
-    data = request.get_json() or {}
-    ids = data.get('ids', None)
+    from backend.services.summaries import enqueue_batch
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(error='请选择需要生成摘要的通知'), 400
     try:
-        count = batch_summarize(ids)
-        return jsonify({'success': True, 'count': count, 'message': f'已为 {count} 条通知生成摘要'})
-    except Exception as e:
-        logger.error(f"摘要生成失败: {e}")
-        return jsonify({'success': False, 'error': '摘要生成失败，请确认 API Key 已正确配置'}), 500
+        result = enqueue_batch(data.get('ids'), requested_by=g.user.id)
+        return jsonify(success=True, **result, message='所选通知的摘要已加入队列'), 202
+    except (ValueError, TypeError) as exc:
+        db.session.rollback()
+        return jsonify(error=str(exc)), 400

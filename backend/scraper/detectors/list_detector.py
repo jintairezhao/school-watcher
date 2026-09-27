@@ -13,6 +13,7 @@ from backend.scraper.detectors.dom_analyzer import (
     is_likely_notice_list, _find_first_date, _css_path,
 )
 from backend.scraper.detectors.title_quality import is_junk_title, clean_title
+from backend.scraper.change_detector import parse_date
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,11 @@ def detect_notice_list(html, url, existing_profiles=None):
                         or (title_el.get('title') or '').strip()
                         or (title_el.get('data-title') or '').strip())
                     # 质量门控：纯日期/MORE 等垃圾标题不算有效条目
-                    if len(title) >= 4 and not is_junk_title(title):
+                    link_el = item.select_one(profile.get('link_selector') or 'a[href]')
+                    date_el = item.select_one(profile['date_selector']) if profile.get('date_selector') else None
+                    dated = parse_date(date_el.get_text(strip=True)) if date_el is not None else None
+                    article_url = urljoin(url, link_el.get('href', '')) if link_el and dated else ''
+                    if len(title) >= 4 and not is_junk_title(title, article_url=article_url):
                         valid_items += 1
                         sample_titles.append(title[:100])
 

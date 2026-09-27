@@ -1,0 +1,220 @@
+{
+  "type": "object",
+  "properties": {
+    "school_id": {
+      "type": [
+        "integer",
+        "string"
+      ]
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "kind": {
+            "enum": [
+              "unit",
+              "channel",
+              "directory",
+              "article",
+              "navigation",
+              "non_source",
+              "unknown"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "parent_entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publisher_entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "enum": [
+                    "综合通知",
+                    "本科教学",
+                    "研究生培养",
+                    "推免",
+                    "夏令营",
+                    "本科招生",
+                    "硕士招生",
+                    "博士招生",
+                    "奖助与评优",
+                    "就业与实习",
+                    "学生活动",
+                    "国际交流",
+                    "科研与学术",
+                    "新闻动态",
+                    "行政事务",
+                    "教师发展",
+                    "其他",
+                    "未知"
+                  ]
+                },
+                "basis": {
+                  "enum": [
+                    "column_scope",
+                    "sample_only"
+                  ]
+                },
+                "evidence_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "basis",
+                "evidence_ids"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "decision": {
+            "enum": [
+              "propose",
+              "review",
+              "exclude"
+            ]
+          },
+          "evidence": {
+            "type": "object",
+            "properties": {
+              "identity": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
+              },
+              "name": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
+              },
+              "parent": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
+              },
+              "publisher": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
+              }
+            },
+            "required": [
+              "identity",
+              "name",
+              "parent",
+              "publisher"
+            ],
+            "additionalProperties": false
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "needed_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            }
+          }
+        },
+        "required": [
+          "candidate_id",
+          "kind",
+          "name",
+          "parent_entity_id",
+          "publisher_entity_id",
+          "topics",
+          "decision",
+          "evidence",
+          "reason",
+          "needed_evidence"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "coverage_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "topic": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "needed_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "entity_id",
+          "topic",
+          "reason",
+          "needed_evidence"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "school_id",
+    "results",
+    "coverage_gaps"
+  ],
+  "additionalProperties": false
+}

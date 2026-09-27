@@ -1,0 +1,412 @@
+{
+  "id": "whu-academic-directory-2026-09-20",
+  "root_url": "https://www.whu.edu.cn/",
+  "reference_url": "https://www.whu.edu.cn/jgsz/yxsz.htm",
+  "reference_hash": "239ad7830fcd9ab91cc30fa87e5a1620246f119abab981ec77a4b900b2b3c83a",
+  "reviewed_at": "2026-09-20",
+  "category": "academic_units",
+  "scope": "武汉大学院系设置页七个标题分区及其43个院系入口，共50项；保留医学部跨域入口和跨学科分组。只核对该页的列示层级，不代表整校栏目或行政隶属审核。",
+  "scope_selector": ".top:has(> h4), ul.list21",
+  "entries": [
+    {
+      "id": "humanities",
+      "name": "人文科学学部",
+      "url": "",
+      "kind": "unit",
+      "parent": null,
+      "relation": "directory_entry"
+    },
+    {
+      "id": "humanities-1",
+      "name": "哲学学院",
+      "url": "http://philosophy.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "humanities",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "humanities-2",
+      "name": "文学院",
+      "url": "http://chinese.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "humanities",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "humanities-3",
+      "name": "外国语言文学学院",
+      "url": "http://fls.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "humanities",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "humanities-4",
+      "name": "新闻与传播学院",
+      "url": "http://journal.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "humanities",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "humanities-5",
+      "name": "历史学院",
+      "url": "http://history.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "humanities",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "humanities-6",
+      "name": "艺术学院（艺术教育中心）",
+      "url": "http://art.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "humanities",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "social",
+      "name": "社会科学学部",
+      "url": "",
+      "kind": "unit",
+      "parent": null,
+      "relation": "directory_entry"
+    },
+    {
+      "id": "social-1",
+      "name": "经济与管理学院",
+      "url": "http://ems.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "social",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "social-2",
+      "name": "法学院",
+      "url": "http://law.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "social",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "social-3",
+      "name": "政治与公共管理学院",
+      "url": "https://pspa.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "social",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "social-4",
+      "name": "马克思主义学院",
+      "url": "http://marx.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "social",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "social-5",
+      "name": "社会学院",
+      "url": "http://shxy.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "social",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "social-6",
+      "name": "信息管理学院",
+      "url": "http://sim.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "social",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "science",
+      "name": "理学部",
+      "url": "",
+      "kind": "unit",
+      "parent": null,
+      "relation": "directory_entry"
+    },
+    {
+      "id": "science-1",
+      "name": "数学与统计学院",
+      "url": "http://maths.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "science",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "science-2",
+      "name": "物理科学与技术学院",
+      "url": "http://physics.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "science",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "science-3",
+      "name": "化学与分子科学学院",
+      "url": "http://chem.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "science",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "science-4",
+      "name": "生命科学学院",
+      "url": "http://bio.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "science",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "science-5",
+      "name": "资源与环境科学学院",
+      "url": "http://sres.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "science",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "science-6",
+      "name": "地球与空间科学技术学院",
+      "url": "https://esst.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "science",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "engineering",
+      "name": "工学部",
+      "url": "",
+      "kind": "unit",
+      "parent": null,
+      "relation": "directory_entry"
+    },
+    {
+      "id": "engineering-1",
+      "name": "动力与机械学院",
+      "url": "http://pmc.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "engineering",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "engineering-2",
+      "name": "电气与自动化学院",
+      "url": "http://eea.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "engineering",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "engineering-3",
+      "name": "土木建筑工程学院",
+      "url": "http://civ.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "engineering",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "engineering-4",
+      "name": "水利水电学院",
+      "url": "http://swrh.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "engineering",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "engineering-5",
+      "name": "城市设计学院",
+      "url": "https://sud.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "engineering",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "engineering-6",
+      "name": "机器人学院",
+      "url": "https://robotics.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "engineering",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "engineering-7",
+      "name": "集成电路学院",
+      "url": "http://ic.whu.edu.cn",
+      "kind": "unit",
+      "parent": "engineering",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "information",
+      "name": "信息科学学部",
+      "url": "",
+      "kind": "unit",
+      "parent": null,
+      "relation": "directory_entry"
+    },
+    {
+      "id": "information-1",
+      "name": "电子信息学院",
+      "url": "http://eis.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "information",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "information-2",
+      "name": "计算机学院",
+      "url": "http://cs.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "information",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "information-3",
+      "name": "遥感信息工程学院",
+      "url": "http://rsgis.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "information",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "information-4",
+      "name": "测绘学院",
+      "url": "http://www.sgg.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "information",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "information-5",
+      "name": "国家网络安全学院",
+      "url": "http://cse.whu.edu.cn",
+      "kind": "unit",
+      "parent": "information",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "information-6",
+      "name": "人工智能学院",
+      "url": "https://sai.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "information",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "medicine",
+      "name": "医学部",
+      "url": "",
+      "kind": "unit",
+      "parent": null,
+      "relation": "directory_entry"
+    },
+    {
+      "id": "medicine-1",
+      "name": "泰康医学院(基础医学院)",
+      "url": "http://wbm.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "medicine",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "medicine-2",
+      "name": "公共卫生学院",
+      "url": "http://sph.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "medicine",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "medicine-3",
+      "name": "药学院",
+      "url": "http://pharmacy.whu.edu.cn",
+      "kind": "unit",
+      "parent": "medicine",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "medicine-4",
+      "name": "第一临床学院",
+      "url": "http://www.rmhospital.com/",
+      "kind": "unit",
+      "parent": "medicine",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "medicine-5",
+      "name": "第二临床学院",
+      "url": "http://www.znhospital.cn/",
+      "kind": "unit",
+      "parent": "medicine",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "medicine-6",
+      "name": "口腔医学院",
+      "url": "https://www.whuss.com/",
+      "kind": "unit",
+      "parent": "medicine",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "medicine-7",
+      "name": "护理学院",
+      "url": "http://sns.whu.edu.cn",
+      "kind": "unit",
+      "parent": "medicine",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "interdisciplinary",
+      "name": "跨学科类",
+      "url": "",
+      "kind": "group",
+      "parent": null,
+      "relation": "directory_entry"
+    },
+    {
+      "id": "interdisciplinary-1",
+      "name": "弘毅学堂",
+      "url": "http://hyxt.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "interdisciplinary",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "interdisciplinary-2",
+      "name": "前沿交叉学科研究院",
+      "url": "https://aais.whu.edu.cn",
+      "kind": "unit",
+      "parent": "interdisciplinary",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "interdisciplinary-3",
+      "name": "国家卓越工程师学院",
+      "url": "https://ncee.whu.edu.cn",
+      "kind": "unit",
+      "parent": "interdisciplinary",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "interdisciplinary-4",
+      "name": "科技与产业学院",
+      "url": "https://sti.whu.edu.cn/",
+      "kind": "unit",
+      "parent": "interdisciplinary",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "interdisciplinary-5",
+      "name": "武汉大学杜伦大学联合学院",
+      "url": "https://wdj.whu.edu.cn",
+      "kind": "unit",
+      "parent": "interdisciplinary",
+      "relation": "nested_directory_entry"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ data/
 
 # 环境变量（含密钥）
 .env
+deploy/server.env
 
 # 隐私日志（记录所有秘密位置）
 docs/PRIVACY_LOG.md
@@ -38,3 +39,6 @@ Thumbs.db
 
 # 本地权限测试（含测试凭据）
 test_admin_perms.py
+
+# 本机界面检查截图与临时审查记录
+.impeccable/review/

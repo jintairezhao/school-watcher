@@ -1,0 +1,31 @@
+{
+  "id": "zju-medical-news_list-2026-09-21",
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/38670/list.htm",
+  "reference_hash": "edaed44b1170087d97c2bc2475ea74f349aeef3ae2183c380a8007538c27728f",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "医学院学院新闻列表第一页，10 个不同文章地址；两种同页展示各列 10 条，不重复计数。",
+  "scope_selector": ".news-content-box",
+  "review_method": "独立逐行阅读官网原始列表，抄录栏目名、当前页面或分类入口和全部文章地址。与首页相同的新闻和教师招聘地址沿用已独立抄录的原地址，并重新逐项对读本页。只核对本次响应的列表范围，不证明历史分页、原文发布责任或整体 90% 匹配。列表中有完整年月日才记发布日期，讲座举办时间和网址日期不补作发布日期。",
+  "entries": [
+    {
+      "id": "学院新闻",
+      "name": "学院新闻",
+      "url": "http://www.cmm.zju.edu.cn/38670/list.htm",
+      "scope_selector": ".news-content-box",
+      "article_urls": [
+        "https://mp.weixin.qq.com/s/v53f2WsgZDO1B0lRpQpguw",
+        "https://mp.weixin.qq.com/s/QU98LjAwWd-ZNNv-kx-UqA",
+        "https://mp.weixin.qq.com/s/RwKZWjlZXMRAyVqbaGZXTg",
+        "https://mp.weixin.qq.com/s/N36VC0q4J3oRvy7vjF1lXA",
+        "http://www.cmm.zju.edu.cn/2026/0917/c38670a3204419/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0917/c38670a3204347/page.htm",
+        "https://mp.weixin.qq.com/s/I_IInHmyq17ctEoLWW5cvA",
+        "https://mp.weixin.qq.com/s?__biz=MzU4ODAxMzI4NQ==&mid=2247530428&idx=1&sn=3e918ddbe11030fd6b55c91d8212856d&chksm=fc8189bdbaaf419b80704fe595feacfd6889a0818322dc8c680cebcc50b2b99b9dd7cf9b80b7&mpshare=1&scene=1&srcid=09123oMQc5Oq7VMNFdy6jYmK&sharer_shareinfo=7dd489f090900c686a6d5eff7a675e69&sharer_shareinfo_first=7dd489f090900c686a6d5eff7a675e69",
+        "https://mp.weixin.qq.com/s?__biz=MzU4ODAxMzI4NQ==&mid=2247530427&idx=1&sn=90bfaa7a11b27689db13003ba960d553&chksm=fc8c7a4b25f18d3e39fc528526eee5096a22f60f76f91389118df5c9f8dd1a458d3a0821f888&mpshare=1&scene=1&srcid=0912xKiymZlNja9NNyqDitRG&sharer_shareinfo=ff389f0aafa7e6b7fd7aacc9f5481df3&sharer_shareinfo_first=ff389f0aafa7e6b7fd7aacc9f5481df3",
+        "https://mp.weixin.qq.com/s?__biz=MzU4ODAxMzI4NQ==&mid=2247530426&idx=1&sn=669081cb690d74571c4bdb92b1bde7ef&chksm=fcd84ddfad06ee0a593fa85e7ed652bc7a9d0ab557c64a32d096d59419982f10bc68d90a7400&mpshare=1&scene=1&srcid=0912jdmjii15HayClgBfph1S&sharer_shareinfo=8b19349a8fedac99e59e3a08ae20176d&sharer_shareinfo_first=8b19349a8fedac99e59e3a08ae20176d"
+      ]
+    }
+  ]
+}

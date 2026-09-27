@@ -1,52 +1,71 @@
 {% extends "base.html" %}
 {% block title %}个人中心 — 学校通知{% endblock %}
+{% block main_class %}main-full account-main{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>个人中心</h1>
-    <p class="page-subtitle">👤 {{ current_user.username }} · {{ '管理员' if current_user.is_admin else '普通用户' }}</p>
-</div>
+<header class="surface-heading account-heading">
+    <div><h1>个人中心</h1><p>{{ current_user.username }} · {{ '管理员' if current_user.is_admin else '普通用户' }}</p></div>
+    {% if current_user.is_admin %}<a class="btn btn-outline" href="{{ url_for('admin.admin_page') }}">系统管理</a>{% endif %}
+</header>
+<nav class="surface-tabs account-tabs" aria-label="个人设置">
+    <a href="#subscriptions" data-account-section="subscriptions" aria-current="page">我的订阅 <span>{{ subscriptions|length }}</span></a>
+    <a href="#security" data-account-section="security">账户安全</a>
+</nav>
+<div class="account-sections">
+    <div id="subscriptions" data-account-panel="subscriptions">
+        <section class="account-section" aria-labelledby="subscription-title">
+            <header class="account-section-header">
+                <div><h2 id="subscription-title">我的订阅</h2><p>管理学校和接收的官网栏目。</p></div>
+                <a class="btn btn-outline btn-sm" href="{{ url_for('pages.explore') }}">管理学校</a>
+            </header>
+            {% if not subscriptions %}
+            <div class="account-empty"><p>你还没有订阅学校。</p><a href="{{ url_for('pages.explore') }}">前往学校目录</a></div>
+            {% else %}
+            <ul class="subscription-list">
+                {% for s in subscriptions %}
+                <li>
+                    <a class="subscription-school" href="{{ url_for('subscriptions.manage_sources', school_id=s.school_id) }}">
+                        <span class="subscription-mark" aria-hidden="true">{{ s.school.name[:1] }}</span>
+                        <span><strong>{{ s.school.name }}</strong><small>{{ '订阅全部官网栏目' if s.department_ids is none else '已选择 ' ~ s.department_ids|length ~ ' 个栏目' }} · 调整栏目订阅</small></span>
+                    </a>
+                    <button class="btn btn-xs btn-ghost" onclick="unsub({{ s.school_id }}, this)">取消订阅</button>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </section>
 
-<div class="settings-grid">
-    <div class="setting-card">
-        <h3>🔒 修改密码</h3>
-        <div class="form-group"><label>当前密码</label>
-            <input type="password" id="curPw" class="form-input" autocomplete="current-password"></div>
-        <div class="form-group"><label>新密码（至少 8 位）</label>
-            <input type="password" id="newPw" class="form-input" autocomplete="new-password"></div>
-        <button class="btn btn-primary" onclick="changePassword()">修改密码</button>
     </div>
+    <div id="security" data-account-panel="security">
+        <section class="account-section" id="password" aria-labelledby="password-title">
+            <header class="account-section-header"><div><h2 id="password-title">修改密码</h2></div></header>
+            <div class="account-form-row">
+                <div class="form-group"><label for="curPw">当前密码</label>
+                    <input type="password" id="curPw" class="form-input" autocomplete="current-password"></div>
+                <div class="form-group"><label for="newPw">新密码</label>
+                    <input type="password" id="newPw" class="form-input" autocomplete="new-password" placeholder="至少 8 位"></div>
+            </div>
+            <button class="btn btn-primary" onclick="changePassword()">更新密码</button>
+        </section>
 
-    <div class="setting-card">
-        <h3>🛡️ 密保设置（忘记密码时自助找回）</h3>
-        <div class="form-group"><label>当前密码</label>
-            <input type="password" id="secPw" class="form-input" autocomplete="current-password"></div>
-        <div class="form-group"><label>密保问题</label>
-            <input type="text" id="secQ" class="form-input" placeholder="如：我的生日？"></div>
-        <div class="form-group"><label>密保答案</label>
-            <input type="text" id="secA" class="form-input"></div>
-        <button class="btn btn-primary" onclick="setSecurity()">保存密保</button>
-    </div>
-
-    <div class="setting-card">
-        <h3>📚 我的订阅（{{ subscriptions|length }}）</h3>
-        {% if not subscriptions %}
-        <p class="text-muted">还没有订阅，<a href="{{ url_for('pages.explore') }}">去学校目录看看</a></p>
-        {% else %}
-        <ul style="list-style:none;padding:0;margin:0;">
-            {% for s in subscriptions %}
-            <li style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--color-border);">
-                <a href="{{ url_for('pages.school_detail', school_id=s.school_id) }}">{{ s.school.name }}</a>
-                <button class="btn btn-xs btn-outline" onclick="unsub({{ s.school_id }}, this)">退订</button>
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+        <section class="account-section" id="recovery" aria-labelledby="security-title">
+            <header class="account-section-header"><div><h2 id="security-title">密保设置</h2><p>忘记密码时用于验证身份。</p></div></header>
+            <div class="account-form-row">
+                <div class="form-group"><label for="secPw">当前密码</label>
+                    <input type="password" id="secPw" class="form-input" autocomplete="current-password"></div>
+                <div class="form-group"><label for="secQ">密保问题</label>
+                    <input type="text" id="secQ" class="form-input" placeholder="例如：我的生日？"></div>
+            </div>
+            <div class="form-group account-answer"><label for="secA">密保答案</label>
+                <input type="text" id="secA" class="form-input"></div>
+            <button class="btn btn-primary" onclick="setSecurity()">保存密保</button>
+        </section>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/account-sections.js') }}"></script>
 <script>
 async function changePassword() {
     var resp = await fetch('/api/me/password', {

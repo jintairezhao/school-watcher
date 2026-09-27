@@ -1,0 +1,65 @@
+{
+  "id": "zju-medical-recruitment_columns-2026-09-21",
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/rczp/list.htm",
+  "reference_hash": "db35f273e9a52d994b6bff865a854d244946feb84687449cf864f6916acc9a13",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "医学院人才招聘页教师、行政、博后、其它四类，每类 5 个入口，共 20 个职位信息入口；分类不视作单位机构。",
+  "scope_selector": ".news-content-box",
+  "review_method": "独立逐行阅读官网原始列表，抄录栏目名、当前页面或分类入口和全部文章地址。与首页相同的新闻和教师招聘地址沿用已独立抄录的原地址，并重新逐项对读本页。只核对本次响应的列表范围，不证明历史分页、原文发布责任或整体 90% 匹配。列表中有完整年月日才记发布日期，讲座举办时间和网址日期不补作发布日期。",
+  "entries": [
+    {
+      "id": "教师",
+      "name": "教师",
+      "url": "http://www.cmm.zju.edu.cn/js_84610/list.htm",
+      "scope_selector": ".wp_sublist.sublist-1",
+      "article_urls": [
+        "https://mp.weixin.qq.com/s/kWXAsM9HGK7mSOg1Kq4Tuw",
+        "https://mp.weixin.qq.com/s/6AGz2Y2vt4l9E1rUKzHdwg?scene=1&click_id=1",
+        "https://mp.weixin.qq.com/s/pczcqZdljQJ49T17Omshig",
+        "https://mp.weixin.qq.com/s/1_uTNxihuLqflDNSBysRbA",
+        "https://mp.weixin.qq.com/s/WGq1KPh100gB0j-tim0ybA"
+      ]
+    },
+    {
+      "id": "行政",
+      "name": "行政",
+      "url": "http://www.cmm.zju.edu.cn/xz_84611/list.htm",
+      "scope_selector": ".wp_sublist.sublist-2",
+      "article_urls": [
+        "https://ehr.zju.edu.cn/vuejs/recruitment/position-detail.htm?id=N1815755626815422987",
+        "http://www.cmm.zju.edu.cn/2023/0525/c84611a2763128/page.htm",
+        "http://www.cmm.zju.edu.cn/2019/0602/c84611a1624894/page.htm",
+        "http://www.cmm.zju.edu.cn/2018/1101/c84611a1624858/page.htm",
+        "http://www.cmm.zju.edu.cn/2018/0717/c84611a1624845/page.htm"
+      ]
+    },
+    {
+      "id": "博后",
+      "name": "博后",
+      "url": "http://www.cmm.zju.edu.cn/bh_84612/list.htm",
+      "scope_selector": ".wp_sublist.sublist-3",
+      "article_urls": [
+        "http://www.cmm.zju.edu.cn/2026/0917/c84612a3204369/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0917/c84612a3204360/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0724/c84612a3191051/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0714/c84612a3189041/page.htm",
+        "http://www.cmm.zju.edu.cn/2026/0625/c84612a3182295/page.htm"
+      ]
+    },
+    {
+      "id": "其它",
+      "name": "其它",
+      "url": "http://www.cmm.zju.edu.cn/qt_84613/list.htm",
+      "scope_selector": ".wp_sublist.sublist-4",
+      "article_urls": [
+        "http://www.cmm.zju.edu.cn/2026/0521/c84613a3165027/page.htm",
+        "http://www.cmm.zju.edu.cn/2025/0326/c84613a3031776/page.htm",
+        "http://www.cmm.zju.edu.cn/2025/0324/c84613a3030542/page.htm",
+        "http://www.cmm.zju.edu.cn/2025/0303/c84613a3021621/page.htm",
+        "http://ehr.zju.edu.cn/vuejs/recruitment/position-detail.htm?id=N1703437426843713610"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "zju-medical-video_list-2026-09-21",
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/stzy/list.htm",
+  "reference_hash": "b423eaf28314e7c543c20fe0d43043129c5a2bc8df9b2323c2adcc631ed1189f",
+  "category": "publication_columns",
+  "reviewed_at": "2026-09-21",
+  "scope": "医学院视听浙医列表全部 8 个视频文章入口；空链接文字的重复锚点不重复计数，原文日期未提供。",
+  "scope_selector": ".news-content-box",
+  "review_method": "独立逐行阅读官网原始列表，抄录栏目名、当前页面或分类入口和全部文章地址。与首页相同的新闻和教师招聘地址沿用已独立抄录的原地址，并重新逐项对读本页。只核对本次响应的列表范围，不证明历史分页、原文发布责任或整体 90% 匹配。列表中有完整年月日才记发布日期，讲座举办时间和网址日期不补作发布日期。",
+  "entries": [
+    {
+      "id": "视听浙医",
+      "name": "视听浙医",
+      "url": "http://www.cmm.zju.edu.cn/stzy/list.htm",
+      "scope_selector": ".news-content-box",
+      "article_urls": [
+        "http://www.cmm.zju.edu.cn/2025/0625/c55113a3064477/page.htm",
+        "http://www.cmm.zju.edu.cn/2025/0422/c55113a3040973/page.htm",
+        "http://www.cmm.zju.edu.cn/2024/0923/c55113a2965759/page.htm",
+        "http://www.cmm.zju.edu.cn/2024/0923/c55113a2965907/page.htm",
+        "http://www.cmm.zju.edu.cn/2024/0923/c55113a2965861/page.htm",
+        "http://www.cmm.zju.edu.cn/2020/1208/c55113a2228732/page.htm",
+        "http://www.cmm.zju.edu.cn/2021/0104/c55113a2241116/page.htm",
+        "http://www.cmm.zju.edu.cn/2021/0520/c55113a2376434/page.htm"
+      ]
+    }
+  ]
+}

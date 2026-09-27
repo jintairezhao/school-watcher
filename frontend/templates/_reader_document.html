@@ -1,0 +1,20 @@
+{% from '_source_links.html' import source_links %}
+{% from '_article_provenance.html' import article_signature %}
+{% from '_summary_panel.html' import summary_panel %}
+{% from '_content_loader.html' import content_loader %}
+
+{% macro reader_document(ann, source, sources, provenance, summary_state, user) %}
+<header class="reading-header">
+    <h1 class="reading-title">{{ ann.title }}</h1>
+    <div class="reading-meta">
+        <span class="reader-source">{{ source.school.name }} · {{ source|source_breadcrumb }}</span>
+        <time datetime="{{ ann.published_at.isoformat() if ann.published_at else '' }}">{{ ann.published_at.strftime('%Y年%m月%d日 %H:%M') if ann.published_at else '发布时间未知' }}</time>
+    </div>
+    {{ source_links(sources) }}
+    {{ article_signature(provenance) }}
+</header>
+{{ summary_panel(ann, summary_state, user) }}
+<div class="reader-content" aria-label="通知正文">
+    {{ content_loader(ann) }}
+</div>
+{% endmacro %}

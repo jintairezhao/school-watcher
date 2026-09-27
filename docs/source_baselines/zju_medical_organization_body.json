@@ -1,0 +1,399 @@
+{
+  "root_url": "https://www.zju.edu.cn/",
+  "reference_url": "http://www.cmm.zju.edu.cn/55143/list.htm",
+  "reference_hash": "fc27afc31a19c53bbd69fc3a44879f2182ef5af202312416102058aa62b91587",
+  "category": "institutional_units",
+  "reviewed_at": "2026-09-21",
+  "id": "zju-medical-organization-body-2026-09-21",
+  "scope": "浙大医学院组织机构页正文：6 类机构、38 个首层条目和 5 个附加列示条目，共 49 个目录位置。",
+  "scope_selector": ".about-content-box .content #wp_news_w5",
+  "entries": [
+    {
+      "id": "学院委员会",
+      "name": "学院委员会",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "人力资源委员会",
+      "name": "人力资源委员会",
+      "url": "",
+      "kind": "unit",
+      "parent": "学院委员会",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "学术委员会",
+      "name": "学术委员会",
+      "url": "",
+      "kind": "unit",
+      "parent": "学院委员会",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "教学委员会",
+      "name": "教学委员会",
+      "url": "",
+      "kind": "unit",
+      "parent": "学院委员会",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "学位委员会",
+      "name": "学位委员会",
+      "url": "",
+      "kind": "unit",
+      "parent": "学院委员会",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "职能部门",
+      "name": "职能部门",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "党政办公室",
+      "name": "党政办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "职能部门",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "发展规划与学科建设办公室（与党政办公室合署）",
+      "name": "发展规划与学科建设办公室（与党政办公室合署）",
+      "url": "",
+      "kind": "unit",
+      "parent": "职能部门",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "人事人才办公室",
+      "name": "人事人才办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "职能部门",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "教学办公室",
+      "name": "教学办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "职能部门",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "科研办公室",
+      "name": "科研办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "职能部门",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "团委/学生工作办公室",
+      "name": "团委/学生工作办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "职能部门",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "继续教育中心",
+      "name": "继续教育中心",
+      "url": "",
+      "kind": "unit",
+      "parent": "职能部门",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "发展联络办公室（医学发展部）",
+      "name": "发展联络办公室（医学发展部）",
+      "url": "",
+      "kind": "unit",
+      "parent": "职能部门",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "院系设置",
+      "name": "院系设置",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "基础医学院",
+      "name": "基础医学院",
+      "url": "http://bms.zju.edu.cn/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "脑科学与脑医学学院",
+      "name": "脑科学与脑医学学院",
+      "url": "http://www.neuroscience.zju.edu.cn/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "公共卫生学院",
+      "name": "公共卫生学院",
+      "url": "http://www.phs.zju.edu.cn/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第一临床医学院",
+      "name": "第一临床医学院",
+      "url": "http://www.zy91.com/index/index.jhtml",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第二临床医学院",
+      "name": "第二临床医学院",
+      "url": "http://www.z2hospital.com/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第三临床医学院",
+      "name": "第三临床医学院",
+      "url": "http://www.srrsh.com/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第四临床医学院",
+      "name": "第四临床医学院",
+      "url": "http://www.zju4h.com/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "妇产科学院",
+      "name": "妇产科学院",
+      "url": "http://www.womanhospital.cn/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "儿科学院",
+      "name": "儿科学院",
+      "url": "http://www.zjuch.cn/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "口腔医学院",
+      "name": "口腔医学院",
+      "url": "https://www.zjkq.com.cn/",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "护理系",
+      "name": "护理系",
+      "url": "",
+      "kind": "unit",
+      "parent": "院系设置",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属医院",
+      "name": "附属医院",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "附属第一医院",
+      "name": "附属第一医院",
+      "url": "http://www.zy91.com/index/index.jhtml",
+      "kind": "unit",
+      "parent": "附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属第二医院",
+      "name": "附属第二医院",
+      "url": "http://www.z2hospital.com/",
+      "kind": "unit",
+      "parent": "附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属邵逸夫医院",
+      "name": "附属邵逸夫医院",
+      "url": "http://www.srrsh.com/",
+      "kind": "unit",
+      "parent": "附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属第四医院",
+      "name": "附属第四医院",
+      "url": "http://www.zju4h.com/",
+      "kind": "unit",
+      "parent": "附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属妇产医院",
+      "name": "附属妇产医院",
+      "url": "http://www.womanhospital.cn/",
+      "kind": "unit",
+      "parent": "附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属儿童医院",
+      "name": "附属儿童医院",
+      "url": "http://www.zjuch.cn/",
+      "kind": "unit",
+      "parent": "附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属口腔医院",
+      "name": "附属口腔医院",
+      "url": "https://www.zjkq.com.cn/",
+      "kind": "unit",
+      "parent": "附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属精神卫生中心",
+      "name": "附属精神卫生中心",
+      "url": "http://www.hz7hospital.com/",
+      "kind": "unit",
+      "parent": "附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "非直属附属医院",
+      "name": "非直属附属医院",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "附属浙江医院",
+      "name": "附属浙江医院",
+      "url": "http://www.zjhospital.com.cn/",
+      "kind": "unit",
+      "parent": "非直属附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属金华医院",
+      "name": "附属金华医院",
+      "url": "http://www.jhzxyy.cn/",
+      "kind": "unit",
+      "parent": "非直属附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "附属湖州医院",
+      "name": "附属湖州医院",
+      "url": "http://www.hzhospital.com/",
+      "kind": "unit",
+      "parent": "非直属附属医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "合作医院",
+      "name": "合作医院",
+      "url": "",
+      "kind": "group",
+      "relation": "directory_group"
+    },
+    {
+      "id": "浙江大学绍兴医院",
+      "name": "浙江大学绍兴医院",
+      "url": "http://www.312000.net/",
+      "kind": "unit",
+      "parent": "合作医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "浙江大学宁波医院",
+      "name": "浙江大学宁波医院",
+      "url": "http://www.nbdyyy.com/",
+      "kind": "unit",
+      "parent": "合作医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "浙江大学丽水医院",
+      "name": "浙江大学丽水医院",
+      "url": "http://www.lshospital.zj.cn/",
+      "kind": "unit",
+      "parent": "合作医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "浙江大学台州医院",
+      "name": "浙江大学台州医院",
+      "url": "",
+      "kind": "unit",
+      "parent": "合作医院",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "国际交流与合作办公室",
+      "name": "国际交流与合作办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "党政办公室",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "宣传中心",
+      "name": "宣传中心",
+      "url": "",
+      "kind": "unit",
+      "parent": "党政办公室",
+      "relation": "nested_directory_entry"
+    },
+    {
+      "id": "本科生教育办公室",
+      "name": "本科生教育办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "教学办公室",
+      "relation": "directory_companion_entry"
+    },
+    {
+      "id": "研究生教育办公室",
+      "name": "研究生教育办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "教学办公室",
+      "relation": "directory_companion_entry"
+    },
+    {
+      "id": "毕业后教育办公室",
+      "name": "毕业后教育办公室",
+      "url": "",
+      "kind": "unit",
+      "parent": "教学办公室",
+      "relation": "directory_companion_entry"
+    }
+  ],
+  "review_method": "逐段独立阅读并抄录官方正文，包含无链接委员会、职能办公室、护理系及浙江大学台州医院。正文党政办公室以“含”列出两个名称；教学办公室括号内并列三个办公室，按附加列示保留，不移用顶部目录“下设”关系。合署、组合名称和医学发展部括号不拆分成推测单位。正文名称及地址不按顶部版本改写。这里只核对本页正文结构，不证明全校或全部发布来源达到 90%。"
+}

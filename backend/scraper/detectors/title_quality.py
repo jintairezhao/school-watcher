@@ -12,6 +12,7 @@
 
 import re
 from datetime import datetime, timezone
+from backend.scraper.article_urls import ARTICLE
 
 # 纯日期形态（整串匹配才判垃圾，「2026年8月28日关于…的通知」这类真实标题不受影响）
 _DATE_ONLY_RES = [
@@ -37,6 +38,9 @@ _JUNK_EXACT = {
     'more', 'more>>', 'more »', '>>', '»', '[详细]', '详细', '详细>',
     '更多', '首页', '查看详情', '查看全文', '查看更多', '进入', '正文',
     '当前位置', '上一篇', '下一篇', '返回', 'close', '附件', '附件下载',
+    'english', 'english version', 'english website', '中文', '中文版', '网站地图',
+    '通知公告', '新闻中心', '学校新闻', '信息公开', '组织机构', '招生就业',
+    '科学研究', '人才培养', '本科教育', '研究生教育',
 }
 
 # 文章 URL 中的日期（/2026-08-28/ 分隔形态，或上交式 /20260828/ 紧凑形态）
@@ -44,7 +48,7 @@ _URL_DATE_RE = re.compile(r'/(20\d{2})[-/](\d{1,2})[-/](\d{1,2})/')
 _URL_DATE_COMPACT_RE = re.compile(r'/(20\d{2})(\d{2})(\d{2})/')
 
 
-def is_junk_title(title) -> bool:
+def is_junk_title(title, *, article_url='') -> bool:
     """True 表示该字符串不可能是一条通知的标题。"""
     if not title:
         return True
@@ -53,10 +57,13 @@ def is_junk_title(title) -> bool:
         return True
     if t.lower() in _JUNK_EXACT:
         return True
+    if re.match(r'^(english\s+(version|website)|网站地图|版权所有)\b', t, re.I):
+        return True
     if any(r.match(t) for r in _DATE_ONLY_RES):
         return True
     # 短字符串且无强指示词 → 栏目/导航标签而非通知标题
-    if len(t) <= 8 and not any(w in t for w in _SHORT_INDICATORS):
+    if (len(t) <= 8 and not any(w in t for w in _SHORT_INDICATORS)
+            and not ARTICLE.search(article_url or '')):
         return True
     return False
 
@@ -72,7 +79,7 @@ def _title_score(t: str) -> int:
     return score
 
 
-def extract_best_title(item) -> str:
+def extract_best_title(item, *, article_url='') -> str:
     """在列表项元素内按回退链挑选最佳真实标题，找不到返回 ''。
 
     回退链：a[title] 属性 → 各链接文本得分最高且非垃圾者 →
@@ -82,7 +89,7 @@ def extract_best_title(item) -> str:
     best, best_score = '', -1
     for a in item.find_all('a', href=True):
         cand = (a.get('title') or a.get('data-title') or '').strip() or a.get_text(strip=True)
-        if is_junk_title(cand):
+        if is_junk_title(cand, article_url=a.get('href', '') if article_url else ''):
             continue
         s = _title_score(cand)
         if s > best_score:
@@ -92,7 +99,7 @@ def extract_best_title(item) -> str:
     # 链接全为垃圾（日期/图片链接）时，在子级文本节点里找最佳标题
     for el in item.find_all(['span', 'div', 'p', 'h1', 'h2', 'h3', 'h4', 'em', 'strong']):
         cand = el.get_text(strip=True)
-        if is_junk_title(cand):
+        if is_junk_title(cand, article_url=article_url):
             continue
         s = _title_score(cand)
         if s > best_score:

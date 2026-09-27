@@ -1,0 +1,114 @@
+name: school-watcher
+
+x-app: &app
+  image: school-watcher:2026.09
+  build: {context: .., dockerfile: deploy/Dockerfile, target: app}
+  init: true
+  restart: unless-stopped
+  volumes: [watcher-data:/data]
+  networks: [business, outgoing]
+  environment: &environment
+    DATABASE_URL: postgresql+psycopg://watcher:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/watcher
+    SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
+    FIELD_ENC_KEY: ${FIELD_ENC_KEY:?set FIELD_ENC_KEY}
+    WATCHER_BROWSER: "1"
+    WATCHER_BROWSER_URL: http://browser:8765
+    WATCHER_BROWSER_TOKEN: ${WATCHER_BROWSER_TOKEN:?set WATCHER_BROWSER_TOKEN}
+    WATCHER_PUBLIC_ORIGIN: ${WATCHER_PUBLIC_ORIGIN:?set the HTTPS public origin}
+    WATCHER_DB_POOL_SIZE: "4"
+    WATCHER_DB_POOL_OVERFLOW: "4"
+  depends_on:
+    init: {condition: service_completed_successfully}
+
+services:
+  db:
+    image: postgres:18.6-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: watcher
+      POSTGRES_DB: watcher
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      TZ: UTC
+    volumes: [postgres-data:/var/lib/postgresql]
+    networks: [business]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U watcher -d watcher"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  init:
+    <<: *app
+    restart: "no"
+    command: [python, scripts/initialize_runtime.py]
+    depends_on:
+      db: {condition: service_healthy}
+  web:
+    <<: *app
+    command: [python, app.py]
+    networks: [business, browser-control, outgoing]
+    environment:
+      <<: *environment
+      WATCHER_WEB_THREADS: ${WATCHER_WEB_THREADS:-8}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health/live',timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  http-worker:
+    <<: *app
+    command: [python, scripts/run_worker.py, --roles, http, --concurrency, "${WATCHER_HTTP_CONCURRENCY:-4}"]
+  browser-worker:
+    <<: *app
+    networks: [business, browser-control]
+    command: [python, scripts/run_worker.py, --roles, browser, --concurrency, "${WATCHER_BROWSER_CONCURRENCY:-1}"]
+  directory-worker:
+    <<: *app
+    networks: [business, browser-control, outgoing]
+    command: [python, scripts/run_worker.py, --roles, directory, --concurrency, "1"]
+  scheduler:
+    <<: *app
+    command: [python, scripts/run_worker.py, --roles, scheduler, --concurrency, "1"]
+  browser:
+    image: school-watcher-browser:2026.09
+    build: {context: .., dockerfile: deploy/Dockerfile, target: browser}
+    init: true
+    restart: unless-stopped
+    shm_size: 1gb
+    security_opt: ["seccomp=./seccomp_profile.json"]
+    networks: [browser-control]
+    environment:
+      WATCHER_BROWSER_HOST: 0.0.0.0
+      WATCHER_BROWSER_TOKEN: ${WATCHER_BROWSER_TOKEN:?set WATCHER_BROWSER_TOKEN}
+      WATCHER_PUBLIC_ORIGIN: ${WATCHER_PUBLIC_ORIGIN:?set public origin}
+      WATCHER_BROWSER_CONCURRENCY: ${WATCHER_BROWSER_CONCURRENCY:-1}
+      WATCHER_BROWSER_MAX_SESSIONS: ${WATCHER_BROWSER_MAX_SESSIONS:-8}
+      WATCHER_BROWSER_EGRESS_PROXY: http://egress:3128
+      WATCHER_ORIGIN_BROKER_URL: http://web:5000/internal/browser-origin
+    depends_on:
+      web: {condition: service_healthy}
+      egress: {condition: service_started}
+    healthcheck:
+      test: [CMD, python, -c, "import os,urllib.request; urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8765/health',headers={'X-Watcher-Token':os.environ['WATCHER_BROWSER_TOKEN']}),timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  egress:
+    build: {context: .., dockerfile: deploy/Dockerfile, target: egress}
+    init: true
+    restart: unless-stopped
+    networks: [browser-control, outgoing]
+  gateway:
+    build: {context: .., dockerfile: deploy/Dockerfile, target: gateway}
+    init: true
+    restart: unless-stopped
+    ports: ["127.0.0.1:${WATCHER_GATEWAY_PORT:-8080}:8080"]
+    networks: [business, browser-control, outgoing]
+    depends_on: [web, browser]
+
+volumes:
+  watcher-data:
+  postgres-data:
+networks:
+  business: {internal: true}
+  browser-control: {internal: true}
+  outgoing: {}

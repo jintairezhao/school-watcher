@@ -8,7 +8,7 @@ import logging
 import re
 from urllib.parse import urljoin, urlparse, parse_qs, urlencode, urlunparse
 
-from curl_cffi import requests
+from backend.scraper.http_client import requests
 
 from backend.scraper.detectors.dom_analyzer import find_pagination_links
 from backend.scraper.engine import HEADERS, REQUEST_TIMEOUT

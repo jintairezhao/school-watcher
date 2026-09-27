@@ -4,7 +4,7 @@
 {% block card %}
     <!-- ======== 阶段 1：验证密保 ======== -->
     <div id="stageVerify">
-        <div class="login-icon">🔑</div>
+        <div class="login-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M15 4l2 2M13 6l2 2"/></svg></div>
         <h1 class="login-title">密码恢复</h1>
         <p class="login-subtitle" id="recoverySubtitle">输入用户名以获取密保问题</p>
 
@@ -39,7 +39,7 @@
         </div>
 
         <div id="lockedMsg" style="display:none;">
-            <p style="color:var(--color-danger);margin-bottom:0.5rem;">⛔ 尝试次数过多，已暂时锁定</p>
+            <p style="color:var(--color-danger);margin-bottom:0.5rem;">尝试次数过多，已暂时锁定</p>
             <p id="lockedUntil" style="font-size:0.85rem;color:var(--color-text-muted);"></p>
         </div>
 
@@ -48,7 +48,7 @@
 
     <!-- ======== 阶段 2：重置密码 ======== -->
     <div id="stageReset" style="display:none;">
-        <div class="login-icon">✅</div>
+        <div class="login-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg></div>
         <h1 class="login-title">设置新密码</h1>
         <p class="login-subtitle">密保验证通过，请设置新密码（至少 8 位）</p>
 

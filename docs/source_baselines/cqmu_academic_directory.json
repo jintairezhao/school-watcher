@@ -1,0 +1,199 @@
+{
+  "id": "cqmu_academic_directory",
+  "root_url": "https://www.cqmu.edu.cn/",
+  "reference_url": "https://www.cqmu.edu.cn/jgsz/jxkynsjg.htm",
+  "reference_hash": "a99195238819624ce779a9146afcbd056a71fba6e41a27162d7a476ea11c3981",
+  "scope": "重庆医科大学教学科研内设机构正文31个目录条目，含学院、研究机构与教辅机构；外部医院网站身份另行核对",
+  "scope_selector": ".departmentlist > ul",
+  "category": "academic_units",
+  "reviewed_at": "2026-09-21",
+  "review_method": "逐项查看正文31个原名与实际入口，保持平级目录位置。医院域名不据此与学院同名身份自动合并，未用网站前缀推断组织隶属。",
+  "entries": [
+    {
+      "id": "基础医学院",
+      "name": "基础医学院",
+      "url": "https://basic.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "检验医学院",
+      "name": "检验医学院",
+      "url": "https://jyx.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "公共卫生学院",
+      "name": "公共卫生学院",
+      "url": "https://gwgl.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "药学院",
+      "name": "药学院",
+      "url": "https://yxy.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "生物医学工程学院",
+      "name": "生物医学工程学院",
+      "url": "https://swyxgcxy.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "中医药学院",
+      "name": "中医药学院",
+      "url": "https://zyy.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "马克思主义学院",
+      "name": "马克思主义学院",
+      "url": "https://mkszyxy.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "外国语学院",
+      "name": "外国语学院",
+      "url": "https://foreign.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "人工智能医学学院",
+      "name": "人工智能医学学院",
+      "url": "https://mi.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "护理学院",
+      "name": "护理学院",
+      "url": "https://nursing.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "重庆医科大学莱斯特大学联合学院",
+      "name": "重庆医科大学莱斯特大学联合学院",
+      "url": "https://imc.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "国际教育学院",
+      "name": "国际教育学院",
+      "url": "https://cie.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "体育医学学院",
+      "name": "体育医学学院",
+      "url": "https://tgb.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "继续教育学院",
+      "name": "继续教育学院",
+      "url": "https://jxjy.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "科技创新中心",
+      "name": "科技创新中心",
+      "url": "https://kczx.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "信息与肿瘤免疫研究院",
+      "name": "信息与肿瘤免疫研究院",
+      "url": "https://xxyzlmy.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "超声医学工程国家重点实验室",
+      "name": "超声医学工程国家重点实验室",
+      "url": "https://skl-ume.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第一临床学院",
+      "name": "第一临床学院",
+      "url": "https://www.hospital-cqmu.com/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第二临床学院",
+      "name": "第二临床学院",
+      "url": "https://www.sahcqmu.com/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "儿科学院",
+      "name": "儿科学院",
+      "url": "http://www.chcmu.com/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "口腔医学院",
+      "name": "口腔医学院",
+      "url": "http://www.cqdent.com/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第四临床学院",
+      "name": "第四临床学院",
+      "url": "http://www.uhcmu.com/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第三临床学院",
+      "name": "第三临床学院",
+      "url": "http://www.3-hospital-cqmu.com/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "第五临床学院",
+      "name": "第五临床学院",
+      "url": "https://www.ychcqmu.com/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "康复医学院",
+      "name": "康复医学院",
+      "url": "https://www.rhcqmu.com/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "医学教育研究所",
+      "name": "医学教育研究所",
+      "url": "https://yxjyyjs.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "图书馆（档案馆）",
+      "name": "图书馆（档案馆）",
+      "url": "https://lib.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "期刊社",
+      "name": "期刊社",
+      "url": "http://cqmu.ijournals.cn/cqykdx/home",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "信息中心",
+      "name": "信息中心",
+      "url": "https://cnw.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "实验教学管理中心",
+      "name": "实验教学管理中心",
+      "url": "https://ltmc.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    },
+    {
+      "id": "实验动物中心",
+      "name": "实验动物中心",
+      "url": "https://sydwzx.cqmu.edu.cn/",
+      "relation": "directory_entry"
+    }
+  ]
+}

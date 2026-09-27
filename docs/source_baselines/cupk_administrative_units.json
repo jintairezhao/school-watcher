@@ -1,0 +1,308 @@
+{
+  "id": "cupk-administrative-units-2026-09-19",
+  "root_url": "https://www.cupk.edu.cn/",
+  "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+  "reference_hash": "31db39b772585d4db856419170eef201c385b83bb0e13095fddb3feec7cee3fe",
+  "scope": "组织机构表前两列：12 个单位名称、32 个挂靠单位及 1 个共同表行；共同表行的具体挂靠范围仍待核实",
+  "scope_selector": "table td:nth-child(1), table td:nth-child(2)",
+  "category": "administrative_units",
+  "reviewed_at": "2026-09-21",
+  "review_method": "逐行独立核对单位名称、挂靠单位两列的文字、链接与行对应关系。组织人事部和党委教师工作部在同一单元格，不擅自把党校办公室或师资办公室划给其中一方，保留共同表行分组。无链接单位保持空地址，不借用备注列中相似名称的入口。备注列和各单位下属站点不在本基准范围。通过仅表示忠实呈现该表，不代表已经厘清行政隶属或整校覆盖率。 2026-09-21重新查看当前官网缓存：目录逐行名称、链接、父级保持一致；首页各栏目按当前六条更新展示地址。",
+  "entries": [
+    {
+      "id": "综合办公室",
+      "name": "综合办公室",
+      "url": "https://www.cupk.edu.cn/zhb/"
+    },
+    {
+      "id": "党委办公室",
+      "name": "党委办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "校长办公室",
+      "name": "校长办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "督查办公室",
+      "name": "督查办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "信访工作办公室",
+      "name": "信访工作办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "法律事务办公室",
+      "name": "法律事务办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "保密委员会办公室",
+      "name": "保密委员会办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "校友工作办公室",
+      "name": "校友工作办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "发展规划办公室",
+      "name": "发展规划办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "高教研究办公室",
+      "name": "高教研究办公室",
+      "parent": "综合办公室",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "人事共同表行",
+      "name": "组织人事部 / 党委教师工作部",
+      "kind": "group",
+      "url": "",
+      "relation": "shared_table_row"
+    },
+    {
+      "id": "组织人事部",
+      "name": "组织人事部",
+      "parent": "人事共同表行",
+      "url": "https://www.cupk.edu.cn/rsb/",
+      "relation": "same_table_row"
+    },
+    {
+      "id": "党委教师工作部",
+      "name": "党委教师工作部",
+      "parent": "人事共同表行",
+      "url": "https://www.cupk.edu.cn/rsb/",
+      "relation": "same_table_row"
+    },
+    {
+      "id": "党校办公室",
+      "name": "党校办公室",
+      "parent": "人事共同表行",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "师资办公室",
+      "name": "师资办公室",
+      "parent": "人事共同表行",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "党群工作部",
+      "name": "党群工作部",
+      "url": "https://www.cupk.edu.cn/dwxcb/"
+    },
+    {
+      "id": "机关党委",
+      "name": "机关党委",
+      "parent": "党群工作部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "工会",
+      "name": "工会",
+      "parent": "党群工作部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "新闻中心",
+      "name": "新闻中心",
+      "parent": "党群工作部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "纪检监察部",
+      "name": "纪检监察部",
+      "url": "https://www.cupk.edu.cn/jwjc/"
+    },
+    {
+      "id": "内部控制办公室",
+      "name": "内部控制办公室",
+      "parent": "纪检监察部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "教务部",
+      "name": "教务部",
+      "url": "https://www.cupk.edu.cn/jwb/"
+    },
+    {
+      "id": "教师教学发展中心",
+      "name": "教师教学发展中心",
+      "parent": "教务部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "质量监控与评估中心",
+      "name": "质量监控与评估中心",
+      "parent": "教务部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "创新创业学院",
+      "name": "创新创业学院",
+      "parent": "教务部",
+      "url": "https://www.cupk.edu.cn/cxcy/",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "研究生部",
+      "name": "研究生部",
+      "url": "https://www.cupk.edu.cn/yjsb/"
+    },
+    {
+      "id": "联合研究生院",
+      "name": "联合研究生院",
+      "parent": "研究生部",
+      "url": "https://www.cupk.edu.cn/yjsb/c/2024-02-25/520306.shtml",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "科技与信息部",
+      "name": "科技与信息部",
+      "url": "https://www.cupk.edu.cn/xxglb/"
+    },
+    {
+      "id": "网信办公室",
+      "name": "网信办公室",
+      "parent": "科技与信息部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "分析测试中心",
+      "name": "分析测试中心",
+      "parent": "科技与信息部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "图书馆",
+      "name": "图书馆",
+      "parent": "科技与信息部",
+      "url": "https://www.cupk.edu.cn/library/",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "档案馆",
+      "name": "档案馆",
+      "parent": "科技与信息部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "实验室安全管理办公室",
+      "name": "实验室安全管理办公室",
+      "parent": "科技与信息部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "学生工作与安全保卫部",
+      "name": "学生工作与安全保卫部",
+      "url": "https://www.cupk.edu.cn/xgybw/"
+    },
+    {
+      "id": "团委",
+      "name": "团委",
+      "parent": "学生工作与安全保卫部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "就业指导中心",
+      "name": "就业指导中心",
+      "parent": "学生工作与安全保卫部",
+      "url": "https://career.cupk.edu.cn/CupkJY/Web",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "武装部",
+      "name": "武装部",
+      "parent": "学生工作与安全保卫部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "维稳办公室",
+      "name": "维稳办公室",
+      "parent": "学生工作与安全保卫部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "学生资助管理中心",
+      "name": "学生资助管理中心",
+      "parent": "学生工作与安全保卫部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "心理健康教育及咨询中心",
+      "name": "心理健康教育及咨询中心",
+      "parent": "学生工作与安全保卫部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "合作发展部",
+      "name": "合作发展部",
+      "url": "https://www.cupk.edu.cn/hzfzb/"
+    },
+    {
+      "id": "财务部",
+      "name": "财务部",
+      "url": "https://www.cupk.edu.cn/cwb/"
+    },
+    {
+      "id": "财务核算中心",
+      "name": "财务核算中心",
+      "parent": "财务部",
+      "url": "",
+      "relation": "attached_unit"
+    },
+    {
+      "id": "校园管理部",
+      "name": "校园管理部",
+      "url": "https://www.cupk.edu.cn/cxgl/"
+    },
+    {
+      "id": "招标办公室",
+      "name": "招标办公室",
+      "parent": "校园管理部",
+      "url": "",
+      "relation": "attached_unit"
+    }
+  ]
+}

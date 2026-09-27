@@ -1,0 +1,60 @@
+name: Runtime acceptance
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['backend/**', 'scripts/**', 'tests/**', 'migrations/**', 'requirements*.txt', 'deploy/**', '.github/workflows/runtime.yml']
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.14.3'}
+      - run: python -m pip install -r requirements-test.txt
+      - run: python -m playwright install chromium
+      - run: python -m unittest discover -s tests -p "test_*.py"
+        env:
+          SECRET_KEY: isolated-ci-session-key
+  linux-postgres-and-compose:
+    runs-on: ubuntu-24.04
+    env:
+      POSTGRES_PASSWORD: isolated_ci_postgres_password
+      SECRET_KEY: isolated_ci_session_secret_never_deploy
+      FIELD_ENC_KEY: isolated_ci_field_secret_never_deploy
+      WATCHER_BROWSER_TOKEN: isolated_ci_browser_token_64_characters_for_test_environment_only
+      WATCHER_PUBLIC_ORIGIN: https://fixture.invalid
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f deploy/compose.yaml config --quiet
+      - run: docker compose -f deploy/compose.yaml build --pull
+      - run: docker compose -f deploy/compose.yaml up -d
+      - name: Create isolated test databases
+        run: |
+          docker compose -f deploy/compose.yaml exec -T db createdb -U watcher watcher_runtime_test
+          docker compose -f deploy/compose.yaml exec -T db createdb -U watcher watcher_drill_admin
+      - name: Provider and runtime tests
+        run: >-
+          docker compose -f deploy/compose.yaml run --rm --no-deps
+          -e WATCHER_TEST_POSTGRES_URI=postgresql+psycopg://watcher:isolated_ci_postgres_password@db:5432/watcher_runtime_test
+          -e WATCHER_TEST_MIGRATION_ADMIN_URI=postgresql+psycopg://watcher:isolated_ci_postgres_password@db:5432/watcher_drill_admin
+          web python -m unittest discover -s tests -p 'test_*.py'
+      - name: Chromium fixture tests in sandbox
+        run: >-
+          docker compose -f deploy/compose.yaml run --rm --no-deps
+          -e WATCHER_ORIGIN_BROKER_URL= -e WATCHER_BROWSER_EGRESS_PROXY=
+          browser python -m unittest discover -s tests -p 'test_browser_runtime_real.py'
+      - name: Gateway and worker readiness
+        run: |
+          for i in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:8080/health/ready; then exit 0; fi
+            sleep 3
+          done
+          exit 1
+      - name: Logs on failure
+        if: failure()
+        run: docker compose -f deploy/compose.yaml logs --tail 100
+      - name: Stop isolated deployment
+        if: always()
+        run: docker compose -f deploy/compose.yaml down --volumes

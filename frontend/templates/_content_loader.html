@@ -1,0 +1,15 @@
+{% macro content_loader(announcement) %}
+<div class="body-loader" data-content-id="{{ announcement.id }}" data-cached="{{ 'true' if announcement.content_html or announcement.content_cached_at else 'false' }}">
+    <div class="body-loader-content">
+    {% if announcement.content_html %}
+        {{ announcement.content_html|safe }}
+    {% elif announcement.content_cached_at and announcement.content_text %}
+        <p>{{ announcement.content_text }}</p>
+    {% endif %}
+    </div>
+    {% if not announcement.content_html and not announcement.content_cached_at %}
+    <p class="body-loader-status" role="status">正文尚未加载，可在此阅读或打开官网原文。</p>
+    <button class="text-button body-loader-retry" type="button">加载正文</button>
+    {% endif %}
+</div>
+{% endmacro %}

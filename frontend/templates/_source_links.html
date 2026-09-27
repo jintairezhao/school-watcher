@@ -1,0 +1,12 @@
+{% macro source_links(sources) %}
+{% if sources|length > 1 %}
+<details class="article-sources">
+    <summary>这篇文章出现在 {{ sources|length }} 个官网栏目</summary>
+    <ul>{% for source in sources %}<li>
+        {% if source.list_url and source.list_url.startswith(('https://', 'http://')) %}<a href="{{ source.list_url }}" target="_blank" rel="noopener noreferrer">{% endif %}
+        {{ source.school.name }} · {{ source|source_breadcrumb }}
+        {% if source.list_url and source.list_url.startswith(('https://', 'http://')) %}</a>{% endif %}
+    </li>{% endfor %}</ul>
+</details>
+{% endif %}
+{% endmacro %}

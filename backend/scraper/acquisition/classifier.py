@@ -1,0 +1,127 @@
+"""Judge page content before parsing; transport success is not content success."""
+from dataclasses import replace
+import re
+from urllib.parse import urlsplit
+
+from bs4 import BeautifulSoup
+
+from .contracts import FetchRequest, FetchResult
+
+_AUTO_CHALLENGE = ('$_ts', '/cdn-cgi/challenge-platform/', 'cf-chl-',
+                   'checking your browser', 'just a moment...', '正在检查您的浏览器')
+_MANUAL_CHALLENGE = ('verify you are human', '请完成安全验证', '请完成下方验证',
+                     '请输入验证码', '滑动滑块', '人机身份验证')
+_EMPTY = re.compile(r'^(?:暂无(?:通知|公告|新闻|内容|信息|数据|记录)|没有(?:相关)?(?:通知|公告|记录|数据)|'
+                    r'no (?:results|records|notices|data)(?: found)?)[。.!！\s]*$', re.I)
+_DATE = re.compile(r'(?:20\d{2}[-年./]\d{1,2}[-月./]\d{1,2}|\d{1,2}[-/]\d{1,2})')
+_ARTICLE = 'article, .v_news_content, #vsb_content, #vsb_content_2, .wp_articlecontent, .article-content, .article_content, .TRS_Editor'
+
+
+def _decision(raw, outcome, code='', message='', evidence=()):
+    return replace(raw, outcome=outcome, error_code=code, message=message,
+                   evidence=tuple(raw.evidence) + tuple(evidence))
+
+
+def _visible(node):
+    for current in (node, *node.parents):
+        if not hasattr(current, 'get'):
+            continue
+        style = re.sub(r'\s+', '', current.get('style', '')).lower()
+        if current.has_attr('hidden') or current.get('aria-hidden') == 'true' or 'display:none' in style or 'visibility:hidden' in style:
+            return False
+    return True
+
+
+def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
+    """Reclassify raw DOM after HTTP, browser rendering, or manual verification."""
+    headers = {str(k).lower(): str(v).lower() for k, v in raw.headers.items()}
+    html = raw.html or ''
+    lower = html[:300000].lower()
+    soup = BeautifulSoup(html, 'lxml')
+    for node in soup.select('script, style, template, noscript'):
+        node.decompose()
+    visible = soup.get_text(' ', strip=True)
+    title = soup.title.get_text(' ', strip=True).lower() if soup.title else ''
+    automatic = (headers.get('cf-mitigated') == 'challenge' or
+                 any(marker in lower for marker in _AUTO_CHALLENGE))
+    manual = any(marker in visible.lower() for marker in _MANUAL_CHALLENGE)
+    # Embedded reCAPTCHA on an ordinary contact page is not an access challenge.
+    if manual and (automatic or len(visible) < 1200 or raw.status in (403, 412)):
+        return _decision(raw, 'needs_manual', 'human_verification',
+                         '官网需要人工完成访问验证；已有通知仍保留', ('manual_challenge',))
+    if automatic:
+        rendered = raw.transport == 'browser'
+        return _decision(raw, 'needs_manual' if rendered else 'requires_render',
+                         'access_challenge', '官网当前返回访问校验页面，需要浏览器或管理员验证',
+                         ('automatic_challenge',))
+    if raw.status >= 400:
+        from backend.scraper.fetch_errors import http_failure
+        failure = http_failure(raw.status)
+        return _decision(raw, 'network_error' if failure.retryable else 'denied',
+                         'http_' + str(raw.status), str(failure))
+    if raw.outcome in ('unavailable', 'busy', 'network_error', 'denied') and raw.error_code:
+        return raw
+    if not html.strip():
+        return _decision(raw, 'needs_adapter', 'empty_response',
+                         '官网未返回可读取的网页内容；已有通知仍保留')
+    if title in ('access denied', '403 forbidden', 'forbidden', 'error', '访问被拒绝'):
+        return _decision(raw, 'denied', 'access_denied_page', '官网拒绝本次访问；已有通知仍保留')
+    fragment = urlsplit(request.url).fragment
+    if raw.transport != 'browser' and fragment.startswith(('/', '!/')):
+        return _decision(raw, 'requires_render', 'fragment_route',
+                         '该官网路由需要浏览器渲染', ('fragment_route_requires_browser',))
+    empty_evidence = ()
+    empty_selector = request.policy.get('empty_selector', '')
+    if empty_selector:
+        try:
+            nodes = soup.select(empty_selector)
+        except Exception:
+            return _decision(raw, 'needs_adapter', 'invalid_empty_selector', '来源的空列表规则需要核对')
+        if any(node.get_text(' ', strip=True) and _visible(node) for node in nodes):
+            empty_evidence = ('verified_empty_selector',)
+    if request.purpose != 'article' and any(_EMPTY.fullmatch(str(text).strip()) and _visible(text.parent)
+            for text in soup.find_all(string=True)):
+        empty_evidence = empty_evidence or ('explicit_empty_message',)
+    if request.readiness_selector:
+        try:
+            ready = soup.select(request.readiness_selector)
+        except Exception:
+            return _decision(raw, 'needs_adapter', 'invalid_readiness_selector', '来源的内容识别规则需要核对')
+        if any(_visible(node) and (node.get_text(' ', strip=True) or node.select_one('img[src], a[href]')) for node in ready):
+            return _decision(raw, 'usable', evidence=('readiness_selector',))
+        if empty_evidence:
+            return _decision(raw, 'empty', evidence=empty_evidence)
+        # A configured region is a contract, not a hint. A static news widget
+        # must not satisfy a request for a script-injected directory or list.
+        if raw.transport != 'browser' and '<script' in lower:
+            return _decision(raw, 'requires_render', 'readiness_missing',
+                             '目标内容尚未出现，需要浏览器渲染', ('readiness_selector_missing',))
+        return _decision(raw, 'needs_adapter', 'readiness_missing', '未找到配置要求的目标内容，需要核对来源规则')
+    if request.purpose == 'article':
+        if any(len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
+               for node in soup.select(_ARTICLE)):
+            return _decision(raw, 'usable', evidence=('article_region',))
+    elif request.purpose == 'directory':
+        anchors = [a for a in soup.select('a[href]') if a.get_text(' ', strip=True)
+                   and not a.get('href', '').lower().startswith(('javascript:', 'mailto:', 'tel:'))]
+        if not empty_evidence and (anchors or len(visible) >= 60):
+            return _decision(raw, 'usable', evidence=('visible_directory_content',))
+    else:
+        # List extraction remains the parser's job. Require a dated, descriptive
+        # link or a recognizable article address, not a navigation-only header.
+        for anchor in soup.select('a[href]'):
+            label = anchor.get_text(' ', strip=True) or anchor.get('title', '')
+            href = anchor.get('href', '')
+            surrounding = anchor.parent.get_text(' ', strip=True) if anchor.parent else label
+            if len(label) >= 4 and (_DATE.search(surrounding) or
+                    re.search(r'/(?:info|article|news|content)/|(?:newsDetail|ArticleID)[?=/]', href, re.I)):
+                return _decision(raw, 'usable', evidence=('publication_link',))
+    if empty_evidence:
+        return _decision(raw, 'empty', evidence=empty_evidence)
+    scripts = '<script' in lower
+    js_shell = scripts and (not visible or len(visible) < 120 or
+                           bool(re.search(r'id\s*=\s*[\"\'](?:app|root|__next)[\"\']', lower)))
+    if js_shell and raw.transport != 'browser':
+        return _decision(raw, 'requires_render', 'javascript_shell', '官网内容需要 JavaScript 渲染', ('javascript_shell',))
+    return _decision(raw, 'needs_adapter', 'content_not_recognized',
+                     '已读取官网，但尚未识别到所需内容，需要核对来源规则；已有通知仍保留')

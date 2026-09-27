@@ -1,0 +1,53 @@
+{% extends 'admin_base.html' %}
+{% set admin_section = 'source-review' %}
+{% block title %}来源核实 — 学校通知{% endblock %}
+{% block content %}
+<header class="surface-heading"><div><h1>来源核实</h1><p>核对官网机构归属及通知证据，通过检查后启用栏目。</p></div></header>
+<div class="source-review-layout">
+<div class="setting-card">
+    <div class="setting-card-body">
+        <label for="proposalState">显示状态</label>
+        <select id="proposalState" class="form-input">
+            <option value="needs_review">需要核实</option><option value="proposed">等待检查</option>
+            <option value="activated">已启用</option><option value="rejected">已拒绝</option><option value="all">全部</option>
+        </select>
+        <p id="reviewStatus" role="status" aria-live="polite">加载中…</p>
+        <div id="proposalList"></div>
+        <div class="header-actions"><button class="btn btn-outline" id="reviewPrev">上一页</button><button class="btn btn-outline" id="reviewNext">下一页</button></div>
+    </div>
+</div>
+<section id="proposalDetail" class="setting-card" hidden aria-labelledby="proposalTitle">
+    <div class="setting-card-header"><h2 id="proposalTitle">官网证据</h2></div>
+    <div class="setting-card-body">
+        <p id="proposalErrors"></p>
+        <div id="proposalEvidence"></div>
+        <button class="btn btn-outline" type="button" id="openSourcePicker">在网页中点选栏目</button>
+        <section id="sourcePicker" hidden aria-labelledby="pickerHeading">
+            <h3 id="pickerHeading">点选通知区域</h3>
+            <p class="text-muted">先选一条包含标题和日期的完整通知，再分别点选其中的标题、原文链接和日期。日期可以留空。</p>
+            <div class="header-actions">
+                <label for="pickerField">正在选择</label>
+                <select id="pickerField" class="form-input"><option value="row">完整通知行</option><option value="title">标题</option><option value="link">原文链接</option><option value="date">日期（可选）</option></select>
+                <button class="btn btn-outline" type="button" id="clearPickerField">清除此项</button>
+            </div>
+            <label for="pickerElement">调整所选区域</label>
+            <select id="pickerElement" class="form-input" disabled><option>请先点击下方网页</option></select>
+            <p id="pickerStatus" role="status" aria-live="polite"></p>
+            <dl id="pickerSelections"></dl>
+            <iframe id="pickerFrame" title="官网网页快照，仅供点选" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+            <button class="btn btn-primary" type="button" id="submitSourcePicks">提交点选并重新检查</button>
+        </section>
+        <label for="reviewNote">核实依据</label>
+        <textarea id="reviewNote" class="form-input" rows="3" maxlength="2000" placeholder="记录正式机构名称、栏目归属和核实依据"></textarea>
+        <p class="text-muted">确认归属会重新检查网页，只有检查通过的来源才会启用。</p>
+        <div class="header-actions" id="reviewActions">
+            <button class="btn btn-primary" data-review="confirm_identity">确认归属并检查</button>
+            <button class="btn btn-outline" data-review="recheck">重新检查</button>
+            <button class="btn btn-ghost" data-review="reject">拒绝此建议</button>
+        </div>
+        <details id="sourceVersions" hidden><summary>查看配置版本</summary><div id="sourceVersionList"></div><p id="sourceVersionStatus" role="status" aria-live="polite"></p></details>
+    </div>
+</section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/source-review.js') }}"></script>{% endblock %}
