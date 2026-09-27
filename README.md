@@ -30,7 +30,7 @@
 
 ### Windows / macOS 桌面版
 
-桌面分发方案提供独立应用窗口、内置本机服务和 Chromium，并支持从 GitHub Release 检查和下载安装更新。安装包、数据位置及版本发布流程见 [桌面版说明](deploy/DESKTOP.md)。首次发布以前仍可使用下方源码安装方式；实际可用安装包以 [Releases](https://github.com/jintairezhao/school-watcher/releases) 为准。
+从 [Releases](https://github.com/jintairezhao/school-watcher/releases) 下载 Windows x64 安装程序，或适合 Apple 芯片／Intel Mac 的 DMG。桌面版提供独立窗口、内置本机服务和 Chromium，无须单独安装 Python；应用菜单的「检查更新」可以下载新版并确认安装。安装说明、数据位置及版本发布流程见 [桌面版说明](deploy/DESKTOP.md)。
 
 ### Windows 本机
 
@@ -77,7 +77,7 @@ docker compose --env-file deploy/server.env -f deploy/compose.yaml up -d
 
 公网 HTTPS 反向代理、管理员设置、远程访问验证、升级和恢复步骤见 [部署与维护](deploy/README.md#linux-docker-compose)。不要把数据库、浏览器服务或 VNC 端口直接暴露到公网。
 
-Windows 是当前本机验证环境；Linux／PostgreSQL 提供部署配置与验收工作流，部署者仍需在目标环境完成启动和恢复验证。macOS 尚未验收。
+Windows 是当前本机验证环境；桌面工作流分别在 Windows、Apple 芯片 Mac 和 Intel Mac 上构建，并检查打包后的服务、Chromium 与原生窗口。Linux／PostgreSQL 提供部署配置与验收工作流，部署者仍需在目标环境完成启动和恢复验证。
 
 ## AI 配置
 

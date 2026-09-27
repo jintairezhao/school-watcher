@@ -19,6 +19,8 @@ Playwright 的 seccomp 配置基于 Docker 默认配置，并增加允许创建�
 
 ## 安装依赖与容器
 
+桌面安装包还包括 Python 运行时、pywebview、Playwright 与其 Chromium 浏览器。打包时按实际收录的 Python 模块保留依赖发行包中的许可证和版权文件，放在程序资源目录 `third-party-licenses/`；Python 的声明见 `licenses/Python-3.14.3.txt`。Chromium 的原始文件、声明和内置 credits 随浏览器目录一同保留。这些第三方组件继续遵循各自原有许可证。
+
 Python 依赖及固定版本见根目录 `requirements.txt` 和 [requirements/](requirements/README.md)。Playwright 的浏览器二进制由安装步骤另行下载；Docker 构建还会安装 PostgreSQL 客户端、Nginx、noVNC、TigerVNC、Xvfb、Squid 和字体等系统包。它们不统一改授项目主许可证。
 
 重新分发打包程序或容器时，应保留实际安装版本的许可与版权文件；不能仅凭本清单推定完整镜像只受一种许可证约束。修改依赖或引入新的内嵌资源时须同步更新声明。
