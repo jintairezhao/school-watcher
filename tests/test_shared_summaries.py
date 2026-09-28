@@ -30,9 +30,7 @@ def response(evidence, text='请符合条件的同学于2026年10月1日前提�
 
 class SharedSummaryTests(unittest.TestCase):
     def setUp(self):
-        temporary_root = Path(__file__).resolve().parents[1] / 'data' / 'test-runtime'
-        temporary_root.mkdir(parents=True, exist_ok=True)
-        self.temp = tempfile.TemporaryDirectory(dir=temporary_root)
+        self.temp = tempfile.TemporaryDirectory(prefix='watcher-summaries-')
         root = Path(self.temp.name)
         self.app = create_app({'TESTING': True, 'SECRET_KEY': 'summary-test',
             'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + str(root / 'main.db'),

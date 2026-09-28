@@ -150,6 +150,12 @@ class DatabasePortabilityTests(unittest.TestCase):
             app = self.app(uri)
             with app.app_context():
                 self.verify_business(ids)
+                self.assertEqual(AppConfig.get('check_interval'), '30')
+                review = AppConfig.query.filter_by(key='ai_restore_review_required').one()
+                self.assertEqual(review.value, '1')
+                config = AppConfig(key='after_migration', value='preserved')
+                db.session.add(config); db.session.commit()
+                self.assertGreater(config.id, review.id)
                 from backend.services.data_transfer import export_data, read_backup, merge_data
                 portable = export_data()
                 try:

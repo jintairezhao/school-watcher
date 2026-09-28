@@ -109,8 +109,8 @@ def sqlite_to_postgres(source, target_url, destination, *, catalog=None, stopped
                         writer.execute(sessions.update().where(sessions.c.status.in_(['required', 'pending', 'opening', 'active', 'verifying']))
                             .values(status='expired', generation=None, runtime_id=None,
                                     error_message='数据库已搬迁，请重新发起访问验证'))
-                        from backend.database.provider_backup import fence_restored_ai
-                        fence_restored_ai(writer)
+                        # Explicit copied IDs do not advance PostgreSQL sequences.
+                        # Repair them before any cleanup step inserts generated IDs.
                         for table in db.metadata.sorted_tables:
                             for column in table.primary_key:
                                 if not isinstance(column.type, sa.Integer):
@@ -121,6 +121,8 @@ def sqlite_to_postgres(source, target_url, destination, *, catalog=None, stopped
                                     maximum = writer.execute(sa.select(sa.func.max(column))).scalar()
                                     writer.execute(sa.text('SELECT setval(CAST(:seq AS regclass), :value, :called)'),
                                         {'seq': sequence, 'value': maximum or 1, 'called': maximum is not None})
+                        from backend.database.provider_backup import fence_restored_ai
+                        fence_restored_ai(writer)
                         version = ScriptDirectory(str(ROOT_DIR / 'migrations')).get_current_head()
                         writer.execute(sa.text('CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL PRIMARY KEY)'))
                         writer.execute(sa.text('INSERT INTO alembic_version VALUES (:version)'), {'version': version})

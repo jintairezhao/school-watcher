@@ -19,9 +19,7 @@ from backend.worker import dispatch
 
 class OnboardingIntegrationTests(unittest.TestCase):
     def setUp(self):
-        root = Path(__file__).resolve().parents[1] / 'data' / 'test-runtime'
-        root.mkdir(parents=True, exist_ok=True)
-        self.temp = tempfile.TemporaryDirectory(dir=root)
+        self.temp = tempfile.TemporaryDirectory(prefix='watcher-onboarding-')
         path = Path(self.temp.name)
         self.app = create_app({'TESTING': True, 'SECRET_KEY': 'integration-test',
             'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + (path / 'db.sqlite3').as_posix(),

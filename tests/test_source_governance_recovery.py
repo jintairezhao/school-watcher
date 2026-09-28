@@ -18,9 +18,7 @@ from backend.services import source_governance as governance
 
 class SourceGovernanceRecoveryTests(unittest.TestCase):
     def setUp(self):
-        parent = ROOT / 'data' / 'test-runtime'
-        parent.mkdir(parents=True, exist_ok=True)
-        self.tmp = tempfile.TemporaryDirectory(dir=parent)
+        self.tmp = tempfile.TemporaryDirectory(prefix='watcher-governance-')
         self.addCleanup(self.tmp.cleanup)
         self.app = create_app({'TESTING': True, 'SECRET_KEY': 'isolated-review',
             'SQLALCHEMY_DATABASE_URI': 'sqlite://',

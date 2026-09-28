@@ -18,6 +18,7 @@ class DesktopLocalTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.app = create_app({'TESTING': True, 'SECRET_KEY': 'isolated-local-test',
             'SQLALCHEMY_DATABASE_URI': 'sqlite://', 'DESKTOP_MODE': True, 'DESKTOP_TOKEN': 'a' * 64,
+            'DESKTOP_ORIGIN': 'http://localhost', 'SESSION_COOKIE_SECURE': False,
             'SOURCE_CATALOG_PATH': str(Path(self.temp.name) / 'catalog.sqlite3')})
         self.ctx = self.app.app_context()
         self.ctx.push()

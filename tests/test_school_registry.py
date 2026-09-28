@@ -16,9 +16,7 @@ from backend.services.school_registry import ensure_school, rename_school, stabl
 
 class SchoolRegistryTests(unittest.TestCase):
     def setUp(self):
-        root = Path(__file__).resolve().parents[1] / 'data' / 'test-runtime'
-        root.mkdir(parents=True, exist_ok=True)
-        self.tmp = tempfile.TemporaryDirectory(dir=root)
+        self.tmp = tempfile.TemporaryDirectory(prefix='watcher-registry-')
         self.app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI':
                               'sqlite:///' + (Path(self.tmp.name) / 'registry.sqlite3').as_posix()})
         with self.app.app_context():
