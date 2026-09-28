@@ -13,7 +13,7 @@ class LocationTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.pref = self.root / 'preferences.json'
         self.env = patch.dict(os.environ, {'WATCHER_LOCATION_SETTINGS': str(self.pref)})
         self.env.start(); self.addCleanup(self.env.stop)
