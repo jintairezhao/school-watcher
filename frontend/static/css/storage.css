@@ -28,3 +28,17 @@
     .storage-actions { align-items: stretch; }
     .storage-actions .btn { flex: 1 1 180px; }
 }
+
+.storage-table td:nth-child(2) { text-align:right; font-variant-numeric:tabular-nums; }
+.storage-table thead th:nth-child(2) { text-align:right; }
+.storage-table td:last-child { width:92px; padding-left:20px; }
+.storage-location { display:grid; grid-template-columns:72px minmax(0,1fr) auto auto; gap:10px; align-items:center; margin-block:12px; }
+.storage-location .form-input { min-width:0; width:100%; font-size:var(--text-control); text-overflow:ellipsis; }
+.storage-number { display:flex; gap:10px; align-items:center; width:100%; }
+.storage-number input { flex:1; min-width:0; }
+.storage-number span { color:var(--color-text-secondary); }
+@media(max-width:600px) {
+ .storage-location { grid-template-columns:minmax(0,1fr) auto auto; }
+ .storage-location label { grid-column:1/-1; }
+ .storage-table td:last-child { padding-left:8px; width:auto; }
+}

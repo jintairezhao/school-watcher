@@ -35,9 +35,10 @@ class DiscoveryCache(Inventory):
 
     def trim(self, *, all_cache=False):
         from flask import has_app_context
-        from backend.services.storage_policy import policy
+        from backend.services.storage_policy import policy, retention_cutoff
         days = policy()['discovery_cache_days'] if has_app_context() else 7
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat(timespec='seconds')
+        limit = policy()['discovery_cache_mb'] * 1048576 if has_app_context() else self.max_bytes
+        cutoff = retention_cutoff(days, datetime.now(timezone.utc)).isoformat(timespec='seconds')
         with self.connect() as c:
             before = c.execute('SELECT count(*) FROM snapshots').fetchone()[0]
             if all_cache:
@@ -48,7 +49,7 @@ class DiscoveryCache(Inventory):
             c.execute('DELETE FROM edge_history')
             size = c.execute('SELECT coalesce(sum(length(body_gzip)),0) FROM snapshots').fetchone()[0]
             for row in c.execute('SELECT site_key,url,length(body_gzip) size FROM snapshots ORDER BY checked_at').fetchall():
-                if size <= self.max_bytes // 2:
+                if not limit or size <= limit // 2:
                     break
                 c.execute('DELETE FROM snapshots WHERE site_key=? AND url=?', (row['site_key'], row['url']))
                 size -= row['size']
@@ -57,7 +58,7 @@ class DiscoveryCache(Inventory):
         # be rediscovered; retain pending tasks and published catalogue evidence.
         with self.connect() as c:
             c.execute('PRAGMA wal_checkpoint(TRUNCATE)')
-        if self.path.stat().st_size > self.max_bytes:
+        if limit and self.path.stat().st_size > limit:
             with self.connect() as c:
                 completed = c.execute("SELECT site_key,url FROM pages WHERE state NOT IN ('pending','running') ORDER BY checked_at").fetchall()
                 for row in completed[:max(1, len(completed) // 2)]:
@@ -66,7 +67,7 @@ class DiscoveryCache(Inventory):
                     c.execute('DELETE FROM pages WHERE site_key=? AND url=?', tuple(row))
             with self.connect() as c:
                 c.execute('VACUUM')
-            if self.path.stat().st_size > self.max_bytes:
+            if self.path.stat().st_size > limit:
                 raise RuntimeError('调查缓存已达到容量上限，已保存进度，请先清理后继续')
         return deleted
 

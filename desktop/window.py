@@ -73,7 +73,9 @@ class UpdateAPI:
             self._state.update(phase='downloading', message='正在下载安装包…', progress=0)
             def progress(done, total):
                 self._state['progress'] = round(done * 100 / total)
-            self._path = download_update(self._update, self._data, progress)
+            from desktop.locations import effective_locations
+            self._path = download_update(self._update, self._data, progress,
+                                         download_dir=effective_locations(self._data)['downloads'])
             self._state.update(phase='ready', message='下载完成，完整性校验通过', progress=100)
         except UpdateError as exc:
             self._state.update(phase='download-error', message=str(exc))
@@ -114,7 +116,7 @@ class UpdateAPI:
             self._state.update(phase='download-error', message=str(exc))
         except Exception:
             logging.exception('Could not open installer')
-            self._state.update(phase='error', message='未能打开安装程序，请在数据文件夹的 updates 目录中手动打开。')
+            self._state.update(phase='error', message='未能打开安装程序，请在文件位置中打开更新包目录后重试。')
         finally:
             self._lock.release()
         return self.state()
@@ -136,6 +138,10 @@ def run_window(runtime, smoke_test=False):
 
     update_window = None
     component_window = None
+    update_api = None
+    location_busy = threading.Lock()
+    def locations():
+        window.load_url(runtime.address + '/admin/storage#locations')
     def components():
         nonlocal component_window
         if component_window in webview.windows:
@@ -153,12 +159,13 @@ def run_window(runtime, smoke_test=False):
             html=(resource_root() / 'desktop' / 'ui' / 'components.html').read_text(encoding='utf-8'),
             js_api=ComponentsAPI(), width=560, height=390, min_size=(480, 350), background_color='#f5f5f7')
     def updates():
-        nonlocal update_window
+        nonlocal update_window, update_api
         if update_window in webview.windows:
             update_window.restore()
             update_window.show()
             return
         api = UpdateAPI(runtime.data_dir, quit_app)
+        update_api = api
         update_window = webview.create_window('检查更新 · School Watcher',
             html=(resource_root() / 'desktop' / 'ui' / 'updates.html').read_text(encoding='utf-8'),
             js_api=api, width=560, height=500, min_size=(480, 420), background_color='#f5f5f7')
@@ -188,20 +195,89 @@ def run_window(runtime, smoke_test=False):
                 components()
             elif action == 'data':
                 open_data()
+            elif action == 'locations':
+                locations()
             else:
                 return False
             return True
 
+        def location_state(self):
+            if not self._allowed(): return None
+            from desktop.locations import location_state
+            return location_state(runtime.data_dir)
+
+        def choose_location(self, kind):
+            if not self._allowed() or kind not in ('data', 'cache', 'backups', 'downloads'):
+                return None
+            from desktop.locations import effective_locations
+            choices = window.create_file_dialog(webview.FileDialog.FOLDER, directory=str(effective_locations(runtime.data_dir)[kind]))
+            return str(choices[0]) if choices else None
+
+        def open_location(self, kind):
+            if not self._allowed() or kind not in ('data', 'cache', 'backups', 'downloads', 'program'):
+                return False
+            from desktop.locations import location_state
+            path = Path(location_state(runtime.data_dir)[kind])
+            path.mkdir(parents=True, exist_ok=True)
+            if os.name == 'nt': os.startfile(path)
+            elif sys.platform == 'darwin': subprocess.Popen(['open', str(path)])
+            return True
+
+        def change_locations(self, values):
+            if not self._allowed(): return {'error': '无法更改文件位置'}
+            if not location_busy.acquire(blocking=False): return {'error': '文件操作正在进行，请稍候。'}
+            from desktop.locations import validate_locations
+            update_locked = False
+            try:
+                validate_locations(values, runtime.data_dir)
+                if update_api:
+                    update_locked = update_api._lock.acquire(blocking=False)
+                    if not update_locked:
+                        return {'error': '安装包正在下载，请完成后再更改位置。'}
+                if not window.create_confirmation_dialog('更改文件位置', '将保存数据、迁移并重启。原目录会保留一份副本。'):
+                    return {'cancelled': True}
+                runtime.requested_locations = values
+                quit_app()
+                return {'restarting': True}
+            except (ValueError, OSError) as exc:
+                return {'error': str(exc)}
+            finally:
+                if not getattr(runtime, 'requested_locations', None):
+                    if update_locked: update_api._lock.release()
+                    location_busy.release()
+
+        def reinstall(self):
+            if not self._allowed(): return {'error': '无法打开安装程序'}
+            if not location_busy.acquire(blocking=False): return {'error': '文件操作正在进行，请稍候。'}
+            update_locked = False
+            try:
+                if update_api:
+                    update_locked = update_api._lock.acquire(blocking=False)
+                    if not update_locked: return {'error': '安装包正在下载，请稍候。'}
+                from desktop.locations import effective_locations
+                update = check_update(allow_current=True)
+                if not update: raise UpdateError('暂时没有可用的安装程序。')
+                package = download_update(update, runtime.data_dir, download_dir=effective_locations(runtime.data_dir)['downloads'])
+                api = UpdateAPI(runtime.data_dir, quit_app)
+                api._path, api._update, api._window = package, update, window
+                result = api.install()
+                return {'error': result['message']} if result['phase'] in ('error', 'download-error') else result
+            except (UpdateError, OSError) as exc:
+                return {'error': str(exc)}
+            finally:
+                if update_locked: update_api._lock.release()
+                location_busy.release()
+
         def resize_window(self, width, height):
             if not self._allowed() or state['maximized'] or type(width) not in (int, float) or type(height) not in (int, float):
                 return False
-            window.resize(max(980, min(10000, int(width))), max(680, min(10000, int(height))))
+            window.resize(max(760, min(10000, int(width))), max(520, min(10000, int(height))))
             return True
 
     state = {'maximized': False}
     window = webview.create_window(APP_NAME,
         html=(resource_root() / 'desktop' / 'ui' / 'loading.html').read_text(encoding='utf-8'),
-        width=1380, height=900, min_size=(980, 680), text_select=True, zoomable=True,
+        width=1280, height=820, min_size=(760, 520), text_select=True, zoomable=True,
         background_color='#f5f5f7', hidden=smoke_test, js_api=WindowAPI(),
         frameless=os.name == 'nt', easy_drag=False)
     def maximized():
@@ -211,7 +287,7 @@ def run_window(runtime, smoke_test=False):
     window.events.maximized += maximized
     window.events.restored += restored
     menu = [Menu('School Watcher', [MenuAction('检查更新…', updates), MenuAction('采集组件…', components),
-        MenuAction('打开数据文件夹', open_data), MenuAction('退出', quit_app)])]
+        MenuAction('文件位置…', locations), MenuAction('打开数据文件夹', open_data), MenuAction('退出', quit_app)])]
 
     token = secrets.token_hex(32)
     class ActivationHandler(BaseHTTPRequestHandler):
@@ -235,6 +311,14 @@ def run_window(runtime, smoke_test=False):
     smoke_error = []
     def prepare():
         try:
+            if os.name == 'nt':
+                deadline = time.monotonic() + 30
+                while time.monotonic() < deadline and (window.native is None or not window.native.IsHandleCreated):
+                    time.sleep(.05)
+                if window.native is None or not window.native.IsHandleCreated:
+                    raise RuntimeError('窗口初始化超时')
+                from desktop.window_bounds import install_work_area
+                install_work_area(window)
             address = runtime.start()
             window.load_url(runtime.open_url())
             if smoke_test:
@@ -261,6 +345,23 @@ def run_window(runtime, smoke_test=False):
                                 time.sleep(.1)
                             if not window.run_js('window.__actionRejected === true'):
                                 raise RuntimeError('Native action allowlist did not reject an unknown action.')
+                            from System import Action
+                            from System.Windows.Forms import Screen
+                            window.native.Invoke(Action(lambda: setattr(window.native, 'Opacity', 0)))
+                            window.show()
+                            window.maximize()
+                            time.sleep(.3)
+                            work = Screen.FromHandle(window.native.Handle).WorkingArea
+                            bounds = window.native.Bounds
+                            if not work.Contains(bounds):
+                                raise RuntimeError('Maximized window covered the taskbar.')
+                            window.restore()
+                            window.run_js('window.pywebview.api.location_state().then(v => {window.__locationsChecked=!!v.data && !!v.cache && !!v.backups && !!v.downloads;})')
+                            until = time.monotonic() + 10
+                            while time.monotonic() < until and not window.run_js('window.__locationsChecked === true'):
+                                time.sleep(.1)
+                            if not window.run_js('window.__locationsChecked === true'):
+                                raise RuntimeError('Native file locations bridge did not respond.')
                             print('Native check: frameless controls and resize bridge verified', flush=True)
                         return
                     time.sleep(.2)

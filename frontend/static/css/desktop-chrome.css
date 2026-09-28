@@ -1,17 +1,37 @@
-body { padding-top:36px; }
-.desktop-chrome { position:fixed; inset:0 0 auto; height:36px; display:flex; z-index:1000; color:var(--color-text); background:var(--color-surface); user-select:none; }
-.desktop-drag { flex:1; min-width:40px; }
+/* One app bar: navigation and native controls share the same vertical center. */
+.desktop-chrome { display:flex; align-self:stretch; margin-left:10px; color:var(--color-text); user-select:none; }
+.desktop-drag { flex:1; align-self:stretch; min-width:28px; }
 .desktop-resize { position:fixed; right:0; bottom:0; width:12px; height:12px; cursor:nwse-resize; z-index:1000; }
-.desktop-chrome button,.desktop-chrome summary { display:grid; place-items:center; width:46px; height:36px; padding:0; border:0; border-radius:0; color:inherit; background:transparent; cursor:pointer; }
+.desktop-chrome button,.desktop-chrome summary { display:grid; place-items:center; width:44px; height:56px; padding:0; border:0; border-radius:0; color:inherit; background:transparent; cursor:pointer; }
 .desktop-chrome svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5; }
 .desktop-chrome button:hover,.desktop-chrome summary:hover { background:var(--color-surface-2); }
 .desktop-chrome .desktop-close:hover { background:#c42b1c; color:#fff; }
 .desktop-menu { position:relative; }
 .desktop-menu summary::-webkit-details-marker { display:none; }
-.desktop-menu>div { position:absolute; right:0; top:36px; width:190px; padding:6px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; }
+.desktop-menu>div { position:absolute; right:0; top:52px; z-index:1100; width:190px; padding:6px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; box-shadow:0 6px 20px #0002; }
 .desktop-menu>div>button { width:100%; height:44px; padding:0 12px; display:flex; font:inherit; font-size:var(--text-control,.875rem); border-radius:4px; }
-body .navbar { top:36px; }
-body .admin-sidebar { top:36px; height:calc(100dvh - 36px); }
-body .main-content--inbox { height:calc(100dvh - var(--navbar-height) - 36px); }
-body .source-panel { top:calc(var(--navbar-height) + 36px); }
-@media (max-width:900px) { body .admin-sidebar { height:auto; } }
+body .nav-inner { padding-right:0; gap:0; height:56px; }
+body .nav-brand { font-size:18px; flex-shrink:0; }
+body .nav-brand .brand-mark svg { width:22px; height:22px; }
+body .nav-actions { margin-left:12px; flex-shrink:0; }
+body .nav-search { flex:0 1 280px; }
+.desktop-admin-bar { position:fixed; inset:0 0 auto; display:flex; align-items:center; height:56px; padding-left:24px; background:var(--color-surface); border-bottom:1px solid var(--color-border); z-index:1000; }
+.desktop-app-name { color:var(--color-text); font-size:18px; font-weight:650; text-decoration:none; }
+.desktop-app-section { margin-left:24px; color:var(--color-text-secondary); font-size:14px; }
+body.page-admin { padding-top:56px; }
+body .admin-sidebar { top:56px; height:calc(100dvh - 56px); }
+body .admin-brand { display:none; }
+@media(max-width:900px) { body .admin-sidebar { height:auto; } }
+@media(max-width:780px) {
+ body .nav-inner { padding-left:12px; }
+ body .nav-links { margin-left:12px; gap:12px; }
+ body .nav-search { display:none; }
+ body .nav-actions { margin-left:4px; }
+ .desktop-chrome { margin-left:4px; }
+}
+@media(max-width:600px) {
+ body .nav-brand .brand-text { display:none; }
+ .desktop-chrome button,.desktop-chrome summary { width:34px; }
+ body .nav-actions { gap:4px; }
+ .desktop-drag { min-width:8px; }
+}

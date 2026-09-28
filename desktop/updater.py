@@ -104,13 +104,13 @@ class Update:
         return asdict(self)
 
 
-def check_update(current=VERSION, target=None, opener=open_url):
+def check_update(current=VERSION, target=None, opener=open_url, allow_current=False):
     try:
         release = json.loads(read_bytes(f'https://api.github.com/repos/{REPOSITORY}/releases/latest', 1024 * 1024, opener))
         if not isinstance(release, dict) or release.get('draft') or release.get('prerelease'):
             raise UpdateError('暂时还没有正式发布的更新。')
         tag = release.get('tag_name', '')
-        if version_tuple(tag) <= version_tuple(current):
+        if version_tuple(tag) < version_tuple(current) or (version_tuple(tag) == version_tuple(current) and not allow_current):
             return None
         version = tag.removeprefix('v')
         name = asset_name(version, target)
@@ -134,11 +134,11 @@ def file_hash(path):
         return hashlib.file_digest(source, 'sha256').hexdigest()
 
 
-def download_update(update, data_dir, progress=None, opener=open_url):
+def download_update(update, data_dir, progress=None, opener=open_url, download_dir=None):
     # Names are derived locally, never accepted as arbitrary release-provided paths.
     if update.name not in [asset_name(update.version, p) for p in ('windows-x64', 'macos-x64', 'macos-arm64')]:
         raise UpdateError('安装包名称不合法。')
-    folder = Path(data_dir) / 'updates' / update.version
+    folder = (Path(download_dir) if download_dir else Path(data_dir) / 'updates') / update.version
     folder.mkdir(parents=True, exist_ok=True)
     target = folder / update.name
     if target.exists() and target.stat().st_size == update.size and file_hash(target) == update.sha256:

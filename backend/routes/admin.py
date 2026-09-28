@@ -33,7 +33,8 @@ def api_log_retention():
     if request.method == 'PUT':
         data = request.get_json(silent=True)
         days = data.get('days') if isinstance(data, dict) else None
-        if type(days) is not int or days not in RETENTION_CHOICES:
+        from backend.services.storage_policy import valid_limit
+        if not valid_limit(days):
             return jsonify(error='请选择有效的记录保留时长'), 400
         AppConfig.set('scrape_log_retention_days', str(days))
     return jsonify(days=retention_days(), choices=list(RETENTION_CHOICES),

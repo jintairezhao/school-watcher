@@ -20,7 +20,7 @@ def check():
     fixture = StorageManagementTests()
     fixture.setUp()
     server = None
-    output = ROOT / '.impeccable' / 'review'
+    output = ROOT / '.local' / 'onboarding-checks' / 'storage-review'
     output.mkdir(parents=True, exist_ok=True)
     try:
         fixture.article('fixture')
@@ -38,14 +38,14 @@ def check():
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.goto(base + '/admin/storage')
             expect(page.get_by_role('heading', name='存储管理', exact=True)).to_be_visible()
-            expect(page.locator('#bodyCacheDays')).to_have_value('30')
-            page.locator('#bodyCacheDays').fill('90')
+            expect(page.locator('#policy-body_cache_days')).to_have_value('30')
+            page.locator('#policy-body_cache_days').fill('90')
             page.locator('[data-cleanup="expired"]').click()
             expect(page.locator('#cleanupStatus')).to_contain_text('请先保存')
             page.get_by_role('button', name='保存保留规则').click()
             expect(page.locator('#policyStatus')).to_contain_text('保留规则已保存')
             page.reload()
-            expect(page.locator('#bodyCacheDays')).to_have_value('90')
+            expect(page.locator('#policy-body_cache_days')).to_have_value('90')
 
             # A cancel must make no request; accept then retain the notification row.
             page.once('dialog', lambda dialog: dialog.dismiss())

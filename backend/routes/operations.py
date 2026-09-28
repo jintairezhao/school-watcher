@@ -75,6 +75,24 @@ def storage():
     files = [{'name': str(p.relative_to(root)), 'bytes': p.stat().st_size,
               'kind': 'governance_evidence' if p.resolve().is_relative_to(governance_root) else ''}
              for p in root.rglob('*') if p.is_file() and not p.is_symlink()]
+    # Relocated files still count toward usage, without counting nested paths twice.
+    known = {p.resolve() for p in root.rglob('*') if p.is_file() and not p.is_symlink()}
+    discovery = Path(current_app.config['DISCOVERY_CACHE_PATH']).resolve()
+    fetch_root = Path(current_app.config['FETCH_EVIDENCE_DIR']).resolve()
+    backup_root = Path(current_app.config['BACKUP_DIR']).resolve()
+    extra = [*discovery.parent.glob(discovery.name + '*')]
+    for folder in (fetch_root, backup_root):
+        if folder.is_dir(): extra.extend(folder.rglob('*'))
+    for path in extra:
+        if path.is_file() and not path.is_symlink() and path.resolve() not in known:
+            prefix = 'backups/' if path.resolve().is_relative_to(backup_root) else 'fetch-evidence/' if path.resolve().is_relative_to(fetch_root) else ''
+            files.append({'name': prefix + path.name, 'bytes': path.stat().st_size, 'kind': ''})
+            known.add(path.resolve())
+    for file in files:
+        actual = (root / file['name']).resolve()
+        if actual.is_relative_to(backup_root): file['name'] = 'backups/' + actual.name
+        elif actual.is_relative_to(fetch_root): file['name'] = 'fetch-evidence/' + actual.name
+        elif actual.parent == discovery.parent and actual.name.startswith(discovery.name): file['name'] = 'discovery_cache.' + actual.name
     governance_bytes = sum(p.stat().st_size for p in governance_root.glob('*.html.gz')
                            if p.is_file() and not p.is_symlink()) if governance_root.exists() else 0
     outside_governance_bytes = governance_bytes if not governance_root.is_relative_to(root.resolve()) else 0
@@ -90,8 +108,8 @@ def storage():
         database_bytes = db.session.execute(text('SELECT pg_database_size(current_database())')).scalar_one()
     return jsonify(total_bytes=sum(p['bytes'] for p in files) + (database_bytes or 0) + outside_governance_bytes, saved_body_bytes=saved_bytes,
                    policy=policy(), announcement_count=Announcement.query.count(),
-                   body_cache_limit=current_app.config['BODY_CACHE_BYTES'],
-                   discovery_cache_limit=100 * 1024 * 1024, files=files,
+                   body_cache_limit=policy()['body_cache_mb'] * 1048576,
+                   discovery_cache_limit=policy()['discovery_cache_mb'] * 1048576, files=files,
                    fetch_evidence_bytes=evidence_bytes, source_governance_evidence_bytes=governance_bytes, database_bytes=database_bytes)
 
 
@@ -136,10 +154,11 @@ def update_storage_policy():
 def cleanup_storage():
     from backend.services.storage_policy import cleanup
     data = request.get_json(silent=True)
-    if not isinstance(data, dict) or data.get('mode') not in ('expired', 'all_cache'):
+    if not isinstance(data, dict) or data.get('mode') not in ('expired', 'all_cache', 'body', 'discovery', 'fetch', 'governance', 'backups', 'logs'):
         return jsonify(error='请选择按已保存规则清理或清空可清理缓存'), 400
     try:
-        return jsonify(cleanup(all_cache=data['mode'] == 'all_cache'))
+        category = data['mode'] if data['mode'] not in ('expired', 'all_cache') else None
+        return jsonify(cleanup(all_cache=data['mode'] == 'all_cache', category=category))
     except Timeout:
         return jsonify(error='正在检查学校来源，请完成后再清理；本次未执行清理'), 409
     except (SQLAlchemyError, OSError, RuntimeError):
@@ -154,6 +173,17 @@ def export_storage():
     from backend.services.data_transfer import export_data
     try:
         archive = export_data()
+        if current_app.config.get('DESKTOP_MODE') and request.args.get('save') == '1':
+            import shutil
+            folder = Path(current_app.config['BACKUP_DIR'])
+            folder.mkdir(parents=True, exist_ok=True)
+            name = 'school-watcher-data-' + datetime.utcnow().strftime('%Y%m%dT%H%M%S%f') + '.zip'
+            try:
+                with (folder / name).open('xb') as output:
+                    shutil.copyfileobj(archive, output)
+            finally:
+                archive.close()
+            return jsonify(saved=True, name=name)
         response = send_file(archive, mimetype='application/zip', as_attachment=True,
             download_name='school-watcher-data-' + datetime.utcnow().strftime('%Y%m%dT%H%M%SZ') + '.zip')
         response.headers['Cache-Control'] = 'no-store'

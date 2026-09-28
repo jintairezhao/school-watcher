@@ -30,7 +30,7 @@ def create_app(test_config=None):
     app.config.update(
         SESSION_COOKIE_SECURE=os.environ.get('WATCHER_ENV') == 'production',
         SOURCE_CATALOG_PATH=str(DATA_DIR / 'source_catalog.sqlite3'),
-        DISCOVERY_CACHE_PATH=str(DATA_DIR / 'discovery_cache.sqlite3'),
+        DISCOVERY_CACHE_PATH=os.environ.get('WATCHER_DISCOVERY_CACHE_PATH', str(DATA_DIR / 'discovery_cache.sqlite3')),
         BODY_CACHE_BYTES=150 * 1024 * 1024,
         BODY_CACHE_DAYS=30,
         BACKUP_DIR=os.environ.get('WATCHER_BACKUP_DIR', str(DATA_DIR / 'backups')),

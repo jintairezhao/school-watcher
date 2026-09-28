@@ -94,11 +94,14 @@ def create_backup():
     return {'backup': target.name, 'bytes': target.stat().st_size, 'replicated': bool(replica)}
 
 
-def rotate(folder):
+def rotate(folder, *, clear=False):
     from backend.services.storage_policy import policy
     deleted = 0
     # Only this application's generated backups; never recurse or remove arbitrary files.
-    for old in sorted(folder.glob('watcher-*.zip'), reverse=True)[policy()['backup_keep_count']:]:
+    keep = 0 if clear else policy()['backup_keep_count']
+    if keep == 0 and not clear:
+        return 0
+    for old in sorted(folder.glob('watcher-*.zip'), reverse=True)[keep:]:
         if old.resolve().parent != folder.resolve():
             raise ValueError('Backup path escaped its directory')
         old.unlink()

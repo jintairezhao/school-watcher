@@ -21,15 +21,15 @@ def resource_root():
 
 
 def user_data_dir():
-    if sys.platform == 'win32':
-        return Path(os.environ.get('LOCALAPPDATA', Path.home() / 'AppData' / 'Local')) / 'SchoolWatcher'
-    if sys.platform == 'darwin':
-        return Path.home() / 'Library' / 'Application Support' / 'School Watcher'
-    return Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local' / 'share')) / 'school-watcher'
+    from desktop.locations import configured_data_dir
+    return configured_data_dir()
 
 
 def configure(data_dir):
     data_dir = Path(data_dir).resolve()
+    previous = os.environ.get('WATCHER_DATA_DIR')
+    if previous and os.environ.get('PLAYWRIGHT_BROWSERS_PATH') == str(Path(previous) / 'browsers'):
+        os.environ['PLAYWRIGHT_BROWSERS_PATH'] = str(data_dir / 'browsers')
     data_dir.mkdir(parents=True, exist_ok=True)
     env_file = data_dir / '.env'
     from dotenv import load_dotenv
@@ -44,6 +44,11 @@ def configure(data_dir):
     os.environ.setdefault('WATCHER_BROWSER_TOKEN', secrets.token_hex(32))
     # Keep downloaded components outside the installation so app updates retain them.
     os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH', str(data_dir / 'browsers'))
+    from desktop.locations import effective_locations
+    locations = effective_locations(data_dir)
+    os.environ['WATCHER_DISCOVERY_CACHE_PATH'] = str(locations['cache'] / 'discovery_cache.sqlite3')
+    os.environ['WATCHER_FETCH_EVIDENCE_DIR'] = str(locations['cache'] / 'fetch-evidence')
+    os.environ['WATCHER_BACKUP_DIR'] = str(locations['backups'])
     return data_dir
 
 

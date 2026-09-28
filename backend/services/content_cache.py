@@ -105,10 +105,10 @@ def fetch_content(ann_id):
 
 
 def prune_content(*, all_cache=False):
-    from backend.services.storage_policy import policy
+    from backend.services.storage_policy import policy, retention_cutoff, capacity_bytes
     days = policy()['body_cache_days']
-    cutoff = datetime.utcnow() - timedelta(days=days) if days else None
-    limit = current_app.config.get('BODY_CACHE_BYTES', 150 * 1024 * 1024)
+    cutoff = retention_cutoff(days, datetime.utcnow()) if days else None
+    limit = capacity_bytes('body_cache_mb', 'BODY_CACHE_BYTES', 150 * 1048576)
     pinned = exists().where(UserAnnouncementState.announcement_id == Announcement.id,
                             UserAnnouncementState.starred.is_(True))
     accessed = db.func.coalesce(Announcement.content_accessed_at, Announcement.content_cached_at, Announcement.created_at)
@@ -119,7 +119,7 @@ def prune_content(*, all_cache=False):
     total = sum(r.content_bytes for r in rows)
     expired = []
     for row in rows:
-        if all_cache or total > limit or (cutoff and (row.accessed is None or row.accessed < cutoff)):
+        if all_cache or (limit and total > limit) or (cutoff and (row.accessed is None or row.accessed < cutoff)):
             expired.append(row.id)
             total -= row.content_bytes
     evicted = 0

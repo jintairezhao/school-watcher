@@ -8,68 +8,66 @@
 
 {% block content %}
 <section class="storage-page">
-<header class="surface-heading"><div><h1>存储管理</h1><p>管理保留时长、清理缓存，并备份或合并历史通知。</p></div></header>
-<p>数据目录合计 <strong id="storageTotal">{{ '%.1f'|format(storage.total_bytes / 1048576) }} MB</strong>，共 <strong id="announcementCount">{{ storage.announcement_count }}</strong> 条通知。</p>
+<header class="surface-heading"><h1>存储管理</h1></header>
+<p>已用空间 <strong id="storageTotal">{{ '%.1f'|format(storage.total_bytes / 1048576) }} MB</strong>，共 <strong id="announcementCount">{{ storage.announcement_count }}</strong> 条通知。</p>
 <table class="storage-table">
-    <thead><tr><th scope="col">用途</th><th scope="col">已用空间</th></tr></thead>
-    <tbody>{% for name, size in groups.items() %}<tr><th scope="row">{{ name }}</th><td data-storage-group="{{ name }}">{{ '%.1f'|format(size / 1048576) }} MB</td></tr>{% endfor %}</tbody>
+    <thead><tr><th scope="col">用途</th><th scope="col">已用空间</th><th scope="col"><span class="sr-only">操作</span></th></tr></thead>
+    <tbody>
+    {% set cleanup_modes = {'调查缓存':'discovery', '网页抓取缓存':'fetch', '栏目核实证据':'governance', '备份与回退资料':'backups'} %}
+    {% for name, size in groups.items() %}
+    <tr><th scope="row">{{ name }}</th><td data-storage-group="{{ name }}">{{ '%.1f'|format(size / 1048576) }} MB</td>
+        <td>{% if name in cleanup_modes %}<button class="btn btn-outline btn-sm" type="button" data-cleanup="{{ cleanup_modes[name] }}" aria-label="清理{{ name }}">清理</button>{% endif %}</td></tr>
+    {% endfor %}
+    <tr><th scope="row">未收藏正文</th><td></td><td><button class="btn btn-outline btn-sm" type="button" data-cleanup="body">清理</button></td></tr>
+    <tr><th scope="row">已结束的抓取记录</th><td></td><td><button class="btn btn-outline btn-sm" type="button" data-cleanup="logs">清理</button></td></tr>
+    </tbody>
 </table>
-<p class="storage-help">收藏正文约 <span id="savedBodySize">{{ '%.1f'|format(storage.saved_body_bytes / 1048576) }} MB</span>，长期保留。通知标题、日期和原文链接不会因缓存清理或官网下架而删除。</p>
+<p class="storage-help">清理保留通知目录与收藏正文；正在使用的缓存和证据会跳过。</p>
+<div class="storage-actions"><button class="btn btn-outline" type="button" data-cleanup="expired">按保留规则清理</button><button class="btn btn-outline" type="button" data-cleanup="all_cache">清空可清理缓存</button></div>
+<p id="cleanupStatus" class="storage-status" role="status" aria-live="polite"></p>
+{% if config.DESKTOP_MODE %}
+<section class="storage-section" id="locations" aria-labelledby="locationsTitle">
+    <h2 id="locationsTitle">文件位置</h2>
+    <div id="locationRows">
+    {% for key, label in [('program','程序'),('data','个人数据'),('cache','缓存'),('backups','备份'),('downloads','更新包')] %}
+        <div class="storage-location"><label for="location-{{ key }}">{{ label }}</label>
+        <input class="form-input" id="location-{{ key }}" data-location="{{ key }}" readonly aria-label="{{ label }}位置" placeholder="正在读取…">
+        <button class="btn btn-outline btn-sm" type="button" data-location-open="{{ key }}">打开</button>
+        <button class="btn btn-outline btn-sm" type="button" data-location-change="{{ key }}">更改</button></div>
+    {% endfor %}
+    </div>
+    <div class="storage-actions"><button class="btn btn-primary" id="saveLocations" type="button" hidden>迁移并重启</button><button class="btn btn-outline" id="resetLocations" type="button" hidden>取消更改</button></div>
+    <p id="locationStatus" class="storage-status" role="status" aria-live="polite"></p>
+</section>
+{% endif %}
 
 <section class="storage-section" aria-labelledby="retentionTitle">
     <h2 id="retentionTitle">保留规则</h2>
     <form id="storagePolicyForm">
+        <p class="storage-help">0 表示不限制。保存后用于定期清理。</p>
         <div class="storage-fields">
-            <div class="storage-field">
-                <label for="bodyCacheDays">未收藏正文保留天数</label>
-                <input class="form-input" id="bodyCacheDays" name="body_cache_days" type="number" min="0" max="3650" step="1" required value="{{ storage.policy.body_cache_days }}" aria-describedby="bodyCacheHelp">
-                <small id="bodyCacheHelp">按最后阅读时间计算；0 表示不按时间清理。仍受 {{ (storage.body_cache_limit / 1048576)|int }} MB 容量限制。</small>
+        {% for key, label, unit in [('body_cache_days','未收藏正文保留','天'),('body_cache_mb','正文缓存上限','MB'),('discovery_cache_days','网页缓存保留','天'),('discovery_cache_mb','调查缓存上限','MB'),('fetch_cache_mb','抓取缓存上限','MB'),('scrape_log_retention_days','抓取记录保留','天'),('backup_keep_count','自动备份保留','份')] %}
+            <div class="storage-field"><label for="policy-{{ key }}">{{ label }}</label>
+                <div class="storage-number"><input class="form-input" id="policy-{{ key }}" name="{{ key }}" type="number" min="0" step="1" required value="{{ storage.policy[key] }}"><span>{{ unit }}</span></div>
             </div>
-            <div class="storage-field">
-                <label for="discoveryCacheDays">调查网页缓存保留天数</label>
-                <input class="form-input" id="discoveryCacheDays" name="discovery_cache_days" type="number" min="0" max="3650" step="1" required value="{{ storage.policy.discovery_cache_days }}" aria-describedby="discoveryCacheHelp">
-                <small id="discoveryCacheHelp">0 表示不按时间清理。仍受 100 MB 容量限制，已确认来源目录继续保留。</small>
-            </div>
-            <div class="storage-field">
-                <label for="scrapeLogDays">抓取记录保留时长</label>
-                <select class="form-input" id="scrapeLogDays" name="scrape_log_retention_days" aria-describedby="scrapeLogHelp">
-                    {% for days in log_retention_choices %}<option value="{{ days }}" {% if days == storage.policy.scrape_log_retention_days %}selected{% endif %}>{{ (days|string + ' 天') if days else '永久保留' }}</option>{% endfor %}
-                </select>
-                <small id="scrapeLogHelp">与抓取记录页面共用设置，正在运行的记录保留。</small>
-            </div>
-            <div class="storage-field">
-                <label for="backupKeepCount">自动备份保留份数</label>
-                <input class="form-input" id="backupKeepCount" name="backup_keep_count" type="number" min="1" max="100" step="1" required value="{{ storage.policy.backup_keep_count }}" aria-describedby="backupKeepHelp">
-                <small id="backupKeepHelp">保留最近 1–100 份；下载到本机的备份由你保管。</small>
-            </div>
+        {% endfor %}
         </div>
         <div class="storage-actions"><button class="btn btn-primary" type="submit">保存保留规则</button></div>
-        <p class="storage-help">保存时不会立即清理。后台会按新规则执行维护；需要立即释放缓存时，可在下方手动清理。</p>
+
         <p id="policyStatus" class="storage-status" role="status" aria-live="polite"></p>
     </form>
 </section>
 
-<section class="storage-section" aria-labelledby="cleanupTitle">
-    <h2 id="cleanupTitle">手动清理</h2>
-    <p>按已保存规则清理过期缓存、已结束的抓取记录和超出保留份数的自动备份。清空缓存还会移除所有未收藏正文及调查网页缓存。</p>
-    <p class="storage-help">通知目录、收藏正文、账户和订阅继续保留。清理后可重新读取官网仍可访问的正文；需要保留旧正文时，请先导出备份。数据库释放的空间可供后续写入复用，文件大小可能不会立即变小。</p>
-    <div class="storage-actions">
-        <button class="btn btn-outline" type="button" data-cleanup="expired">按已保存规则清理</button>
-        <button class="btn btn-outline" type="button" data-cleanup="all_cache">清空可清理缓存</button>
-    </div>
-    <p id="cleanupStatus" class="storage-status" role="status" aria-live="polite"></p>
-</section>
-
 <section class="storage-section" aria-labelledby="backupTitle">
     <h2 id="backupTitle">备份与合并导入</h2>
-    <p>导出全部已抓取通知、已缓存正文、摘要和学校来源关系。备份包含附件链接，不包含未下载的正文或附件文件，也不包含账户及个人阅读状态。</p>
+    <p>备份通知、已缓存正文与来源信息，不包含账户和个人阅读状态。</p>
     <div class="storage-actions"><button class="btn btn-primary" type="button" id="exportStorage">导出数据备份</button></div>
     <p id="exportStatus" class="storage-status" role="status" aria-live="polite"></p>
     <form id="storageImportForm" class="storage-import">
         <label for="storageBackupFile">选择之前的备份</label>
         <input class="form-input" id="storageBackupFile" name="file" type="file" accept=".zip,application/zip" required aria-describedby="importHelp">
         <p id="importHelp" class="storage-help">支持本页导出的 ZIP 和旧版自动数据库备份。文件应小于 100 MB，解压后不超过 256 MB。</p>
-        <p>导入按原文链接去重，只补充缺失通知和正文。重复通知保留当前内容，历史独有通知完整保留；不因新库或官网中缺失而筛除。重复导入同一备份不会重复添加通知。</p>
+        <p>导入只补充缺失内容，重复通知自动跳过。</p>
         <div class="storage-actions"><button class="btn btn-outline" type="submit">导入并合并</button></div>
         <p id="importStatus" class="storage-status" role="status" aria-live="polite"></p>
     </form>

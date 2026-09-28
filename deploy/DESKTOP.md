@@ -19,7 +19,17 @@
 | Windows | `%LOCALAPPDATA%\SchoolWatcher` |
 | macOS | `~/Library/Application Support/School Watcher` |
 
-安装目录只放程序资源，数据、密钥、浏览器会话和下载的更新留在上述用户目录。更新与卸载不会删除它。数据库升级前沿用现有自动备份逻辑。源码运行时原有 `data/` 不会被桌面版自动挪动；迁移历史数据请使用已有导出/导入或完整备份恢复流程。
+安装目录只放程序资源，数据、密钥、浏览器会话和下载的更新留在上述用户目录。更新保留数据。Windows 卸载默认保留数据，也可主动选择删除当前应用数据、缓存和自动备份；手动导出的备份、自定义目录中的其他文件与迁移前副本保留。数据库升级前沿用现有自动备份逻辑。源码运行时原有 `data/` 不会被桌面版自动挪动；迁移历史数据请使用已有导出/导入或完整备份恢复流程。
+
+## 文件位置与存储
+
+Windows 安装向导始终显示程序位置，并可选择数据、缓存、备份和更新包目录。默认缓存与数据同目录，自动备份和更新包分别在数据目录的 `backups`、`updates` 下。
+
+安装后打开系统管理 → 存储管理 → 文件位置。更改目录时选择空文件夹，迁移会先停止采集、复制并校验，成功后切换位置并重启；原目录保留为副本。复制失败时原配置继续有效。目录配置在 Windows 使用当前用户注册表，在 macOS 使用默认数据目录中的 `desktop-locations.json`；请不要手动移动这些入口配置。
+
+程序位置通过重新安装更改：应用下载正式安装包并校验后打开安装向导。macOS 在 DMG 或 Finder 中选择 `.app` 的位置；缓存、备份和数据位置同样可在存储管理中更改。
+
+各类缓存可在对应行清理。保留天数、容量（MB）及自动备份份数均可填写非负整数，0 表示不限制。通知目录和收藏正文不随缓存清理删除，活动任务与栏目依赖的证据受保护。手动导出的数据备份保存到所选备份目录，不参加自动轮转。
 
 ## 检查更新
 
@@ -36,7 +46,7 @@ python -m pip install -r requirements/build.txt
 python desktop/entry.py
 ```
 
-运行 `python desktop/build.py`。构建不需要下载或收录浏览器。Windows 安装包需要 Inno Setup 6 和微软 WebView2 官方引导程序的本机路径 `WATCHER_WEBVIEW_BOOTSTRAPPER`，使用 `python desktop/build.py --installer`。CI 单独下载 Chromium 用于验收，但不放入安装包。
+运行 `python desktop/build.py`。构建不需要下载或收录浏览器。Windows 安装包需要 Inno Setup 6.6 或更新版本 和微软 WebView2 官方引导程序的本机路径 `WATCHER_WEBVIEW_BOOTSTRAPPER`，使用 `python desktop/build.py --installer`。CI 单独下载 Chromium 用于验收，但不放入安装包。
 
 生成内容只在 `.local/desktop-build`、`.local/desktop-dist`、`.local/desktop-release`。资源收录使用明确目录清单，不收录仓库根目录、`.env`、`data/`、`.local/` 或宣传片。完成后检查最终文件树，拒绝私有数据库和媒体制作文件。
 

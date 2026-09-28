@@ -21,7 +21,20 @@ def main(argv=None):
     parser.add_argument('--smoke-test', action='store_true')
     parser.add_argument('--gui-smoke-test', action='store_true')
     parser.add_argument('--report', type=Path)
+    parser.add_argument('--configure-locations', action='store_true')
+    parser.add_argument('--download-dir', type=Path)
+    parser.add_argument('--cache-dir', type=Path)
+    parser.add_argument('--backup-dir', type=Path)
+    parser.add_argument('--remove-personal-data', action='store_true')
     args = parser.parse_args(argv)
+    if args.remove_personal_data:
+        from desktop.locations import remove_personal_data
+        remove_personal_data()
+        return 0
+    if args.configure_locations:
+        from desktop.locations import apply_locations
+        apply_locations(args.data_dir or user_data_dir(), args.download_dir, args.cache_dir, args.backup_dir)
+        return 0
     data = configure(args.data_dir or user_data_dir())
     if args.gui_smoke_test:
         import faulthandler
@@ -78,9 +91,29 @@ def main(argv=None):
         return 0
     finally:
         runtime.close()
+        pending = getattr(runtime, 'requested_locations', None)
+        if pending:
+            try:
+                from desktop.locations import apply_changes
+                apply_changes(pending, source=data)
+            except Exception as exc:
+                logging.exception('Location change failed; original profile retained')
+                if os.name == 'nt':
+                    import ctypes
+                    ctypes.windll.user32.MessageBoxW(None, f'目录更改未完成，原数据仍保留。\n{exc}', '学校通知', 0x10)
         lock.release()
         if args.gui_smoke_test:
             faulthandler.cancel_dump_traceback_later()
+        if pending:
+            import subprocess
+            environment = os.environ.copy()
+            environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
+            command = [sys.executable] if getattr(sys, 'frozen', False) else [sys.executable, str(Path(__file__).resolve())]
+            if os.name == 'nt' and getattr(sys, 'frozen', False):
+                import ctypes
+                ctypes.windll.kernel32.SetDllDirectoryW(None)
+            subprocess.Popen(command, env=environment, cwd=str(user_data_dir()),
+                             creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
 
 
 if __name__ == '__main__':

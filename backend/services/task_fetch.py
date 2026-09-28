@@ -1,6 +1,6 @@
 """Bridge pure acquisition to the one durable task queue and bounded replay files."""
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -66,9 +66,10 @@ def cache_store(request, result):
     from filelock import FileLock
     with FileLock(str(root) + '.lock', timeout=30):
         prune_fetch_evidence(_locked=True)
-        capacity = current_app.config.get('FETCH_EVIDENCE_BYTES', 100 * 1024 * 1024)
+        from backend.services.storage_policy import capacity_bytes
+        capacity = capacity_bytes('fetch_cache_mb', 'FETCH_EVIDENCE_BYTES', 100 * 1048576)
         occupied = sum(p.stat().st_size for p in root.iterdir() if p.is_file() and p.name != name)
-        if occupied + len(payload.encode('utf-8')) > capacity:
+        if capacity and occupied + len(payload.encode('utf-8')) > capacity:
             # Checkpoints are an optimization; never evict an active execution or
             # exceed the disk budget. Re-reading remains idempotent on recovery.
             return
@@ -160,15 +161,16 @@ def prune_fetch_evidence(*, all_cache=False, _locked=False):
         days = max(0, int(AppConfig.get('discovery_cache_days', '7')))
     except (ValueError, TypeError):
         days = 7
-    max_bytes = current_app.config.get('FETCH_EVIDENCE_BYTES', 100 * 1024 * 1024)
+    from backend.services.storage_policy import capacity_bytes, retention_cutoff
+    max_bytes = capacity_bytes('fetch_cache_mb', 'FETCH_EVIDENCE_BYTES', 100 * 1048576)
     files = sorted(((p, p.stat()) for p in root.iterdir() if p.is_file() and not p.is_symlink()), key=lambda row: row[1].st_mtime)
     total, removed = sum(stat.st_size for _, stat in files), 0
-    cutoff = (datetime.utcnow() - timedelta(days=days)).timestamp()
+    cutoff = retention_cutoff(days, datetime.now(timezone.utc)).timestamp()
     for path, stat in files:
         parts = path.name.split('-', 2)
         if len(parts) >= 3 and parts[0].isdigit() and parts[1].isdigit() and (int(parts[0]), int(parts[1])) in active:
             continue
-        if all_cache or (days and stat.st_mtime < cutoff) or total > max_bytes:
+        if all_cache or (days and stat.st_mtime < cutoff) or (max_bytes and total > max_bytes):
             path.unlink(missing_ok=True)
             total -= stat.st_size
             removed += 1

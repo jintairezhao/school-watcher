@@ -43,6 +43,21 @@ class UpdateTests(unittest.TestCase):
         self.assertIsNone(check_update('1.0.0','windows-x64',opener))
         self.assertGreater(version_tuple('v0.10.0'), version_tuple('0.9.0'))
 
+    def test_reinstall_allows_same_version_but_never_downgrades(self):
+        _, _, _, opener = self.fixture()
+        self.assertEqual(check_update('0.2.0', 'windows-x64', opener, allow_current=True).version, '0.2.0')
+        self.assertIsNone(check_update('0.3.0', 'windows-x64', opener, allow_current=True))
+
+    def test_download_uses_selected_folder(self):
+        payload, _, _, opener = self.fixture()
+        update = check_update('0.1.0', 'windows-x64', opener)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            target = download_update(update, root / 'data', opener=opener, download_dir=root / 'downloads')
+            self.assertEqual(target.parent, root / 'downloads' / update.version)
+            self.assertEqual(target.read_bytes(), payload)
+            self.assertFalse((root / 'data').exists())
+
     def test_rejects_missing_hash_foreign_assets_and_prereleases(self):
         for mutation in ('hash','url','prerelease'):
             _, release, contents, opener = self.fixture()

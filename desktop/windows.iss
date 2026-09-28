@@ -7,14 +7,18 @@
 #ifndef OutputPath
   #error OutputPath is required
 #endif
+#ifndef AppIdentifier
+  #define AppIdentifier "{{6E20F2D9-C889-4B92-9878-B204171598A2}"
+#endif
 [Setup]
-AppId={{6E20F2D9-C889-4B92-9878-B204171598A2}
+AppId={#AppIdentifier}
 AppName=School Watcher
 AppVerName=学校通知 {#AppVersion}
 AppVersion={#AppVersion}
 AppPublisher=jintairezhao
 AppPublisherURL=https://github.com/jintairezhao/school-watcher
 DefaultDirName={localappdata}\Programs\School Watcher
+DisableDirPage=no
 DefaultGroupName=School Watcher
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -51,10 +55,116 @@ Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"
 #endif
 Filename: "{app}\SchoolWatcher.exe"; Description: "打开学校通知"; Flags: nowait postinstall skipifsilent
 [Code]
+var
+  DataPage, FilesPage: TInputDirWizardPage;
+  RemoveData: Boolean;
+
+function SavedDirectory(Name, Fallback: String): String;
+begin
+  if not RegQueryStringValue(HKCU, 'Software\SchoolWatcher', Name, Result) or (Result = '') then
+    Result := Fallback;
+end;
+
 procedure InitializeWizard;
 begin
   WizardForm.TasksList.Left := ScaleX(8);
   WizardForm.TasksList.Width := WizardForm.TasksList.Parent.ClientWidth - ScaleX(16);
+  DataPage := CreateInputDirPage(wpSelectDir, '数据位置', '选择订阅、收藏与设置的保存位置',
+    '更改位置时会迁移现有数据，并保留原目录副本。', False, '');
+  DataPage.Add('数据文件夹：');
+  DataPage.Values[0] := SavedDirectory('DataDirectory', ExpandConstant('{localappdata}\SchoolWatcher'));
+  FilesPage := CreateInputDirPage(DataPage.ID, '其他文件位置', '选择缓存、备份与更新包的保存位置',
+    '可使用默认位置，也可以在安装后更改。', False, '');
+  FilesPage.Add('缓存：');
+  FilesPage.Add('自动备份：');
+  FilesPage.Add('更新包：');
+  FilesPage.Values[0] := SavedDirectory('CacheDirectory', DataPage.Values[0]);
+  FilesPage.Values[1] := SavedDirectory('BackupDirectory', AddBackslash(DataPage.Values[0]) + 'backups');
+  FilesPage.Values[2] := SavedDirectory('DownloadDirectory', AddBackslash(DataPage.Values[0]) + 'updates');
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+var OldData: String;
+begin
+  Result := True;
+  if CurPageID = DataPage.ID then begin
+    OldData := SavedDirectory('DataDirectory', ExpandConstant('{localappdata}\SchoolWatcher'));
+    if FilesPage.Values[0] = OldData then FilesPage.Values[0] := DataPage.Values[0];
+    if FilesPage.Values[1] = AddBackslash(OldData) + 'backups' then FilesPage.Values[1] := AddBackslash(DataPage.Values[0]) + 'backups';
+    if FilesPage.Values[2] = AddBackslash(OldData) + 'updates' then FilesPage.Values[2] := AddBackslash(DataPage.Values[0]) + 'updates';
+  end;
+end;
+
+function LocationArguments(Param: String): String;
+begin
+  Result := '--configure-locations --data-dir ' + AddQuotes(DataPage.Values[0]) +
+    ' --cache-dir ' + AddQuotes(FilesPage.Values[0]) + ' --backup-dir ' + AddQuotes(FilesPage.Values[1]) +
+    ' --download-dir ' + AddQuotes(FilesPage.Values[2]);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var Code: Integer;
+begin
+  if CurStep = ssPostInstall then
+    if not Exec(ExpandConstant('{app}\SchoolWatcher.exe'), LocationArguments(''), '', SW_HIDE, ewWaitUntilTerminated, Code) or (Code <> 0) then
+      RaiseException('文件位置更改未完成，原数据仍保留。请退出学校通知，并选择空文件夹后重试。');
+end;
+
+function InitializeUninstall: Boolean;
+var Form: TSetupForm; KeepButton, DeleteButton, CancelButton: TNewButton; LabelText: TNewStaticText; Choice: Integer;
+begin
+  RemoveData := False;
+  Result := True;
+  if UninstallSilent then Exit;
+#if VER >= EncodeVer(6, 6, 0)
+  Form := CreateCustomForm(ScaleX(470), ScaleY(155), False, False);
+#else
+  Form := CreateCustomForm();
+  Form.ClientWidth := ScaleX(470);
+  Form.ClientHeight := ScaleY(155);
+#endif
+  try
+    Form.Caption := '卸载学校通知';
+    LabelText := TNewStaticText.Create(Form);
+    LabelText.Parent := Form;
+    LabelText.SetBounds(ScaleX(24), ScaleY(24), ScaleX(420), ScaleY(58));
+    LabelText.AutoSize := False;
+    LabelText.WordWrap := True;
+    LabelText.Caption := '是否保留个人数据？' + #13#10 + '保留后，重新安装可继续使用订阅、收藏与设置。';
+    KeepButton := TNewButton.Create(Form);
+    KeepButton.Parent := Form;
+    KeepButton.SetBounds(ScaleX(24), ScaleY(100), ScaleX(125), ScaleY(32));
+    KeepButton.Caption := '仅卸载程序';
+    KeepButton.ModalResult := mrYes;
+    KeepButton.Default := True;
+    DeleteButton := TNewButton.Create(Form);
+    DeleteButton.Parent := Form;
+    DeleteButton.SetBounds(ScaleX(159), ScaleY(100), ScaleX(185), ScaleY(32));
+    DeleteButton.Caption := '删除程序及个人数据';
+    DeleteButton.ModalResult := mrNo;
+    CancelButton := TNewButton.Create(Form);
+    CancelButton.Parent := Form;
+    CancelButton.SetBounds(ScaleX(354), ScaleY(100), ScaleX(92), ScaleY(32));
+    CancelButton.Caption := '取消';
+    CancelButton.ModalResult := mrCancel;
+    CancelButton.Cancel := True;
+    Choice := Form.ShowModal();
+    Result := (Choice = mrYes) or (Choice = mrNo);
+    RemoveData := Choice = mrNo;
+    if RemoveData then
+      Result := MsgBox('将删除当前应用的订阅、收藏、设置、缓存与自动备份。此操作无法撤销。继续？', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES;
+  finally
+    Form.Free();
+  end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var Code: Integer;
+begin
+  if (CurUninstallStep = usUninstall) and RemoveData then begin
+    if not Exec(ExpandConstant('{app}\SchoolWatcher.exe'), '--remove-personal-data', '', SW_HIDE, ewWaitUntilTerminated, Code) or (Code <> 0) then
+      RaiseException('个人数据未能全部删除。请退出学校通知后重试；卸载已停止。');
+  end;
 end;
 
 function NeedsWebView: Boolean;
@@ -63,4 +173,4 @@ begin
   Result := not (RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
     RegQueryStringValue(HKLM32, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version));
 end;
-// User data lives outside {app}; upgrades and uninstall never delete it.
+// Silent uninstall and the default choice retain all personal data.

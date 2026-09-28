@@ -6,14 +6,7 @@
     <form id="logRetentionForm" class="log-retention-form">
         <div>
             <label for="logRetentionDays">记录保留时长</label>
-            <select class="form-input" id="logRetentionDays" name="days">
-                <option value="7">7 天</option>
-                <option value="30" selected>30 天</option>
-                <option value="90">90 天</option>
-                <option value="180">180 天</option>
-                <option value="365">1 年</option>
-                <option value="0">永久保留</option>
-            </select>
+            <input class="form-input" id="logRetentionDays" name="days" type="number" min="0" step="1" value="30" required aria-label="记录保留天数，0 表示永久保留">
         </div>
         <button class="btn btn-primary" type="submit" id="saveLogRetention">保存保留时长</button>
         <p>每日清理超期的已结束记录；通知、收藏和正在进行的抓取不受影响。</p>

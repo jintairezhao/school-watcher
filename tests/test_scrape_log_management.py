@@ -73,9 +73,9 @@ class ScrapeLogManagementTests(unittest.TestCase):
         self.assertEqual(reader.get('/api/admin/scrape-logs').status_code,403)
         self.assertEqual(reader.put(endpoint,json={'days':7},headers={'X-CSRF-Token':'token'}).status_code,403)
         self.assertEqual(self.client.put(endpoint,json={'days':7}).status_code,403)
-        for value in [-1,1,8,'30',True,1.5,None]:
+        for value in [-1,9007199254740992,'30',True,1.5,None]:
             self.assertEqual(self.client.put(endpoint,json={'days':value},headers={'X-CSRF-Token':'token'}).status_code,400)
-        for value in [7,30,90,180,365,0]:
+        for value in [1,8,7,30,90,180,365,5000,0]:
             self.assertEqual(self.client.put(endpoint,json={'days':value},headers={'X-CSRF-Token':'token'}).status_code,200)
             self.assertEqual(self.client.get(endpoint).get_json()['days'],value)
         self.assertEqual(ScrapeLog.query.count(),1)

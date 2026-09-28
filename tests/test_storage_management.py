@@ -103,8 +103,8 @@ class StorageManagementTests(unittest.TestCase):
         self.assertEqual(self.client.put('/api/storage/policy', json=values, headers=self.headers).status_code, 200)
         for invalid in [None, [], {}, {**values, 'unexpected': 7}, {**values, 'body_cache_days': True},
                         {**values, 'body_cache_days': '30'}, {**values, 'body_cache_days': -1},
-                        {**values, 'body_cache_days': 3651}, {**values, 'backup_keep_count': 0},
-                        {**values, 'scrape_log_retention_days': 12}]:
+                        {**values, 'body_cache_mb': -1}, {**values, 'backup_keep_count': 1.5},
+                        {**values, 'scrape_log_retention_days': 9007199254740992}]:
             self.assertEqual(self.client.put('/api/storage/policy', json=invalid, headers=self.headers).status_code, 400)
             self.assertEqual(policy(), values)
         db.session.refresh(ann)
@@ -135,11 +135,53 @@ class StorageManagementTests(unittest.TestCase):
         ann = self.article(days=500)
         save_policy({**policy(), 'body_cache_days': 0})
         self.assertEqual(prune_content()['evicted'], 0)
-        self.app.config['BODY_CACHE_BYTES'] = 1
+        ann.content_bytes = 2 * 1048576
+        db.session.commit()
+        save_policy({'body_cache_mb': 1})
         self.assertEqual(prune_content()['evicted'], 1)
         legacy = self.article('legacy', content_bytes=0, content_cached_at=None, content_accessed_at=None)
         self.assertEqual(prune_content(all_cache=True)['evicted'], 1)
         db.session.refresh(legacy); self.assertFalse(legacy.content_html)
+
+    def test_custom_and_unlimited_rules_reach_real_cleanup(self):
+        ann = self.article(days=500, content_bytes=200 * 1048576)
+        values = {**policy(), 'body_cache_mb': 0, 'body_cache_days': 5000,
+                  'backup_keep_count': 200, 'scrape_log_retention_days': 12,
+                  'discovery_cache_mb': 1024, 'fetch_cache_mb': 2048}
+        self.assertEqual(save_policy(values), values)
+        self.assertEqual(prune_content()['evicted'], 0)
+        folder = self.root / 'backups'; folder.mkdir()
+        for i in range(3): (folder / f'watcher-{i}.zip').write_bytes(b'fixture')
+        save_policy({'backup_keep_count': 0})
+        from backend.services.backups import rotate
+        self.assertEqual(rotate(folder), 0)
+        save_policy({'body_cache_days': 9007199254740991})
+        self.assertEqual(prune_content()['evicted'], 0)
+        save_policy({'body_cache_mb': 1})
+        self.assertEqual(prune_content()['evicted'], 1)
+
+    def test_row_cleanup_only_changes_its_category(self):
+        ann = self.article()
+        folder = self.root / 'backups'; folder.mkdir()
+        (folder / 'watcher-fixture.zip').write_bytes(b'fixture')
+        (folder / 'personal-document.zip').write_bytes(b'keep')
+        result = self.client.post('/api/storage/cleanup', json={'mode':'backups'}, headers=self.headers)
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.get_json()['backups_deleted'], 1)
+        db.session.refresh(ann)
+        self.assertTrue(ann.content_html)
+        self.assertTrue((folder / 'personal-document.zip').exists())
+
+    def test_external_cache_and_backup_usage_is_counted_once(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            folder = Path(scratch)
+            (folder / 'discovery.sqlite3').write_bytes(b'cache')
+            (folder / 'backups').mkdir()
+            (folder / 'backups' / 'watcher-fixture.zip').write_bytes(b'backup')
+            self.app.config.update(DISCOVERY_CACHE_PATH=str(folder / 'discovery.sqlite3'), BACKUP_DIR=str(folder / 'backups'))
+            data = self.client.get('/api/storage').get_json()
+            self.assertEqual(sum(f['bytes'] for f in data['files'] if f['name'].startswith('backups/')), 6)
+            self.assertEqual(sum(f['bytes'] for f in data['files'] if f['name'].endswith('discovery.sqlite3')), 5)
 
     def test_cleanup_logs_rotation_and_busy_discovery(self):
         from filelock import FileLock

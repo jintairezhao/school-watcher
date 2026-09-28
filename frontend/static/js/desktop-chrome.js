@@ -11,7 +11,7 @@
             bar.querySelector('details').open = false;
         });
     });
-    bar.querySelector('.desktop-drag').addEventListener('dblclick', () => action('maximize'));
+    document.querySelectorAll('.desktop-drag').forEach(drag => drag.addEventListener('dblclick', () => action('maximize')));
     const grip = document.getElementById('desktopResize');
     let resizeStart = null, resizing = false;
     grip.addEventListener('pointerdown', event => {

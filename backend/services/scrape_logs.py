@@ -14,14 +14,18 @@ def retention_days():
         value = int(AppConfig.get('scrape_log_retention_days', '30'))
     except (TypeError, ValueError):
         return 30
-    return value if value in RETENTION_CHOICES else 30
+    from backend.services.storage_policy import valid_limit
+    return value if valid_limit(value) else 30
 
 
-def prune_scrape_logs(*, now=None):
+def prune_scrape_logs(*, now=None, all_logs=False):
     days = retention_days()
-    if days == 0:
+    if days == 0 and not all_logs:
         return 0
-    cutoff = (now or datetime.utcnow()) - timedelta(days=days)
+    from backend.services.storage_policy import retention_cutoff
+    cutoff = now or datetime.utcnow()
+    if not all_logs:
+        cutoff = retention_cutoff(days, cutoff)
     deleted = ScrapeLog.query.filter(ScrapeLog.started_at < cutoff, ScrapeLog.status != 'running').delete()
     db.session.commit()
     return deleted
