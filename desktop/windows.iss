@@ -148,6 +148,8 @@ begin
     CancelButton.Caption := '取消';
     CancelButton.ModalResult := mrCancel;
     CancelButton.Cancel := True;
+    Form.Width := CancelButton.Left + CancelButton.Width + ScaleX(24) + Form.Width - Form.ClientWidth;
+    Form.Height := CancelButton.Top + CancelButton.Height + ScaleY(24) + Form.Height - Form.ClientHeight;
     Choice := Form.ShowModal();
     Result := (Choice = mrYes) or (Choice = mrNo);
     RemoveData := Choice = mrNo;
