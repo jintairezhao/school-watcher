@@ -7,7 +7,7 @@ REPO = 'jintairezhao/school-watcher'
 TAGS = ('v0.1.0', 'v0.2.0')
 
 def command(args, **kwargs):
-    return subprocess.run(args, capture_output=True, text=True, timeout=300, **kwargs)
+    return subprocess.run(args, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300, **kwargs)
 
 def digest(path):
     with path.open('rb') as reader: return hashlib.file_digest(reader, 'sha256').hexdigest()
