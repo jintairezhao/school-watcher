@@ -118,7 +118,7 @@ class RealBrowserFixtureTests(unittest.IsolatedAsyncioTestCase):
     @unittest.skipIf(os.name == 'nt', 'Linux Xvfb/TigerVNC acceptance')
     async def test_linux_manual_display_revocation_and_context_reuse(self):
         import shutil
-        if not shutil.which('Xvfb') or not shutil.which('x0vncserver'):
+        if not shutil.which('Xvfb') or not (shutil.which('X0tigervnc') or shutil.which('x0vncserver')):
             self.skipTest('Install Linux manual display dependencies')
         payload = FetchRequest(url=self.base + '/delayed', purpose='list', request_id='manual-fixture',
             readiness_selector='.notices', timeout_seconds=3).to_dict()
@@ -128,12 +128,16 @@ class RealBrowserFixtureTests(unittest.IsolatedAsyncioTestCase):
         active = self.runtime.verifications['manual-fixture']
         context = active['session'].context
         port = active['session'].display.port
+        server = active['session'].display.vnc
         reader, writer = await asyncio.open_connection('127.0.0.1', port)
         self.assertTrue((await reader.read(12)).startswith(b'RFB '))
         writer.close(); await writer.wait_closed()
         ticket = self.runtime.issue_ticket('manual-fixture', payload['generation'])['ticket']
         await self.runtime.verify_manual('manual-fixture', payload['generation'])
         self.assertIsNone(active['session'].display.port)
+        self.assertIsNotNone(server.returncode)
+        with self.assertRaises(OSError):
+            await asyncio.open_connection('127.0.0.1', port)
         from backend.browser_service.runtime import RuntimeFault
         with self.assertRaises(RuntimeFault):
             self.runtime.consume_ticket('manual-fixture', ticket)

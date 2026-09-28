@@ -1,6 +1,7 @@
 """A disposable Linux desktop; only its VNC listener is exposed during verification."""
 import asyncio
 import os
+import shutil
 import socket
 import sys
 from pathlib import Path
@@ -44,11 +45,15 @@ class PrivateDisplay:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             self.port = sock.getsockname()[1]
-        self.vnc = await asyncio.create_subprocess_exec('x0vncserver',
+        # Debian's x0vncserver is a daemonizing wrapper. Own the foreground
+        # server itself so hide() also revokes the actual listener.
+        server = shutil.which('X0tigervnc') or 'x0vncserver'
+        # The pinned TigerVNC 1.12 scraping server has no clipboard support;
+        # it rejects AcceptCutText/SendCutText rather than ignoring them.
+        self.vnc = await asyncio.create_subprocess_exec(server,
             '-display', f':{self.number}', '-rfbport', str(self.port),
-            '-localhost', 'yes', '-SecurityTypes', 'None',
-            '-AlwaysShared', 'yes', '-AcceptCutText', '0', '-SendCutText', '0',
-            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+            '-localhost=1', '-SecurityTypes=None', '-AlwaysShared=1',
+            stdout=asyncio.subprocess.DEVNULL)
         for _ in range(50):
             if self.vnc.returncode is not None:
                 raise RuntimeError('远程验证连接启动失败')
