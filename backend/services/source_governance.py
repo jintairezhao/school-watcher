@@ -837,7 +837,7 @@ def process_discovered_candidates(school_id, inventory, key, *, limit=5):
             config = json.loads(known_proposal.candidate_json)
         # Same URL with a new widget is a separate source; an existing unit
         # homepage cannot be repurposed as its discovered first notice list.
-        page = next((p for p in inventory.report(key)['pages'] if canonical_url(p.get('final_url') or p['url']) == canonical_url(config['list_url'])), None)
+        page = next((p for p in report['pages'] if canonical_url(p.get('final_url') or p['url']) == canonical_url(config['list_url'])), None)
         seed = inventory.snapshot(key, page['url']) if page else None
         proposal = known_proposal or propose_source(school_id, config,
             origin='submitted_entry' if not config['list_selector'] else 'discovery')

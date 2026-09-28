@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supporting-surfaces.css') }}">
 </head>
 <body class="page-admin">
+    {% include '_desktop_chrome.html' %}
     <div class="admin-shell">
         <aside class="admin-sidebar" aria-label="系统管理导航">
             <div class="admin-brand">
@@ -39,7 +40,7 @@
             {% block admin_navigation %}{% include '_admin_navigation.html' %}{% endblock %}
             <div class="admin-account">
                 {% if config.DESKTOP_MODE %}
-                <span><strong>本机应用</strong><small>设置与数据保存在此电脑</small></span>
+                <span class="admin-theme-label">外观</span>
                 {% else %}
                 <span class="admin-account-mark" aria-hidden="true">{{ current_user.username[0]|upper }}</span>
                 <span><strong>{{ current_user.username }}</strong><small>管理员</small></span>

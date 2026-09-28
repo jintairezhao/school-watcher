@@ -224,6 +224,22 @@ def run_service(role):
         main()
         return
     if role == 'probe':
+        from backend.scraper.discovery.parser_revision import assert_current_parser
+        from backend.ai.skill_loader import load_skill
+        from backend.services.source_inventory import Inventory
+        from backend.scraper.discovery.inventory_crawler import crawl_site
+        import tempfile
+        assert_current_parser()
+        load_skill('university-source-onboarding', 'classify')
+        load_skill('university-source-onboarding', 'extraction')
+        load_skill('summarize-university-notice', 'summary')
+        with tempfile.TemporaryDirectory(dir=os.environ['WATCHER_DATA_DIR']) as folder:
+            inventory = Inventory(Path(folder) / 'discovery.sqlite3')
+            key = inventory.ensure_site('安装包检查', 'https://example.edu.cn/')
+            result = crawl_site(inventory, key, max_pages=1, workers=1,
+                fetcher=lambda url: {'html': '<title>学校</title><a href="/units/">院系设置</a>', 'url': url, 'status': 200})
+            if result['states'].get('fetched', 0) != 1:
+                raise RuntimeError('Packaged discovery did not parse the first page')
         from playwright.sync_api import sync_playwright
         from backend.scraper.sanitizer import sanitize_html
         with sync_playwright() as playwright:
@@ -256,8 +272,6 @@ def run_service(role):
         from backend.auth.desktop import ensure_local_owner
         with app.app_context():
             ensure_local_owner()
-            from backend.services.starter_catalog import install
-            install()
         from waitress import serve
         # A private ownership/readiness check, independent of account login.
         original = app.wsgi_app

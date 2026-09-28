@@ -8,7 +8,7 @@ import logging
 from flask import Blueprint, request, jsonify, g
 
 from backend.database.db import db
-from backend.database.models import AppConfig, Announcement
+from backend.database.models import AppConfig, Announcement, Department
 from backend.auth import admin_required, login_required
 
 logger = logging.getLogger(__name__)
@@ -21,12 +21,20 @@ bp = Blueprint('settings', __name__)
 def api_save_settings():
     """保存平台设置（API Key / 抓取间隔）"""
     data = request.get_json()
-    if not data:
+    if not isinstance(data, dict) or not data:
         return jsonify({'error': '无效数据'}), 400
 
     if 'api_key' in data:
         return jsonify(error='请在系统管理的 AI 服务中配置、测试并选择用途'), 409
 
+    from backend.services.collection_settings import validate_month, since_month
+    month = None
+    if 'since_month' in data:
+        try:
+            month = validate_month(data['since_month'])
+        except ValueError as exc:
+            return jsonify(error=str(exc)), 400
+    interval = None
     if 'interval' in data:
         try:
             interval = int(data['interval'])
@@ -34,6 +42,11 @@ def api_save_settings():
             return jsonify({'error': '间隔必须为整数（分钟）'}), 400
         if not 5 <= interval <= 720:
             return jsonify({'error': '间隔需在 5-720 分钟之间'}), 400
+    if month is not None and month != since_month():
+        # Backfills must not stop at the first already-known page.
+        Department.query.update({Department.last_scraped_at: None})
+        AppConfig.set('scrape_since_month', month)
+    if interval is not None:
         AppConfig.set('scrape_interval', str(interval))
         # The independent worker rereads this persisted setting on every tick.
 

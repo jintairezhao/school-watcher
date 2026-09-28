@@ -22,6 +22,8 @@ def start_background_scrape(school_id):
 
 
 def subscribe_school(school, user_id):
+    from backend.services.starter_catalog import mark_selected
+    mark_selected(school.id)
     result = db.session.execute(insert(Subscription).values(
         user_id=user_id, school_id=school.id).on_conflict_do_nothing(
             index_elements=['user_id', 'school_id']))
@@ -32,6 +34,10 @@ def subscribe_school(school, user_id):
             subscriber_count=School.subscriber_count + 1))
     db.session.commit()
     if revived:
+        if not school.departments.count():
+            from backend.services.tasks import enqueue
+            enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': True,
+                'require_ai': current_app.config.get('DESKTOP_MODE', False)}, expedite=True)
         start_background_scrape(school.id)
     return revived
 
@@ -120,10 +126,46 @@ def manage_sources(school_id):
     key = site_key(school.url)
     relationships = relationships_for(inventory, key)
     from backend.services.source_governance import school_governance_status
+    from backend.services.onboarding_progress import status
     return render_template('sources.html', school=school, subscription=sub,
+                           discovery=status(school),
                            onboarding=school_governance_status(school.id),
                            groups=source_groups(departments), latest=latest,
                            source_paths={d.id: relationships.paths_for(d.list_url) for d in departments})
+
+
+@bp.route('/api/subscriptions/<int:school_id>/discovery', methods=['GET', 'POST'])
+@login_required
+def subscription_discovery(school_id):
+    from backend.services.onboarding_progress import status, ai_available
+    school = db.get_or_404(School, school_id)
+    if not school.enabled or not Subscription.query.filter_by(user_id=g.user.id, school_id=school_id).first():
+        return jsonify(error='请先订阅这所学校'), 403
+    if request.method == 'POST':
+        if not ai_available():
+            return jsonify(error='请先配置目录识别 AI', setup_url=url_for('admin.admin_page', onboarding=school.id, _anchor='platform')), 409
+        from backend.services.tasks import enqueue
+        from backend.auth.rate_limit import check_rate_limit
+        if not check_rate_limit(f'discovery-retry:{g.user.id}:{school.id}', 8, 3600)[0]:
+            return jsonify(error='重试过于频繁，请稍后再试'), 429
+        enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': True, 'refresh': True}, expedite=True)
+        from backend.database.models import BackgroundTask
+        from datetime import datetime, timedelta
+        now = datetime.utcnow()
+        db.session.execute(db.update(BackgroundTask).where(BackgroundTask.identity == f'discover:{school.id}',
+            BackgroundTask.state == 'waiting', BackgroundTask.phase == 'ai_setup').values(
+                state='pending', phase='fetch', available_at=now, updated_at=now,
+                deadline_at=now + timedelta(hours=2), error='', error_code=''))
+        db.session.commit()
+    from backend.services.inbox import source_groups
+    from backend.services.source_inventory import site_key
+    from backend.services.runtime_catalog import runtime_catalog, relationships_for
+    relationships = relationships_for(runtime_catalog(), site_key(school.url))
+    departments = school.departments.order_by(Department.id).all()
+    sub = Subscription.query.filter_by(user_id=g.user.id, school_id=school.id).first()
+    choices = render_template('_source_choices.html', groups=source_groups(departments), subscription=sub,
+                              source_paths={d.id: relationships.paths_for(d.list_url) for d in departments})
+    return jsonify(**status(school), choices_html=choices)
 
 
 @bp.route('/subscriptions/<int:school_id>/sources', methods=['POST'])

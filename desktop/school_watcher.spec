@@ -8,13 +8,8 @@ import sys
 root = Path(SPECPATH).parent
 version = runpy.run_path(str(root / 'desktop' / '__init__.py'))['VERSION']
 
-datas = []
-for folder in ('frontend', 'config', 'migrations', 'licenses', 'desktop/ui'):
-    for source in (root / folder).rglob('*'):
-        if source.is_file() and '__pycache__' not in source.parts and source.suffix not in ('.pyc', '.pyo'):
-            datas.append((str(source), str(source.parent.relative_to(root))))
-for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
-    datas.append((str(root / name), '.'))
+application_data = runpy.run_path(str(root / 'desktop/resources.py'))['application_data']
+datas = application_data(root, root / '.local/desktop-build')
 hidden = ['desktop.window', 'desktop.updater', 'desktop.browser', 'scripts.maintenance.migrate_safely', 'logging.config']
 for source in (root / 'backend').rglob('*.py'):
     name = '.'.join(source.relative_to(root).with_suffix('').parts)

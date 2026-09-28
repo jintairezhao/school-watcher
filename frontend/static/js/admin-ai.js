@@ -88,7 +88,11 @@
             for (const [id, purpose] of [['aiDirectory', 'directory'], ['aiSummary', 'summary']]) {
                 if (field(id).value) await api('/api/admin/ai/bindings/' + purpose, 'PUT', {profile_id: Number(field(id).value)});
             }
-            field('aiStatus').textContent = '用途已保存。已有摘要保持不变。';
+            const school = new URLSearchParams(location.search).get('onboarding');
+            if (school && /^\d+$/.test(school) && field('aiDirectory').value) {
+                await api('/api/subscriptions/' + school + '/discovery', 'POST', {});
+                location.assign('/subscriptions/' + school);
+            } else field('aiStatus').textContent = '用途已保存';
         });
     });
     field('aiLimitsForm').addEventListener('submit', event => {

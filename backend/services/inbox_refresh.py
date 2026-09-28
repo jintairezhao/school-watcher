@@ -208,10 +208,16 @@ def refresh_status(departments):
         state = (task.state if task else 'saved' if dept.last_scraped_at else 'unloaded') if dept.list_url else 'unavailable'
         result = task.result or {} if task else {}
         message = task.error or result.get('message', '') if task else ''
+        progress = (task.checkpoint or {}).get('collection_progress', {}) if task else {}
+        latest = next(reversed(progress.values())) if progress else {}
+        if task and state in ('pending', 'running') and progress:
+            if latest.get('page', 1) > 1 and not latest.get('finished'):
+                message = f"已检查 {latest['page'] - 1} 页，继续抓取历史通知"
         sources.append({'id': dept.id, 'name': dept.name, 'state': state,
                         'status_label': source_status_label(state, message, task.error_code if task else ''),
                         'error_code': task.error_code if task else '',
-                        'new_count': result.get('new_count', 0),
+                        'new_count': result.get('new_count', latest.get('new', 0)),
+                        'pages_checked': max(0, latest.get('page', 1) - (0 if latest.get('finished') else 1)),
                         'message': message,
                         'updated_at': (task.checked_at or task.updated_at).isoformat() if task else None,
                         'last_synced_at': dept.last_scraped_at.isoformat() if dept.last_scraped_at else None})

@@ -30,7 +30,7 @@
 
 ### Windows / macOS 桌面版
 
-从 [Releases](https://github.com/jintairezhao/school-watcher/releases) 下载 Windows x64 安装程序，或适合 Apple 芯片／Intel Mac 的 DMG。桌面版在独立窗口中打开即用，无需账号和 Python，可直接管理系统。优先使用已有 Edge／Chrome，缺少时自动下载独立采集组件；应用菜单的「检查更新」可以下载新版并确认安装。内置学校与栏目配置，用户订阅后重新抓取，不附带开发阶段的通知和个人数据。安装说明、数据位置及版本发布流程见 [桌面版说明](deploy/DESKTOP.md)。
+从 [Releases](https://github.com/jintairezhao/school-watcher/releases) 下载 Windows x64 安装程序，或适合 Apple 芯片／Intel Mac 的 DMG。桌面版在独立窗口中打开即用，无需账号和 Python，可直接管理系统。优先使用已有 Edge／Chrome，缺少时自动下载独立采集组件；应用菜单的「检查更新」可以下载新版并确认安装。全新安装不预选学校，从学校目录订阅后使用 AI 辅助识别栏目并显示进度。安装说明、数据位置及版本发布流程见 [桌面版说明](deploy/DESKTOP.md)。
 
 ### Windows 本机
 

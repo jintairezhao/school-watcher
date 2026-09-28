@@ -44,8 +44,11 @@ def api_log_retention():
 @admin_required
 def admin_page():
     # 学校管理标签页的列表为服务端渲染（partial 内 for 循环）
-    return render_template('admin.html',
-                           schools=School.query.order_by(School.name).all())
+    from backend.services.starter_catalog import managed_schools
+    onboarding_id = request.args.get('onboarding', type=int)
+    onboarding_school = db.session.get(School, onboarding_id) if onboarding_id else None
+    return render_template('admin.html', onboarding_school=onboarding_school,
+                           schools=managed_schools().order_by(School.name).all())
 
 
 @bp.route('/api/admin/stats')
@@ -53,6 +56,8 @@ def admin_page():
 def api_admin_stats():
     """后台概览仪表盘数据（单接口聚合，naive utcnow 与存量时间一致）"""
     from backend.scraper.engine import active_schools_query
+    from backend.services.starter_catalog import managed_schools
+    from backend.services.collection_settings import since_month
 
     now = datetime.utcnow()
     d7 = now - timedelta(days=7)
@@ -73,8 +78,8 @@ def api_admin_stats():
     return jsonify({
         'users': User.query.count(),
         'admins': User.query.filter_by(role='admin').count(),
-        'schools': School.query.count(),
-        'schools_enabled': School.query.filter(School.enabled.is_(True)).count(),
+        'schools': managed_schools().count(),
+        'schools_enabled': managed_schools().filter(School.enabled.is_(True)).count(),
         'schools_active': active_schools_query().count(),
         'subscriptions': Subscription.query.count(),
         'announcements': Announcement.query.count(),
@@ -85,6 +90,7 @@ def api_admin_stats():
         'scrape_outcomes_7d': outcomes,
         'scrape_new_7d': int(new7),
         'scrape_interval': AppConfig.get('scrape_interval', '30'),
+        'scrape_since_month': since_month(),
         'open_registration': AppConfig.get('open_registration', '1'),
         'public_read': AppConfig.get('public_read', '1'),
         'recent_logs': [log.to_dict() for log in

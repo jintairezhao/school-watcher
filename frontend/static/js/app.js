@@ -112,6 +112,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ---- Toast 通知 ----
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.flash-success').forEach(function (notice) {
+        let timer;
+        const start = () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                const container = notice.parentElement;
+                notice.remove();
+                if (container && !container.children.length) container.remove();
+            }, 4000);
+        };
+        notice.setAttribute('role', 'status');
+        notice.addEventListener('mouseenter', () => clearTimeout(timer));
+        notice.addEventListener('mouseleave', start);
+        notice.addEventListener('focusin', () => clearTimeout(timer));
+        notice.addEventListener('focusout', start);
+        start();
+    });
+});
+
 function showToast(type, message) {
     const container = document.getElementById('toastContainer');
     if (!container) return;

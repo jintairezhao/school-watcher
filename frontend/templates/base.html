@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reader.css') }}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
+    {% include '_desktop_chrome.html' %}
     <!-- Shared navigation stays separate from each page's working controls. -->
     <!-- 顶部导航栏 -->
     <nav class="navbar">
@@ -111,7 +112,7 @@
         {% for category, message in messages %}
         <div class="flash flash-{{ category }}" role="alert">
             <span>{{ message }}</span>
-            <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+            <button class="flash-close" aria-label="关闭提示" onclick="this.parentElement.remove()">&times;</button>
         </div>
         {% endfor %}
     </div>

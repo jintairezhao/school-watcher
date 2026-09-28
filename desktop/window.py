@@ -166,10 +166,50 @@ def run_window(runtime, smoke_test=False):
 
     webview.settings.update(ALLOW_DOWNLOADS=True, ALLOW_FILE_URLS=False,
                             OPEN_EXTERNAL_LINKS_IN_BROWSER=True, OPEN_DEVTOOLS_IN_DEBUG=False)
+    class WindowAPI:
+        def _allowed(self):
+            from urllib.parse import urlsplit
+            actual = urlsplit(window.get_current_url() or '')
+            expected = urlsplit(runtime.address or '')
+            return actual.scheme == 'http' and actual.netloc == expected.netloc and actual.hostname == '127.0.0.1'
+
+        def window_action(self, action):
+            if not self._allowed():
+                return False
+            if action == 'minimize':
+                window.minimize()
+            elif action == 'maximize':
+                window.restore() if state['maximized'] else window.maximize()
+            elif action == 'close':
+                quit_app()
+            elif action == 'updates':
+                updates()
+            elif action == 'components':
+                components()
+            elif action == 'data':
+                open_data()
+            else:
+                return False
+            return True
+
+        def resize_window(self, width, height):
+            if not self._allowed() or state['maximized'] or type(width) not in (int, float) or type(height) not in (int, float):
+                return False
+            window.resize(max(980, min(10000, int(width))), max(680, min(10000, int(height))))
+            return True
+
+    state = {'maximized': False}
     window = webview.create_window(APP_NAME,
         html=(resource_root() / 'desktop' / 'ui' / 'loading.html').read_text(encoding='utf-8'),
         width=1380, height=900, min_size=(980, 680), text_select=True, zoomable=True,
-        background_color='#f5f5f7', hidden=smoke_test)
+        background_color='#f5f5f7', hidden=smoke_test, js_api=WindowAPI(),
+        frameless=os.name == 'nt', easy_drag=False)
+    def maximized():
+        state['maximized'] = True
+    def restored():
+        state['maximized'] = False
+    window.events.maximized += maximized
+    window.events.restored += restored
     menu = [Menu('School Watcher', [MenuAction('检查更新…', updates), MenuAction('采集组件…', components),
         MenuAction('打开数据文件夹', open_data), MenuAction('退出', quit_app)])]
 
@@ -206,6 +246,22 @@ def run_window(runtime, smoke_test=False):
                 while time.monotonic() < deadline:
                     if window.run_js('location.pathname === "/" && !!document.querySelector("a[href=\\"/admin\\"]") && !document.querySelector("a[href=\\"/login\\"],input[type=password]")'):
                         print('Native check: account-free desktop rendered', flush=True)
+                        if os.name == 'nt':
+                            if not window.run_js('!!document.querySelector("[data-window-action=close]")'):
+                                raise RuntimeError('Desktop window controls did not render.')
+                            window.run_js('window.pywebview.api.resize_window(1000,700).then(ok => {window.__resizeChecked=ok;})')
+                            until = time.monotonic() + 10
+                            while time.monotonic() < until and not window.run_js('window.__resizeChecked === true'):
+                                time.sleep(.1)
+                            if not window.run_js('window.__resizeChecked === true'):
+                                raise RuntimeError('Native resize bridge did not respond.')
+                            window.run_js('window.pywebview.api.window_action("invalid-action").then(ok => {window.__actionRejected=ok===false;})')
+                            until = time.monotonic() + 10
+                            while time.monotonic() < until and not window.run_js('window.__actionRejected === true'):
+                                time.sleep(.1)
+                            if not window.run_js('window.__actionRejected === true'):
+                                raise RuntimeError('Native action allowlist did not reject an unknown action.')
+                            print('Native check: frameless controls and resize bridge verified', flush=True)
                         return
                     time.sleep(.2)
                 raise RuntimeError('Native window did not render the desktop navigation.')
@@ -235,7 +291,8 @@ def run_window(runtime, smoke_test=False):
     window.events.closed += main_closed
     try:
         webview.start(prepare, gui='edgechromium' if os.name == 'nt' else None,
-            private_mode=False, storage_path=str(runtime.data_dir / 'webview'), menu=menu, debug=False)
+            private_mode=False, storage_path=str(runtime.data_dir / 'webview'),
+            menu=menu if sys.platform == 'darwin' else [], debug=False)
         if smoke_error:
             raise smoke_error[0]
     finally:

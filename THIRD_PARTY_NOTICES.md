@@ -32,3 +32,9 @@ Python 依赖及固定版本见根目录 `requirements.txt` 和 [requirements/](
 学校名称、官网地址、栏目与专业等目录事实用于来源识别，相关名称与标识不表示学校对本项目的背书。程序运行时取得的通知、图片和附件仍属于各自权利人，不能根据代码许可推定可任意再分发。
 
 `tests/fixtures/*.html` 中有用于解析回归的真实官网页面或片段，目前没有统一的再分发许可证明。它们不在项目原创代码授权声明的范围内；公开发行前需要逐项确认授权，或替换为独立编写的最小测试样本。测试用途本身不等于取得内容的开源授权。
+# Windows installer translation
+
+Simplified Chinese messages by Zhenghan Yang (Kira), vendored from
+https://github.com/kira-96/Inno-Setup-Chinese-Simplified-Translation (MIT).
+License: `licenses/inno-chinese-translation.txt`.
+Translation SHA-256: `bf0751fa176569c6faa2f6e17ed2734617bef325d5cc06eae030fdd0258ee778`.

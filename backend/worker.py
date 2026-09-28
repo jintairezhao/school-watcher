@@ -34,7 +34,8 @@ def _schedule_due(lease=None):
             delay = int(hashlib.sha256(f'{kind}:{key}'.encode()).hexdigest()[:8], 16) % min(60, max(1, seconds // 10))
             tasks.enqueue(kind, key, payload, min_interval=seconds, delay=delay)
 
-    schools = School.query.filter(School.enabled.is_(True)).all()
+    from backend.services.starter_catalog import managed_schools
+    schools = managed_schools().filter(School.enabled.is_(True)).all()
     for school in schools:
         if school.subscriber_count > 0:
             due('scrape', school.id, {'school_id': school.id}, interval)
@@ -44,7 +45,7 @@ def _schedule_due(lease=None):
     due('maintenance', 'daily', {}, 86400)
     due('backup', 'daily', {}, 86400)
     from backend.services.runtime_catalog import RuntimeCatalog
-    registered = {(s.name, s.url) for s in schools}
+    registered = {(s.name, s.url) for s in School.query.all()}
     for site in RuntimeCatalog(__import__('flask').current_app.config['SOURCE_CATALOG_PATH']).all_sites():
         if (site['name'], site['root_url']) in registered:
             continue
@@ -135,7 +136,7 @@ def dispatch(kind, payload):
         if result.get('continuation_required'):
             checkpoint = dict((tasks.current_execution() or {}).get('checkpoint') or {})
             checkpoint.update(directory_refresh_started=True, pending_pages=result.get('pending_pages', 0))
-            tasks.defer(capability='directory', phase='directory_slice', checkpoint=checkpoint, delay=5,
+            tasks.defer(capability='directory', phase='directory_slice', checkpoint=checkpoint, delay=1,
                         reason='本轮检查已保存，继续处理剩余部门与栏目')
         return result
     if kind == 'summary':
@@ -154,6 +155,10 @@ def dispatch(kind, payload):
     if not school or not school.enabled:
         return {'skipped': True}
     if kind == 'discover':
+        from backend.services.onboarding_progress import ai_available
+        if payload.get('require_ai') and not ai_available():
+            tasks.defer(capability='directory', phase='ai_setup', state='waiting',
+                        reason='请先配置目录识别 AI', error_code='ai_not_configured')
         from backend.services.discovery_cache import adapt_site
         name, url = school.name, school.url
         db.session.commit()
@@ -168,7 +173,7 @@ def dispatch(kind, payload):
         if result.get('continuation_required'):
             checkpoint = dict((tasks.current_execution() or {}).get('checkpoint') or {})
             checkpoint.update(directory_refresh_started=True, pending_pages=result.get('pending_pages', 0))
-            tasks.defer(capability='directory', phase='directory_slice', checkpoint=checkpoint, delay=5,
+            tasks.defer(capability='directory', phase='directory_slice', checkpoint=checkpoint, delay=1,
                         reason='本轮检查已保存，继续处理剩余部门与栏目')
         return result
     if not school.subscriber_count:
@@ -220,6 +225,10 @@ def dispatch(kind, payload):
         from backend.scraper.selector_monitor import evaluate_and_repair, mark_needs_review
         checked = 0
         needs_adaptation = False
+        # Successful collection already checks selectors against its fetched DOM.
+        # Avoid requesting the same column again when the daily audit overlaps it.
+        if dept.last_scraped_at and dept.last_scraped_at >= datetime.utcnow() - timedelta(minutes=15):
+            return {'checked': 1, 'adaptation_queued': False, 'reused_recent_collection': True}
         # Check every subscribed column daily; global HTTP slots bound concurrency.
         for dept in [dept]:
             url = dept.list_url

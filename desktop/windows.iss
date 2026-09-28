@@ -10,6 +10,7 @@
 [Setup]
 AppId={{6E20F2D9-C889-4B92-9878-B204171598A2}
 AppName=School Watcher
+AppVerName=学校通知 {#AppVersion}
 AppVersion={#AppVersion}
 AppPublisher=jintairezhao
 AppPublisherURL=https://github.com/jintairezhao/school-watcher
@@ -27,6 +28,8 @@ UninstallDisplayIcon={app}\SchoolWatcher.exe
 CloseApplications=yes
 RestartApplications=no
 LicenseFile=..\LICENSE
+[Languages]
+Name: "zhcn"; MessagesFile: "languages\ChineseSimplified.isl"
 [Files]
 Source: "{#AppSource}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 #ifdef WebViewBootstrapper
@@ -35,17 +38,25 @@ Source: "{#WebViewBootstrapper}"; DestDir: "{tmp}"; Flags: deleteafterinstall
 [InstallDelete]
 ; Only obsolete application-owned browser files, never the user data directory.
 Type: filesandordirs; Name: "{app}\_internal\browser-runtime"
+Type: files; Name: "{app}\_internal\config\desktop-schools.json"
+Type: files; Name: "{app}\_internal\config\schools.yaml"
 [Icons]
 Name: "{group}\School Watcher"; Filename: "{app}\SchoolWatcher.exe"
 Name: "{autodesktop}\School Watcher"; Filename: "{app}\SchoolWatcher.exe"; Tasks: desktopicon
 [Tasks]
-Name: "desktopicon"; Description: "创建桌面快捷方式"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 [Run]
 #ifdef WebViewBootstrapper
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "正在准备网页显示组件…"; Flags: waituntilterminated runhidden; Check: NeedsWebView
 #endif
-Filename: "{app}\SchoolWatcher.exe"; Description: "打开 School Watcher"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\SchoolWatcher.exe"; Description: "打开学校通知"; Flags: nowait postinstall skipifsilent
 [Code]
+procedure InitializeWizard;
+begin
+  WizardForm.TasksList.Left := ScaleX(8);
+  WizardForm.TasksList.Width := WizardForm.TasksList.Parent.ClientWidth - ScaleX(16);
+end;
+
 function NeedsWebView: Boolean;
 var Version: String;
 begin

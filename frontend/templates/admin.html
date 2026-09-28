@@ -7,7 +7,7 @@
 {% block content %}
 <header class="surface-heading admin-page-header">
     <div><h1 id="adminPageTitle">系统概览</h1><p id="adminPageDescription">先处理需要介入的事项，再查看近期运行情况。</p></div>
-    <span class="admin-access-label">{{ '本机管理' if config.DESKTOP_MODE else '仅管理员' }}</span>
+    {% if not config.DESKTOP_MODE %}<span class="admin-access-label">仅管理员</span>{% endif %}
 </header>
 
 <!-- ================= 概览 ================= -->
@@ -58,14 +58,19 @@
 <section class="admin-tab-panel" id="panel-scrape" hidden>
     <div class="settings-grid">
         <div class="setting-card">
-            <div class="setting-card-header"><h3>抓取设置</h3><p>定时抓取间隔</p></div>
+            <div class="setting-card-header"><h3>抓取设置</h3></div>
             <div class="setting-card-body">
                 <div class="form-group">
                     <label for="interval">检查间隔（分钟）</label>
                     <input type="number" id="interval" class="form-input" min="5" max="720" step="1" value="30" aria-describedby="interval-help">
-                    <p id="interval-help" class="text-muted">可设为 5–720 分钟，默认 30 分钟。任务排队时会合并更新请求。</p>
+                    <p id="interval-help" class="text-muted">5–720 分钟</p>
                 </div>
-                <button class="btn btn-primary" onclick="saveInterval()">保存间隔</button>
+                <div class="form-group">
+                    <label for="sinceMonth">起始发布年月</label>
+                    <input type="month" id="sinceMonth" class="form-input" min="1900-01" required aria-describedby="sinceMonthHelp">
+                    <p id="sinceMonthHelp" class="text-muted">下次抓取生效，已保存的通知保留。</p>
+                </div>
+                <button class="btn btn-primary" onclick="saveInterval()">保存设置</button>
             </div>
         </div>
         <div class="setting-card">
@@ -82,6 +87,7 @@
 
 <!-- ================= 平台设置 ================= -->
 <section class="admin-tab-panel" id="panel-platform" hidden>
+    {% if onboarding_school %}<p class="ai-onboarding-return"><a href="{{ url_for('subscriptions.manage_sources', school_id=onboarding_school.id) }}">返回{{ onboarding_school.name }}</a> · 保存目录识别用途后继续发现栏目</p>{% endif %}
     <div class="settings-grid">
         {% include '_admin_ai.html' %}
         {% if not config.DESKTOP_MODE %}
@@ -217,11 +223,17 @@ async function loadInterval() {
     var r = await fetch('/api/admin/stats');
     var s = await r.json();
     document.getElementById('interval').value = s.scrape_interval;
+    var month = document.getElementById('sinceMonth');
+    month.value = s.scrape_since_month;
+    var today = new Date();
+    month.max = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
 }
 async function saveInterval() {
+    if (!document.getElementById('sinceMonth').reportValidity()) return;
     var resp = await fetch('/api/settings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interval: document.getElementById('interval').value }) });
+        body: JSON.stringify({ interval: document.getElementById('interval').value,
+            since_month: document.getElementById('sinceMonth').value }) });
     var d = await resp.json();
     showToast(d.success ? 'success' : 'error', d.message || d.error);
 }

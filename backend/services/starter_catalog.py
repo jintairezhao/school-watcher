@@ -13,6 +13,27 @@ FIELDS = ('name', 'list_url', 'group_name', 'list_selector', 'title_selector',
           'link_selector', 'date_selector', 'content_selector')
 
 
+def managed_schools():
+    """Unused legacy presets are not the desktop owner's school list."""
+    from backend.database.models import School
+    from backend.database.school_registry_models import SchoolRegistryEntry
+    query = School.query
+    if current_app.config.get('DESKTOP_MODE'):
+        unused = db.select(SchoolRegistryEntry.school_id).where(
+            SchoolRegistryEntry.origin == 'desktop-catalog', SchoolRegistryEntry.school_id.is_not(None))
+        query = query.filter(db.or_(School.id.not_in(unused), School.subscriber_count > 0,
+                                  School.announcements.any()))
+    return query
+
+
+def mark_selected(school_id):
+    from backend.database.school_registry_models import SchoolRegistryEntry
+    if current_app.config.get('DESKTOP_MODE'):
+        db.session.execute(db.update(SchoolRegistryEntry).where(
+            SchoolRegistryEntry.school_id == school_id, SchoolRegistryEntry.origin == 'desktop-catalog'
+        ).values(origin='selected'))
+
+
 @lru_cache(maxsize=4)
 def _read(path):
     return json.loads(Path(path).read_text(encoding='utf-8'))
@@ -20,6 +41,8 @@ def _read(path):
 
 def catalog():
     path = current_app.config.get('STARTER_CATALOG_PATH', ROOT_DIR / 'config' / 'desktop-schools.json')
+    if not Path(path).is_file():
+        return {'version': 'empty', 'schools': []}
     return _read(str(path))
 
 

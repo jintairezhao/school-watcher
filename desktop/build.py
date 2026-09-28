@@ -38,7 +38,7 @@ def main():
                         '--timestamp=none', str(bundle)], check=True)
     # Also run this against the finished tree, since dependencies have their own hooks.
     forbidden = [p for p in bundle.rglob('*') if p.is_file() and (
-        '.local' in p.relative_to(bundle).parts or 'promo-web' in p.parts or 'browser-runtime' in p.parts or p.name in ('.env', '.field-key', 'browser-service.token')
+        '.local' in p.relative_to(bundle).parts or 'promo-web' in p.parts or 'browser-runtime' in p.parts or p.name in ('.env', '.field-key', 'browser-service.token', 'desktop-schools.json', 'schools.yaml')
         or p.suffix.lower() in ('.db', '.sqlite', '.sqlite3', '.mp4', '.webm', '.wav', '.mp3'))]
     if forbidden:
         raise RuntimeError(f'Private or unrelated files found in bundle: {forbidden[:5]}')
@@ -71,7 +71,7 @@ def main():
         raise RuntimeError('Build this application on Windows or macOS.')
     entries = []
     for artifact in sorted(release.iterdir()):
-        if artifact.suffix in ('.exe', '.zip', '.dmg'):
+        if artifact.name.startswith(f'School-Watcher-{VERSION}-') and artifact.suffix in ('.exe', '.zip', '.dmg'):
             with artifact.open('rb') as source:
                 entries.append(f'{hashlib.file_digest(source, "sha256").hexdigest()}  {artifact.name}')
     (release / 'SHA256SUMS.txt').write_text('\n'.join(entries) + '\n', encoding='utf-8')

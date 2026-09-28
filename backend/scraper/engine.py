@@ -21,7 +21,8 @@ from backend.scraper.cms_registry import load_selector_profiles
 logger = logging.getLogger(__name__)
 
 MAX_PAGES = max(1, min(50, int(os.environ.get('WATCHER_MAX_PAGES', '3'))))
-SINCE_YEAR = 2024  # 只抓取2024年至今的通知
+# MAX_PAGES is a scheduling slice, never a completeness limit.
+MAX_TOTAL_PAGES = 2000
 INCREMENTAL_THRESHOLD = 3  # 连续N条已存在通知时停止翻页（增量抓取）
 
 # ---- 选择器探测：常见中国高校 CMS 模式 ----
@@ -194,12 +195,15 @@ def _process_announcement_item(item, department, school_base_url: str) -> bool:
 
 
 def scrape_department(department: Department, school_base_url: str,
-                      since_year: int = SINCE_YEAR, *, strict_fetch: bool = False) -> tuple:
+                      since_year: int | None = None, *, strict_fetch: bool = False) -> tuple:
     """爬取单个部门（支持翻页），返回 (新增数量, 总数)
 
     如果部门的选择器为空或未匹配到内容，会自动探测常见的 CMS 模式。
     """
     from backend.scraper.discovery.publication_lists import select_node
+    from backend.services.collection_settings import since_date, coverage_complete, record_coverage
+    from backend.services import tasks
+    cutoff = datetime(since_year, 1, 1) if since_year is not None else since_date()
     department._fetch_confirmed_empty = False
     new_count = 0
     total = 0
@@ -207,7 +211,9 @@ def scrape_department(department: Department, school_base_url: str,
     consecutive_empty = 0
     consecutive_existing = 0  # 连续已存在通知计数（增量抓取）
     # 增量模式：上次完整抓取过 → 遇到连续已存在通知时提前停止
-    incremental_mode = department.last_scraped_at is not None
+    incremental_mode = department.last_scraped_at is not None and coverage_complete(department, cutoff)
+    old_pages = 0
+    processed_this_slice = 0
     if incremental_mode:
         logger.info(f"[{department.name}] 增量模式：上次抓取 {department.last_scraped_at}, "
                     f"连续{INCREMENTAL_THRESHOLD}条已存在即停止")
@@ -239,13 +245,14 @@ def scrape_department(department: Department, school_base_url: str,
     _orig_content_sel = department.content_selector
 
     from backend.services.source_collection import collection_progress, save_collection_progress
-    progress_key = 'column:' + str(department.id)
+    progress_key = f'column:{department.id}:{cutoff:%Y-%m}'
     saved = collection_progress(progress_key)
     if saved:
         new_count, total = saved['new'], saved['total']
         page, page_url = saved['page'], saved['page_url']
         visited_pages = set(saved.get('visited', []))
         consecutive_existing = saved.get('consecutive_existing', 0)
+        old_pages = saved.get('old_pages', 0)
         incremental_mode = saved.get('incremental_mode', incremental_mode)
         department._fetch_confirmed_empty = saved.get('confirmed_empty', False)
         for name, value in saved.get('selectors', {}).items():
@@ -261,13 +268,16 @@ def scrape_department(department: Department, school_base_url: str,
         save_collection_progress(progress_key, {'new': new_count, 'total': total,
             'page': next_page, 'page_url': next_url, 'visited': sorted(visited_pages),
             'consecutive_existing': consecutive_existing, 'incremental_mode': incremental_mode,
+            'old_pages': old_pages,
             'confirmed_empty': department._fetch_confirmed_empty, 'finished': finished,
             'selectors': {name: getattr(department, name) for name in
                 ('list_selector', 'title_selector', 'link_selector', 'date_selector', 'content_selector')}})
 
-    while page <= MAX_PAGES and not saved.get('finished'):
+    while not saved.get('finished'):
+        if page > MAX_TOTAL_PAGES:
+            raise RuntimeError('栏目分页超出本轮检查上限，已保存通知；请检查官网分页规则')
         if page_url in visited_pages:
-            break
+            raise RuntimeError('官网分页重复，已保存通知；需要核对分页规则')
         visited_pages.add(page_url)
         logger.info(f"[{department.name}] 第{page}页 {page_url}")
         db.session.commit()  # Release any list-membership writes before the next network call.
@@ -324,16 +334,27 @@ def scrape_department(department: Department, school_base_url: str,
         page_old = 0
 
         for item in items:
-            # 先检查日期，早于since_year的跳过（不抓正文，节省请求）
+            # Filter before ingestion; undated entries remain eligible.
             date_text = ''
             if department.date_selector:
                 date_elem = select_node(item, department.date_selector)
                 date_text = publication_date_text(date_elem)
             pub_date = parse_date(date_text)
-            if pub_date and pub_date.year < since_year:
+            if not pub_date:
+                link = select_node(item, department.link_selector or 'a[href]')
+                if link:
+                    pub_date = date_from_url(_resolve_url(page_url, link.get('href', '')) or '')
+            if pub_date and pub_date.replace(tzinfo=None) < cutoff:
                 page_old += 1
                 continue
 
+            # A rejected title or malformed item is not an existing notice.
+            prior = False
+            if incremental_mode:
+                from backend.services.announcement_identity import article_identity
+                link = select_node(item, department.link_selector or 'a[href]')
+                _, key = article_identity(_resolve_url(page_url, link.get('href', '')) if link else '')
+                prior = bool(key and Announcement.query.filter_by(school_id=department.school_id, url_key=key).first())
             if _process_announcement_item(item, department, school_base_url):
                 new_count += 1
                 page_new += 1
@@ -341,7 +362,7 @@ def scrape_department(department: Department, school_base_url: str,
             else:
                 # 增量模式：计数连续已存在项，达到阈值则停止翻页
                 if incremental_mode:
-                    consecutive_existing += 1
+                    consecutive_existing = consecutive_existing + 1 if prior else 0
 
         if page_new > 0:
             logger.info(f"[{department.name}] P{page}: 新增{page_new}条")
@@ -352,9 +373,10 @@ def scrape_department(department: Department, school_base_url: str,
             checkpoint_page(page_url, page, finished=True)
             break
 
-        # 翻页策略：如果本页半数以上是旧数据，再翻一页确认后停止
-        if page_old > len(items) * 0.6:
-            logger.info(f"[{department.name}] P{page}大部分为{SINCE_YEAR}年前数据，停止翻页")
+        # Do not stop on a mixed/pinned page. Confirm two fully dated old pages.
+        old_pages = old_pages + 1 if page_old == len(items) else 0
+        if old_pages >= 2:
+            logger.info(f"[{department.name}] 连续两页早于{cutoff:%Y-%m}，停止翻页")
             checkpoint_page(page_url, page, finished=True)
             break
 
@@ -368,10 +390,14 @@ def scrape_department(department: Department, school_base_url: str,
             consecutive_empty = 0
 
         next_page = _next_page_url(html, page_url, page)
-        if not next_page or page >= MAX_PAGES:
+        if not next_page:
             checkpoint_page(page_url, page, finished=True)
             break
         checkpoint_page(next_page, page + 1)
+        processed_this_slice += 1
+        if tasks.current_execution() and processed_this_slice >= MAX_PAGES:
+            tasks.defer(capability='http', phase='pagination', delay=1,
+                        reason=f'已检查 {page} 页，继续抓取历史通知')
         page_url = next_page
 
         page += 1
@@ -381,6 +407,7 @@ def scrape_department(department: Department, school_base_url: str,
     # --- 更新上次抓取时间（用于下次增量抓取）---
     if total > 0 or department._fetch_confirmed_empty:
         department.last_scraped_at = datetime.utcnow()
+        record_coverage(department, cutoff)
     db.session.commit()
 
     # --- 探测后处理：保存成功的探测结果，或恢复原始选择器 ---
@@ -407,7 +434,7 @@ def scrape_department(department: Department, school_base_url: str,
     return new_count, total
 
 
-def scrape_school(school: School, since_year: int = SINCE_YEAR,
+def scrape_school(school: School, since_year: int | None = None,
                   progress_session=None) -> ScrapeLog:
     """爬取一个学校的所有部门
 
@@ -564,7 +591,7 @@ def active_schools_query():
                                School.subscriber_count > 0)
 
 
-def scrape_all_schools(since_year: int = SINCE_YEAR) -> list:
+def scrape_all_schools(since_year: int | None = None) -> list:
     """爬取所有活跃学校（上架且有订阅）"""
     schools = active_schools_query().all()
     results = []
@@ -575,7 +602,7 @@ def scrape_all_schools(since_year: int = SINCE_YEAR) -> list:
     return results
 
 
-def manual_scrape(school_id: int, since_year: int = SINCE_YEAR) -> ScrapeLog:
+def manual_scrape(school_id: int, since_year: int | None = None) -> ScrapeLog:
     """手动触发单个学校的爬取"""
     school = db.session.get(School, school_id)
     if not school:

@@ -97,7 +97,19 @@ def adapt_site(name, root_url, *, monthly=False):
             tasks.checkpoint(dict(handle.get('checkpoint') or {}, directory_refresh_started=True))
         # A slice prioritizes student entrances but must eventually visit other
         # official information too; student_priority is ordering, not exclusion.
-        result = crawl_site(inventory, key, max_pages=20, workers=2, focus='all', retry_failed=monthly)
+        from backend.services.onboarding_progress import record_progress
+        def progress(processed, snapshot):
+            states = snapshot['states']
+            record_progress(phase='crawl', checked_pages=sum(v for k, v in states.items() if k not in ('pending', 'running')),
+                pending_pages=states.get('pending', 0) + states.get('running', 0),
+                failed_pages=states.get('failed', 0) + states.get('blocked', 0),
+                current_label=snapshot.get('current_label', ''))
+            if processed:
+                catalog.publish(inventory, key, merge=True)
+        # Make the first results available without waiting for a twenty-page crawl.
+        first_slice = bool(handle) and not handle.get('checkpoint', {}).get('first_slice_finished')
+        result = crawl_site(inventory, key, max_pages=3 if first_slice else 20, workers=2,
+                            focus='all', retry_failed=monthly, progress=progress)
         from backend.database.models import School
         from backend.services.source_governance import process_discovered_candidates, record_onboarding_slice
         from backend.services.source_relationships import ROSTER_RELATIONS
@@ -105,6 +117,7 @@ def adapt_site(name, root_url, *, monthly=False):
                        if canonical_url(s.url) == canonical_url(root_url)), None)
         governance = {'proposal_ids': [], 'activated_ids': [], 'remaining_candidates': 0}
         if school:
+            record_progress(phase='verify', current_label='')
             governance = process_discovered_candidates(school.id, inventory, key)
             result['official_units'] = [n for n in inventory.structure(key) if n['kind'] == 'unit' and n['relation'] in ROSTER_RELATIONS]
             record_onboarding_slice(school.id, result)
@@ -113,6 +126,9 @@ def adapt_site(name, root_url, *, monthly=False):
         catalog.publish(inventory, key, merge=True)
         inventory.trim()
         pending = result['states'].get('pending', 0) + result['states'].get('running', 0)
+        if handle:
+            tasks.checkpoint(dict(handle.get('checkpoint') or {}, first_slice_finished=True))
+        record_progress(phase='crawl' if pending or governance['remaining_candidates'] else 'complete')
         return {'departments': catalog.candidates(key), 'pending_pages': pending,
                 'continuation_required': bool(pending or governance['remaining_candidates']), **governance,
                 'coverage_verified': False, 'message': '本轮来源检查已保存；剩余入口将继续检查，待核实栏目不会直接生效'}

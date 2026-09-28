@@ -63,6 +63,8 @@ def inspect_page(inventory, site, page, fetcher=fetch_page):
             return
         parsed = extract_structure(html, final, site['root_url'], page['kind'], page['label'],
                                    json.loads(page['path_json']))
+        from .ai_navigation import assist_navigation
+        assist_navigation(site, dict(page, url=final), html, parsed)
         if parsed.get('branding_candidates'):
             from backend.services.source_ownership import BRANDING_PREFIX
             parsed['notes'].append(BRANDING_PREFIX + json.dumps({
@@ -171,6 +173,9 @@ def crawl_site(inventory, key, max_pages=250, workers=4, fetcher=fetch_page, pro
                     batch = [p for _ in range(allowance) if (p := inventory.claim(key, focus=focus)) is not None]
                     if not batch:
                         break
+                    if durable:
+                        from backend.services.onboarding_progress import record_progress
+                        record_progress(phase='crawl', current_label=batch[0]['label'])
                     futures = [pool.submit(inspect_page, inventory, site, p, fetcher) for p in batch] if pool else batch
                     for future in as_completed(futures) if pool else futures:
                         if pool:

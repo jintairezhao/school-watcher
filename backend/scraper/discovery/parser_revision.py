@@ -1,5 +1,7 @@
 """Fingerprint cached parsing separately from the time a website was visited."""
 import hashlib
+import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -24,6 +26,7 @@ FILES = (
     'backend/scraper/discovery/publication_lists.py',
     'backend/scraper/discovery/publication_tabs.py',
     'backend/scraper/discovery/inventory_crawler.py',
+    'backend/scraper/discovery/ai_navigation.py',
     'backend/scraper/detectors/dom_analyzer.py',
     'backend/scraper/detectors/title_quality.py',
     'backend/scraper/cms_registry.py',
@@ -35,6 +38,11 @@ FILES = (
 # Freeze once per process. An old running worker must not label its results with
 # the revision of files subsequently edited on disk.
 def current_revision():
+    if getattr(sys, 'frozen', False):
+        revision = (ROOT / 'config/parser-revision.txt').read_text(encoding='ascii').strip()
+        if not re.fullmatch(r'[0-9a-f]{64}', revision):
+            raise OSError('Packaged parser revision is invalid')
+        return revision
     return hashlib.sha256(b'\0'.join(
         name.encode() + b'\0' + (ROOT / name).read_bytes().replace(b'\r\n', b'\n') for name in FILES
     )).hexdigest()

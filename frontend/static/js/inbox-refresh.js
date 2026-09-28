@@ -127,7 +127,8 @@
         scope = data.tracking?.scope || scope;
         checking = sending = recovering = reconnecting = false; retryCount = 0; message = '';
         render();
-        const signature = data.sources.filter(s => s.state === 'done').map(s => s.id + ':' + s.updated_at).join('|');
+        const signature = data.sources.filter(s => s.state === 'done' || (s.pages_checked > 0 && s.new_count > 0))
+            .map(s => s.state === 'done' ? s.id + ':' + s.updated_at : s.id + ':partial:' + s.new_count).join('|');
         if (updateList && signature && signature !== completedSignature) {
             completedSignature = signature;
             await window.refreshInboxView?.();

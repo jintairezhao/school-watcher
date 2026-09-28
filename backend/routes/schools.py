@@ -44,7 +44,8 @@ def subscribe_catalog():
 @login_required
 def api_schools():
     """获取所有学校"""
-    schools = School.query.order_by(School.name).all()
+    from backend.services.starter_catalog import managed_schools
+    schools = managed_schools().order_by(School.name).all()
     return jsonify([s.to_dict() for s in schools])
 
 
@@ -123,6 +124,8 @@ def api_update_school(school_id):
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify(error='学校信息格式无效'), 400
+    from backend.services.starter_catalog import mark_selected
+    mark_selected(school_id)
     if 'name' in data and data['name'] != school.name:
         from backend.services.school_registry import rename_school
         try:

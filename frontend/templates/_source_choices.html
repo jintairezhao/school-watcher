@@ -1,0 +1,22 @@
+        {% for group_name, departments in groups.items() %}
+        <fieldset class="source-group"><legend>{{ group_name }}</legend>
+            {% for dept in departments %}
+            <div class="source-entry" data-source-id="{{ dept.id }}">
+            <div class="source-choice"><label><input type="checkbox" name="department" value="{{ dept.id }}" {% if subscription.department_ids is none or dept.id in subscription.department_ids %}checked{% endif %}><span>{{ dept.name }}</span></label>{% if dept.list_url %}<a href="{{ dept.list_url }}" target="_blank" rel="noopener noreferrer" aria-label="打开{{ dept.name }}官网栏目">官网栏目</a>{% endif %}</div>
+            {% if source_paths.get(dept.id) %}
+            <details class="source-paths"><summary>官网层级 · {{ source_paths[dept.id]|length }} 条路径</summary>
+                {% for path in source_paths[dept.id] %}<div class="source-path">
+                    <ol aria-label="官网列示路径">
+                        {% for node in path.nodes %}<li>{{ node.name }}{% if node.relation == 'sub_unit' %}<small>下属单位</small>{% elif node.relation == 'attached_unit' %}<small>挂靠单位</small>{% elif node.relation == 'non_entity_directory_entry' %}<small>官网标注：非实体学院</small>{% elif node.relation == 'campus_group' %}<small>官网校区分组</small>{% elif node.relation == 'shared_table_row' %}<small>官网同列多个单位，具体归属待核实</small>{% elif node.relation == 'academic_group' %}<small>官网教学科研分组</small>{% elif node.relation == 'directory_group' %}<small>官网机构分类</small>{% elif node.relation == 'shared_directory_row' %}<small>官网同一条目并列，不代表上下级</small>{% elif node.relation == 'directory_companion_entry' %}<small>官网附加列示，隶属关系待核实</small>{% endif %}</li>
+                        {% else %}<li>学校主页</li>{% endfor %}
+                        {% for node in path.entry_nodes %}<li>{{ node.name }}<small>导航分组</small></li>{% endfor %}
+                        <li>{{ path.entry_names|join(' / ') if path.entry_names else dept.name }}</li>
+                    </ol>
+                    <ul class="source-path-references" aria-label="路径出处">{% for reference in path.references %}<li><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=reference.url) }}">查看{{ reference.title }}的结构</a> · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer">官网出处</a><span>检查于 {{ reference.checked_at[:10] }}</span></li>{% endfor %}</ul>
+                </div>{% endfor %}
+            </details>
+            {% else %}<p class="source-path-pending">单位与栏目关系待核实</p>{% endif %}
+            </div>
+            {% endfor %}
+        </fieldset>
+        {% else %}<p class="source-sync">发现的栏目会出现在这里。</p>{% endfor %}
