@@ -63,13 +63,28 @@
     <p>备份通知、已缓存正文与来源信息，不包含账户和个人阅读状态。</p>
     <div class="storage-actions"><button class="btn btn-primary" type="button" id="exportStorage">导出数据备份</button></div>
     <p id="exportStatus" class="storage-status" role="status" aria-live="polite"></p>
+    <div id="exportProgress" class="storage-progress" hidden>
+        <div class="storage-progress-heading"><span data-phase></span><span data-percent></span></div>
+        <progress max="100" aria-label="导出进度"></progress>
+        <div class="storage-progress-details"><span data-count></span><span data-speed></span><span data-elapsed></span></div>
+    </div>
     <form id="storageImportForm" class="storage-import">
         <label for="storageBackupFile">选择之前的备份</label>
         <input class="form-input" id="storageBackupFile" name="file" type="file" accept=".zip,application/zip" required aria-describedby="importHelp">
-        <p id="importHelp" class="storage-help">支持本页导出的 ZIP 和旧版自动数据库备份。文件应小于 100 MB，解压后不超过 256 MB。</p>
+        <p id="importHelp" class="storage-help">支持导出的 ZIP 和旧版自动备份。</p>
+        <details class="storage-import-options"><summary>导入选项</summary>
+            <label for="importExpandedMB">允许的展开大小（MB）</label>
+            <input id="importExpandedMB" class="form-input" type="number" min="1" step="1" value="1024" required>
+            <p class="storage-help">大备份可调高；用于防止异常压缩包占满空间。</p>
+        </details>
         <p>导入只补充缺失内容，重复通知自动跳过。</p>
         <div class="storage-actions"><button class="btn btn-outline" type="submit">导入并合并</button></div>
         <p id="importStatus" class="storage-status" role="status" aria-live="polite"></p>
+        <div id="importProgress" class="storage-progress" hidden>
+            <div class="storage-progress-heading"><span data-phase></span><span data-percent></span></div>
+            <progress max="100" aria-label="导入进度"></progress>
+            <div class="storage-progress-details"><span data-count></span><span data-speed></span><span data-elapsed></span></div>
+        </div>
     </form>
 </section>
 </section>

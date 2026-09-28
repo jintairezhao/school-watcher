@@ -69,6 +69,12 @@ procedure InitializeWizard;
 begin
   WizardForm.TasksList.Left := ScaleX(8);
   WizardForm.TasksList.Width := WizardForm.TasksList.Parent.ClientWidth - ScaleX(16);
+  { Windows themes draw a DPI-sized glyph, while the checklist reserves a
+    legacy bitmap width. Give the glyph space INSIDE the owner-drawn control. }
+  WizardForm.TasksList.Offset := ScaleX(16);
+  WizardForm.TasksList.MinItemHeight := ScaleY(28);
+  WizardForm.RunList.Offset := ScaleX(16);
+  WizardForm.RunList.MinItemHeight := ScaleY(28);
   DataPage := CreateInputDirPage(wpSelectDir, '数据位置', '选择订阅、收藏与设置的保存位置',
     '更改位置时会迁移现有数据，并保留原目录副本。', False, '');
   DataPage.Add('数据文件夹：');

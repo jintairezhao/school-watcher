@@ -10,7 +10,7 @@ version = runpy.run_path(str(root / 'desktop' / '__init__.py'))['VERSION']
 
 application_data = runpy.run_path(str(root / 'desktop/resources.py'))['application_data']
 datas = application_data(root, root / '.local/desktop-build')
-hidden = ['desktop.window', 'desktop.updater', 'desktop.browser', 'scripts.maintenance.migrate_safely', 'logging.config']
+hidden = ['desktop.window', 'desktop.updater', 'desktop.browser', 'scripts.maintenance.migrate_safely', 'logging.config', 'ijson.backends.yajl2_c', 'ijson.backends.python']
 for source in (root / 'backend').rglob('*.py'):
     name = '.'.join(source.relative_to(root).with_suffix('').parts)
     hidden.append(name.removesuffix('.__init__'))

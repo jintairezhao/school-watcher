@@ -20,6 +20,130 @@
         if (!response.ok) throw new Error(await responseError(response));
         return response.json();
     }
+    const bytesText = bytes => {
+        if (bytes < 1024) return `${Math.round(bytes)} B`;
+        if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+        if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
+        return `${(bytes / 1073741824).toFixed(2)} GB`;
+    };
+    const phases = {preparing:'正在准备', uploading:'正在传输备份', staging:'正在读取文件', reading:'正在解压读取',
+        compressing:'正在生成备份', writing:'正在写入文件', flushing:'正在保存到磁盘', finalizing:'正在完成备份',
+        checking_database:'正在检查旧版数据库', checking_relations:'正在校验数据关系', waiting_database:'正在等待数据库',
+        indexing:'正在检查已有通知', merging_schools:'正在合并学校', merging_departments:'正在合并栏目',
+        merging_announcements:'正在合并通知', merging_memberships:'正在合并通知来源', merging_sources:'正在合并来源',
+        merging_directories:'正在合并目录', reviewing_sources:'正在核实来源配置', committing:'正在保存合并结果',
+        downloading:'正在传输到浏览器', done:'已完成'};
+    function progressView(id) {
+        const node = document.getElementById(id);
+        const bar = node.querySelector('progress');
+        const started = performance.now();
+        let lastUpdate = started, active = true;
+        node.hidden = false;
+        function update(event) {
+            lastUpdate = performance.now();
+            node.querySelector('[data-phase]').textContent = phases[event.phase] ||
+                (event.phase.startsWith('validating_') ? '正在校验备份' : '正在处理');
+            const fraction = event.total > 0 ? Math.min(100, event.done / event.total * 100) : null;
+            if (fraction === null) bar.removeAttribute('value');
+            else bar.value = fraction;
+            node.querySelector('[data-percent]').textContent = fraction === null ? '' : `${Math.floor(fraction)}%`;
+            const isBytes = event.processed_bytes != null;
+            const byteStage = ['uploading', 'staging', 'reading', 'writing', 'downloading'].includes(event.phase);
+            node.querySelector('[data-count]').textContent = byteStage
+                ? `${bytesText(event.done || 0)}${event.total ? ' / ' + bytesText(event.total) : ''}`
+                : (event.total ? `${event.done} / ${event.total} 条` : '');
+            node.querySelector('[data-speed]').textContent = event.speed == null ? '正在计算速度…'
+                : isBytes ? `${bytesText(event.speed)}/s` : `${Math.round(event.speed)} 条/s`;
+            if (!event.total && event.processed_bytes == null)
+                node.querySelector('[data-speed]').textContent = '处理中';
+        }
+        update({phase:'preparing'});
+        const timer = setInterval(() => {
+            const seconds = Math.floor((performance.now() - started) / 1000);
+            node.querySelector('[data-elapsed]').textContent = `已用时 ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+            if (active && performance.now() - lastUpdate > 3000)
+                node.querySelector('[data-speed]').textContent = '处理中，等待下一批数据';
+        }, 500);
+        return {update, finish(success) {
+            active = false;
+            clearInterval(timer);
+            node.querySelector('[data-speed]').textContent = '';
+            if (success) {
+                bar.value = 100;
+                node.querySelector('[data-phase]').textContent = '已完成';
+                node.querySelector('[data-percent]').textContent = '100%';
+            } else {
+                node.querySelector('[data-phase]').textContent = '未完成';
+                bar.value = 0;
+                node.querySelector('[data-percent]').textContent = '';
+            }
+        }};
+    }
+    function transfer(url, data, view) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            let cursor = 0, result, failure;
+            const samples = [{time:performance.now(), bytes:0}];
+            xhr.open('POST', url);
+            xhr.setRequestHeader('X-CSRF-Token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+            if (data) {
+                xhr.upload.onprogress = event => {
+                    const now = performance.now();
+                    while (samples.length > 1 && now - samples[1].time > 2000) samples.shift();
+                    const elapsed = (now - samples[0].time) / 1000;
+                    view.update({phase:'uploading', done:event.loaded, total:event.lengthComputable ? event.total : 0,
+                        processed_bytes:event.loaded, speed:elapsed >= .05 ? (event.loaded - samples[0].bytes) / elapsed : null});
+                    samples.push({time:now, bytes:event.loaded});
+                };
+                xhr.upload.onload = () => view.update({phase:'preparing'});
+            }
+            function consume() {
+                const text = xhr.responseText;
+                let end;
+                while ((end = text.indexOf('\n', cursor)) !== -1) {
+                    const line = text.slice(cursor, end); cursor = end + 1;
+                    if (!line.trim()) continue;
+                    const event = JSON.parse(line);
+                    if (event.type === 'progress') view.update(event);
+                    if (event.type === 'result') result = event.result;
+                    if (event.type === 'error') failure = event.error;
+                }
+            }
+            xhr.onprogress = () => { if (xhr.status === 200) { try { consume(); } catch (_) { failure = '进度响应异常'; } } };
+            xhr.onload = () => {
+                if (xhr.status !== 200) {
+                    let message = '传输未完成，请稍后重试';
+                    try { message = JSON.parse(xhr.responseText).error || message; } catch (_) { /* Non-JSON proxy errors. */ }
+                    reject(new Error(message)); return;
+                }
+                try { consume(); } catch (_) { failure = '进度响应异常'; }
+                if (failure || !result) reject(new Error(failure || '连接中断，未收到完成结果，请检查后重试'));
+                else resolve(result);
+            };
+            xhr.onerror = () => reject(new Error('连接中断，未收到完成结果，请检查后重试'));
+            xhr.send(data || null);
+        });
+    }
+    async function download(result, view) {
+        const response = await fetch(result.download_url);
+        if (!response.ok) throw new Error(await responseError(response));
+        const reader = response.body.getReader(), chunks = [];
+        const total = Number(response.headers.get('Content-Length')) || result.bytes;
+        const started = performance.now();
+        let done = 0;
+        while (true) {
+            const {value, done:ended} = await reader.read();
+            if (ended) break;
+            chunks.push(value); done += value.byteLength;
+            const seconds = (performance.now() - started) / 1000;
+            view.update({phase:'downloading', done, total, processed_bytes:done, speed:seconds > .05 ? done / seconds : null});
+        }
+        const url = URL.createObjectURL(new Blob(chunks, {type:'application/zip'}));
+        const link = document.createElement('a');
+        link.href = url; link.download = result.name;
+        document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
     async function refreshUsage() {
         const data = await jsonRequest('/api/storage');
         const mb = bytes => `${(bytes / 1048576).toFixed(1)} MB`;
@@ -104,22 +228,16 @@
     document.getElementById('exportStorage').addEventListener('click', () => {
         run('exportStatus', '正在生成数据备份，请稍候…', async () => {
             const desktop = !!window.pywebview?.api;
-            const response = await fetch('/api/storage/export' + (desktop ? '?save=1' : ''), {method: 'POST'});
-            if (!response.ok) throw new Error(await responseError(response));
-            if (desktop) {
-                const result = await response.json();
-                return `已保存到备份目录：${result.name}`;
+            const view = progressView('exportProgress');
+            let success = false;
+            try {
+                const result = await transfer('/api/storage/export?progress=1' + (desktop ? '&save=1' : ''), null, view);
+                if (!result.saved) await download(result, view);
+                success = true;
+                return result.saved ? `已保存到备份目录：${result.name}` : '数据备份已生成，请在下载列表中查看';
+            } finally {
+                view.finish(success);
             }
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = (response.headers.get('Content-Disposition') || '').match(/filename="?([^";]+)/)?.[1] || 'school-watcher-data.zip';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 60000);
-            return '数据备份已生成，请在浏览器下载列表中确认并妥善保存。';
         });
     });
     let originalLocations;
@@ -183,15 +301,29 @@
         event.preventDefault();
         const file = document.getElementById('storageBackupFile').files[0];
         if (!file) return;
-        if (file.size >= 100 * 1024 * 1024) {
-            status('importStatus', '备份文件应小于 100 MB，请选择较小的完整备份。', true);
+        const expanded = Number(document.getElementById('importExpandedMB').value);
+        if (!Number.isSafeInteger(expanded) || expanded < 1) {
+            status('importStatus', '展开大小请输入正整数（MB）', true);
+            return;
+        }
+        if (file.size > expanded * 1048576) {
+            document.querySelector('.storage-import-options').open = true;
+            status('importStatus', `文件为 ${bytesText(file.size)}，请提高允许的展开大小后重试`, true);
             return;
         }
         const data = new FormData(importForm);
         run('importStatus', '正在检查并合并备份，请勿重复提交…', async () => {
-            const result = await jsonRequest('/api/storage/import', {method: 'POST', body: data});
-            importForm.reset();
-            return `合并完成：新增 ${result.added} 条通知，去重 ${result.duplicates} 条，补回 ${result.bodies_restored} 条正文。当前及历史独有通知均已保留。`;
+            const view = progressView('importProgress');
+            let success = false;
+            try {
+                const url = `/api/storage/import?progress=1&upload_mb=${Math.ceil(file.size / 1048576) + 2}&expanded_mb=${expanded}`;
+                const result = await transfer(url, data, view);
+                document.getElementById('storageBackupFile').value = '';
+                success = true;
+                return `合并完成：新增 ${result.added} 条通知，去重 ${result.duplicates} 条，补回 ${result.bodies_restored} 条正文。`;
+            } finally {
+                view.finish(success);
+            }
         }, true);
     });
 })();

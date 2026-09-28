@@ -31,6 +31,10 @@ jobs:
         run: python tests/browser/check_desktop_storage_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify import and export progress, speed and large-file recovery
+        run: python tests/browser/check_transfer_browser.py
+        env:
+          PLAYWRIGHT_CHANNEL: chromium
       - name: Verify inbox reading, favorites and filter memory
         env:
           PLAYWRIGHT_CHANNEL: chromium

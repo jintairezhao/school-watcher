@@ -289,4 +289,9 @@ def run_service(role):
                 return [json.dumps({'status': 'ok', 'version': VERSION}).encode()]
             return original(environ, start_response)
         app.wsgi_app = with_health
-        serve(app, host='127.0.0.1', port=int(os.environ['WATCHER_PORT']), threads=6)
+        import shutil
+        import tempfile
+        # Waitress otherwise rejects >1 GiB before the per-import allowance can
+        # run. Bound its disk spool by available space instead of a fixed size.
+        serve(app, host='127.0.0.1', port=int(os.environ['WATCHER_PORT']), threads=6,
+              max_request_body_size=shutil.disk_usage(tempfile.gettempdir()).free // 4)

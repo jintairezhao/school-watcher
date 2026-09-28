@@ -8,6 +8,7 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import zipfile
+import shutil
 
 from sqlalchemy import null, text
 
@@ -34,7 +35,20 @@ TABLES = {
 }
 
 
-def export_data():
+def _report(progress, phase, done=0, total=0, processed_bytes=None):
+    if progress:
+        progress(phase, done, total, processed_bytes)
+
+
+def _rows_progress(rows, progress, phase):
+    total = len(rows)
+    _report(progress, phase, 0, total)
+    for index, row in enumerate(rows, 1):
+        yield row
+        _report(progress, phase, index, total)
+
+
+def export_data(progress=None):
     """Stream rows into a temporary ZIP; no accounts, secrets or personal state."""
     output = tempfile.SpooledTemporaryFile(max_size=8 * 1024 * 1024, mode='w+b')
     try:
@@ -43,6 +57,9 @@ def export_data():
             db.session.execute(text('BEGIN'))
         elif db.engine.dialect.name == 'postgresql':
             db.session.execute(text('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'))
+        total = sum(db.session.query(model).count() for model, _ in TABLES.values())
+        done = processed = 0
+        _report(progress, 'compressing', done, total, processed)
         with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
             with archive.open('data.json', 'w') as raw, io.TextIOWrapper(raw, encoding='utf-8') as writer:
                 writer.write('{"format":' + json.dumps(FORMAT) + ',"version":1')
@@ -60,10 +77,15 @@ def export_data():
                             values['summary_history'] = values.get('summary') or ''
                             values['summary'] = version['summary'] if version else ''
                             values['summary_version'] = version
-                        json.dump(values, writer, ensure_ascii=False)
+                        encoded = json.dumps(values, ensure_ascii=False)
+                        writer.write(encoded)
+                        done += 1
+                        processed += len(encoded.encode('utf-8'))
+                        _report(progress, 'compressing', done, total, processed)
                         first = False
                     writer.write(']')
                 writer.write('}')
+        _report(progress, 'finalizing')
         db.session.commit()
         output.seek(0)
         return output
@@ -73,14 +95,24 @@ def export_data():
         raise
 
 
-def _legacy_data(archive, infos):
+def _legacy_data(archive, infos, progress=None, disk_backed=False, max_rows=MAX_ROWS):
+    candidates = []
+    try:
+        return _legacy_rows(archive, infos, candidates, progress, disk_backed, max_rows)
+    except Exception:
+        for data in candidates:
+            if hasattr(data, 'close'):
+                data.close()
+        raise
+
+
+def _legacy_rows(archive, infos, candidates, progress, disk_backed, max_rows):
     """Read only known tables from historical watcher-*.zip SQLite snapshots."""
     if 'manifest.json' not in infos or infos['manifest.json'].file_size > 65536:
         raise ValueError('无法识别备份格式，请选择本项目导出的 ZIP 备份')
     manifest = json.loads(archive.read('manifest.json'))
     if not isinstance(manifest, dict) or not manifest:
         raise ValueError('备份清单无效')
-    candidates = []
     selected = None
     checksums = {}
     if 'backup-info.json' in infos:
@@ -97,6 +129,7 @@ def _legacy_data(archive, infos):
         checksums = info.get('checksums', {})
         if not isinstance(checksums, dict):
             raise ValueError('备份校验清单无效')
+    from backend.services.backup_stream import BackupData, DiskRows
     with tempfile.TemporaryDirectory(prefix='watcher-import-') as scratch:
         for name, size in manifest.items():
             if name not in infos or type(size) is not int or size != infos[name].file_size:
@@ -108,11 +141,13 @@ def _legacy_data(archive, infos):
             # Names and expanded sizes have already been checked; never extractall.
             with archive.open(name) as source, target.open('wb') as destination:
                 remaining = size
+                _report(progress, 'reading', 0, size, 0)
                 while chunk := source.read(min(1024 * 1024, remaining + 1)):
                     remaining -= len(chunk)
                     if remaining < 0:
                         raise ValueError('备份解压大小超出限制')
                     destination.write(chunk)
+                    _report(progress, 'reading', size - remaining, size, size - remaining)
             if selected:
                 with target.open('rb') as reader:
                     if hashlib.file_digest(reader, 'sha256').hexdigest() != checksums.get(name):
@@ -124,11 +159,15 @@ def _legacy_data(archive, infos):
                 tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
                 if not {'schools', 'departments', 'announcements'} <= tables:
                     continue
+                if candidates:
+                    raise ValueError('备份中需要且只能包含一份通知数据库')
                 if connection.execute('PRAGMA quick_check').fetchone()[0] != 'ok':
                     raise ValueError('备份数据库已损坏')
-                data = {'format': FORMAT, 'version': 1}
+                _report(progress, 'checking_database')
+                data = BackupData(format=FORMAT, version=1) if disk_backed else {'format': FORMAT, 'version': 1}
+                candidates.append(data)
                 for table, (_, allowed) in TABLES.items():
-                    data[table] = []
+                    data[table] = DiskRows() if disk_backed else []
                     if table not in tables:
                         continue
                     available = {r[1] for r in connection.execute(f'PRAGMA table_info("{table}")')}
@@ -136,21 +175,30 @@ def _legacy_data(archive, infos):
                     if not columns:
                         raise ValueError('备份缺少必要的数据字段')
                     column_sql = ','.join('"' + c + '"' for c in columns)
-                    rows = connection.execute(f'SELECT {column_sql} FROM "{table}" LIMIT ?', (MAX_ROWS + 1,))
-                    data[table] = [dict(zip(columns, row)) for row in rows]
-                candidates.append(data)
+                    rows = connection.execute(f'SELECT {column_sql} FROM "{table}" LIMIT ?', (max_rows + 1,))
+                    for index, row in enumerate(rows, 1):
+                        data[table].append(dict(zip(columns, row)))
+                        _report(progress, 'checking_database', index)
     if len(candidates) != 1:
         raise ValueError('备份中需要且只能包含一份通知数据库')
     return candidates[0]
 
 
-def read_backup(stream):
+def read_backup(stream, progress=None, expanded_limit=None, disk_backed=False):
+    limit = MAX_EXPANDED_BYTES if expanded_limit is None else expanded_limit
+    max_rows = max(MAX_ROWS, limit // 1024)
+    data = None
     try:
         with zipfile.ZipFile(stream) as archive:
             entries = archive.infolist()
             versioned = 'backup-info.json' in archive.namelist()
-            if len(entries) > (10000 if versioned else 10) or sum(i.file_size for i in entries) > MAX_EXPANDED_BYTES:
-                raise ValueError('备份解压后不可超过 256 MB，且最多包含 10 个文件')
+            expanded = sum(i.file_size for i in entries)
+            if len(entries) > (10000 if versioned else 10):
+                raise ValueError('备份包含过多文件')
+            if expanded > limit:
+                raise ValueError(f'备份展开后约 {expanded / 1048576:.1f} MB，超过本次 {limit / 1048576:g} MB 额度；请在导入选项中调整')
+            if disk_backed and expanded * 3 > shutil.disk_usage(tempfile.gettempdir()).free:
+                raise ValueError('临时目录可用空间不足，请释放空间后重试')
             infos = {}
             for info in entries:
                 nested_catalog = (versioned and info.filename.startswith('catalog-generations/') and
@@ -162,13 +210,24 @@ def read_backup(stream):
                     raise ValueError('备份包含重复、加密或不安全的文件名')
                 infos[info.filename] = info
             if 'data.json' in infos:
-                data = json.loads(archive.read('data.json'))
+                if disk_backed:
+                    from backend.services.backup_stream import read_json
+                    with archive.open('data.json') as source:
+                        data = read_json(source, infos['data.json'].file_size, progress, max_rows)
+                else:
+                    data = json.loads(archive.read('data.json'))
             else:
-                data = _legacy_data(archive, infos)
-        return validate_data(data)
+                data = _legacy_data(archive, infos, progress, disk_backed, max_rows)
+        return validate_data(data, progress, max_rows)
     except (zipfile.BadZipFile, UnicodeError, json.JSONDecodeError, sqlite3.DatabaseError,
             KeyError, TypeError, OverflowError, RecursionError, NotImplementedError) as exc:
+        if hasattr(data, 'close'):
+            data.close()
         raise ValueError('备份文件损坏或格式不支持，请重新选择完整备份') from exc
+    except Exception:
+        if hasattr(data, 'close'):
+            data.close()
+        raise
 
 
 def _stamp(value):
@@ -189,16 +248,17 @@ def _ident(value):
     return value
 
 
-def validate_data(data):
+def validate_data(data, progress=None, max_rows=MAX_ROWS):
+    from backend.services.backup_stream import DiskRows
     if not isinstance(data, dict) or data.get('format') != FORMAT or type(data.get('version')) is not int or data['version'] != 1:
         raise ValueError('不支持此备份版本，请使用兼容版本导出')
     for table, (_, columns) in TABLES.items():
         rows = data.get(table, [] if table in ('announcement_sources', 'department_directory_entries') else None)
-        if not isinstance(rows, list) or len(rows) > MAX_ROWS:
+        if not isinstance(rows, (list, DiskRows)) or len(rows) > max_rows:
             raise ValueError('备份缺少数据表或记录数超过限制')
         data[table] = rows
         ids = set()
-        for row in rows:
+        for row in _rows_progress(rows, progress, 'validating_' + table):
             if not isinstance(row, dict):
                 raise ValueError('备份记录格式无效')
             if 'id' in columns:
@@ -243,13 +303,17 @@ def validate_data(data):
                 if version is not None and (not isinstance(version, dict) or
                         len(json.dumps(version, ensure_ascii=False)) > 512000):
                     raise ValueError('备份中的摘要版本无效')
-    schools = {r['id']: r for r in data['schools']}
-    departments = {r['id']: r for r in data['departments']}
-    announcements = {r['id']: r for r in data['announcements']}
+        if isinstance(rows, DiskRows):
+            rows.normalized = True
+    _report(progress, 'checking_relations')
+    schools = {r['id'] for r in data['schools']}
+    departments = {r['id']: {'id': r['id'], 'school_id': r['school_id']} for r in data['departments']}
+    announcements = set()
     for row in departments.values():
         if row['school_id'] not in schools:
             raise ValueError('备份中的部门缺少所属学校')
-    for row in announcements.values():
+    for row in data['announcements']:
+        announcements.add(row['id'])
         dept = departments.get(row['department_id'])
         if not dept or dept['school_id'] != row['school_id']:
             raise ValueError('备份中的通知与所属学校、部门不一致')
@@ -282,7 +346,7 @@ def _history_digest(title, body_text, body_html):
     return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
 
-def merge_data(data):
+def merge_data(data, progress=None):
     """Keep current values and identities; add missing records and source memberships."""
     result = dict(added=0, duplicates=0, bodies_restored=0, schools_added=0, departments_added=0,
                   sources_pending_review=0)
@@ -291,6 +355,7 @@ def merge_data(data):
     # looking up identities, so two uploads cannot insert the same missing notice.
     db.session.rollback()
     try:
+        _report(progress, 'waiting_database')
         if db.engine.dialect.name == 'sqlite':
             db.session.execute(text('BEGIN IMMEDIATE'))
         elif db.engine.dialect.name == 'postgresql':
@@ -312,7 +377,7 @@ def merge_data(data):
             for name in [entry.canonical_name, *(entry.aliases or [])]:
                 aliases.setdefault(normalize_name(name), {})[entry.registry_key] = entry
         school_map = {}
-        for row in data['schools']:
+        for row in _rows_progress(data['schools'], progress, 'merging_schools'):
             name = normalize_name(row['name'])
             matches = school_names.get(name, [])
             if len(matches) > 1:
@@ -346,7 +411,7 @@ def merge_data(data):
         dept_index = {(d.school_id, _url(d.list_url), d.name.strip()): d for d in Department.query.order_by(Department.id.desc()).all()}
         dept_map = {}
         source_reviews = []
-        for row in data['departments']:
+        for row in _rows_progress(data['departments'], progress, 'merging_departments'):
             key = (school_map[row['school_id']].id, _url(row.get('list_url')), row['name'].strip())
             dept = dept_index.get(key)
             if dept is None:
@@ -368,15 +433,18 @@ def merge_data(data):
                     source_reviews.append((dept, candidate, existing))
         url_index = {}
         fallback = {}
-        for ann in Announcement.query.order_by(Announcement.id).yield_per(500):
+        count = Announcement.query.count()
+        _report(progress, 'indexing', 0, count)
+        for index, ann in enumerate(Announcement.query.order_by(Announcement.id).yield_per(500), 1):
             if ann.url:
                 url_index.setdefault((ann.school_id, _url(ann.url)), ann.id)
             else:
                 key = _history_key(ann.school_id, ann.department_id, ann.title, ann.published_at,
                                    ann.created_at, ann.content_hash or _history_digest(ann.title, ann.content_text, ann.content_html))
                 fallback.setdefault(key, ann.id)
+            _report(progress, 'indexing', index, count)
         ann_map = {}
-        for row in data['announcements']:
+        for row in _rows_progress(data['announcements'], progress, 'merging_announcements'):
             school_id, dept_id = school_map[row['school_id']].id, dept_map[row['department_id']].id
             url = _url(row.get('url'))
             undated_history = not url and not row.get('published_at') and not row.get('created_at')
@@ -421,24 +489,25 @@ def merge_data(data):
                 from backend.services.summaries import import_summary
                 import_summary(ann, row['summary_version'])
             ann_map[row['id']] = ann.id
-        for row in data['announcements']:
+        for row in _rows_progress(data['announcements'], progress, 'merging_memberships'):
             _merge_source(ann_map[row['id']], dept_map[row['department_id']].id,
                           dept_map[row['department_id']].list_url, row.get('url'), row.get('created_at'), row.get('created_at'))
-        for row in data['announcement_sources']:
+        for row in _rows_progress(data['announcement_sources'], progress, 'merging_sources'):
             _merge_source(ann_map[row['announcement_id']], dept_map[row['department_id']].id,
                           row.get('list_url'), row.get('article_url'), row.get('first_seen_at'), row.get('last_seen_at'))
-        for row in data['department_directory_entries']:
+        for row in _rows_progress(data['department_directory_entries'], progress, 'merging_directories'):
             key = (dept_map[row['parent_id']].id, dept_map[row['department_id']].id)
             if key[0] != key[1] and db.session.get(DepartmentDirectoryEntry, key) is None:
                 db.session.add(DepartmentDirectoryEntry(parent_id=key[0], department_id=key[1], position=row['position']))
         from backend.services.source_governance import propose_source
         from backend.services.tasks import enqueue
-        for department, candidate, expected in source_reviews:
+        for department, candidate, expected in _rows_progress(source_reviews, progress, 'reviewing_sources'):
             proposal = propose_source(department.school_id, candidate, department_id=department.id,
                 expected_config=expected, origin='import', commit=False)
             enqueue('source_review', proposal.id, {'proposal_id': proposal.id},
                     capability='directory', replace_finished=False, commit=False)
             result['sources_pending_review'] += 1
+        _report(progress, 'committing')
         db.session.commit()
         return result
     except Exception:

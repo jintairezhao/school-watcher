@@ -1,7 +1,7 @@
 """Minimal health probes and authenticated job/storage inspection."""
 from datetime import datetime, timedelta
 from pathlib import Path
-from flask import Blueprint, jsonify, current_app, render_template, request, send_file
+from flask import Blueprint, jsonify, current_app, render_template, request, send_file, g, abort
 from filelock import Timeout
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -18,11 +18,30 @@ def limit_backup_upload():
     if request.path == '/api/storage/import':
         from backend.services.data_transfer import MAX_UPLOAD_BYTES
         request.max_content_length = MAX_UPLOAD_BYTES
+        if request.args.get('progress') == '1':
+            import shutil
+            import tempfile
+            try:
+                upload_limit = _import_megabytes('upload_mb', 100)
+                expanded_limit = _import_megabytes('expanded_mb', 1024)
+            except ValueError as exc:
+                return jsonify(error=str(exc)), 400
+            # The authenticated UI declares the selected file size; unpacking is
+            # separately bounded by the user's explicit processing allowance.
+            request.max_content_length = min(upload_limit, expanded_limit + 2 * 1048576,
+                                             shutil.disk_usage(tempfile.gettempdir()).free // 2)
+
+
+def _import_megabytes(key, default):
+    raw = request.args.get(key, str(default))
+    if not raw.isascii() or not raw.isdecimal() or len(raw) > 10 or not 1 <= int(raw) <= 2**31 - 1:
+        raise ValueError('导入额度请输入正整数（MB）')
+    return int(raw) * 1048576
 
 
 @bp.app_errorhandler(RequestEntityTooLarge)
 def upload_too_large(error):
-    return jsonify(error='备份文件过大，上传请求不可超过 100 MB'), 413
+    return jsonify(error='文件超过本次导入额度或临时目录可用空间，请调整导入选项后重试'), 413
 
 
 @bp.get('/health/live')
@@ -171,6 +190,11 @@ def cleanup_storage():
 @admin_required
 def export_storage():
     from backend.services.data_transfer import export_data
+    if request.args.get('progress') == '1':
+        from backend.services.transfer_progress import streamed, export_with_progress
+        save = bool(current_app.config.get('DESKTOP_MODE') and request.args.get('save') == '1')
+        user_id = g.user.id
+        return streamed(lambda progress: export_with_progress(progress, save, user_id))
     try:
         archive = export_data()
         if current_app.config.get('DESKTOP_MODE') and request.args.get('save') == '1':
@@ -202,6 +226,24 @@ def import_storage():
     upload = request.files.get('file')
     if not upload or not upload.filename:
         return jsonify(error='请先选择 ZIP 备份文件'), 400
+    if request.args.get('progress') == '1':
+        from backend.services.transfer_progress import streamed
+        expanded_limit = _import_megabytes('expanded_mb', 1024)
+        # Detach the upload from Flask's request lifetime, so a disconnected
+        # browser cannot close the stream while the worker is reading it.
+        import os
+        # fileno rolls a small SpooledTemporaryFile to disk if needed. A duplicated
+        # descriptor keeps the upload alive without copying a multi-GB file again.
+        source = os.fdopen(os.dup(upload.stream.fileno()), 'rb')
+        def operation(progress):
+            source.seek(0)
+            data = read_backup(source, progress, expanded_limit, disk_backed=True)
+            try:
+                return merge_data(data, progress)
+            finally:
+                if hasattr(data, 'close'):
+                    data.close()
+        return streamed(operation, cleanup=source.close)
     try:
         data = read_backup(upload.stream)
         return jsonify(merge_data(data))
@@ -212,3 +254,26 @@ def import_storage():
         db.session.rollback()
         current_app.logger.exception('Data import failed')
         return jsonify(error='导入未完成，数据库改动已撤销，请稍后重试'), 503
+
+
+@bp.get('/api/storage/export/download/<token>')
+@admin_required
+def download_export(token):
+    import re
+    from itsdangerous import BadSignature
+    from backend.services.transfer_progress import signer, download_folder
+    try:
+        payload = signer().loads(token, max_age=3600)
+    except BadSignature:
+        abort(404)
+    if (not isinstance(payload, dict) or payload.get('user') != g.user.id or
+            not re.fullmatch(r'[0-9a-f]{32}', str(payload.get('id', '')))):
+        abort(404)
+    path = download_folder() / (payload['id'] + '.zip')
+    if not path.is_file() or path.is_symlink():
+        abort(404)
+    response = send_file(path, mimetype='application/zip', as_attachment=True, download_name=payload['name'])
+    response.headers['Cache-Control'] = 'no-store'
+    response.direct_passthrough = False
+    response.call_on_close(lambda: path.unlink(missing_ok=True))
+    return response
