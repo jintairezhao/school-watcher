@@ -22,6 +22,11 @@ def publication_date_text(element):
         day, year, month = match.groups()
         return f'{year}-{month}-{day}'
     text = element.get_text(' ', strip=True)
+    # Calendar tiles can split the year from month-day across child elements.
+    forward = re.fullmatch(r'\s*(20\d{2})\s+(\d{1,2})[-/.](\d{1,2})\s*', text)
+    if forward:
+        year, month, day = forward.groups()
+        return f'{year}-{month}-{day}'
     split_calendar = re.fullmatch(r'\s*(\d{1,2})\s+(20\d{2})[-/.](\d{1,2})\s*', text)
     if split_calendar:
         day, year, month = split_calendar.groups()

@@ -10,6 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class FrozenResourcesTests(unittest.TestCase):
+    def test_year_and_month_day_in_separate_calendar_elements(self):
+        from bs4 import BeautifulSoup
+        from backend.scraper.date_elements import publication_date_text
+        from backend.scraper.change_detector import parse_date
+        element = BeautifulSoup('<div><span>2024</span><br><span>01-02</span></div>', 'lxml').div
+        stamp = parse_date(publication_date_text(element))
+        self.assertEqual((stamp.year, stamp.month, stamp.day), (2024, 1, 2))
+
     def test_frozen_parser_uses_build_revision_without_source_files(self):
         from backend.scraper.discovery import parser_revision
         with tempfile.TemporaryDirectory() as folder:
