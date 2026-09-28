@@ -90,6 +90,8 @@ def create_app(test_config=None):
 
     from backend.services.source_labels import source_breadcrumb
     app.jinja_env.filters['source_breadcrumb'] = source_breadcrumb
+    from backend.scraper.sanitizer import sanitize_html
+    app.jinja_env.filters['article_html'] = sanitize_html
 
     # ---- 错误处理 ----
     @app.errorhandler(404)

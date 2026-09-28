@@ -103,12 +103,16 @@ def _css_path(element, root=None, max_depth=4):
     while current is not None and current is not root and depth < max_depth:
         if not isinstance(current, Tag):
             break
-        if current.get('id'):
-            parts.append(f"#{current['id']}")
+        from soupsieve import escape
+        ident = current.get('id', '')
+        if ident and len(ident) <= 100:
+            parts.append('#' + escape(ident))
             break
         selector = current.name
         if current.get('class'):
-            selector += '.' + '.'.join(current['class'])
+            classes = [value for value in current['class'] if len(value) <= 80][:3]
+            if classes:
+                selector += '.' + '.'.join(escape(value) for value in classes)
         parts.append(selector)
         current = current.parent
         depth += 1

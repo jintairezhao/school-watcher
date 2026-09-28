@@ -331,7 +331,7 @@ class LightweightTests(unittest.TestCase):
         response._content = b''
         response._content_consumed = True
         with patch('socket.getaddrinfo', return_value=[(2, 1, 6, '', ('8.8.8.8', 443))]), patch(
-                'backend.scraper.http_client.standard_requests.request', return_value=response) as request:
+                'backend.scraper.pinned_transport.pinned_request', return_value=response) as request:
             with self.assertRaises(ValueError):
                 PublicHTTPClient().get('https://www.tsinghua.edu.cn')
             self.assertEqual(request.call_count, 1)

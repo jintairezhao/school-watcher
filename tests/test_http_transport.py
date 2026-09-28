@@ -1,12 +1,14 @@
-"""A failing local proxy must not make public official directories disappear."""
+"""HTTP fallback must preserve public destinations, TLS checks and shared budgets."""
 import sys
 from pathlib import Path
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import requests
 from backend.scraper.http_client import PublicHTTPClient
+
+TRANSPORT = 'backend.scraper.pinned_transport.pinned_request'
 
 
 class TransportTests(unittest.TestCase):
@@ -14,9 +16,6 @@ class TransportTests(unittest.TestCase):
         self.pacing = patch('backend.scraper.http_client._pace_host')
         self.pacing.start()
         self.addCleanup(self.pacing.stop)
-        self.env = patch.dict('os.environ', {'WATCHER_ENHANCED_HTTP': '0'})
-        self.env.start()
-        self.addCleanup(self.env.stop)
         self.dns = patch('socket.getaddrinfo', return_value=[(2, 1, 6, '', ('8.8.8.8', 443))])
         self.dns.start()
         self.addCleanup(self.dns.stop)
@@ -31,68 +30,58 @@ class TransportTests(unittest.TestCase):
             response.headers['Location'] = location
         return response
 
-    def test_retry_public_get_directly_after_environment_proxy_timeout(self):
-        direct = MagicMock()
-        direct.request.return_value = self.response()
-        with patch('requests.utils.get_environ_proxies', return_value={'https': 'http://127.0.0.1:8086'}), \
-             patch('requests.request', side_effect=requests.exceptions.ReadTimeout('proxy timeout')), \
-             patch('requests.Session') as session:
-            session.return_value.__enter__.return_value = direct
-            result = PublicHTTPClient().get('https://www.example.edu.cn/', timeout=(6, 16))
+    def test_proxy_fallback_reuses_validated_addresses(self):
+        with patch('requests.utils.get_environ_proxies', return_value={'https':'http://127.0.0.1:8086'}), \
+             patch(TRANSPORT, side_effect=[requests.ReadTimeout('proxy'), self.response()]) as transport:
+            result = PublicHTTPClient().get('https://www.example.edu.cn/', timeout=(6,16))
         self.assertEqual(result.status_code, 200)
-        self.assertFalse(direct.trust_env)
+        first, second = transport.call_args_list
+        self.assertEqual(first.kwargs['addresses'], ['8.8.8.8'])
+        self.assertEqual(second.kwargs['addresses'], first.kwargs['addresses'])
+        self.assertFalse(second.kwargs['trust_env'])
         self.assertEqual(result._watcher_transport, ['direct_after_proxy_error:ReadTimeout'])
-        self.assertEqual(direct.request.call_args.kwargs['allow_redirects'], False)
-        self.assertNotEqual(direct.request.call_args.kwargs.get('verify'), False)
 
-    def test_explicit_proxy_or_non_read_request_does_not_silently_switch_transport(self):
-        with patch('requests.utils.get_environ_proxies', return_value={'https': 'http://127.0.0.1:8086'}), \
-             patch('requests.request', side_effect=requests.exceptions.ReadTimeout('timeout')), \
-             patch('requests.Session') as session:
-            for method, kwargs in [('POST', {}), ('GET', {'proxies': {'https': 'http://proxy.example'}})]:
-                with self.assertRaises(requests.exceptions.ReadTimeout):
+    def test_explicit_proxy_and_writes_do_not_silently_switch_transport(self):
+        for method, kwargs in [('POST', {}), ('GET', {'proxies':{'https':'http://proxy.example'}})]:
+            with patch('requests.utils.get_environ_proxies', return_value={'https':'http://proxy.example'}), \
+                 patch(TRANSPORT, side_effect=requests.ReadTimeout('timeout')) as transport:
+                with self.assertRaises(requests.ReadTimeout):
                     PublicHTTPClient().request(method, 'https://www.example.edu.cn/', **kwargs)
-            session.assert_not_called()
+                self.assertEqual(transport.call_count, 1)
 
-    def test_direct_retry_redirect_still_cannot_reach_a_private_address(self):
-        direct = MagicMock()
-        direct.request.return_value = self.response(302, 'http://127.0.0.1/secret')
-        with patch('requests.utils.get_environ_proxies', return_value={'https': 'http://127.0.0.1:8086'}), \
-             patch('requests.request', side_effect=requests.exceptions.ProxyError('offline')), \
-             patch('requests.Session') as session:
-            session.return_value.__enter__.return_value = direct
+    def test_retry_redirect_cannot_reach_private_address(self):
+        with patch('requests.utils.get_environ_proxies', return_value={'https':'http://127.0.0.1:8086'}), \
+             patch(TRANSPORT, side_effect=[requests.exceptions.ProxyError('offline'), self.response(302,'http://127.0.0.1/secret')]) as transport:
             with self.assertRaises(ValueError):
                 PublicHTTPClient().get('https://www.example.edu.cn/')
-        self.assertEqual(direct.request.call_count, 1)
+            self.assertEqual(transport.call_count, 2)
 
-    def test_failure_without_a_proxy_has_no_duplicate_retry(self):
+    def test_failure_without_proxy_has_no_duplicate_retry(self):
         with patch('requests.utils.get_environ_proxies', return_value={}), \
-             patch('requests.request', side_effect=requests.exceptions.ConnectionError('offline')), \
-             patch('requests.Session') as session:
-            with self.assertRaises(requests.exceptions.ConnectionError):
+             patch(TRANSPORT, side_effect=requests.ConnectionError('offline')) as transport:
+            with self.assertRaises(requests.ConnectionError):
                 PublicHTTPClient().get('https://www.example.edu.cn/')
-            session.assert_not_called()
+            self.assertEqual(transport.call_count, 1)
 
-    def test_http_access_denial_does_not_trigger_transport_retry(self):
-        with patch('requests.request', return_value=self.response(403)), patch('requests.Session') as session:
+    def test_http_access_denial_is_not_retried(self):
+        with patch(TRANSPORT, return_value=self.response(403)) as transport:
             self.assertEqual(PublicHTTPClient().get('https://www.example.edu.cn/').status_code, 403)
-            session.assert_not_called()
+            self.assertEqual(transport.call_count, 1)
 
-    def test_exact_same_host_duplicated_https_redirect_preserves_path_and_query(self):
+    def test_same_host_duplicated_https_redirect_preserves_path_and_query(self):
         url = 'http://www.example.edu.cn/notices/?page=2'
         malformed = 'https://www.example.edu.cn' + url
-        with patch('requests.request', side_effect=[self.response(302, malformed), self.response()]) as request:
+        with patch(TRANSPORT, side_effect=[self.response(302, malformed), self.response()]) as transport:
             result = PublicHTTPClient().get(url)
-        self.assertEqual(request.call_args_list[1].args[1], 'https://www.example.edu.cn/notices/?page=2')
+        self.assertEqual(transport.call_args_list[1].args[1], 'https://www.example.edu.cn/notices/?page=2')
         self.assertIn('repaired_same_host_https_redirect:' + malformed, result._watcher_transport)
 
-    def test_nested_redirect_pointing_elsewhere_is_not_rewritten_to_another_destination(self):
-        url = 'http://www.example.edu.cn/notices/'
-        location = 'https://www.example.edu.cnhttp://other.example.org/secret'
-        with patch('requests.request', side_effect=[self.response(302, location), self.response()]) as request:
-            result = PublicHTTPClient().get(url)
-        self.assertEqual(request.call_args_list[1].args[1], location)
-        self.assertEqual(result._watcher_transport, [])
+    def test_redirect_dns_is_validated_again(self):
+        with patch('backend.scraper.pinned_transport.public_addresses', side_effect=[['8.8.8.8'],ValueError('private')]), \
+             patch(TRANSPORT, return_value=self.response(302,'https://other.invalid/')) as transport:
+            with self.assertRaises(ValueError):
+                PublicHTTPClient().get('https://www.example.edu.cn/')
+            self.assertEqual(transport.call_count, 1)
 
     def test_outbound_concurrency_is_shared_by_client_instances(self):
         from concurrent.futures import ThreadPoolExecutor
@@ -100,7 +89,6 @@ class TransportTests(unittest.TestCase):
         import time
         lock = Lock()
         active = peak = 0
-
         def transport(*args, **kwargs):
             nonlocal active, peak
             with lock:
@@ -110,13 +98,66 @@ class TransportTests(unittest.TestCase):
                 time.sleep(.02)
                 return self.response()
             finally:
-                with lock:
-                    active -= 1
-
-        with patch('requests.request', side_effect=transport), ThreadPoolExecutor(max_workers=8) as pool:
-            responses = list(pool.map(lambda _: PublicHTTPClient().get('https://www.example.edu.cn/'), range(16)))
+                with lock: active -= 1
+        with patch(TRANSPORT, side_effect=transport), ThreadPoolExecutor(max_workers=8) as pool:
+            responses = list(pool.map(lambda _:PublicHTTPClient().get('https://www.example.edu.cn/'),range(16)))
         self.assertTrue(all(r.status_code == 200 for r in responses))
         self.assertEqual(peak, 2)
+
+
+class PinnedTransportSecurityTests(unittest.TestCase):
+    def test_rebinding_cannot_change_actual_tcp_destination(self):
+        from backend.scraper.pinned_transport import pinned_request
+        answers = [(2,1,6,'',('93.184.216.34',80))]
+        with patch('socket.getaddrinfo', side_effect=[answers,[(2,1,6,'',('127.0.0.1',80))]]) as dns, \
+             patch('urllib3.util.connection.create_connection', side_effect=OSError('isolated connection probe')) as connect, \
+             patch('backend.scraper.http_client._pace_host'):
+            with self.assertRaises(requests.ConnectionError):
+                pinned_request('GET','http://audit-rebind.invalid/',trust_env=False,timeout=1)
+        self.assertEqual(dns.call_count, 1)
+        self.assertEqual(connect.call_args.args[0], ('93.184.216.34',80))
+
+    def test_tls_uses_original_identity_but_numeric_connect_target(self):
+        from backend.scraper.pinned_transport import PinnedAdapter
+        adapter = PinnedAdapter('https://www.example.edu.cn/','93.184.216.34')
+        request = requests.Request('GET','https://www.example.edu.cn/').prepare()
+        try:
+            with patch.object(adapter.poolmanager,'connection_from_host') as connect:
+                adapter.get_connection_with_tls_context(request,True)
+                self.assertEqual(connect.call_args.kwargs['host'],'93.184.216.34')
+                options = connect.call_args.kwargs['pool_kwargs']
+                self.assertEqual(options['server_hostname'],'www.example.edu.cn')
+                self.assertEqual(options['assert_hostname'],'www.example.edu.cn')
+            with self.assertRaises(ValueError):
+                adapter.get_connection_with_tls_context(request,False)
+            adapter.add_headers(request)
+            self.assertEqual(request.headers['Host'],'www.example.edu.cn')
+        finally:
+            adapter.close()
+
+    def test_http_proxy_uses_numeric_absolute_uri(self):
+        from backend.scraper.pinned_transport import PinnedAdapter
+        adapter = PinnedAdapter('http://www.example.edu.cn/','93.184.216.34')
+        try:
+            request = requests.Request('GET','http://www.example.edu.cn/a?b=1').prepare()
+            self.assertEqual(adapter.request_url(request,{'http':'http://127.0.0.1:8080'}), 'http://93.184.216.34/a?b=1')
+            adapter.add_headers(request)
+            self.assertEqual(request.headers['Host'],'www.example.edu.cn')
+        finally:
+            adapter.close()
+
+    def test_proxy_https_connect_target_is_numeric(self):
+        from backend.scraper.pinned_transport import PinnedAdapter
+        adapter = PinnedAdapter('https://www.example.edu.cn/','93.184.216.34')
+        try:
+            request = requests.Request('GET','https://www.example.edu.cn/a').prepare()
+            with patch.object(adapter,'proxy_manager_for') as manager:
+                adapter.get_connection_with_tls_context(request,True,{'https':'http://127.0.0.1:8080'})
+                arguments = manager.return_value.connection_from_host.call_args.kwargs
+                self.assertEqual(arguments['host'],'93.184.216.34')
+                self.assertEqual(arguments['pool_kwargs']['server_hostname'],'www.example.edu.cn')
+        finally:
+            adapter.close()
 
 
 class HostPacingTests(unittest.TestCase):

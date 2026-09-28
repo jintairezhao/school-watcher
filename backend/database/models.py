@@ -209,6 +209,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(32), nullable=False, unique=True, comment='用户名')
     password_hash = db.Column(db.String(255), nullable=False)
+    auth_version = db.Column(db.Integer, nullable=False, default=0, server_default='0')
     role = db.Column(db.String(10), nullable=False, default='user', comment='admin/user')
     security_question = db.Column(db.String(200), comment='密保问题')
     security_answer_hash = db.Column(db.String(64), comment='密保答案哈希')

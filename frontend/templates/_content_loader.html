@@ -2,7 +2,7 @@
 <div class="body-loader" data-content-id="{{ announcement.id }}" data-cached="{{ 'true' if announcement.content_html or announcement.content_cached_at else 'false' }}">
     <div class="body-loader-content">
     {% if announcement.content_html %}
-        {{ announcement.content_html|safe }}
+        {{ announcement.content_html|article_html|safe }}
     {% elif announcement.content_cached_at and announcement.content_text %}
         <p>{{ announcement.content_text }}</p>
     {% endif %}

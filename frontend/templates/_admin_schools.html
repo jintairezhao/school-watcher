@@ -30,7 +30,7 @@
             <button class="btn btn-sm btn-outline" onclick="manageDept({{ school.id }})" title="管理部门">
                 部门
             </button>
-            <button class="btn btn-sm btn-outline" onclick="editSchool({{ school.id }}, '{{ school.name }}', '{{ school.url }}', {{ school.enabled|lower }})">
+            <button class="btn btn-sm btn-outline" data-school-id="{{ school.id }}" data-school-name="{{ school.name }}" data-school-url="{{ school.url }}" data-school-enabled="{{ school.enabled|lower }}" onclick="editSchool(Number(this.dataset.schoolId), this.dataset.schoolName, this.dataset.schoolUrl, this.dataset.schoolEnabled === 'true')">
                 编辑
             </button>
             <a href="{{ url_for('pages.school_detail', school_id=school.id) }}" class="btn btn-sm btn-outline">
@@ -428,14 +428,16 @@ function updateDiscoveryPhase(data) {
 
     const label = phaseLabels[data.phase] || data.message || data.phase;
     document.getElementById('discoveryStatus').innerHTML = `
-        <p style="font-size:16px;margin-bottom:8px;">${label}</p>
-        <p style="font-size:13px;color:#999;">${data.message || ''}</p>
+        <p style="font-size:16px;margin-bottom:8px;">${escHtml(label)}</p>
+        <p style="font-size:13px;color:#999;">${escHtml(data.message || '')}</p>
     `;
 }
 
 function addDiscoveryLog(msg) {
     const log = document.getElementById('discoveryLog');
-    log.innerHTML += '<div>' + msg + '</div>';
+    const entry = document.createElement('div');
+    entry.textContent = msg;
+    log.appendChild(entry);
     log.scrollTop = log.scrollHeight;
 }
 
@@ -473,7 +475,7 @@ function showDiscoveryResults(data) {
                         ${d.sample_titles ? d.sample_titles.map(t => '• ' + escHtml(t)).join('<br>') : ''}
                     </div>
                     <div style="font-size:11px;color:#aaa;margin-top:2px;">
-                        ${escHtml(d.list_url || '')} · 方法: ${d.method || '?'}
+                        ${escHtml(d.list_url || '')} · 方法: ${escHtml(d.method || '?')}
                     </div>
                 </div>
             </label>
@@ -490,7 +492,7 @@ function showDiscoveryError(msg) {
     document.getElementById('discoveryResults').style.display = 'none';
     document.getElementById('discoveryError').style.display = 'block';
     document.getElementById('discoveryError').innerHTML =
-        '<p style="font-size:18px;">❌</p><p>' + msg + '</p>';
+        '<p style="font-size:18px;">❌</p><p>' + escHtml(msg) + '</p>';
     document.getElementById('discoveryTitle').textContent = '发现失败';
 
     if (eventSource) { eventSource.close(); eventSource = null; }
@@ -602,15 +604,22 @@ async function loadDepts(schoolId) {
                     </div>
                 </div>
                 <div class="manage-actions">
-                    <button class="btn btn-sm btn-outline" onclick="editDept(${d.id}, '${escAttr(d.name)}', '${escAttr(d.group_name||'')}', '${escAttr(d.list_url||'')}', '${escAttr(d.list_selector||'')}', '${escAttr(d.title_selector||'')}', '${escAttr(d.link_selector||'')}', '${escAttr(d.date_selector||'')}', '${escAttr(d.content_selector||'')}')">
+                    <button class="btn btn-sm btn-outline" data-dept-action="edit">
                         编辑
                     </button>
-                    <button class="btn btn-sm btn-danger-outline" onclick="deleteDept(${d.id})">
+                    <button class="btn btn-sm btn-danger-outline" data-dept-action="delete">
                         删除
                     </button>
                 </div>
             </div>
         `).join('');
+        container.querySelectorAll('.manage-card').forEach((card, index) => {
+            const d = depts[index];
+            card.querySelector('[data-dept-action="edit"]').addEventListener('click', () =>
+                editDept(d.id, d.name, d.group_name || '', d.list_url || '', d.list_selector || '',
+                    d.title_selector || '', d.link_selector || '', d.date_selector || '', d.content_selector || ''));
+            card.querySelector('[data-dept-action="delete"]').addEventListener('click', () => deleteDept(d.id));
+        });
     } catch(e) {
         showToast('error', '加载部门列表失败');
     }
@@ -618,10 +627,6 @@ async function loadDepts(schoolId) {
 
 function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function escAttr(s) {
-    return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 }
 
 function editDept(id, name, group_name, list_url, list_sel, title_sel, link_sel, date_sel, content_sel) {
@@ -702,21 +707,21 @@ async function testCurrentSelectors() {
         const data = await waitForQueuedTask(await resp.json());
         if (resp.ok) {
             if (data.item_count > 0) {
-                resultEl.innerHTML = '<span>匹配 ' + data.item_count + ' 条</span>';
+                resultEl.innerHTML = '<span>匹配 ' + escHtml(String(data.item_count)) + ' 条</span>';
                 if (data.items && data.items.length > 0) {
-                    resultEl.innerHTML += '<br><small>' + data.items.slice(0,3).map(i => escHtml(i.title).substring(0,60)).join('<br>') + '</small>';
+                    resultEl.innerHTML += '<br><small>' + data.items.slice(0,3).map(i => escHtml(String(i.title).substring(0,60))).join('<br>') + '</small>';
                 }
                 if (data.warnings && data.warnings.length > 0) {
-                    resultEl.innerHTML += '<br><span style="color:#d69e2e;">⚠️ ' + data.warnings.join('; ') + '</span>';
+                    resultEl.innerHTML += '<br><span style="color:#d69e2e;">⚠️ ' + escHtml(data.warnings.join('; ')) + '</span>';
                 }
             } else {
                 resultEl.innerHTML = '<span style="color:#e53e3e;">❌ 未匹配到任何条目</span>';
             }
         } else {
-            resultEl.innerHTML = '<span style="color:#e53e3e;">❌ ' + (data.error || '测试失败') + '</span>';
+            resultEl.innerHTML = '<span style="color:#e53e3e;">❌ ' + escHtml(data.error || '测试失败') + '</span>';
         }
     } catch(e) {
-        resultEl.innerHTML = '<span style="color:#e53e3e;">❌ ' + e.message + '</span>';
+        resultEl.innerHTML = '<span style="color:#e53e3e;">❌ ' + escHtml(e.message) + '</span>';
     } finally {
         btn.disabled = false;
         btn.textContent = '测试选择器';

@@ -23,6 +23,8 @@ Playwright 的 seccomp 配置基于 Docker 默认配置，并增加允许创建�
 
 Python 依赖及固定版本见根目录 `requirements.txt` 和 [requirements/](requirements/README.md)。Playwright 的浏览器二进制由安装步骤另行下载；Docker 构建还会安装 PostgreSQL 客户端、Nginx、noVNC、TigerVNC、Xvfb、Squid 和字体等系统包。它们不统一改授项目主许可证。
 
+正文清洗使用 [nh3](https://github.com/messense/nh3)（MIT；Copyright (c) 2021-present Messense Lv），其 Python 发行包包含基于 Ammonia 的 HTML5 清洗实现。桌面打包流程将实际安装发行包的原始许可证一并收入 `third-party-licenses/`。
+
 重新分发打包程序或容器时，应保留实际安装版本的许可与版权文件；不能仅凭本清单推定完整镜像只受一种许可证约束。修改依赖或引入新的内嵌资源时须同步更新声明。
 
 ## 高校目录与网页样本

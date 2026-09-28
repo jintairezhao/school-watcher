@@ -5,12 +5,13 @@ admin：用户列表 / 重置密码（一次性临时密码）/ 角色切换。
 """
 import secrets
 
-from flask import Blueprint, g, jsonify, request, render_template
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask import Blueprint, g, jsonify, request, render_template, session
+from werkzeug.security import check_password_hash
 
 from backend.auth import admin_required, hash_answer, login_required
 from backend.database.db import db
 from backend.database.models import Subscription, User
+from backend.auth.passwords import replace_password
 
 bp = Blueprint('account', __name__)
 
@@ -32,8 +33,10 @@ def api_change_password():
     new = data.get('new_password') or ''
     if len(new) < 8:
         return jsonify({'error': '密码至少 8 位'}), 400
-    g.user.password_hash = generate_password_hash(new)
+    if not replace_password(g.user, new):
+        return jsonify({'error': '账号已更新，请重新登录'}), 409
     db.session.commit()
+    session['auth_version'] = g.user.auth_version
     return jsonify({'success': True})
 
 
@@ -67,7 +70,8 @@ def api_admin_reset_password(uid):
     if not user:
         return jsonify({'error': '用户不存在'}), 404
     temp = secrets.token_urlsafe(9)
-    user.password_hash = generate_password_hash(temp)
+    if not replace_password(user, temp):
+        return jsonify({'error': '账号已更新，请重试'}), 409
     db.session.commit()
     return jsonify({'success': True, 'temp_password': temp})
 

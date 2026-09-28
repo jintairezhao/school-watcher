@@ -225,6 +225,7 @@ def run_service(role):
         return
     if role == 'probe':
         from playwright.sync_api import sync_playwright
+        from backend.scraper.sanitizer import sanitize_html
         with sync_playwright() as playwright:
             from desktop.browser import launch_channel
             channel = launch_channel(os.environ['WATCHER_DATA_DIR'])
@@ -235,6 +236,15 @@ def run_service(role):
                 page = browser.new_page()
                 page.set_content('<title>School Watcher desktop check</title><script>document.title += " ready"</script>')
                 assert page.title() == 'School Watcher desktop check ready'
+                # Exercise the sanitizer extension inside the frozen application,
+                # not merely in the Python environment used to build it.
+                dirty = '<a href="java&#9;script:window.__audit_marker=1">Audit link</a><img src=x onerror="window.__audit_marker=1"><svg onload="window.__audit_marker=1"></svg>'
+                page.route('**/*', lambda route: route.fulfill(status=404, body=''))
+                page.set_content(sanitize_html(dirty))
+                page.locator('a').click()
+                page.wait_for_timeout(100)
+                assert not page.evaluate('Boolean(window.__audit_marker)')
+                assert page.locator('svg,script').count() == 0
                 browser.close()
         return
     from backend import create_app

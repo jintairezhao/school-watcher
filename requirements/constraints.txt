@@ -25,6 +25,7 @@ lxml==6.1.1
 mako==1.4.1
 markupsafe==3.0.3
 multidict==6.9.1
+nh3==0.3.7
 playwright==1.61.0
 propcache==0.5.4
 psycopg==3.3.6
@@ -34,7 +35,7 @@ pyee==13.0.1
 python-dotenv==1.2.2
 pyyaml==6.0.3
 requests==2.34.2
-soupsieve==2.8.4
+soupsieve==2.10
 sqlalchemy==2.0.51
 typing-extensions==4.16.0
 tzdata==2026.3

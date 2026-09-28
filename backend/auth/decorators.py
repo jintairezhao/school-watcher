@@ -17,8 +17,9 @@ def get_current_user():
     if not user_id:
         return None
     user = User.query.get(user_id)
-    if user is None:
-        session.pop('user_id', None)
+    if user is None or session.get('auth_version', 0) != user.auth_version:
+        session.clear()
+        return None
     return user
 
 

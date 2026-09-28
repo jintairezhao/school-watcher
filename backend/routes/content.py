@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request, g
 from backend.database.models import Announcement
 from backend.services.announcement_sources import source_expression
 from backend.services.content_cache import status, request_content
+from backend.scraper.sanitizer import sanitize_html
 
 bp = Blueprint('content', __name__)
 
@@ -22,5 +23,5 @@ def article_content(ann_id):
         request_content(ann)
     state = status(ann)
     return jsonify(content_status=state, error=ann.content_error if state == 'failed' else '',
-                   content_html=ann.content_html if state == 'saved' else '',
+                   content_html=sanitize_html(ann.content_html) if state == 'saved' else '',
                    content_text=ann.content_text if state == 'saved' else ''), (202 if state == 'loading' else 200)

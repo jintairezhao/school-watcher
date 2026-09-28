@@ -1,6 +1,5 @@
 """Small static HTTP client; enhanced TLS is opt-in, redirects stay public."""
 import ipaddress
-import os
 import socket
 import time
 from urllib.parse import urlsplit, urljoin
@@ -124,46 +123,24 @@ class PublicHTTPClient:
     def _request(self, method, url, **kwargs):
         method = method.upper()
         follow = kwargs.pop('allow_redirects', method != 'HEAD')
-        impersonate = kwargs.pop('impersonate', None)
-        client = standard_requests
-        if os.environ.get('WATCHER_ENHANCED_HTTP') == '1':
-            try:
-                from curl_cffi import requests as enhanced_requests
-                client = enhanced_requests
-                if impersonate:
-                    kwargs['impersonate'] = impersonate
-            except ImportError:
-                pass
+        # Every collection path uses the same pinned transport. Browser fallback
+        # remains available when a site requires a browser TLS/session profile.
+        kwargs.pop('impersonate', None)
+        from backend.scraper.pinned_transport import pinned_request, public_addresses
         transport_notes = []
         for _ in range(6):
-            try:
-                validate_public_url(url)
-                public_fallback = False
-            except ValueError:
-                # Validate syntax and literal addresses independently before considering split DNS.
-                validate_public_url(url, resolve=False)
-                public_fallback = True
+            addresses = public_addresses(url)
             permit = _shared_permit(url, kwargs.get('timeout'))
             try:
-                if public_fallback:
-                    from backend.scraper.public_dns import pinned_request
-                    response = pinned_request(method, url, **kwargs)
-                else:
-                    _pace_host(url)
-                    try:
-                        response = client.request(method, url, allow_redirects=False, **kwargs)
-                    except (standard_requests.exceptions.ConnectionError, standard_requests.exceptions.Timeout) as exc:
-                        proxies = standard_requests.utils.get_environ_proxies(url)
-                        if (method not in ('GET', 'HEAD') or 'proxies' in kwargs or
-                                not any(proxies.get(key) for key in ('http', 'https', 'all'))):
-                            raise
-                        validate_public_url(url)
-                        direct_kwargs = {k: v for k, v in kwargs.items() if k != 'impersonate'}
-                        _pace_host(url)
-                        with standard_requests.Session() as direct:
-                            direct.trust_env = False
-                            response = direct.request(method, url, allow_redirects=False, **direct_kwargs)
-                        transport_notes.append('direct_after_proxy_error:' + type(exc).__name__)
+                try:
+                    response = pinned_request(method, url, addresses=addresses, **kwargs)
+                except (standard_requests.exceptions.ConnectionError, standard_requests.exceptions.Timeout) as exc:
+                    proxies = standard_requests.utils.get_environ_proxies(url)
+                    if (method not in ('GET', 'HEAD') or 'proxies' in kwargs or
+                            not any(proxies.get(key) for key in ('http', 'https', 'all'))):
+                        raise
+                    response = pinned_request(method, url, addresses=addresses, trust_env=False, **kwargs)
+                    transport_notes.append('direct_after_proxy_error:' + type(exc).__name__)
                 _guard_response(response, permit)
             except BaseException:
                 _release_permit(permit)

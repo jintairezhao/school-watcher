@@ -47,6 +47,7 @@ def login_page():
             if user and check_password_hash(user.password_hash, password):
                 session.clear()  # 防会话固定
                 session['user_id'] = user.id
+                session['auth_version'] = user.auth_version
                 session.permanent = True
                 user.last_login_at = datetime.utcnow()
                 db.session.commit()
@@ -92,6 +93,7 @@ def register_page():
             db.session.commit()
             session.clear()
             session['user_id'] = user.id
+            session['auth_version'] = user.auth_version
             session.permanent = True
             return redirect(url_for('pages.index'))
 
@@ -145,6 +147,7 @@ def api_recovery_verify():
         return jsonify({'error': '密保答案错误'}), 400
 
     session['recovery_user_id'] = user.id
+    session['recovery_auth_version'] = user.auth_version
     session['recovery_verified_time'] = now.isoformat()
     return jsonify({'success': True})
 
@@ -165,13 +168,18 @@ def api_recovery_reset():
     user = db.session.get(User, uid)
     if not user:
         return jsonify({'error': '账号不存在'}), 404
+    if session.get('recovery_auth_version') != user.auth_version:
+        return jsonify({'error': '验证已失效，请重新验证'}), 400
     password = (request.get_json(silent=True) or {}).get('password') or ''
     if len(password) < 8:
         return jsonify({'error': '密码至少 8 位'}), 400
 
-    user.password_hash = generate_password_hash(password)
+    from backend.auth.passwords import replace_password
+    if not replace_password(user, password):
+        return jsonify({'error': '验证已失效，请重新验证'}), 400
     user.recovery_locked_until = None
     db.session.commit()
     session.pop('recovery_user_id', None)
+    session.pop('recovery_auth_version', None)
     session.pop('recovery_verified_time', None)
     return jsonify({'success': True})
