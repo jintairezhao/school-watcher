@@ -57,7 +57,7 @@ class InboxSearchTests(unittest.TestCase):
 
     def test_substring_title_and_deep_body_match_with_context(self):
         data = self.results()
-        self.assertEqual({item['id'] for item in data['items']}, {1, 2, 5, 8})
+        self.assertEqual({item['id'] for item in data['items']}, {1, 2, 5, 7, 8})
         body = next(item for item in data['items'] if item['id'] == 2)
         self.assertIn('北京', body['snippet'])
         self.assertLessEqual(len(body['snippet']), 162)
@@ -74,6 +74,8 @@ class InboxSearchTests(unittest.TestCase):
     def test_saved_and_archived_are_private_even_after_unsubscribe(self):
         db.session.add(UserAnnouncementState(user_id=1, announcement_id=4, starred=True)); db.session.commit()
         self.assertEqual([item['id'] for item in self.results(view='saved')['items']], [4])
+        Subscription.query.filter_by(user_id=1).delete(); db.session.commit()
+        self.assertEqual([item['id'] for item in self.results()['items']], [7])
         self.assertEqual([item['id'] for item in self.results(view='archived')['items']], [7])
         with self.client.session_transaction() as session: session['user_id'] = 2
         self.assertFalse(self.results(view='saved')['items'])
@@ -100,11 +102,17 @@ class InboxSearchTests(unittest.TestCase):
         db.session.commit()
         for mailbox, ident in [('saved', 4), ('archived', 7)]:
             data = self.results(view='focus', mailbox=mailbox)
-            self.assertEqual([item['id'] for item in data['items']], [ident])
-            params = parse_qs(urlsplit(data['items'][0]['url']).query)
+            expected = {4} if mailbox == 'saved' else {1, 2, 5, 6, 7, 8}
+            self.assertEqual({item['id'] for item in data['items']}, expected)
+            item = next(item for item in data['items'] if item['id'] == ident)
+            params = parse_qs(urlsplit(item['url']).query)
             self.assertEqual(params['view'], ['focus'])
-            self.assertEqual(params['mailbox'], [mailbox])
-            response = self.client.get(data['items'][0]['url'])
+            if mailbox == 'saved':
+                self.assertEqual(params['mailbox'], ['saved'])
+            else:
+                self.assertNotIn('mailbox', params)
+                self.assertEqual(params['period'], ['all'])
+            response = self.client.get(item['url'])
             self.assertEqual(response.status_code, 200)
             self.assertIn('北京未订阅通知' if mailbox == 'saved' else '北京已归档通知', response.text)
         with self.client.session_transaction() as session:
@@ -117,7 +125,8 @@ class InboxSearchTests(unittest.TestCase):
         self.assertEqual({item['id'] for item in self.results(view='focus')['items']}, expected)
         self.assertEqual({item['id'] for item in self.results(view='focus', mailbox='other')['items']}, expected)
         # An unrelated mailbox argument cannot change the existing view contract.
-        self.assertEqual([item['id'] for item in self.results(view='archived', mailbox='saved')['items']], [7])
+        expected_all = {item['id'] for item in self.results(period='all')['items']}
+        self.assertEqual({item['id'] for item in self.results(view='archived', mailbox='saved')['items']}, expected_all)
 
     def test_saved_article_links_keep_explicit_week_filter(self):
         from bs4 import BeautifulSoup

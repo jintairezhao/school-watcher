@@ -225,12 +225,75 @@ class LightweightTests(unittest.TestCase):
         self.assertEqual(self.write(path).json['count'], 0)
         self.assertEqual(UserRead.query.filter_by(user_id=self.other.id).count(), 0)
 
-    def test_archive_is_personal_and_reversible(self):
-        self.state(self.notice, archived=True)
+    def test_legacy_archives_return_to_inbox_without_changing_personal_records(self):
+        from bs4 import BeautifulSoup
+        db.session.add_all([
+            UserAnnouncementState(user_id=self.user.id, announcement_id=self.notice.id,
+                                  archived=True, starred=True),
+            UserRead(user_id=self.user.id, announcement_id=self.notice.id),
+            UserAnnouncementState(user_id=self.user.id, announcement_id=self.old.id, archived=True)])
+        db.session.commit()
+        original = (self.notice.content_text, UserRead.query.one().read_at)
+        for path in ('/?period=all', '/?view=archived'):
+            response = self.client.get(path, follow_redirects=True)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            self.assertIn('选课通知', soup.select_one('#noticeList').get_text())
+            self.assertIn('历史资料通知', soup.select_one('#noticeList').get_text())
+            self.assertFalse(soup.select('[data-state-field="archived"]'))
+            self.assertEqual(len(soup.select('.mailbox-views a')), 2)
+        self.assertEqual((self.notice.content_text, UserRead.query.one().read_at), original)
+        self.assertEqual(UserRead.query.count(), 1)
+        self.assertTrue(db.session.get(UserAnnouncementState, (self.user.id, self.notice.id)).starred)
+        self.assertFalse(db.session.get(UserAnnouncementState, (self.user.id, self.old.id)).starred)
+
+    def test_legacy_archives_survive_unsubscribe_without_exposing_other_notices(self):
+        db.session.add(UserAnnouncementState(user_id=self.user.id, announcement_id=self.notice.id, archived=True))
+        db.session.commit()
+        self.write(f'/api/subscriptions/{self.school.id}', method='delete')
+        page = self.client.get('/?period=all').text
+        self.assertIn('选课通知', page)
+        self.assertIn('清华大学', page)
+        self.assertNotIn('校园新闻消息', page)
+        self.assertNotIn('历史资料通知', page)
+        other = self.client_as(self.other.id).get('/?view=archived', follow_redirects=True).text
+        self.assertNotIn('选课通知', other)
+        self.assertEqual(Subscription.query.count(), 0)
+        self.assertEqual(Announcement.query.count(), 4)
+        self.school.enabled = False
+        db.session.commit()
         self.assertNotIn('选课通知', self.client.get('/?period=all').text)
-        self.assertIn('选课通知', self.client.get('/?view=archived').text)
-        self.assertNotIn('选课通知', self.client_as(self.other.id).get('/?view=archived').text)
-        self.state(self.notice, archived=False)
+
+    def test_legacy_archive_column_remains_selectable_outside_current_subscription(self):
+        from bs4 import BeautifulSoup
+        Subscription.query.one().department_ids = [self.teaching.id]
+        db.session.add(UserAnnouncementState(user_id=self.user.id, announcement_id=self.other_notice.id, archived=True))
+        db.session.commit()
+        response = self.client.get(f'/?period=all&school={self.school.id}&dept={self.news.id}')
+        soup = BeautifulSoup(response.text, 'html.parser')
+        self.assertIn('校园新闻消息', soup.select_one('#noticeList').get_text())
+        self.assertNotIn('选课通知', soup.select_one('#noticeList').get_text())
+        self.assertIn(f'dept={self.news.id}', soup.select_one('[data-notice-link]')['href'])
+        self.assertEqual(Subscription.query.one().department_ids, [self.teaching.id])
+
+    def test_legacy_archive_links_preserve_focus_selection_and_repeated_filters(self):
+        from urllib.parse import parse_qs, urlsplit
+        response = self.client.get('/?view=focus&mailbox=archived&dept=1&dept=2&selected=3&q=notice')
+        self.assertEqual(response.status_code, 302)
+        params = parse_qs(urlsplit(response.location).query)
+        self.assertEqual(params, {'view': ['focus'], 'dept': ['1', '2'],
+                                 'selected': ['3'], 'q': ['notice'], 'period': ['all']})
+        explicit = self.client.get('/?view=archived&period=archive&year=2024&month=3')
+        self.assertEqual(parse_qs(urlsplit(explicit.location).query),
+                         {'period': ['archive'], 'year': ['2024'], 'month': ['3']})
+        reserved = self.client.get('/?view=archived&_external=true&_scheme=https&_method=POST')
+        self.assertEqual(reserved.status_code, 302)
+        self.assertTrue(reserved.location.startswith('/?'))
+
+    def test_removed_archive_api_cannot_hide_notices_or_change_favorites(self):
+        for data in ({'archived': True}, {'archived': False}, {'starred': True, 'archived': True}):
+            response = self.write(f'/api/announcements/{self.notice.id}/state', data, 'put')
+            self.assertEqual(response.status_code, 400)
+        self.assertEqual(UserAnnouncementState.query.count(), 0)
         self.assertIn('选课通知', self.client.get('/?period=all').text)
 
     def test_saved_survives_unsubscribe_and_does_not_leak(self):

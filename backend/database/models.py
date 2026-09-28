@@ -277,12 +277,13 @@ class UserRead(db.Model):
 
 
 class UserAnnouncementState(db.Model):
-    """收藏与归档只属于当前用户，绝不改动学校的原始分类。"""
+    """个人收藏；旧版归档字段仅用于兼容历史数据，通知仍显示在收件箱。"""
     __tablename__ = 'user_announcement_states'
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     announcement_id = db.Column(db.Integer, db.ForeignKey('announcements.id', ondelete='CASCADE'), primary_key=True)
     starred = db.Column(db.Boolean, nullable=False, default=False, server_default='0')
+    # Retain old records and portable backups without changing subscriptions or stars.
     archived = db.Column(db.Boolean, nullable=False, default=False, server_default='0')
 
 

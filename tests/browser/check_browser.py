@@ -73,12 +73,11 @@ def check():
                 page.get_by_role('button', name='收藏', exact=True).click()
                 page.get_by_role('button', name='取消收藏', exact=True).wait_for()
                 page.screenshot(path=str(out / 'inbox-desktop.png'), full_page=True)
-                page.get_by_role('button', name='归档', exact=True).click()
-                page.wait_for_function('() => !new URL(location.href).searchParams.has("selected")')
-                page.get_by_role('link', name='已归档', exact=True).click()
+                assert page.locator('[data-state-field="archived"]').count() == 0
+                page.get_by_role('link', name='我的收藏', exact=True).click()
                 assert page.locator('[data-notice-link]').count() == 1
                 page.locator('[data-notice-link]').first.click()
-                page.get_by_role('button', name='移回收件箱', exact=True).click()
+                page.get_by_role('button', name='取消收藏', exact=True).click()
                 page.wait_for_function('() => !new URL(location.href).searchParams.has("selected")')
                 for width in [390, 1440]:
                     page.set_viewport_size({'width': width, 'height': 900})

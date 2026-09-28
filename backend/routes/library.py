@@ -1,11 +1,11 @@
-"""Personal saved/archived state and inbox-scoped bulk read actions."""
+"""Personal favorites and inbox-scoped bulk read actions."""
 from flask import Blueprint, g, jsonify, request, url_for
 from backend.database.dialect import insert
 
 from backend.auth import login_required
 from backend.database.db import db
 from backend.database.models import Announcement, School, UserAnnouncementState, UserRead
-from backend.services.inbox import filtered_inbox, read_expression
+from backend.services.inbox import filtered_inbox, read_expression, normalize_inbox_args
 
 bp = Blueprint('library', __name__)
 
@@ -27,9 +27,10 @@ def search_suggestions():
                 .order_by(Announcement.published_at.desc().nullslast(), Announcement.created_at.desc())
                 .limit(9).all())
         sources = sources_for([row.id for row in rows[:8]])
-        params = {key: request.args.getlist(key) for key in
+        args = normalize_inbox_args(request.args)
+        params = {key: args.getlist(key) for key in
                   ('school', 'dept', 'group', 'period', 'year', 'month', 'view', 'mailbox', 'read')
-                  if key in request.args}
+                   if key in args}
         params['q'] = keyword
         terms = keyword.lower().split()[:10]
 
@@ -69,8 +70,8 @@ def update_state(ann_id):
     if not ann or not Announcement.query.filter(Announcement.id == ann_id, source_expression()).first():
         return jsonify(error='通知不存在或来源已下架'), 404
     data = request.get_json(silent=True)
-    if not isinstance(data, dict) or not data or set(data) - {'starred', 'archived'}:
-        return jsonify(error='请选择收藏或归档操作'), 400
+    if not isinstance(data, dict) or not data or set(data) - {'starred'}:
+        return jsonify(error='请选择收藏操作'), 400
     if any(type(value) is not bool for value in data.values()):
         return jsonify(error='状态必须为 true 或 false'), 400
     db.session.execute(insert(UserAnnouncementState).values(

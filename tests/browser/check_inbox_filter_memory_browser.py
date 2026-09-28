@@ -148,7 +148,7 @@ def check():
 
                 def mailbox_and_late_response():
                     choose_filters()
-                    for label in ('我的收藏', '已归档', '收件箱'):
+                    for label in ('我的收藏', '收件箱'):
                         page.locator('.mailbox-views a').filter(has_text=label).click(); settled()
                         params(period='all', read='unread')
                     page.evaluate('''() => {

@@ -22,13 +22,19 @@ bp = Blueprint('pages', __name__)
 def index():
     """通知收件箱：订阅学校的统一通知流与组合筛选"""
     from backend.services import read_state
-    from backend.services.inbox import filtered_inbox, source_hierarchy, read_expression, inbox_mailbox
+    from backend.services.inbox import (filtered_inbox, source_hierarchy, read_expression,
+                                        inbox_mailbox, normalize_inbox_args, state_expression)
     from backend.services.directory_options import directory_entries_for, expand_directory_ids
-    from backend.services.announcement_sources import source_expression, source_counts, sources_for, schools_for
+    from backend.services.announcement_sources import (source_expression, source_counts,
+                                                      sources_for, schools_for, memberships)
     from backend.services.inbox_refresh import refresh_status
 
     if g.get('user') is None:
         return redirect(url_for('pages.explore'))
+
+    canonical_args = normalize_inbox_args(request.args)
+    if canonical_args != request.args:
+        return redirect(url_for('pages.index') + '?' + urlencode(list(canonical_args.items(multi=True))))
 
     subscriptions = (Subscription.query
                      .filter_by(user_id=g.user.id)
@@ -40,13 +46,16 @@ def index():
     schools = [item.school for item in subscriptions]
     view = inbox_mailbox(request.args)
     reading_view = 'focus' if request.args.get('view') == 'focus' else 'split'
-    if view != 'inbox':
-        state_field = UserAnnouncementState.starred if view == 'saved' else UserAnnouncementState.archived
-        state_query = Announcement.query.join(UserAnnouncementState).filter(
-            UserAnnouncementState.user_id == g.user.id, state_field.is_(True),
-            source_expression())
+    retained_query = Announcement.query.filter(
+        state_expression(g.user.id, 'archived'), source_expression())
+    if view == 'saved':
+        state_query = Announcement.query.filter(
+            state_expression(g.user.id, 'starred'), source_expression())
         schools = schools_for(state_query)
-        school_ids = [s.id for s in schools]
+    else:
+        schools = sorted({s.id: s for s in schools + schools_for(retained_query)}.values(),
+                         key=lambda school: school.name)
+    school_ids = [s.id for s in schools]
 
     requested_school_id = request.args.get('school', type=int)
     current_school = next(
@@ -69,7 +78,9 @@ def index():
         known_departments = departments
         current_subscription = next((s for s in subscriptions if s.school_id == current_school.id), None)
         if view == 'inbox' and current_subscription and current_subscription.department_ids is not None:
-            allowed = expand_directory_ids(current_school.id, current_subscription.department_ids, directory_entries)
+            allowed = set(expand_directory_ids(current_school.id, current_subscription.department_ids, directory_entries))
+            retained_sources = memberships(retained_query.with_entities(Announcement.id).statement)
+            allowed.update(row[0] for row in db.session.query(retained_sources.c.department_id).distinct())
             departments = [d for d in departments if d.id in allowed]
         valid_dept_ids = {dept.id for dept in departments}
         selected_dept_ids = [dept_id for dept_id in expand_directory_ids(current_school.id,
@@ -194,7 +205,7 @@ def index():
         if current_school_id:
             params.append(('school', current_school_id))
         params.extend(('dept', dept_id) for dept_id in selected_dept_ids)
-        # Keep the active time range explicit: saved/archive have a different
+        # Keep the active time range explicit: favorites have a different
         # default, and fresh browser entries can inherit a user's preference.
         params.append(('period', period))
         if period == 'archive' and current_year:

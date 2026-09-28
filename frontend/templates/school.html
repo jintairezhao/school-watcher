@@ -14,7 +14,7 @@
         <div><label for="previewQuery">通知标题</label><input type="search" class="form-input" id="previewQuery" name="q" value="{{ q }}" placeholder="输入关键词"></div>
         <button type="submit" class="btn btn-outline">筛选通知</button>
     </form>
-    <p class="directory-summary">{{ pagination.total }} 条通知 · 订阅后可管理已读、收藏和归档</p>
+    <p class="directory-summary">{{ pagination.total }} 条通知 · 订阅后可管理已读和收藏</p>
     <div class="directory-list">
         {% for ann in pagination.items %}
         {% set source = display_sources.get(ann.id) %}

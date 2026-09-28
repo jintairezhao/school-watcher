@@ -98,9 +98,11 @@ def check(capture=True):
             page.reload(); expect(workspace).to_have_attribute('data-view', 'saved')
             toggle.click(); assert 'view=saved' in page.url and 'mailbox=' not in page.url
             go('view=focus&mailbox=archived&period=all&selected=7')
-            expect(workspace).to_have_attribute('data-view', 'archived')
+            expect(workspace).to_have_attribute('data-view', 'inbox')
             expect(page.locator('.reading-title')).to_contain_text('已归档')
-            checks.append('saved/archive focus URLs survive reload and restore legacy mailbox URLs')
+            assert 'mailbox=' not in page.url
+            expect(page.locator('[data-state-field="archived"]')).to_have_count(0)
+            checks.append('favorites keep focus mode; legacy archive links restore the notice in the inbox')
 
             go(); toggle.click()
             page.locator('.reader-document').evaluate('(e) => e.scrollTop = 320')
@@ -142,12 +144,19 @@ def check(capture=True):
             page.locator('#rowStar1').focus(); page.locator('#rowStar1').click()
             expect(page.locator('#readerStar')).to_have_attribute('aria-pressed', 'false')
             expect(page.locator('#rowStar1')).to_have_attribute('aria-pressed', 'false')
-            page.locator('#rowArchive3').focus(); page.locator('#rowArchive3').click()
-            expect(page.locator('#sourceFilterStatus')).to_have_text('已更新')
-            expect(page.locator('#rowArchive3')).to_have_count(0)
+            page.locator('#rowStar3').focus(); page.locator('#rowStar3').click()
+            expect(page.locator('#rowStar3')).to_have_attribute('aria-pressed', 'true')
             expect(page.locator('.reading-title')).to_contain_text('北京学术交流')
             assert 'selected=1' in page.url
-            checks.append('row actions synchronize favorites and archive other rows without losing the current article')
+            page.locator('#rowStar1').focus(); page.locator('#rowStar1').click()
+            expect(page.locator('#rowStar1')).to_have_attribute('aria-pressed', 'true')
+            go('view=saved&period=all&selected=1')
+            page.locator('#rowStar3').focus(); page.locator('#rowStar3').click()
+            expect(page.locator('#rowStar3')).to_have_count(0)
+            expect(page.locator('.reading-title')).to_contain_text('北京学术交流')
+            assert 'selected=1' in page.url
+            expect(page.locator('.mailbox-views a')).to_have_count(2)
+            checks.append('favorites synchronize and unfavoriting another row preserves the current article')
 
             for width, theme in ([(1440, 'light'), (1440, 'dark'), (1200, 'light'), (1200, 'dark'), (1024, 'light'), (1024, 'dark'), (390, 'light'), (390, 'dark')] if capture else [(1024, 'light'), (390, 'light')]):
                 page.set_viewport_size({'width': width, 'height': 844 if width == 390 else 960})

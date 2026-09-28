@@ -27,6 +27,14 @@ jobs:
         run: python tests/browser/check_desktop_onboarding_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify inbox reading, favorites and filter memory
+        env:
+          PLAYWRIGHT_CHANNEL: chromium
+        run: |
+          python -c "import runpy; runpy.run_path('tests/browser/check_inbox_views_browser.py')['check'](capture=False)"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/browser/check_inbox_filter_memory_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - run: python -m unittest discover -s tests -p "test_*.py"
         env:
           SECRET_KEY: isolated-ci-session-key

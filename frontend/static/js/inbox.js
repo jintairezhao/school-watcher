@@ -323,9 +323,13 @@
                         control.setAttribute('aria-pressed', String(saved)); control.disabled = false;
                     });
                     showToast('success', saved ? '已加入我的收藏' : '已取消收藏');
+                    if (!saved && readingView.mailbox(appliedURL) === 'saved') {
+                        const keepSelected = button.dataset.id !== appliedURL.searchParams.get('selected');
+                        await navigate(readingView.withMode(keepSelected ? appliedURL : workspace.dataset.backUrl,
+                            readingView.mode(appliedURL) === 'focus'), {preserveList: true});
+                    }
                 } else {
-                    const preserveSelected = button.hasAttribute('data-row-state') && button.dataset.id !== find('#undoRead')?.dataset.announcementId;
-                    await navigate(readingView.withMode(preserveSelected ? appliedURL : workspace.dataset.backUrl,
+                    await navigate(readingView.withMode(workspace.dataset.backUrl,
                         readingView.mode(appliedURL) === 'focus'), {preserveList: true});
                 }
             } catch (error) { button.disabled = false; showToast('error', error.message); }

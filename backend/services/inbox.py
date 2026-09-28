@@ -152,25 +152,38 @@ def subscription_scope(user_id):
     return or_(*conditions) if conditions else false()
 
 
+def normalize_inbox_args(args):
+    """Old archive bookmarks now open the inbox without losing their time range."""
+    args = args.copy()
+    if args.get('view') == 'archived' or (
+            args.get('view') == 'focus' and args.get('mailbox') == 'archived'):
+        if args.get('view') == 'archived':
+            args.pop('view', None)
+        args.pop('mailbox', None)
+        args.setdefault('period', 'all')
+    return args
+
+
 def inbox_mailbox(args):
     """Keep legacy mailbox URLs while allowing a focused reading presentation."""
     view = args.get('view', 'inbox')
     if view == 'focus':
         view = args.get('mailbox', 'inbox')
-    return view if view in ('inbox', 'saved', 'archived') else 'inbox'
+    return view if view in ('inbox', 'saved') else 'inbox'
 
 
 def filtered_inbox(user_id, args, include_read=True):
     """Parameters are shared with the GET page; invalid source IDs cannot widen scope."""
+    args = normalize_inbox_args(args)
     view = inbox_mailbox(args)
     query = Announcement.query.filter(source_expression())
     # Saved records remain accessible after unsubscribing from a source.
     if view == 'saved':
         query = query.filter(state_expression(user_id, 'starred'))
-    elif view == 'archived':
-        query = query.filter(state_expression(user_id, 'archived'))
     else:
-        query = query.filter(subscription_scope(user_id), ~state_expression(user_id, 'archived'))
+        # The legacy flag only retains these existing records after unsubscribe;
+        # it no longer hides them or grants access to any other user's records.
+        query = query.filter(or_(subscription_scope(user_id), state_expression(user_id, 'archived')))
     school_id = args.get('school', type=int)
     if school_id:
         from backend.services.directory_options import directory_entries_for, expand_directory_ids

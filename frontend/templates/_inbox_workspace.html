@@ -2,10 +2,9 @@
 <section class="inbox-empty" aria-labelledby="empty-title">
     <svg class="empty-state-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M4 14h4l2 2h4l2-2h4"/></svg>
     <h1 id="empty-title">收件箱还没有通知来源</h1>
-    <p>{{ '已准备好学校与栏目配置。选择学校订阅后，将从官网获取通知。' if config.DESKTOP_MODE else '先订阅一所学校，新通知会按时间集中显示在这里。' }}</p>
+    <p>先订阅一所学校。</p>
     <a class="btn btn-primary" href="{{ url_for('pages.explore') }}">选择学校</a>
     <a href="{{ url_for('pages.index', view='saved', period='all') }}">查看我的收藏</a>
-    <a href="{{ url_for('pages.index', view='archived', period='all') }}">查看已归档</a>
 </section>
 {% else %}
 {% set source_school = current_school.name if current_school else '全部学校' %}
@@ -15,11 +14,10 @@
     {% include '_inbox_source_panel.html' %}
     <section class="notice-panel" aria-label="通知列表">
         <header class="notice-toolbar">
-            <h1 class="sr-only">{{ '我的收藏' if view == 'saved' else '已归档' if view == 'archived' else '通知收件箱' }}</h1>
+            <h1 class="sr-only">{{ '我的收藏' if view == 'saved' else '通知收件箱' }}</h1>
             <nav class="mailbox-views" aria-label="信息管理">
                 <a href="{{ url_for('pages.index', view='focus') if focused_reading else url_for('pages.index') }}" {% if view == 'inbox' %}aria-current="page"{% endif %}>收件箱{% if view == 'inbox' and scope_unread %}<span class="mailbox-unread" aria-label="当前范围 {{ scope_unread }} 条未读">{{ scope_unread }}</span>{% endif %}</a>
                 <a href="{{ url_for('pages.index', view='focus', mailbox='saved', period='all') if focused_reading else url_for('pages.index', view='saved', period='all') }}" {% if view == 'saved' %}aria-current="page"{% endif %}>我的收藏</a>
-                <a href="{{ url_for('pages.index', view='focus', mailbox='archived', period='all') if focused_reading else url_for('pages.index', view='archived', period='all') }}" {% if view == 'archived' %}aria-current="page"{% endif %}>已归档</a>
             </nav>
             <div class="toolbar-topline">
                 <button class="source-scope-trigger" type="button" id="openFilters" data-open-sources aria-expanded="false" aria-controls="sourcePanel" title="{{ source_school }} · {{ source_scope }}" aria-label="打开来源筛选：{{ source_school }} · {{ source_scope }}">
@@ -138,7 +136,6 @@
                         {% set row_state = states.get(ann.id) %}
                         <div class="notice-row-actions" aria-label="{{ ann.title }}的操作">
                             <button type="button" class="icon-button" id="rowStar{{ ann.id }}" data-row-state data-state-field="starred" data-state-value="{{ 'false' if row_state and row_state.starred else 'true' }}" data-id="{{ ann.id }}" aria-pressed="{{ 'true' if row_state and row_state.starred else 'false' }}" aria-label="{{ '取消收藏' if row_state and row_state.starred else '收藏' }}" title="{{ '取消收藏' if row_state and row_state.starred else '收藏' }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
-                            <button type="button" class="icon-button" id="rowArchive{{ ann.id }}" data-row-state data-state-field="archived" data-state-value="{{ 'false' if row_state and row_state.archived else 'true' }}" data-id="{{ ann.id }}" aria-label="{{ '移回收件箱' if row_state and row_state.archived else '归档' }}" title="{{ '移回收件箱' if row_state and row_state.archived else '归档' }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 8h16v13H4zM3 3h18v5H3zM9 12h6"/></svg></button>
                         </div>
                         </article>
                         {% endfor %}
@@ -157,7 +154,7 @@
             <div class="notice-empty">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg>
                 <h3>没有符合条件的通知</h3>
-                <p>{% if view == 'saved' %}阅读通知时点击“收藏”，即可在这里集中查看。{% elif view == 'archived' %}已处理的通知可以归档，之后随时恢复。{% else %}可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。{% endif %}</p>
+                <p>{% if view == 'saved' %}阅读通知时点击“收藏”，即可在这里集中查看。{% else %}可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。{% endif %}</p>
                 {% if view == 'inbox' and period != 'all' %}<button class="text-button" type="button" data-period="all">查看全部时间的通知</button>{% endif %}
                 {% if current_school_id in subscribed_school_ids %}<a href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">查看栏目与同步状态</a>{% endif %}
                 <a href="{{ url_for('pages.index') }}">清除筛选</a>
@@ -178,7 +175,6 @@
             <button class="text-button" type="button" id="undoRead" data-announcement-id="{{ selected_announcement.id }}">设为未读</button>
             {% set selected_state = states.get(selected_announcement.id) %}
             <button class="text-button" type="button" id="readerStar" data-state-field="starred" data-state-value="{{ 'false' if selected_state and selected_state.starred else 'true' }}" data-id="{{ selected_announcement.id }}" aria-pressed="{{ 'true' if selected_state and selected_state.starred else 'false' }}">{{ '取消收藏' if selected_state and selected_state.starred else '收藏' }}</button>
-            <button class="text-button" type="button" id="readerArchive" data-state-field="archived" data-state-value="{{ 'false' if selected_state and selected_state.archived else 'true' }}" data-id="{{ selected_announcement.id }}">{{ '移回收件箱' if selected_state and selected_state.archived else '归档' }}</button>
             {% if selected_announcement.url %}<a class="text-button reader-original" href="{{ selected_announcement.url }}" target="_blank" rel="noopener noreferrer">原文<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 5h5v5M10 14L19 5M19 13v6H5V5h6"/></svg></a>{% endif %}
         </div>
         <article class="reader-document">

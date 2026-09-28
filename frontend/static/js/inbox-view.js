@@ -9,7 +9,7 @@
         function mailbox(url) {
             const params = new URL(url, location.origin).searchParams;
             const value = params.get('view') === 'focus' ? params.get('mailbox') : params.get('view');
-            return ['saved', 'archived'].includes(value) ? value : 'inbox';
+            return value === 'saved' ? 'saved' : 'inbox';
         }
         function withMode(url, focused) {
             const next = new URL(url, location.origin), box = mailbox(next);
