@@ -1,0 +1,36 @@
+name: Published package security inspection
+on:
+  push:
+    branches: [codex/security-audit-20260928]
+    paths: ['.github/workflows/security-audit.yml', 'scripts/security/audit_release_packages.py']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Download existing releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/security/audit_release_packages.py download
+      - name: Inspect hashes, contents, signatures and installation
+        run: python scripts/security/audit_release_packages.py audit
+      - name: Save inspection evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: package-security-${{ matrix.os }}
+          path: |
+            release-audit/report.json
+            release-audit/**/*.inventory.json
+            release-audit/**/installer.log
+          if-no-files-found: warn
+          retention-days: 3
