@@ -4,7 +4,7 @@ on:
   push:
     tags: ['v*']
     branches: ['main', 'codex/desktop-release', 'codex/security-fixes', 'codex/desktop-onboarding']
-    paths: ['desktop/**', 'backend/**', 'frontend/**', 'requirements/**', 'migrations/**', 'scripts/maintenance/migrate_safely.py', 'tests/test_desktop*.py', 'config/**', '.github/workflows/desktop.yml']
+    paths: ['desktop/**', 'backend/**', 'frontend/**', 'requirements/**', 'migrations/**', 'scripts/maintenance/migrate_safely.py', 'tests/test_desktop*.py', 'config/**', '.github/workflows/desktop.yml', '.github/workflows/runtime.yml']
   pull_request:
     paths: ['desktop/**', 'requirements/desktop.txt', 'requirements/build.txt', 'tests/test_desktop*.py', 'config/**', '.github/workflows/desktop.yml']
 permissions:
