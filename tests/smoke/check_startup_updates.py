@@ -51,6 +51,12 @@ def check():
                     wait(lambda: checker.called and windows and windows[0].events.loaded.is_set(), timeout=120)
                     wait(lambda: windows and apis[0]._allowed())
                     main = windows[0]
+                    print(json.dumps({'update': apis[0].update_notification(), 'bridge': main.run_js('''JSON.stringify((() => {
+                        let dynamicCode; try { dynamicCode = new Function('return 1')() === 1; }
+                        catch (error) { dynamicCode = String(error); }
+                        return {notice: !!document.getElementById('desktopUpdateNotice'),
+                            api: Object.keys(window.pywebview?.api || {}), dynamicCode};
+                    })())''')}), flush=True)
                     wait(lambda: main.run_js('!!document.querySelector("#desktopUpdateNotice:not([hidden])")'))
                     assert apis[0].update_notification()['version'] == '9.0.0'
                     main.run_js('document.getElementById("desktopUpdateOpen").click()')

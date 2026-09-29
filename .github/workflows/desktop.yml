@@ -42,6 +42,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_desktop*.py' -v
       - name: Check imported content and session security
         run: python -m unittest discover -s tests -p 'test_security*.py' -v
+      - name: Verify native startup update notification
+        run: python tests/smoke/check_startup_updates.py
       - name: Prepare Windows WebView2 bootstrapper
         if: runner.os == 'Windows'
         shell: pwsh
@@ -93,8 +95,6 @@ jobs:
               '--report', str(Path('.local/packaged-gui.json').resolve())], check=True, timeout=90)
           assert Path('.local/packaged-gui.json').is_file()
           PY
-      - name: Verify native startup update notification
-        run: python tests/smoke/check_startup_updates.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         # The packaged app has now downloaded the isolated browser itself.
         with:
