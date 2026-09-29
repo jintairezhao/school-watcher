@@ -147,6 +147,12 @@ end;
 
 procedure CurPageChanged(CurPageID: Integer);
 begin
+  { Inno keeps a Ready page when every earlier page was skipped. Advance it
+    asynchronously for an existing installation, and close after a successful
+    upgrade. Preparing/error pages must still wait for the user. }
+  if Updating and not WizardSilent and
+     ((CurPageID = wpReady) or (CurPageID = wpFinished)) then
+    PostMessage(WizardForm.NextButton.Handle, $00F5, 0, 0);
   if Updating and (CurPageID = wpInstalling) then begin
     WizardForm.PageNameLabel.Caption := '正在更新';
     WizardForm.PageDescriptionLabel.Caption := '正在更新学校通知，完成后会自动重新打开。';

@@ -45,6 +45,10 @@ def check():
             runtime = DesktopRuntime(root / 'profile')
             def drive():
                 try:
+                    # Native URL/JS calls have their own short initialization timeout.
+                    # Wait for the actual app navigation and loaded event first, including
+                    # a clean CI profile's runtime/bootstrap work on slower machines.
+                    wait(lambda: checker.called and windows and windows[0].events.loaded.is_set(), timeout=120)
                     wait(lambda: windows and apis[0]._allowed())
                     main = windows[0]
                     wait(lambda: main.run_js('!!document.querySelector("#desktopUpdateNotice:not([hidden])")'))

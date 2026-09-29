@@ -92,10 +92,10 @@ class Fixture { static void Main(string[] args) {
         old = compile_installer(legacy, '9.0.0')
         run([old, '/SP-', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=desktopicon',
              '/DIR=' + str(program), '/LOG=' + str(output / 'first-install.log')])
-        assert calls.read_text().startswith('--configure-locations')
+        assert calls.read_text(encoding='utf-8').startswith('--configure-locations')
         tasks = previous_tasks()
         assert tasks == 'desktopicon', tasks
-        calls.write_text('')
+        calls.write_text('', encoding='utf-8')
         (source / 'version.txt').write_text('after')
         new = compile_installer((ROOT / 'desktop/windows.iss').read_text(encoding='utf-8'), '9.0.1')
         parent_done = output / 'previous-app-exited'
@@ -112,24 +112,27 @@ class Fixture { static void Main(string[] args) {
             if parent.poll() is None:
                 parent.terminate(); parent.wait(timeout=5)
         deadline = time.monotonic() + 5
-        while 'LAUNCH' not in calls.read_text() and time.monotonic() < deadline:
+        while 'LAUNCH' not in calls.read_text(encoding='utf-8') and time.monotonic() < deadline:
             time.sleep(.05)
         assert (program / 'version.txt').read_text() == 'after'
-        assert calls.read_text().splitlines() == ['LAUNCH'], calls.read_text()
+        assert calls.read_text(encoding='utf-8').splitlines() == ['LAUNCH'], calls.read_text(encoding='utf-8')
         assert saved_paths() == values
-        calls.write_text('')
+        calls.write_text('', encoding='utf-8')
         missing = output / 'not-an-installed-program'
         run([new, '/UPDATE', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/SP-', '/NORESTART',
              '/DIR=' + str(missing), '/LOG=' + str(output / 'refused-update.log')], success=False)
         assert not (missing / 'SchoolWatcher.exe').exists()
-        assert calls.read_text() == ''
+        assert calls.read_text(encoding='utf-8') == ''
         assert saved_paths() == values
         assert previous_tasks() == tasks
         assert all(Path(path).read_bytes() == content for path, content in before.items())
-        calls.write_text('')
+        calls.write_text('', encoding='utf-8')
         # Double-clicking the installer should also bypass the setup pages on an existing install.
         run([new, '/SP-', '/NORESTART', '/LOG=' + str(output / 'manual-upgrade.log')])
-        assert calls.read_text().splitlines() == ['LAUNCH'], calls.read_text()
+        deadline = time.monotonic() + 5
+        while 'LAUNCH' not in calls.read_text(encoding='utf-8') and time.monotonic() < deadline:
+            time.sleep(.05)
+        assert calls.read_text(encoding='utf-8').splitlines() == ['LAUNCH'], calls.read_text(encoding='utf-8')
         assert saved_paths() == values
         result = {'program_path_inherited': True, 'all_data_paths_retained': True,
                   'personal_files_unchanged': True, 'shortcut_selection_retained': True,
