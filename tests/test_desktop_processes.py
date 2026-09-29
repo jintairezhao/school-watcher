@@ -168,7 +168,7 @@ class UninstallerTests(unittest.TestCase):
     def test_requires_uninstaller_and_its_matching_data_beside_running_app(self):
         from desktop.uninstall import uninstaller_path
         with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
+            root = Path(folder).resolve()
             app = root / 'SchoolWatcher.exe'; app.touch()
             with patch('sys.frozen', True, create=True), patch('sys.executable', str(app)), patch('sys.platform', 'win32'):
                 self.assertIsNone(uninstaller_path())
