@@ -33,6 +33,22 @@ def activate_existing(data):
     return False
 
 
+def request_exit(data=None):
+    """Authenticated local request used by this installation's uninstaller."""
+    from desktop.runtime import user_data_dir
+    try:
+        state = json.loads(((Path(data) if data else user_data_dir()) / 'desktop-instance.json').read_text(encoding='utf-8'))
+        port, token = int(state['port']), state['token']
+        if not 1024 <= port <= 65535 or not isinstance(token, str) or len(token) != 64:
+            return False
+        request = urllib.request.Request(f'http://127.0.0.1:{port}/quit', data=b'',
+            headers={'X-Watcher-Token': token})
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request, timeout=1) as response:
+            return response.status == 204
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 class UpdateAPI:
     def __init__(self, data, quit_app):
         self._data, self._quit = data, quit_app
@@ -126,9 +142,14 @@ def run_window(runtime, smoke_test=False):
     import webview
     from webview.menu import Menu, MenuAction
 
+    migration = None
+    migration_window = None
     def quit_app():
+        if migration and not migration.done.is_set():
+            return False
         for item in list(webview.windows):
             item.destroy()
+        return True
 
     def open_data():
         if os.name == 'nt':
@@ -140,10 +161,76 @@ def run_window(runtime, smoke_test=False):
     component_window = None
     update_api = None
     location_busy = threading.Lock()
+    def start_migration(values, release):
+        nonlocal migration, migration_window
+        from desktop.migration import Migration
+        operation = Migration(runtime, values)
+        migration = operation
+        finished = threading.Event()
+
+        class MigrationAPI:
+            def state(self):
+                return operation.state()
+            def cancel(self):
+                return operation.cancel()
+            def finish(self):
+                if not operation.done.is_set() or finished.is_set():
+                    return False
+                finished.set()
+                if operation.restart:
+                    runtime.restart_requested = True
+                    quit_app()
+                else:
+                    dialog.destroy()
+                    window.show()
+                    window.restore()
+                    release()
+                return True
+
+        api = MigrationAPI()
+        dialog = webview.create_window('更改文件位置',
+            html=(resource_root() / 'desktop' / 'ui' / 'migration.html').read_text(encoding='utf-8'),
+            js_api=api, width=560, height=480, min_size=(460, 440), background_color='#f5f5f7')
+        migration_window = dialog
+        def closing():
+            if not operation.done.is_set():
+                operation.cancel()
+                return False
+            if not finished.is_set():
+                threading.Thread(target=api.finish, daemon=True).start()
+                return False
+            return True
+        dialog.events.closing += closing
+        window.hide()
+        threading.Thread(target=operation.run, daemon=True, name='location-migration').start()
     def locations():
         window.load_url(runtime.address + '/admin/storage#locations')
+    def uninstall():
+        from desktop.uninstall import uninstaller_path
+        if not location_busy.acquire(blocking=False):
+            return {'error': '文件操作正在进行，请稍候。'}
+        update_locked = False
+        try:
+            if update_api:
+                update_locked = update_api._lock.acquire(blocking=False)
+                if not update_locked:
+                    return {'error': '更新正在进行，请完成后再卸载。'}
+            path = uninstaller_path()
+            if path is None:
+                return {'error': '当前是便携版，请退出应用后删除程序文件夹；个人数据会保留。'}
+            if not window.create_confirmation_dialog('卸载学校通知', '将退出应用并打开卸载向导，可选择保留个人数据。'):
+                return {'cancelled': True}
+            runtime.requested_uninstaller = path
+            quit_app()
+            return {'quitting': True}
+        finally:
+            if not getattr(runtime, 'requested_uninstaller', None):
+                if update_locked: update_api._lock.release()
+                location_busy.release()
     def components():
         nonlocal component_window
+        if location_busy.locked():
+            return
         if component_window in webview.windows:
             component_window.restore()
             component_window.show()
@@ -160,6 +247,8 @@ def run_window(runtime, smoke_test=False):
             js_api=ComponentsAPI(), width=560, height=390, min_size=(480, 350), background_color='#f5f5f7')
     def updates():
         nonlocal update_window, update_api
+        if location_busy.locked():
+            return
         if update_window in webview.windows:
             update_window.restore()
             update_window.show()
@@ -183,6 +272,8 @@ def run_window(runtime, smoke_test=False):
         def window_action(self, action):
             if not self._allowed():
                 return False
+            if migration and not migration.done.is_set():
+                return False
             if action == 'minimize':
                 window.minimize()
             elif action == 'maximize':
@@ -197,6 +288,8 @@ def run_window(runtime, smoke_test=False):
                 open_data()
             elif action == 'locations':
                 locations()
+            elif action == 'uninstall':
+                return uninstall()
             else:
                 return False
             return True
@@ -228,21 +321,25 @@ def run_window(runtime, smoke_test=False):
             if not location_busy.acquire(blocking=False): return {'error': '文件操作正在进行，请稍候。'}
             from desktop.locations import validate_locations
             update_locked = False
+            started = False
             try:
                 validate_locations(values, runtime.data_dir)
                 if update_api:
                     update_locked = update_api._lock.acquire(blocking=False)
                     if not update_locked:
                         return {'error': '安装包正在下载，请完成后再更改位置。'}
-                if not window.create_confirmation_dialog('更改文件位置', '将保存数据、迁移并重启。原目录会保留一份副本。'):
+                if not window.create_confirmation_dialog('更改文件位置', '将暂停抓取、迁移数据并重新打开。原目录保留副本。'):
                     return {'cancelled': True}
-                runtime.requested_locations = values
-                quit_app()
-                return {'restarting': True}
+                def release():
+                    if update_locked: update_api._lock.release()
+                    location_busy.release()
+                start_migration(values, release)
+                started = True
+                return {'migrating': True}
             except (ValueError, OSError) as exc:
                 return {'error': str(exc)}
             finally:
-                if not getattr(runtime, 'requested_locations', None):
+                if not started:
                     if update_locked: update_api._lock.release()
                     location_busy.release()
 
@@ -286,6 +383,9 @@ def run_window(runtime, smoke_test=False):
         state['maximized'] = False
     window.events.maximized += maximized
     window.events.restored += restored
+    def main_closing():
+        return not migration or migration.done.is_set()
+    window.events.closing += main_closing
     menu = [Menu('School Watcher', [MenuAction('检查更新…', updates), MenuAction('采集组件…', components),
         MenuAction('文件位置…', locations), MenuAction('打开数据文件夹', open_data), MenuAction('退出', quit_app)])]
 
@@ -294,13 +394,20 @@ def run_window(runtime, smoke_test=False):
         def log_message(self, *args):
             pass
         def do_POST(self):
-            if self.path != '/activate' or not secrets.compare_digest(self.headers.get('X-Watcher-Token', ''), token):
+            if self.path not in ('/activate', '/quit') or not secrets.compare_digest(self.headers.get('X-Watcher-Token', ''), token):
                 self.send_error(403)
                 return
-            window.restore()
-            window.show()
+            if self.path == '/activate':
+                target = migration_window if migration_window in webview.windows else window
+                target.restore()
+                target.show()
+            if self.path == '/quit' and migration and not migration.done.is_set():
+                self.send_error(409, 'Location migration in progress')
+                return
             self.send_response(204)
             self.end_headers()
+            if self.path == '/quit':
+                threading.Thread(target=quit_app, daemon=True).start()
     control = ThreadingHTTPServer(('127.0.0.1', 0), ActivationHandler)
     threading.Thread(target=control.serve_forever, daemon=True).start()
     instance = runtime.data_dir / 'desktop-instance.json'

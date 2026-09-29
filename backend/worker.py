@@ -261,7 +261,8 @@ def dispatch(kind, payload):
     raise ValueError('Unknown task kind')
 
 
-def execute(app, handle):
+def execute(app, handle, pause=None):
+    from backend.services.desktop_maintenance import before_fetch
     stop = threading.Event()
     handle['cancelled'] = threading.Event()
     def renew():
@@ -287,8 +288,8 @@ def execute(app, handle):
             fingerprint = profile_fingerprint()
             handle['policy_validator'] = lambda: profile_fingerprint() == fingerprint
             with tasks.execution_scope(handle), execution_context(browser_dispatch=browser_dispatch,
-                    cache_lookup=cache_lookup, cache_store=cache_store, before_fetch=tasks.assert_owned):
-                tasks.assert_owned()
+                    cache_lookup=cache_lookup, cache_store=cache_store, before_fetch=lambda: before_fetch(pause)):
+                before_fetch(pause)
                 try:
                     result = dispatch(handle['kind'], dict(handle['payload']))
                 except FetchFailure as exc:
@@ -319,6 +320,7 @@ def execute(app, handle):
         finally:
             stop.set()
             db.session.remove()
+            heartbeat.join()
 
 
 def run(app, *, once=False, roles=None, concurrency=None, worker_id=None):
@@ -337,11 +339,20 @@ def run(app, *, once=False, roles=None, concurrency=None, worker_id=None):
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     lock = FileLock(str(lock_path), timeout=0) if sqlite else nullcontext()
     with lock, ThreadPoolExecutor(max_workers=slots) as pool:
+        from backend.services.desktop_maintenance import WorkerMaintenance
+        maintenance = WorkerMaintenance(app)
         active = {}
         last_schedule = 0
         last_heartbeat = 0
         while True:
-            if 'scheduler' in roles and time.monotonic() - last_schedule > 30:
+            for future in [future for future in active if future.done()]:
+                future.result()
+                del active[future]
+            if maintenance.poll(len(active)):
+                with app.app_context():
+                    worker_heartbeat(worker_id, roles, stopped=True)
+                return
+            if not maintenance.pause.is_set() and 'scheduler' in roles and time.monotonic() - last_schedule > 30:
                 with app.app_context():
                     schedule_due(worker_id)
                 last_schedule = time.monotonic()
@@ -349,16 +360,16 @@ def run(app, *, once=False, roles=None, concurrency=None, worker_id=None):
                 with app.app_context():
                     worker_heartbeat(worker_id, roles)
                 last_heartbeat = time.monotonic()
-            for future in [future for future in active if future.done()]:
-                future.result()
-                del active[future]
-            while lanes and len(active) < slots:
+            while not maintenance.pause.is_set() and lanes and len(active) < slots:
+                maintenance.poll(len(active))
+                if maintenance.pause.is_set():
+                    break
                 with app.app_context():
                     handle = tasks.claim(capabilities=lanes, worker_id=worker_id)
                     db.session.remove()
                 if not handle:
                     break
-                active[pool.submit(execute, app, handle)] = handle['capability']
+                active[pool.submit(execute, app, handle, maintenance.pause)] = handle['capability']
             if once:
                 for future in active:
                     future.result()

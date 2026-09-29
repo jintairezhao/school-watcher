@@ -3,7 +3,14 @@
     const bar = document.getElementById('desktopChrome');
     if (!bar) return;
     async function action(name) {
-        if (window.pywebview && window.pywebview.api) await window.pywebview.api.window_action(name);
+        if (window.pywebview && window.pywebview.api) {
+            try {
+                const result = await window.pywebview.api.window_action(name);
+                if (result && result.error) window.alert(result.error);
+            } catch (_) {
+                if (name === 'uninstall') window.alert('未能打开卸载向导，请重新打开应用后重试。');
+            }
+        }
     }
     bar.querySelectorAll('[data-window-action]').forEach(button => {
         button.addEventListener('click', () => {
