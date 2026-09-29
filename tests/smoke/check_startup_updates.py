@@ -27,7 +27,8 @@ def check():
             time.sleep(.1)
         raise AssertionError('Native update notification timed out')
 
-    with tempfile.TemporaryDirectory(prefix='watcher-startup-update-') as folder:
+    # WebView2 can release its cookie file after its native window closes.
+    with tempfile.TemporaryDirectory(prefix='watcher-startup-update-', ignore_cleanup_errors=True) as folder:
         root = Path(folder)
         original_create = webview.create_window
         windows, apis, failures = [], [], []
@@ -51,12 +52,15 @@ def check():
                     wait(lambda: checker.called and windows and windows[0].events.loaded.is_set(), timeout=120)
                     wait(lambda: windows and apis[0]._allowed())
                     main = windows[0]
-                    print(json.dumps({'update': apis[0].update_notification(), 'bridge': main.run_js('''JSON.stringify((() => {
+                    bridge = json.loads(main.run_js('''JSON.stringify((() => {
                         let dynamicCode; try { dynamicCode = new Function('return 1')() === 1; }
                         catch (error) { dynamicCode = String(error); }
                         return {notice: !!document.getElementById('desktopUpdateNotice'),
                             api: Object.keys(window.pywebview?.api || {}), dynamicCode};
-                    })())''')}), flush=True)
+                    })())'''))
+                    print(json.dumps({'update': apis[0].update_notification(), 'bridge': bridge}), flush=True)
+                    if sys.platform == 'darwin':
+                        assert bridge['dynamicCode'] is not True, 'Page CSP must continue blocking dynamic code'
                     wait(lambda: main.run_js('!!document.querySelector("#desktopUpdateNotice:not([hidden])")'))
                     assert apis[0].update_notification()['version'] == '9.0.0'
                     main.run_js('document.getElementById("desktopUpdateOpen").click()')

@@ -410,11 +410,15 @@ def run_window(runtime, smoke_test=False):
             return True
 
     state = {'maximized': False}
+    main_api = WindowAPI()
     window = webview.create_window(APP_NAME,
         html=(resource_root() / 'desktop' / 'ui' / 'loading.html').read_text(encoding='utf-8'),
         width=1280, height=820, min_size=(760, 520), text_select=True, zoomable=True,
-        background_color='#f5f5f7', hidden=smoke_test, js_api=WindowAPI(),
+        background_color='#f5f5f7', hidden=smoke_test, js_api=main_api,
         frameless=os.name == 'nt', easy_drag=False)
+    if sys.platform == 'darwin':
+        from desktop.native_bridge import install_csp_bridge
+        install_csp_bridge(window, main_api, main_api._allowed)
     def maximized():
         state['maximized'] = True
     def restored():
