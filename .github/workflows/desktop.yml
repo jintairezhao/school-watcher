@@ -132,4 +132,4 @@ jobs:
           mkdir release
           find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' \) -exec cp '{}' release/ \;
           (cd release && sha256sum *.exe *.dmg *.zip > SHA256SUMS.txt)
-          gh release create "$TAG" release/* --target "$GITHUB_SHA" --title "School Watcher $TAG" --notes-file desktop/RELEASE_NOTES.md
+          gh release create "$TAG" release/* --target "$GITHUB_SHA" --title "School Watcher $TAG" --notes-file desktop/RELEASE_NOTES.md --latest
