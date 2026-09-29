@@ -26,7 +26,18 @@ def main(argv=None):
     parser.add_argument('--cache-dir', type=Path)
     parser.add_argument('--backup-dir', type=Path)
     parser.add_argument('--remove-personal-data', action='store_true')
+    parser.add_argument('--stop-for-uninstall', action='store_true')
     args = parser.parse_args(argv)
+    if args.stop_for_uninstall:
+        if sys.platform != 'win32' or not getattr(sys, 'frozen', False):
+            raise RuntimeError('卸载清理仅适用于 Windows 安装版。')
+        from desktop.uninstall import stop_installation
+        from desktop.window import request_exit
+        stop_installation(sys.executable, request_exit)
+        return 0
+    if args.service:
+        from desktop.processes import guard_service
+        guard_service()
     if args.remove_personal_data:
         from desktop.locations import remove_personal_data
         remove_personal_data()
@@ -35,6 +46,10 @@ def main(argv=None):
         from desktop.locations import apply_locations
         apply_locations(args.data_dir or user_data_dir(), args.download_dir, args.cache_dir, args.backup_dir)
         return 0
+    if not args.service:
+        import secrets
+        os.environ['WATCHER_DESKTOP_TOKEN'] = secrets.token_hex(32)
+        os.environ['WATCHER_BROWSER_TOKEN'] = secrets.token_hex(32)
     data = configure(args.data_dir or user_data_dir())
     if args.gui_smoke_test:
         import faulthandler
@@ -91,20 +106,14 @@ def main(argv=None):
         return 0
     finally:
         runtime.close()
-        pending = getattr(runtime, 'requested_locations', None)
-        if pending:
-            try:
-                from desktop.locations import apply_changes
-                apply_changes(pending, source=data)
-            except Exception as exc:
-                logging.exception('Location change failed; original profile retained')
-                if os.name == 'nt':
-                    import ctypes
-                    ctypes.windll.user32.MessageBoxW(None, f'目录更改未完成，原数据仍保留。\n{exc}', '学校通知', 0x10)
         lock.release()
         if args.gui_smoke_test:
             faulthandler.cancel_dump_traceback_later()
-        if pending:
+        uninstaller = getattr(runtime, 'requested_uninstaller', None)
+        if uninstaller:
+            from desktop.uninstall import launch_uninstaller
+            launch_uninstaller(uninstaller)
+        if getattr(runtime, 'restart_requested', False):
             import subprocess
             environment = os.environ.copy()
             environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
@@ -123,7 +132,7 @@ if __name__ == '__main__':
         raise SystemExit(main())
     except Exception as exc:
         logging.exception('Desktop application failed')
-        if os.name == 'nt' and not any(flag in sys.argv for flag in ('--service', '--smoke-test', '--gui-smoke-test')):
+        if os.name == 'nt' and not any(flag in sys.argv for flag in ('--service', '--smoke-test', '--gui-smoke-test', '--stop-for-uninstall')):
             import ctypes
             ctypes.windll.user32.MessageBoxW(None, f'学校通知未能启动。\n\n{exc}', 'School Watcher', 0x10)
         elif sys.stderr:

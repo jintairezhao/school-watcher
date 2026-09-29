@@ -31,7 +31,7 @@ try:
             page.add_init_script("""localStorage.setItem('theme','dark');window.pywebview={api:{
                 location_state:async()=>({program:'D:/Programs/School Watcher',data:'D:/SchoolWatcher',cache:'D:/SchoolWatcher',backups:'D:/SchoolWatcher/backups',downloads:'D:/SchoolWatcher/updates'}),
                 choose_location:async()=> 'E:/SchoolWatcher', change_locations:async(values)=>{window.chosen=values;return {cancelled:true}},
-                window_action:async()=>true, open_location:async()=>true, reinstall:async()=>({cancelled:true})}};""")
+                window_action:async(name)=>{window.nativeAction=name;return {cancelled:true}}, open_location:async()=>true, reinstall:async()=>({cancelled:true})}};""")
             page.goto('http://localhost/admin/storage')
             expect(page.locator('#location-data')).to_have_value('D:/SchoolWatcher')
             page.locator('[data-location-change=data]').click()
@@ -51,6 +51,12 @@ try:
             page.screenshot(path=str(output/f'storage-{width}.png'),full_page=True)
             page.goto('http://localhost/')
             assert page.locator('#desktopChrome').count()==1
+            page.get_by_label('应用菜单').click()
+            expect(page.get_by_role('button', name='卸载学校通知…')).to_be_visible()
+            page.screenshot(path=str(output/f'uninstall-menu-{width}.png'))
+            page.get_by_role('button', name='卸载学校通知…').click()
+            assert page.evaluate("window.nativeAction === 'uninstall'")
+            assert not page.locator('.desktop-menu').evaluate('(menu)=>menu.open')
             rect=page.locator('.navbar').bounding_box()
             assert rect['y']==0 and rect['height']==56,rect
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')

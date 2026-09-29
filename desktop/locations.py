@@ -69,8 +69,26 @@ def save_locations(*, data_dir=None, download_dir=None, cache_dir=None, backup_d
     if sys.platform == 'win32' and not os.environ.get('WATCHER_LOCATION_SETTINGS'):
         import winreg
         with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r'Software\SchoolWatcher') as key:
-            for field, name in REGISTRY_FIELDS.items():
-                if field in values: winreg.SetValueEx(key, name, 0, winreg.REG_SZ, values[field])
+            before = {}
+            for name in REGISTRY_FIELDS.values():
+                try:
+                    before[name] = winreg.QueryValueEx(key, name)
+                except FileNotFoundError:
+                    before[name] = None
+            changed = []
+            try:
+                for field, name in REGISTRY_FIELDS.items():
+                    if field in values:
+                        winreg.SetValueEx(key, name, 0, winreg.REG_SZ, values[field])
+                        changed.append(name)
+            except OSError:
+                for name in reversed(changed):
+                    original = before[name]
+                    if original is None:
+                        winreg.DeleteValue(key, name)
+                    else:
+                        winreg.SetValueEx(key, name, 0, original[1], original[0])
+                raise
     else:
         path = _settings_file()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -149,7 +167,7 @@ def _copy_file(source, destination):
             raise LocationError('文件副本校验失败，原目录保持不变。')
 
 
-def migrate_data(source, target, *, program_dir=None, exclude=()):
+def migrate_data(source, target, *, program_dir=None, exclude=(), progress=None):
     source = Path(source).resolve()
     target = validate_data_target(source, target, program_dir)
     if target == source: return target
@@ -179,10 +197,13 @@ def migrate_data(source, target, *, program_dir=None, exclude=()):
                         if name in dirs: dirs.remove(name)
                 for name in files:
                     old = Path(directory) / name
-                    if old.is_symlink() or name.endswith(('.lock', '-wal', '-shm', '.log')) or name == 'desktop-instance.json':
+                    if old.is_symlink() or name.endswith(('.lock', '-wal', '-shm', '.log')) or name in (
+                            'desktop-instance.json', 'desktop-maintenance.json', 'desktop-worker-state.json'):
                         continue
                     if not old.is_file(): raise LocationError('数据目录包含不支持的文件类型。')
+                    if progress: progress('copying', name)
                     _copy_file(old, destination / name)
+                    if progress: progress('copied', name)
         # The selected target was checked above; recheck before replacing an empty directory.
         validate_data_target(source, target, program_dir)
         if target.exists(): target.rmdir()
@@ -224,7 +245,7 @@ def validate_locations(values, source=None):
     return paths
 
 
-def apply_changes(values, *, source=None):
+def apply_changes(values, *, source=None, progress=None):
     """Called only after all app services stopped, while holding the profile lock."""
     old = effective_locations(source)
     paths = validate_locations(values, source)
@@ -240,7 +261,7 @@ def apply_changes(values, *, source=None):
             exclude.add(origin.relative_to(old['data']))
     if old['cache'] == old['data'] and paths['cache'] != paths['data']:
         exclude.update((Path('discovery_cache.sqlite3'), Path('fetch-evidence')))
-    new_data = migrate_data(old['data'], paths['data'], program_dir=program_dir(), exclude=exclude)
+    new_data = migrate_data(old['data'], paths['data'], program_dir=program_dir(), exclude=exclude, progress=progress)
     for key in ('cache', 'backups', 'downloads'):
         origin, target = old[key], paths[key]
         if target == origin:
@@ -253,11 +274,13 @@ def apply_changes(values, *, source=None):
             for name in ('discovery_cache.sqlite3', 'fetch-evidence'):
                 item = origin / name
                 if item.is_file():
+                    if progress: progress('copying', name)
                     _copy_file(item, target / name)
+                    if progress: progress('copied', name)
                 elif item.is_dir():
-                    migrate_data(item, target / name)
+                    migrate_data(item, target / name, progress=progress)
         else:
-            migrate_data(origin, target)
+            migrate_data(origin, target, progress=progress)
     for path in paths.values():
         path.mkdir(parents=True, exist_ok=True)
     save_locations(data_dir=new_data, cache_dir=paths['cache'], backup_dir=paths['backups'], download_dir=paths['downloads'])
@@ -290,7 +313,8 @@ def remove_personal_data():
             for name in ('school_watcher.db', 'school_watcher.db-wal', 'school_watcher.db-shm',
                          'source_catalog.sqlite3', 'source_catalog.sqlite3-wal', 'source_catalog.sqlite3-shm',
                          '.env', '.field-key', '.secret_key', 'desktop-settings.json', 'desktop-instance.json',
-                         'browser-status.json', 'browser-install.json', 'desktop-browser.json', 'desktop-locations.json'):
+                         'browser-status.json', 'browser-install.json', 'desktop-browser.json', 'desktop-locations.json',
+                         'desktop-maintenance.json', 'desktop-worker-state.json'):
                 erase(data / name, data)
             for name in ('desktop.log', 'desktop-app.log', 'desktop-browser-setup.log', 'desktop-browser-download.log',
                          'desktop-browser.log', 'desktop-migrate.log', 'desktop-web.log', 'desktop-worker.log',

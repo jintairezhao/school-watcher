@@ -116,12 +116,25 @@ begin
       RaiseException('文件位置更改未完成，原数据仍保留。请退出学校通知，并选择空文件夹后重试。');
 end;
 
+function StopInstalledApplication: Boolean;
+var Code: Integer;
+begin
+  Result := True;
+  if not FileExists(ExpandConstant('{app}\SchoolWatcher.exe')) then Exit;
+  Result := Exec(ExpandConstant('{app}\SchoolWatcher.exe'), '--stop-for-uninstall', '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0);
+  if not Result then
+    SuppressibleMsgBox('后台进程未能退出，卸载已停止。请重启电脑后重试。', mbError, MB_OK, IDOK);
+end;
+
 function InitializeUninstall: Boolean;
 var Form: TSetupForm; KeepButton, DeleteButton, CancelButton: TNewButton; LabelText: TNewStaticText; Choice: Integer;
 begin
   RemoveData := False;
   Result := True;
-  if UninstallSilent then Exit;
+  if UninstallSilent then begin
+    Result := StopInstalledApplication();
+    Exit;
+  end;
 #if VER >= EncodeVer(6, 6, 0)
   Form := CreateCustomForm(ScaleX(470), ScaleY(155), False, False);
 #else
@@ -164,6 +177,7 @@ begin
   finally
     Form.Free();
   end;
+  if Result then Result := StopInstalledApplication();
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);

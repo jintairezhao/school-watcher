@@ -6,7 +6,8 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+import sys
 
 
 class LocationTests(unittest.TestCase):
@@ -24,6 +25,30 @@ class LocationTests(unittest.TestCase):
         save_locations(data_dir=data, download_dir=downloads)
         self.assertEqual(configured_data_dir(), data)
         self.assertEqual(downloads_dir(data), downloads)
+
+    def test_partial_registry_write_rolls_back_previous_locations(self):
+        from desktop.locations import save_locations, REGISTRY_FIELDS
+        before = {name: (str(self.root / field), 1) for field, name in REGISTRY_FIELDS.items()}
+        registry = dict(before)
+        fake = MagicMock(REG_SZ=1, HKEY_CURRENT_USER=0)
+        fake.QueryValueEx.side_effect = lambda key, name: registry[name]
+        failed = False
+        def write(key, name, reserved, kind, value):
+            nonlocal failed
+            if name == 'CacheDirectory' and not failed:
+                failed = True
+                raise PermissionError('registry write denied')
+            registry[name] = value, kind
+        fake.SetValueEx.side_effect = write
+        with patch.dict(os.environ), patch.dict(sys.modules, {'winreg': fake}), \
+                patch('desktop.locations.sys.platform', 'win32'), \
+                patch('desktop.locations.load_locations', return_value={field: value[0] for field, value in
+                    ((f, before[n]) for f, n in REGISTRY_FIELDS.items())}):
+            os.environ.pop('WATCHER_LOCATION_SETTINGS', None)
+            with self.assertRaises(PermissionError):
+                save_locations(data_dir=self.root / 'new', download_dir=self.root / 'downloads-new',
+                               cache_dir=self.root / 'cache-new')
+        self.assertEqual(registry, before)
 
     def test_default_download_directory_follows_data(self):
         from desktop.locations import downloads_dir

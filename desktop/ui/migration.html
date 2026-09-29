@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>更改文件位置</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:32px;background:#f5f5f7;color:#1d1d1f;font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-size:24px;margin:0 0 22px}ol{display:flex;list-style:none;padding:0;margin:0 0 28px;gap:8px;color:#737378;font-size:13px}
+li{flex:1;padding-top:10px;border-top:3px solid #d8d8dd}li.active{color:#005fc2;border-color:#0071e3}li.complete{color:#245b43;border-color:#378164}
+#message{font-size:17px;font-weight:600;margin:0 0 8px}#detail{color:#606065;font-size:13px;min-height:42px;overflow-wrap:anywhere;margin:0 0 12px}
+progress{width:100%;height:7px;accent-color:#0071e3;margin:0 0 24px}footer{display:flex;justify-content:flex-end}
+button{font:inherit;padding:9px 18px;min-height:42px;border-radius:8px;border:1px solid #c8c8cd;background:#fff;color:inherit;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:3px solid #78adff;outline-offset:3px}
+@media(prefers-color-scheme:dark){body{background:#1e1e20;color:#f5f5f7}#detail,ol{color:#b5b5bd}li{border-color:#48484e}li.active{color:#8ebeff}li.complete{color:#8fd7b3}button{background:#303034;border-color:#595961}}
+</style>
+<h1>更改文件位置</h1>
+<ol aria-label="迁移步骤"><li>保存进度</li><li>关闭服务</li><li>迁移校验</li><li>继续抓取</li></ol>
+<div role="status" aria-live="polite"><p id="message">正在准备迁移…</p><p id="detail"></p></div>
+<progress aria-label="迁移进行中"></progress><footer><button id="action">取消迁移</button></footer>
+<script>
+const action=document.getElementById('action'), bar=document.querySelector('progress');
+let current=null, finishing=false;
+function paint(state){
+    current=state;
+    document.getElementById('message').textContent=state.message;
+    document.getElementById('detail').textContent=state.detail;
+    document.querySelectorAll('li').forEach((item,index)=>{item.className=index<state.step?'complete':index===state.step?'active':'';if(index===state.step)item.setAttribute('aria-current','step');else item.removeAttribute('aria-current');});
+    bar.hidden=state.done;
+    action.disabled=!state.done&&!state.can_cancel;
+    action.textContent=state.done?(state.restart?'重新打开':'返回应用'):'取消迁移';
+    if(state.phase==='complete'&&state.done&&!finishing){finishing=true;window.pywebview.api.finish().catch(()=>{finishing=false;});}
+}
+action.onclick=async()=>{action.disabled=true;try{if(current?.done)await window.pywebview.api.finish();else paint(await window.pywebview.api.cancel());}catch(_){action.disabled=false;}};
+window.addEventListener('pywebviewready',async()=>{
+    while(true){try{paint(await window.pywebview.api.state());}catch(_){document.getElementById('detail').textContent='连接暂时中断，正在重新连接…';}await new Promise(resolve=>setTimeout(resolve,400));}
+});
+</script>
+</html>

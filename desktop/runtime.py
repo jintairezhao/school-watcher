@@ -83,35 +83,55 @@ def stop_process(process):
     for child in [root, *children]:
         try:
             child.terminate()
-        except psutil.NoSuchProcess:
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            # Windows may report access denied while a process is exiting.
+            # Wait below and retry survivors instead of abandoning the tree.
             pass
     _, alive = psutil.wait_procs([root, *children], timeout=5)
     for child in alive:
         try:
             child.kill()
-        except psutil.NoSuchProcess:
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
-    psutil.wait_procs(alive, timeout=3)
+    _, alive = psutil.wait_procs(alive, timeout=3)
+    if alive:
+        raise RuntimeError('后台进程未能全部退出。')
     process.wait(timeout=5)
 
 
 class DesktopRuntime:
     def __init__(self, data_dir):
+        from desktop.processes import ServiceJob
         self.data_dir = configure(data_dir)
+        self._job = ServiceJob()
         self.processes = {}
         self.stopped = threading.Event()
         self.guard = threading.RLock()
         self.address = None
         self.failure = None
+        self.maintenance = False
 
     def spawn(self, role):
         with self.guard:
             if self.stopped.is_set():
                 raise RuntimeError('应用正在退出。')
             with (self.data_dir / f'desktop-{role}.log').open('ab') as output:
+                environment = os.environ.copy()
+                environment['WATCHER_SERVICE_GUARD'] = '1'
                 process = subprocess.Popen(service_command(role, self.data_dir), cwd=self.data_dir,
-                    stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.STDOUT,
+                    stdin=subprocess.PIPE, stdout=output, stderr=subprocess.STDOUT, env=environment,
                     creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+            try:
+                # The child cannot start services or spawn grandchildren until
+                # it belongs to our Windows job. Keep the pipe open for macOS.
+                self._job.add(process)
+                process.stdin.write(b'start\n')
+                process.stdin.flush()
+            except BaseException:
+                process.stdin.close()
+                process.kill()
+                process.wait(timeout=5)
+                raise
             self.processes[role] = process
             return process
 
@@ -169,6 +189,8 @@ class DesktopRuntime:
 
     def prepare_browser(self, managed=False):
         with self.guard:
+            if self.maintenance:
+                return False
             for role in ('browser-setup', 'browser-download'):
                 previous = self.processes.get(role)
                 if previous and previous.poll() is None:
@@ -179,6 +201,8 @@ class DesktopRuntime:
     def monitor(self):
         restarts = []
         while not self.stopped.wait(1):
+            if self.maintenance:
+                continue
             repair = self.data_dir / 'desktop-browser-repair.request'
             if repair.exists() and self.prepare_browser(managed=True):
                 repair.unlink(missing_ok=True)
@@ -188,29 +212,57 @@ class DesktopRuntime:
             for role in ('web', 'worker', 'browser'):
                 with self.guard:
                     process = self.processes.get(role)
-                    if self.stopped.is_set() or process is None or process.poll() is None:
+                    if self.stopped.is_set() or self.maintenance or process is None or process.poll() is None:
                         continue
                 restarts = [stamp for stamp in restarts if time.monotonic() - stamp < 60]
                 if role == 'browser' and len(restarts) < 3:
                     restarts.append(time.monotonic())
                     try:
-                        self.spawn(role)
+                        with self.guard:
+                            if not self.maintenance:
+                                self.spawn(role)
                     except RuntimeError:
                         return
                 else:
                     self.failure = f'{role} 服务意外停止，请重新打开应用。'
                     return
 
-    def close(self):
-        self.stopped.set()
+    def begin_maintenance(self):
         with self.guard:
-            for role in ('probe', 'worker', 'browser', 'browser-setup', 'browser-download', 'web', 'migrate'):
+            if self.stopped.is_set() or self.failure or self.maintenance:
+                raise RuntimeError('服务暂不可用，请重新打开应用后再更改位置。')
+            for role in ('browser-setup', 'browser-download'):
                 process = self.processes.get(role)
                 if process and process.poll() is None:
-                    try:
-                        stop_process(process)
-                    except Exception:
-                        log.exception('Could not stop owned %s process', role)
+                    raise RuntimeError('采集组件正在准备，请完成后再更改位置。')
+            self.maintenance = True
+
+    def resume_worker(self):
+        with self.guard:
+            process = self.processes.get('worker')
+            if process and process.poll() is not None:
+                if process.stdin:
+                    process.stdin.close()
+                self.spawn('worker')
+            self.maintenance = False
+
+    def close(self, *, strict=False):
+        self.stopped.set()
+        with self.guard:
+            try:
+                for role in ('probe', 'worker', 'browser', 'browser-setup', 'browser-download', 'web', 'migrate'):
+                    process = self.processes.get(role)
+                    if process and process.poll() is None:
+                        try:
+                            stop_process(process)
+                        except Exception:
+                            log.exception('Could not stop owned %s process', role)
+                            if strict:
+                                raise
+                    if process and process.stdin:
+                        process.stdin.close()
+            finally:
+                self._job.close()
 
 
 def run_service(role):
@@ -279,14 +331,15 @@ def run_service(role):
             ensure_local_owner()
         from waitress import serve
         # A private ownership/readiness check, independent of account login.
-        original = app.wsgi_app
+        from desktop.maintenance import Maintenance, WebGate
+        original = WebGate(app.wsgi_app, Maintenance(os.environ['WATCHER_DATA_DIR']))
         def with_health(environ, start_response):
             if environ.get('PATH_INFO') == '/_desktop/health':
                 if not secrets.compare_digest(environ.get('HTTP_X_WATCHER_TOKEN', ''), os.environ['WATCHER_DESKTOP_TOKEN']):
                     start_response('403 Forbidden', [('Content-Type', 'text/plain')])
                     return [b'Forbidden']
                 start_response('200 OK', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
-                return [json.dumps({'status': 'ok', 'version': VERSION}).encode()]
+                return [json.dumps({'status': 'ok', 'version': VERSION, **original.state()}).encode()]
             return original(environ, start_response)
         app.wsgi_app = with_health
         import shutil
