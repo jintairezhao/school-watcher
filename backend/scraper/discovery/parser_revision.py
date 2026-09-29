@@ -24,6 +24,7 @@ FILES = (
     'backend/scraper/discovery/cup_news_headings.py',
     'backend/scraper/discovery/unit_profiles.py',
     'backend/scraper/discovery/publication_lists.py',
+    'backend/scraper/discovery/wordpress_publications.py',
     'backend/scraper/discovery/publication_tabs.py',
     'backend/scraper/discovery/inventory_crawler.py',
     'backend/scraper/discovery/ai_navigation.py',

@@ -1,0 +1,13 @@
+{% extends "admin_base.html" %}
+{% block title %}API 用量 — 学校通知{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ai-usage.css') }}">
+{% endblock %}
+{% block content %}
+<div class="admin-tab-panel">
+    {% include '_admin_ai_usage.html' %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin-ai-usage.js') }}"></script>
+{% endblock %}

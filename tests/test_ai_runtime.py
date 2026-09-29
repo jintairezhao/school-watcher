@@ -226,6 +226,8 @@ class OfficialProviderTests(unittest.TestCase):
                 self.assertFalse(session.trust_env);self.assertEqual(session.post.call_count,1)
                 if provider=='dashscope':self.assertIn('input',kwargs['json'])
                 else:self.assertIn('messages',kwargs['json'])
+                if provider=='deepseek':
+                    self.assertEqual(kwargs['json'].get('thinking'), {'type': 'disabled'})
 
     def test_redirect_and_arbitrary_endpoint_rejected(self):
         with patch('backend.ai.providers.requests.Session') as factory:

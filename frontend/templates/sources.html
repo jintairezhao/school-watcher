@@ -7,14 +7,16 @@
     <section class="discovery-status" id="discoveryStatus" data-school-id="{{ school.id }}" aria-label="栏目发现进度">
         <div class="discovery-status-heading"><h2 id="discoveryMessage" role="status">{{ discovery.message }}</h2><span id="discoveryActivity"></span></div>
         <progress id="discoveryProgress" aria-label="栏目发现进度" {% if not discovery.active %}hidden{% endif %}></progress>
-        <p id="discoveryCounts">已检查 {{ discovery.checked_pages }} 页 · {{ discovery.source_count }} 个部门与栏目</p>
+        <p id="discoveryCounts">已检查 {{ discovery.checked_pages }} 页 · 已接入 {{ discovery.source_count }} 项{% if discovery.review_count %} · 待核实 {{ discovery.review_count }} 项{% endif %}</p>
         <p id="discoveryCurrent" class="text-muted"></p>
-        <p id="discoveryAI" class="text-muted">{{ 'AI 辅助已开启' if discovery.ai_available else '开启 AI 辅助，识别学校部门与栏目' }}</p>
+        <p id="discoveryAI" class="text-muted">{{ discovery.ai_message }}</p>
         <div class="discovery-actions">
+            {% if current_user.is_admin %}<button type="button" class="btn btn-outline" id="discoveryPause" data-action="{{ 'resume' if discovery.can_resume else 'pause' }}" {% if not discovery.can_pause and not discovery.can_resume and discovery.state != 'pausing' %}hidden{% endif %} {% if discovery.state == 'pausing' %}disabled{% endif %}>{{ '继续' if discovery.can_resume else '正在暂停…' if discovery.state == 'pausing' else '暂停' }}</button>{% endif %}
             {% if current_user.is_admin %}<a class="btn btn-primary" id="discoverySetup" href="{{ url_for('admin.admin_page', onboarding=school.id, _anchor='platform') }}" {% if discovery.ai_available %}hidden{% endif %}>配置 AI 并继续</a>{% endif %}
             <button type="button" class="btn btn-outline" id="discoveryRetry" {% if not discovery.ai_available or not discovery.can_retry %}hidden{% endif %}>用 AI 重新发现</button>
             {% if current_user.is_admin %}<a id="discoveryVerify" class="btn btn-outline" href="{{ url_for('browser_sessions.page') }}" hidden>完成访问验证</a>{% endif %}
             <button type="button" class="btn btn-ghost" id="discoveryRefresh">刷新进度</button>
+            {% if current_user.is_admin %}<a class="btn btn-outline" id="discoveryReview" href="{{ url_for('source_governance.review_page') }}" {% if not discovery.review_count %}hidden{% endif %}>查看待核实栏目</a>{% endif %}
         </div>
         <p id="discoveryError" role="alert" hidden></p>
     </section>

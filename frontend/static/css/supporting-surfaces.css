@@ -130,6 +130,11 @@
 .admin-tab-panel .settings-grid { max-width:none; grid-template-columns:minmax(0,1fr); gap:36px; }
 #panel-platform .settings-grid { max-width:800px; }
 #aiStatus { font-size:var(--text-meta,.8125rem); line-height:1.7; margin-bottom:20px; }
+#aiStatus:empty { margin:0; }
+.ai-section-title { margin:0 0 16px; font-size:var(--text-body,1rem); font-weight:600; line-height:1.5; }
+#aiProfileForm { margin-top:28px; }
+.ai-profile-label { min-width:0; overflow-wrap:anywhere; }
+#aiProfileForm .text-muted,#aiBindingForm .text-muted { font-size:var(--text-control,.875rem); line-height:1.7; max-width:70ch; }
 #aiProfileForm+hr { border:0; border-top:1px solid var(--color-border); margin-block:28px; }
 #aiBindingForm+details { margin-top:24px; }
 #aiBindingForm+details>summary { min-height:44px; cursor:pointer; font-size:var(--text-control,.875rem); }

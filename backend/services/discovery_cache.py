@@ -111,6 +111,8 @@ def adapt_site(name, root_url, *, monthly=False):
         first_slice = bool(handle) and not handle.get('checkpoint', {}).get('first_slice_finished')
         result = crawl_site(inventory, key, max_pages=3 if first_slice else 20, workers=2,
                             focus='all', retry_failed=monthly, progress=progress)
+        from backend.services.discovery_control import pause_if_requested
+        pause_if_requested()
         from backend.database.models import School
         from backend.services.source_governance import process_discovered_candidates, record_onboarding_slice
         from backend.services.source_relationships import ROSTER_RELATIONS

@@ -61,6 +61,10 @@ def complete(profile, api_key, messages, *, max_tokens=None):
     else:
         body = {**common, 'messages': messages, 'max_tokens': budget, 'temperature': 0.1,
                 'response_format': {'type': 'json_object'}}
+        if profile['provider'] == 'deepseek':
+            # These bounded classification/summary calls need the JSON answer;
+            # default thinking can consume the output budget before it arrives.
+            body['thinking'] = {'type': 'disabled'}
     session = requests.Session()
     session.trust_env = False
     started = time.monotonic()

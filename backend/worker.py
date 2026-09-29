@@ -66,6 +66,8 @@ def schedule_due(owner_id='local'):
         recover_interrupted_logs()
         from backend.ai.runtime import recover_uncertain_executions
         recover_uncertain_executions()
+        from backend.services.source_governance import recover_source_reviews
+        recover_source_reviews()
         _schedule_due(lease)
         worker_heartbeat(owner_id + ':scheduler', ['scheduler'])
         return True
@@ -289,6 +291,8 @@ def execute(app, handle, pause=None):
             handle['policy_validator'] = lambda: profile_fingerprint() == fingerprint
             with tasks.execution_scope(handle), execution_context(browser_dispatch=browser_dispatch,
                     cache_lookup=cache_lookup, cache_store=cache_store, before_fetch=lambda: before_fetch(pause)):
+                from backend.services.discovery_control import pause_if_requested
+                pause_if_requested()
                 before_fetch(pause)
                 try:
                     result = dispatch(handle['kind'], dict(handle['payload']))

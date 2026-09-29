@@ -14,12 +14,17 @@ from playwright.sync_api import sync_playwright
 from test_desktop_onboarding import FirstSubscriptionTests
 from backend.database.db import db
 from backend.database.models import BackgroundTask, Department
+from backend.services.source_governance import propose_source
 
 output = ROOT / '.local/onboarding-checks/screenshots'
 output.mkdir(parents=True, exist_ok=True)
 fixture = FirstSubscriptionTests()
 fixture.setUp()
 fixture.fixture.app.config['DESKTOP_FRAMELESS'] = True
+proposal = propose_source(fixture.school.id, {'name': '通知公告', 'list_url': fixture.school.url,
+                                             'list_selector': '#notices li'})
+proposal.state = 'needs_review'
+db.session.commit()
 results = []
 try:
     with patch('backend.services.onboarding_progress.ai_available', return_value=False) as ai_ready, sync_playwright() as p:
@@ -61,6 +66,17 @@ try:
             page.wait_for_function("() => document.getElementById('discoveryCounts').textContent.includes('已检查 2 页')")
             assert page.locator('#discoveryProgress').is_visible()
             page.screenshot(path=str(output / f'subscription-{width}.png'), full_page=True)
+            row.checkpoint = {'discovery_progress': {'phase': 'crawl', 'ai_state': 'failed',
+                              'ai_error_code': 'incomplete_model_output', 'checked_pages': 234, 'pending_pages': 766},
+                              'ai_navigation': {'one': 'succeeded', 'two': 'failed', 'three': 'failed'}}
+            db.session.commit()
+            page.locator('#discoveryRefresh').click()
+            page.wait_for_function("() => document.getElementById('discoveryCounts').textContent.includes('待核实 1 项')")
+            assert '1 次成功、2 次未完成' in page.locator('#discoveryAI').inner_text()
+            assert '模型输出不完整' in page.locator('#discoveryAI').inner_text()
+            assert page.locator('#discoveryReview').is_visible()
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), ('progress overflow', width)
+            page.screenshot(path=str(output / f'discovery-results-{width}.png'), full_page=True)
             if width == 1280:
                 department = Department(school_id=fixture.school.id, name='测试学院', list_url='https://www.shu.edu.cn/test/')
                 db.session.add(department); db.session.commit()

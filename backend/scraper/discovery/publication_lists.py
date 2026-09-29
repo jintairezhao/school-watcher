@@ -72,6 +72,10 @@ def wrapped_heading(first_item):
 
 
 def heading_evidence(first_item, url, tabs=None):
+    from .wordpress_publications import archive_heading
+    wordpress = archive_heading(first_item, url)
+    if wordpress:
+        return wordpress
     from .metinfo_publications import metinfo_heading
     metinfo = metinfo_heading(first_item, url)
     if metinfo:
@@ -269,6 +273,9 @@ def samples_for(items, config, url):
 
 def publication_lists(html, url):
     soup = BeautifulSoup(html, 'lxml')
+    from .wordpress_publications import POST_LIST, page_kind
+    if page_kind(soup) in ('article', 'search'):
+        return []
     from .major_directories import major_scopes
     reviewed_majors = major_scopes(soup, url)
     major_regions = {id(scope) for scope in reviewed_majors}
@@ -280,7 +287,7 @@ def publication_lists(html, url):
     from .medical_publications import medical_configs
     reviewed_configs, reviewed_widgets = medical_configs(soup, url)
     from .metinfo_publications import METINFO_CONFIG
-    configs = reviewed_configs + [METINFO_CONFIG] + configs
+    configs = reviewed_configs + [POST_LIST, METINFO_CONFIG] + configs
     # The analyzer removes script nodes; retain an untouched tree for evidence locators.
     for candidate in find_repeating_blocks(BeautifulSoup(html, 'lxml'), min_repeat=2, min_text_len=8):
         # Small or undated official lists remain eligible; article evidence is checked below.
@@ -343,6 +350,8 @@ def publication_lists(html, url):
                 continue
             heading = heading_evidence(items[0], url, tabs)
             name = heading['name']
+            if name and any(name == sample['title'] for sample in samples):
+                continue  # An article headline cannot name its enclosing column.
             result = {k: v for k, v in effective.items() if k != 'list_selector'}
             result.update(heading)
             result.update(list_selector=selector,

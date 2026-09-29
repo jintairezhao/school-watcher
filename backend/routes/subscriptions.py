@@ -142,6 +142,20 @@ def subscription_discovery(school_id):
     if not school.enabled or not Subscription.query.filter_by(user_id=g.user.id, school_id=school_id).first():
         return jsonify(error='请先订阅这所学校'), 403
     if request.method == 'POST':
+        payload = request.get_json(silent=True)
+        if payload is not None and (not isinstance(payload, dict) or payload.get('action', 'retry') not in ('pause', 'resume', 'retry')):
+            return jsonify(error='不支持的发现操作'), 400
+        action = (payload or {}).get('action', 'retry')
+        if action in ('pause', 'resume'):
+            if not g.user.is_admin:
+                return jsonify(error='暂停共享发现任务需要管理员权限'), 403
+            from backend.services.discovery_control import control
+            try:
+                control(school.id, action)
+            except ValueError as exc:
+                db.session.rollback()
+                return jsonify(error=str(exc)), 409
+    if request.method == 'POST' and action == 'retry':
         if not ai_available():
             return jsonify(error='请先配置目录识别 AI', setup_url=url_for('admin.admin_page', onboarding=school.id, _anchor='platform')), 409
         from backend.services.tasks import enqueue

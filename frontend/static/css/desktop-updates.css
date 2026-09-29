@@ -1,0 +1,17 @@
+.desktop-update-notice {
+    position: fixed;
+    inset-inline-end: 24px;
+    bottom: 24px;
+    z-index: 900;
+    width: min(360px, calc(100vw - 32px));
+    padding: 20px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 12px;
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+.desktop-update-notice[hidden] { display: none; }
+.desktop-update-notice p { margin: 0 0 16px; font-size: var(--text-body, 1rem); font-weight: 600; overflow-wrap: anywhere; }
+.desktop-update-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.desktop-update-actions .btn { min-height: 40px; }
+@media (max-width: 480px) { .desktop-update-notice { inset-inline-end: 16px; bottom: 16px; } }

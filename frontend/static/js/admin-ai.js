@@ -10,10 +10,30 @@
         return result;
     }
     function option(value, label) { return new Option(label, value); }
+    const regionNames = {'default': '默认区域', 'cn-beijing': '中国内地（北京）',
+        'ap-southeast-1': '新加坡', 'us-east-1': '美国（弗吉尼亚）'};
+    function profileLabel(profile) {
+        const provider = settings.providers.find(p => p.id === profile.provider);
+        const parts = [provider ? provider.name : profile.provider, profile.model];
+        if (provider && provider.regions.length > 1) parts.push(regionNames[profile.region] || profile.region);
+        if (settings.profiles.some(p => p.id !== profile.id && p.provider === profile.provider &&
+                p.model === profile.model && p.region === profile.region)) parts.push('连接 ' + profile.id);
+        return parts.join(' · ');
+    }
+    function profileStatus(profile) {
+        if (!profile.has_key) return '已移除密钥';
+        if (profile.enabled && profile.tested) return '可用';
+        if (profile.tested) return '已停用';
+        return profile.last_test_code && profile.last_test_code !== 'not_tested' ? '测试未通过' : '待测试';
+    }
     function regions(selected) {
         const provider = settings.providers.find(p => p.id === field('aiProvider').value);
-        field('aiRegion').replaceChildren(...(provider ? provider.regions : []).map(r => option(r, r === 'default' ? '默认区域' : r)));
+        field('aiRegion').replaceChildren(...(provider ? provider.regions : []).map(r => option(r, regionNames[r] || r)));
         if (selected) field('aiRegion').value = selected;
+        field('aiRegionGroup').hidden = !provider || provider.regions.length <= 1;
+        field('aiModelHelp').textContent = provider && provider.id === 'ark'
+            ? '填写方舟控制台中的模型 ID；如果你创建过自定义推理接入点，也可以填它的 ep- 开头编号。这个编号代表你在方舟创建的模型调用入口。'
+            : '填写' + (provider ? provider.name : '服务商') + '提供的模型 ID，按控制台或 API 文档中的原样复制。';
     }
     async function action(button, operation) {
         button.disabled = true;
@@ -23,35 +43,52 @@
     }
     function edit(profile) {
         field('aiProfileId').value = profile.id;
-        field('aiName').value = profile.name;
+        field('aiFormTitle').textContent = '修改 AI 服务';
+        field('aiReset').hidden = false;
         field('aiProvider').value = profile.provider;
         regions(profile.region);
         field('aiModel').value = profile.model;
         field('aiKey').value = '';
-        field('aiName').focus();
+        field('aiKey').required = !profile.has_key;
+        field('aiKeyHelp').textContent = profile.has_key
+            ? '已保存密钥。留空继续使用原密钥，填写新密钥则替换。'
+            : '这项服务的密钥已移除，请重新填写。';
+        field('aiProvider').focus();
+    }
+    function resetForm() {
+        field('aiProfileForm').reset();
+        field('aiProfileId').value = '';
+        field('aiFormTitle').textContent = '添加 AI 服务';
+        field('aiReset').hidden = true;
+        field('aiKey').required = true;
+        field('aiKeyHelp').textContent = '从所选服务商获取密钥。密钥加密保存，不会显示在页面上。';
+        regions();
     }
     window.loadAISettings = async function () {
         try {
             settings = await api('/api/admin/ai');
             field('aiStatus').textContent = settings.encryption_available
-                ? (settings.legacy ? '原有 DeepSeek 摘要配置可继续使用；目录识别需单独选择并保存用途。' : '保存后需手动测试，再分配用途。')
+                ? (settings.legacy ? '原有 DeepSeek 摘要服务可继续使用。要发现学校栏目，请添加并测试服务，再保存下方的功能设置。' : '')
                 : '尚未配置本实例的加密主密钥，请按部署文档设置后保存 API 密钥。';
             const currentProvider = field('aiProvider').value;
+            const currentRegion = field('aiRegion').value;
             field('aiProvider').replaceChildren(...settings.providers.map(p => option(p.id, p.name)));
             if (currentProvider) field('aiProvider').value = currentProvider;
-            regions();
+            regions(currentRegion);
             const profiles = field('aiProfiles'); profiles.replaceChildren();
+            if (!settings.profiles.length) profiles.textContent = '还没有连接 AI，请在下方添加。';
             settings.profiles.forEach(profile => {
                 const row = document.createElement('div'); row.className = 'admin-user-row';
                 const label = document.createElement('span');
-                label.textContent = profile.name + ' · ' + profile.model + ' · ' + (profile.enabled && profile.tested ? '可用' : '未启用');
+                label.className = 'ai-profile-label';
+                label.textContent = profileLabel(profile) + ' · ' + profileStatus(profile);
                 row.append(label);
                 const actions = document.createElement('span'); actions.className = 'admin-user-actions';
                 [['编辑', () => edit(profile)], ['测试连接（调用 API）', async () => {
-                    field('aiStatus').textContent = '正在测试连接与结构化输出…';
+                    field('aiStatus').textContent = '正在测试 AI 连接…';
                     const result = await api('/api/admin/ai/profiles/' + profile.id + '/test', 'POST', {});
                     await window.loadAISettings();
-                    field('aiStatus').textContent = result.tested === true ? '测试通过，请选择用途。' : (result.test_code === 'usage_unavailable' ? '返回格式有效，但服务商未提供可核对用量，配置尚未启用。' : (result.error || '测试未通过，请核对模型、区域和密钥。'));
+                    field('aiStatus').textContent = result.tested === true ? '测试通过，请在下方选择使用这个服务的功能并保存。' : (result.test_code === 'usage_unavailable' ? '服务商未返回调用用量，暂时无法启用。' : (result.error || '测试未通过，请核对模型 ID、密钥及其所属区域。'));
                 }], ['停用并移除密钥', async () => {
                     await api('/api/admin/ai/profiles/' + profile.id, 'DELETE'); await window.loadAISettings();
                 }]].forEach(([text, handler]) => {
@@ -61,26 +98,28 @@
                 row.append(actions); profiles.append(row);
             });
             for (const [id, purpose] of [['aiDirectory', 'directory'], ['aiSummary', 'summary']]) {
-                field(id).replaceChildren(option('', '请选择测试通过的服务'), ...settings.profiles.filter(p => p.enabled && p.tested).map(p => option(p.id, p.name)));
+                field(id).replaceChildren(option('', '请选择测试通过的服务'), ...settings.profiles.filter(p => p.enabled && p.tested).map(p => option(p.id, profileLabel(p))));
                 field(id).value = settings.bindings[purpose] || '';
             }
             for (const [id, key] of [['aiTotalLimit', 'total'], ['aiDirectoryLimit', 'directory'], ['aiSummaryLimit', 'summary']]) field(id).value = settings.limits[key];
             field('aiConcurrent').value = settings.max_concurrent;
-            field('aiUsage').textContent = settings.usage.map(u => u.key + '：已使用 ' + u.used_tokens + '，预留 ' + u.reserved_tokens).join('；') || '暂无调用记录';
         } catch (error) { field('aiStatus').textContent = error.message; }
     };
     field('aiProvider').addEventListener('change', () => regions());
-    field('aiReset').addEventListener('click', () => { field('aiProfileForm').reset(); field('aiProfileId').value = ''; regions(); });
+    field('aiReset').addEventListener('click', resetForm);
     field('aiProfileForm').addEventListener('submit', event => {
         event.preventDefault(); action(event.submitter, async () => {
             const id = field('aiProfileId').value;
-            const data = {name: field('aiName').value, provider: field('aiProvider').value,
+            const data = {provider: field('aiProvider').value,
                 region: field('aiRegion').value, model: field('aiModel').value};
             if (field('aiKey').value) data.api_key = field('aiKey').value;
             if (id) data.expected_version = settings.profiles.find(p => p.id === Number(id)).version;
-            await api('/api/admin/ai/profiles' + (id ? '/' + id : ''), id ? 'PUT' : 'POST', data);
-            field('aiKey').value = ''; field('aiProfileId').value = ''; field('aiProfileForm').reset();
+            const saved = await api('/api/admin/ai/profiles' + (id ? '/' + id : ''), id ? 'PUT' : 'POST', data);
+            resetForm();
             await window.loadAISettings();
+            field('aiStatus').textContent = saved.enabled && saved.tested
+                ? '服务已保存，可在下方选择使用它的功能。'
+                : '服务已保存。请点击这项服务的“测试连接”，通过后再保存下方的功能设置。';
         });
     });
     field('aiBindingForm').addEventListener('submit', event => {
@@ -92,7 +131,7 @@
             if (school && /^\d+$/.test(school) && field('aiDirectory').value) {
                 await api('/api/subscriptions/' + school + '/discovery', 'POST', {});
                 location.assign('/subscriptions/' + school);
-            } else field('aiStatus').textContent = '用途已保存';
+            } else field('aiStatus').textContent = '功能设置已保存';
         });
     });
     field('aiLimitsForm').addEventListener('submit', event => {

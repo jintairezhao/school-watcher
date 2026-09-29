@@ -35,6 +35,26 @@ class DesktopLocalTests(unittest.TestCase):
         ensure_local_owner()
         return self.client.get('/_desktop/open?token=' + 'a' * 64, follow_redirects=True)
 
+    def test_directory_fragment_matches_partial_name_and_keeps_filters(self):
+        from bs4 import BeautifulSoup
+        self.open()
+        response = self.client.get('/explore?q=中国&province=北京&level=double&page=9',
+                                   headers={'X-Directory-Fragment': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('<html', response.text)
+        self.assertIn('X-Directory-Fragment', response.headers['Vary'])
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        result = BeautifulSoup(response.text, 'html.parser')
+        names = [node.get_text() for node in result.select('.directory-school h2')]
+        self.assertGreater(len(names), 3)
+        self.assertTrue(all('中国' in name for name in names))
+        for meta in result.select('.directory-school p'):
+            self.assertIn('北京', meta.get_text())
+            self.assertIn('双一流', meta.get_text())
+        full = self.client.get('/explore?q=中国&province=北京&level=double')
+        self.assertIn('<html', full.text)
+        self.assertIn('catalogQuery', full.text)
+
     def test_no_registration_and_private_native_session(self):
         for path in ('/', '/admin', '/api/admin/stats', '/login', '/register'):
             self.assertEqual(self.client.get(path).status_code, 403)

@@ -9,6 +9,7 @@
 .directory-filters button { min-height: 44px; }
 .directory-summary { display: flex; justify-content: space-between; margin: 24px 0 12px; }
 .directory-summary p { margin: 0; }
+.directory-feedback { margin: 12px 0; color: var(--color-text-secondary); font-size: var(--text-control); }
 .directory-list { border-top: 1px solid var(--color-border); }
 .directory-row { display: grid; grid-template-columns: minmax(0, 1fr) 180px auto; align-items: center; gap: 24px; padding: 22px 4px; border-bottom: 1px solid var(--color-border); }
 .directory-school h2 { font-size: var(--text-body); line-height: 1.5; font-weight: 600; margin: 0 0 6px; overflow-wrap: anywhere; }

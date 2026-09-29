@@ -2,14 +2,14 @@
 {% set admin_section = 'source-review' %}
 {% block title %}来源核实 — 学校通知{% endblock %}
 {% block content %}
-<header class="surface-heading"><div><h1>来源核实</h1><p>核对官网机构归属及通知证据，通过检查后启用栏目。</p></div></header>
+<header class="surface-heading"><div><h1>来源核实</h1><p>确认从哪些官网栏目获取通知。程序会自动检查，已配置的 AI 会辅助识别；无法自动接入的栏目会显示在这里。</p></div></header>
 <div class="source-review-layout">
 <div class="setting-card">
     <div class="setting-card-body">
         <label for="proposalState">显示状态</label>
         <select id="proposalState" class="form-input">
             <option value="needs_review">需要核实</option><option value="proposed">等待检查</option>
-            <option value="activated">已启用</option><option value="rejected">已拒绝</option><option value="all">全部</option>
+            <option value="activated">已启用</option><option value="superseded">已自动整理</option><option value="rejected">已拒绝</option><option value="all">全部</option>
         </select>
         <p id="reviewStatus" role="status" aria-live="polite">加载中…</p>
         <div id="proposalList"></div>
@@ -20,7 +20,16 @@
     <div class="setting-card-header"><h2 id="proposalTitle">官网证据</h2></div>
     <div class="setting-card-body">
         <p id="proposalErrors"></p>
+        <div id="proposalRelated" class="header-actions"></div>
         <div id="proposalEvidence"></div>
+        <div id="reviewActions">
+        <p class="text-muted">自动检查无需填写说明；程序会尝试识别所属栏目，通过官网检查后启用。</p>
+        <div class="header-actions">
+            <button class="btn btn-primary" data-review="recheck">自动检查</button>
+            <button class="btn btn-ghost" data-review="reject">拒绝此建议</button>
+        </div>
+        <details id="manualSourceReview">
+        <summary>手动指定栏目或确认归属</summary>
         <button class="btn btn-outline" type="button" id="openSourcePicker">在网页中点选栏目</button>
         <section id="sourcePicker" hidden aria-labelledby="pickerHeading">
             <h3 id="pickerHeading">点选通知区域</h3>
@@ -37,13 +46,12 @@
             <iframe id="pickerFrame" title="官网网页快照，仅供点选" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
             <button class="btn btn-primary" type="button" id="submitSourcePicks">提交点选并重新检查</button>
         </section>
-        <label for="reviewNote">核实依据</label>
+        <label for="reviewNote">归属说明（仅手动确认时填写）</label>
         <textarea id="reviewNote" class="form-input" rows="3" maxlength="2000" placeholder="记录正式机构名称、栏目归属和核实依据"></textarea>
-        <p class="text-muted">确认归属会重新检查网页，只有检查通过的来源才会启用。</p>
-        <div class="header-actions" id="reviewActions">
-            <button class="btn btn-primary" data-review="confirm_identity">确认归属并检查</button>
-            <button class="btn btn-outline" data-review="recheck">重新检查</button>
-            <button class="btn btn-ghost" data-review="reject">拒绝此建议</button>
+        <div class="header-actions">
+            <button class="btn btn-outline" data-review="confirm_identity">手动确认归属</button>
+        </div>
+        </details>
         </div>
         <details id="sourceVersions" hidden><summary>查看配置版本</summary><div id="sourceVersionList"></div><p id="sourceVersionStatus" role="status" aria-live="polite"></p></details>
     </div>

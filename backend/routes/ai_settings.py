@@ -1,10 +1,16 @@
 """Administrator-owned AI configuration for the whole deployment."""
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, render_template, request
 from backend.auth import admin_required
 from backend.database.db import db
 from backend.ai import configuration
 
 bp = Blueprint('ai_settings', __name__)
+
+
+@bp.route('/admin/ai-usage')
+@admin_required
+def usage_page():
+    return render_template('admin_ai_usage.html', admin_section='ai-usage')
 
 
 def _call(action):
@@ -22,6 +28,13 @@ def _call(action):
 @admin_required
 def settings():
     return _call(configuration.public_settings)
+
+
+@bp.route('/api/admin/ai/usage', methods=['GET'])
+@admin_required
+def usage():
+    from backend.ai.usage import usage_dashboard
+    return _call(lambda: usage_dashboard(request.args.get('days', 30), request.args.get('offset', 0)))
 
 
 @bp.route('/api/admin/ai/profiles', methods=['POST'])

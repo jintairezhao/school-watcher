@@ -65,6 +65,7 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    {% include '_desktop_updates.html' %}
     <div class="toast-container" id="toastContainer"></div>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/content.js') }}"></script>

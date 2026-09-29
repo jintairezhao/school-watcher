@@ -10,6 +10,9 @@
 #ifndef AppIdentifier
   #define AppIdentifier "{{6E20F2D9-C889-4B92-9878-B204171598A2}"
 #endif
+#ifndef LocationRegistry
+  #define LocationRegistry "Software\SchoolWatcher"
+#endif
 [Setup]
 AppId={#AppIdentifier}
 AppName=School Watcher
@@ -19,6 +22,9 @@ AppPublisher=jintairezhao
 AppPublisherURL=https://github.com/jintairezhao/school-watcher
 DefaultDirName={localappdata}\Programs\School Watcher
 DisableDirPage=no
+UsePreviousAppDir=yes
+UsePreviousTasks=yes
+DisableStartupPrompt=yes
 DefaultGroupName=School Watcher
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -53,20 +59,63 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 #ifdef WebViewBootstrapper
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "正在准备网页显示组件…"; Flags: waituntilterminated runhidden; Check: NeedsWebView
 #endif
-Filename: "{app}\SchoolWatcher.exe"; Description: "打开学校通知"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\SchoolWatcher.exe"; Description: "打开学校通知"; Flags: nowait postinstall skipifsilent; Check: not IsUpgrade
+Filename: "{app}\SchoolWatcher.exe"; Flags: nowait; Check: IsUpgrade
 [Code]
 var
   DataPage, FilesPage: TInputDirWizardPage;
   RemoveData: Boolean;
+  Updating: Boolean;
+
+function OpenProcess(Access: LongWord; Inherit: Boolean; ProcessId: LongWord): THandle;
+  external 'OpenProcess@kernel32.dll stdcall';
+function WaitForSingleObject(Handle: THandle; Milliseconds: LongWord): LongWord;
+  external 'WaitForSingleObject@kernel32.dll stdcall';
+function CloseHandle(Handle: THandle): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
+
+function HasSwitch(Name: String): Boolean;
+var I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if CompareText(ParamStr(I), '/' + Name) = 0 then begin
+      Result := True;
+      Exit;
+    end;
+end;
+
+function PreviousProgramDirectory: String;
+var Key: String;
+begin
+  Key := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' +
+    ExpandConstant('{#AppIdentifier}') + '_is1';
+  if not RegQueryStringValue(HKCU64, Key, 'Inno Setup: App Path', Result) then
+    if not RegQueryStringValue(HKCU32, Key, 'Inno Setup: App Path', Result) then Result := '';
+  if not FileExists(AddBackslash(Result) + 'SchoolWatcher.exe') then Result := '';
+end;
+
+function IsUpgrade: Boolean;
+begin
+  Result := Updating;
+end;
 
 function SavedDirectory(Name, Fallback: String): String;
 begin
-  if not RegQueryStringValue(HKCU, 'Software\SchoolWatcher', Name, Result) or (Result = '') then
+  if not RegQueryStringValue(HKCU, '{#LocationRegistry}', Name, Result) or (Result = '') then
     Result := Fallback;
 end;
 
 procedure InitializeWizard;
+var Previous: String;
 begin
+  Previous := PreviousProgramDirectory();
+  Updating := (Previous <> '') and not HasSwitch('CHANGELOCATIONS') and
+    (CompareText(AddBackslash(Previous), AddBackslash(WizardDirValue())) = 0);
+  if Updating then begin
+    WizardForm.Caption := '更新 - 学校通知 {#AppVersion}';
+    Log('Updating the existing installation; keeping all personal file locations.');
+  end;
   WizardForm.TasksList.Left := ScaleX(8);
   WizardForm.TasksList.Width := WizardForm.TasksList.Parent.ClientWidth - ScaleX(16);
   { Windows themes draw a DPI-sized glyph, while the checklist reserves a
@@ -87,6 +136,44 @@ begin
   FilesPage.Values[0] := SavedDirectory('CacheDirectory', DataPage.Values[0]);
   FilesPage.Values[1] := SavedDirectory('BackupDirectory', AddBackslash(DataPage.Values[0]) + 'backups');
   FilesPage.Values[2] := SavedDirectory('DownloadDirectory', AddBackslash(DataPage.Values[0]) + 'updates');
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  { Normal upgrades go straight to progress. Fresh installs and an explicit
+    location change keep the complete wizard. }
+  Result := Updating;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if Updating and (CurPageID = wpInstalling) then begin
+    WizardForm.PageNameLabel.Caption := '正在更新';
+    WizardForm.PageDescriptionLabel.Caption := '正在更新学校通知，完成后会自动重新打开。';
+  end;
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var ProcessId: Integer; Handle: THandle; WaitResult: LongWord;
+begin
+  Result := '';
+  if HasSwitch('UPDATE') and not Updating then begin
+    Result := '未找到要更新的原安装目录。请重新打开学校通知后重试，或运行安装包重新选择位置。';
+    Exit;
+  end;
+  { The old launcher exits after its services and profile lock are released.
+    Wait for its executable handle before replacing files. }
+  ProcessId := StrToIntDef(ExpandConstant('{param:WATCHERPID|0}'), 0);
+  if ProcessId > 0 then begin
+    Handle := OpenProcess($00100000, False, ProcessId);
+    if Handle <> 0 then begin
+      WizardForm.StatusLabel.Caption := '正在等待应用退出…';
+      WaitResult := WaitForSingleObject(Handle, 60000);
+      CloseHandle(Handle);
+      if WaitResult <> 0 then
+        Result := '学校通知尚未完全退出，本次未更新。请退出应用后重试。';
+    end;
+  end;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -111,7 +198,7 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 var Code: Integer;
 begin
-  if CurStep = ssPostInstall then
+  if (CurStep = ssPostInstall) and not Updating then
     if not Exec(ExpandConstant('{app}\SchoolWatcher.exe'), LocationArguments(''), '', SW_HIDE, ewWaitUntilTerminated, Code) or (Code <> 0) then
       RaiseException('文件位置更改未完成，原数据仍保留。请退出学校通知，并选择空文件夹后重试。');
 end;

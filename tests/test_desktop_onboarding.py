@@ -110,6 +110,27 @@ class FirstSubscriptionTests(unittest.TestCase):
         self.assertEqual(self.client.get(f'/api/subscriptions/{other.id}/discovery').status_code, 403)
         self.assertEqual(self.client.post(f'/api/subscriptions/{other.id}/discovery', headers=self.headers).status_code, 403)
 
+    def test_pending_columns_and_partial_ai_success_are_explained(self):
+        from backend.database.db import db
+        from backend.database.models import BackgroundTask
+        from backend.services.source_governance import propose_source
+        proposal = propose_source(self.school.id, {'name': '通知公告', 'list_url': self.school.url,
+                                                   'list_selector': '#notices li'})
+        proposal.state = 'needs_review'
+        task = BackgroundTask.query.filter_by(kind='discover').one()
+        task.checkpoint = {'discovery_progress': {'ai_state': 'failed',
+                           'ai_error_code': 'incomplete_model_output', 'checked_pages': 234},
+                           'ai_navigation': {'root': 'failed', 'directory': 'succeeded', 'units': 'failed'}}
+        db.session.commit()
+        with patch('backend.services.onboarding_progress.ai_available', return_value=True):
+            result = self.client.get(f'/api/subscriptions/{self.school.id}/discovery').json
+        self.assertEqual(result['source_count'], 0)
+        self.assertEqual(result['review_count'], 1)
+        self.assertIn('1 次成功', result['ai_message'])
+        self.assertIn('2 次未完成', result['ai_message'])
+        self.assertIn('输出不完整', result['ai_message'])
+        self.assertNotIn('不可用', result['ai_message'])
+
     def test_publication_month_is_validated_and_backfill_resets_incremental_cursor(self):
         from datetime import datetime
         from backend.database.db import db

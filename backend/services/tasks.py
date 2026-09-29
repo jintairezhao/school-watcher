@@ -197,6 +197,10 @@ def claim(lease_seconds=120, *, capabilities=None, worker_id='local'):
             (BackgroundTask.state == 'running') & (BackgroundTask.lease_until <= now)))
         try:
             for row in db.session.execute(_claim_statement(eligible, now)).scalars().all():
+                if row.kind == 'discover' and (row.payload or {}).get('discovery_pause_requested'):
+                    from backend.services.discovery_control import park_requested_claim
+                    park_requested_claim(row, now)
+                    continue
                 if row.deadline_at and row.deadline_at <= now:
                     db.session.execute(update(BackgroundTask).where(BackgroundTask.id == row.id, eligible).values(
                         state='failed', error='本轮采集超过时间预算，稍后可重新安排', error_code='deadline_exceeded',
@@ -283,6 +287,8 @@ def handoff(handle, deferred):
             if verified:
                 values.update(state='pending', phase='render', error='', error_code='',
                               generation=BackgroundTask.generation + 1, available_at=now)
+        from backend.services.discovery_control import honor_pause
+        values = honor_pause(handle, values)
         changed = db.session.execute(update(BackgroundTask).where(*_owner_where(handle, now)).values(**values))
         if changed.rowcount:
             _release_source(handle)
@@ -319,6 +325,8 @@ def finish(handle, result=None, error=None, *, retryable=True):
             error_code=error_code, lease_until=None, token=None, worker_id=None, updated_at=now,
             checked_at=now, next_run_at=now + timedelta(seconds=interval), finished_at=None if retry else now,
             available_at=now + timedelta(seconds=min(900, 30 * 2 ** failures)))
+        from backend.services.discovery_control import honor_pause
+        values = honor_pause(handle, values)
         changed = db.session.execute(update(BackgroundTask).where(*_owner_where(handle, now)).values(**values))
         if changed.rowcount:
             _release_source(handle)

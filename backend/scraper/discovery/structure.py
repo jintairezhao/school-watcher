@@ -328,6 +328,9 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
     from .medical_publications import medical_article_locators
     publication_positions = medical_article_locators(soup, page_url)
     seen_elements = set()
+    from .wordpress_publications import article_positions, column_links
+    post_positions = article_positions(soup, base_url)
+    taxonomy_positions = {link['locator'] for link in column_links(soup, base_url)}
     for a in elements:
         if publication_positions and locator(a) in publication_positions:
             continue
@@ -354,7 +357,8 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
             label = heading['name'] or label
         if not label or len(label) > 120:
             continue
-        kind = classify(label)
+        position = locator(a)
+        kind = 'channel' if position in taxonomy_positions or position in post_positions else classify(label)
         if not kind and heading and heading.get('heading_method') in (
                 'explicit_tab_control', 'official_indexed_tab_control') and heading['name']:
             kind = 'navigation'
@@ -382,7 +386,7 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
             decision = 'missing_link'
         elif FILES.search(url):
             decision = 'document_reference'
-        elif ARTICLE.search(url) and not (
+        elif position in post_positions or ARTICLE.search(url) and not (
                 (kind == 'directory' and (label in DIRECTORIES or nav_container)) or
                 (kind == 'unit' and (page_kind == 'directory' or nav_container))):
             decision = 'article_reference'

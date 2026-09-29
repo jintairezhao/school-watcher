@@ -1,34 +1,35 @@
 <div class="setting-card">
-    <div class="setting-card-header"><h3>AI 服务</h3><p>目录识别与通知摘要</p></div>
+    <div class="setting-card-header"><h3>AI 服务</h3><p>用于发现学校官网栏目和生成通知摘要，两个功能可以共用一个服务。</p></div>
     <div class="setting-card-body">
         <p id="aiStatus" role="status" aria-live="polite">加载中…</p>
+        <h4 class="ai-section-title">已保存的服务</h4>
         <div id="aiProfiles"></div>
-        <form id="aiProfileForm">
+        <form id="aiProfileForm" aria-labelledby="aiFormTitle">
+            <h4 id="aiFormTitle" class="ai-section-title">添加 AI 服务</h4>
             <input id="aiProfileId" type="hidden">
-            <div class="form-group"><label for="aiName">配置名称</label><input id="aiName" class="form-input" maxlength="100" required placeholder="例如：目录识别服务"></div>
             <div class="form-group"><label for="aiProvider">服务商</label><select id="aiProvider" class="form-input" required></select></div>
-            <div class="form-group"><label for="aiRegion">服务区域</label><select id="aiRegion" class="form-input" required></select></div>
-            <div class="form-group"><label for="aiModel">模型或接入点标识</label><input id="aiModel" class="form-input" maxlength="160" required placeholder="填写服务商控制台中的标识"></div>
-            <div class="form-group"><label for="aiKey">API 密钥</label><input id="aiKey" type="password" class="form-input" autocomplete="new-password" aria-describedby="aiKeyHelp"><p id="aiKeyHelp" class="text-muted">密钥加密保存，不会回显。编辑现有配置时留空可保留原密钥。</p></div>
-            <button class="btn btn-primary" type="submit">保存配置</button>
-            <button class="btn btn-ghost" type="button" id="aiReset">新建配置</button>
+            <div class="form-group" id="aiRegionGroup" hidden><label for="aiRegion">API 密钥所属区域</label><select id="aiRegion" class="form-input" required aria-describedby="aiRegionHelp"></select><p id="aiRegionHelp" class="text-muted">选择创建这把密钥时在百炼控制台使用的区域。不同区域的密钥不能混用。</p></div>
+            <div class="form-group"><label for="aiModel">模型 ID</label><input id="aiModel" class="form-input" maxlength="160" required aria-describedby="aiModelHelp" placeholder="复制服务商提供的模型 ID"><p id="aiModelHelp" class="text-muted"></p></div>
+            <div class="form-group"><label for="aiKey">API 密钥</label><input id="aiKey" type="password" class="form-input" autocomplete="new-password" required aria-describedby="aiKeyHelp"><p id="aiKeyHelp" class="text-muted">从所选服务商获取密钥。密钥加密保存，不会显示在页面上。</p></div>
+            <p class="text-muted">保存后点击“测试连接”，通过后即可在下方选择。测试会调用一次 API。</p>
+            <button class="btn btn-primary" type="submit">保存服务</button>
+            <button class="btn btn-ghost" type="button" id="aiReset" hidden>取消修改</button>
         </form>
         <hr>
-        <form id="aiBindingForm">
-            <div class="form-group"><label for="aiDirectory">目录识别使用</label><select id="aiDirectory" class="form-input"></select></div>
-            <div class="form-group"><label for="aiSummary">通知摘要使用</label><select id="aiSummary" class="form-input"></select></div>
-            <p class="text-muted">保存配置不会调用模型。请在上方手动测试后选择用途；测试会产生一次 API 调用。</p>
-            <button class="btn btn-primary" type="submit">保存用途</button>
+        <form id="aiBindingForm" aria-labelledby="aiFunctionsTitle">
+            <h4 id="aiFunctionsTitle" class="ai-section-title">这两个功能使用哪个 AI</h4>
+            <div class="form-group"><label for="aiDirectory">发现学校栏目</label><select id="aiDirectory" class="form-input" aria-describedby="aiDirectoryHelp"></select><p id="aiDirectoryHelp" class="text-muted">在学校官网中辅助识别院系、部门和通知栏目，供你选择订阅。</p></div>
+            <div class="form-group"><label for="aiSummary">生成通知摘要</label><select id="aiSummary" class="form-input" aria-describedby="aiSummaryHelp"></select><p id="aiSummaryHelp" class="text-muted">在通知详情中点击“生成摘要”，提炼事项、对象和时间。仅处理正文，不包含附件。</p></div>
+            <button class="btn btn-primary" type="submit">保存功能设置</button>
         </form>
         <details>
             <summary>用量与并发设置（可选）</summary>
             <form id="aiLimitsForm">
-                <p class="text-muted">按实例统计每月 token 用量。0 表示不设消费上限；没有个人账号消费额度。</p>
+                <p class="text-muted">每月 Token 上限，0 表示不限。</p>
                 <div class="form-group"><label for="aiTotalLimit">每月总上限</label><input type="number" id="aiTotalLimit" class="form-input" min="0" step="1" value="0" required></div>
                 <div class="form-group"><label for="aiDirectoryLimit">目录识别每月上限</label><input type="number" id="aiDirectoryLimit" class="form-input" min="0" step="1" value="0" required></div>
                 <div class="form-group"><label for="aiSummaryLimit">摘要每月上限</label><input type="number" id="aiSummaryLimit" class="form-input" min="0" step="1" value="0" required></div>
                 <div class="form-group"><label for="aiConcurrent">同时执行数量</label><input type="number" id="aiConcurrent" class="form-input" min="1" max="16" step="1" value="2" required></div>
-                <p id="aiUsage" class="text-muted"></p>
                 <button class="btn btn-outline" type="submit">保存用量设置</button>
             </form>
         </details>

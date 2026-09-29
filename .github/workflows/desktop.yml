@@ -56,6 +56,9 @@ jobs:
       - name: Build Windows application and installer
         if: runner.os == 'Windows'
         run: python desktop/build.py --installer
+      - name: Verify in-place upgrade preserves custom locations
+        if: runner.os == 'Windows'
+        run: python tests/smoke/check_installer_upgrade.py
       - name: Build macOS application and disk image
         if: runner.os == 'macOS'
         run: python desktop/build.py
@@ -90,6 +93,8 @@ jobs:
               '--report', str(Path('.local/packaged-gui.json').resolve())], check=True, timeout=90)
           assert Path('.local/packaged-gui.json').is_file()
           PY
+      - name: Verify native startup update notification
+        run: python tests/smoke/check_startup_updates.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         # The packaged app has now downloaded the isolated browser itself.
         with:
