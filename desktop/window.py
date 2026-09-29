@@ -295,6 +295,8 @@ def run_window(runtime, smoke_test=False):
     class WindowAPI:
         def _allowed(self):
             from urllib.parse import urlsplit
+            if window.events.closed.is_set():
+                return False
             actual = urlsplit(window.get_current_url() or '')
             expected = urlsplit(runtime.address or '')
             return actual.scheme == 'http' and actual.netloc == expected.netloc and actual.hostname == '127.0.0.1'
@@ -416,9 +418,10 @@ def run_window(runtime, smoke_test=False):
         width=1280, height=820, min_size=(760, 520), text_select=True, zoomable=True,
         background_color='#f5f5f7', hidden=smoke_test, js_api=main_api,
         frameless=os.name == 'nt', easy_drag=False)
+    restore_bridge = None
     if sys.platform == 'darwin':
         from desktop.native_bridge import install_csp_bridge
-        install_csp_bridge(window, main_api, main_api._allowed)
+        restore_bridge = install_csp_bridge(window, main_api)
     def maximized():
         state['maximized'] = True
     def restored():
@@ -481,6 +484,16 @@ def run_window(runtime, smoke_test=False):
                 while time.monotonic() < deadline:
                     if window.run_js('location.pathname === "/" && !!document.querySelector("a[href=\\"/admin\\"]") && !document.querySelector("a[href=\\"/login\\"],input[type=password]")'):
                         print('Native check: account-free desktop rendered', flush=True)
+                        if sys.platform == 'darwin':
+                            # Wait for real page-to-native replies before the test
+                            # immediately closes the newly rendered Cocoa window.
+                            until = time.monotonic() + 10
+                            while time.monotonic() < until:
+                                if window.run_js('Object.values(window.pywebview._returnValuesCallbacks || {}).every(calls => Object.keys(calls).length === 0)'):
+                                    break
+                                time.sleep(.1)
+                            else:
+                                raise RuntimeError('Native page callbacks did not finish.')
                         if os.name == 'nt':
                             if not window.run_js('!!document.querySelector("[data-window-action=close]")'):
                                 raise RuntimeError('Desktop window controls did not render.')
@@ -549,6 +562,8 @@ def run_window(runtime, smoke_test=False):
             raise smoke_error[0]
     finally:
         runtime.stopped.set()
+        if restore_bridge:
+            restore_bridge()
         control.shutdown()
         control.server_close()
         instance.unlink(missing_ok=True)
