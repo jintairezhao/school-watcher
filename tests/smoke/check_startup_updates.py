@@ -27,6 +27,10 @@ def check():
             time.sleep(.1)
         raise AssertionError('Native update notification timed out')
 
+    def settle(window):
+        wait(lambda: window.events.loaded.is_set() and window.run_js('''!!window.pywebview?.api &&
+            Object.values(window.pywebview._returnValuesCallbacks || {}).every(calls => Object.keys(calls).length === 0)'''))
+
     # WebView2 can release its cookie file after its native window closes.
     with tempfile.TemporaryDirectory(prefix='watcher-startup-update-', ignore_cleanup_errors=True) as folder:
         root = Path(folder)
@@ -70,15 +74,20 @@ def check():
                     checker.assert_called_once()
                     downloader.assert_not_called()
                     assert not apis[0].update_notification()['available']
+                    wait(lambda: main.run_js('document.getElementById("desktopUpdateNotice").hidden'))
+                    settle(main)
+                    settle(windows[1])
                     windows[1].destroy()
                     main.load_url(runtime.address + '/explore')
                     wait(lambda: main.run_js('!!document.getElementById("catalogQuery")'))
                     assert main.run_js('document.getElementById("desktopUpdateNotice").hidden')
+                    settle(main)
                     # A loaded unrelated document must not see or dismiss update state.
                     main.load_html('<html><body>isolated untrusted page</body></html>')
                     wait(lambda: not apis[0]._allowed())
                     assert apis[0].update_notification() is None
                     assert apis[0].dismiss_update() is None
+                    settle(main)
                 except BaseException:
                     failures.append(traceback.format_exc())
                 finally:
