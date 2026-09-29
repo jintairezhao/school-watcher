@@ -54,12 +54,13 @@ def assist_navigation(site, page, html, parsed):
     try:
         result = run_skill('university-source-onboarding', 'classify', evidence, 'directory', execution,
                            expected_version=binding['version'], binding=binding)
-    except Exception:
+    except Exception as exc:
         # Discovery remains usable if a supplier/configuration becomes unavailable.
-        result = {'status': 'failed'}
+        result = {'status': 'failed', 'error_code': getattr(exc, 'code', 'ai_call_failed')}
     completed[page_key] = result.get('status', 'failed')
     tasks.checkpoint(dict(handle.get('checkpoint') or {}, ai_navigation=completed))
-    record_progress(phase='crawl', ai_state=result.get('status', 'failed'))
+    record_progress(phase='crawl', ai_state=result.get('status', 'failed'),
+                    ai_error_code=result.get('error_code', ''))
     if result.get('status') != 'succeeded':
         return
     candidates = {a['candidate_id']: a for a in anchors}

@@ -168,6 +168,9 @@ def crawl_site(inventory, key, max_pages=250, workers=4, fetcher=fetch_page, pro
             executor = nullcontext(None) if durable else ThreadPoolExecutor(max_workers=workers, thread_name_prefix='source-inventory')
             with executor as pool:
                 while max_pages is None or processed < max_pages:
+                    if durable:
+                        from backend.services.discovery_control import pause_if_requested
+                        pause_if_requested()
                     assert_current_parser()
                     allowance = workers if max_pages is None else min(workers, max_pages - processed)
                     batch = [p for _ in range(allowance) if (p := inventory.claim(key, focus=focus)) is not None]

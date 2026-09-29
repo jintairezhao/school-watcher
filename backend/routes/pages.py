@@ -305,7 +305,7 @@ def explore():
     total_catalog = len(entries)
     if q:
         term = normalize_name(q).lower()
-        entries = [e for e in entries if term in e['name'].lower() or q.lower() in e['url'].lower()]
+        entries = [e for e in entries if term in normalize_name(e['name']).lower() or q.lower() in e['url'].lower()]
     if province:
         entries = [e for e in entries if e['province'] == province]
     if level == 'double':
@@ -318,9 +318,13 @@ def explore():
     pages = max(1, (total + 29) // 30)
     page = min(page, pages)
     entries = entries[(page - 1) * 30:page * 30]
-    return render_template('explore.html', entries=entries, q=q, province=province, level=level,
+    template = '_directory_results.html' if request.headers.get('X-Directory-Fragment') == '1' else 'explore.html'
+    response = make_response(render_template(template, entries=entries, q=q, province=province, level=level,
                            provinces=provinces, total=total, total_catalog=total_catalog,
-                           page=page, pages=pages, counts=counts, totals=totals, my_subs=my_subs)
+                           page=page, pages=pages, counts=counts, totals=totals, my_subs=my_subs))
+    response.vary.add('X-Directory-Fragment')
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 
 @bp.route('/school/<int:school_id>')

@@ -83,6 +83,60 @@ class SourceGovernanceTests(unittest.TestCase):
         self.assertEqual(governance.activate_proposal(proposal.id).id, self.dept.id)
         self.assertEqual(SourceConfigVersion.query.count(), 1)
 
+    def test_snapshot_preserves_mixed_newlines_and_still_detects_changes(self):
+        import gzip
+        html = '<main>通知\r\n第一行\r第二行\n</main>'
+        reference = governance._snapshot(html, self.school.url)
+        self.assertEqual(governance.read_snapshot(reference), html)
+        path = Path(self.app.config['SOURCE_GOVERNANCE_EVIDENCE_PATH']) / (reference['hash'] + '.html.gz')
+        path.write_bytes(gzip.compress((html + 'changed').encode()))
+        with self.assertRaisesRegex(ValueError, '网页证据已变化'):
+            governance.read_snapshot(reference)
+
+    def test_observed_column_can_activate_without_user_filling_publisher(self):
+        config = governance.source_config(self.dept)
+        db.session.delete(self.dept); db.session.commit()
+        proposal = governance.propose_source(self.school.id,
+            {'name': config['name'], 'list_url': config['list_url']}, origin='submitted_entry')
+        with patch('backend.services.runtime_catalog.RuntimeCatalog', return_value=self.identity), \
+                patch.object(governance, '_fetch', side_effect=self.fetcher(self.html())), \
+                patch.object(governance, 'run_source_skill_for_proposal') as ai:
+            result = governance.process_source_review({'proposal_id': proposal.id})
+        self.assertEqual(result['state'], 'activated', result)
+        self.assertEqual(result['candidate']['group_name'], '示例学院')
+        ai.assert_not_called()
+
+    def test_crlf_notice_can_pass_validation_and_activate(self):
+        html = self.html(2).replace('><', '>\r\n<')
+        proposal = self.proposal(html=html)
+        result = governance.validate_proposal(proposal.id)
+        self.assertTrue(result['passed'], result)
+        self.assertEqual(governance.activate_proposal(proposal.id).id, self.dept.id)
+
+    def test_old_snapshot_failure_is_rechecked_once_without_revisiting_other_reviews(self):
+        from backend.services.source_inventory import site_key
+        config = {**governance.source_config(self.dept), 'name': '新通知'}
+        proposal = governance.propose_source(self.school.id, config)
+        proposal.state = 'needs_review'
+        proposal.validation_json = json.dumps({'passed': False, 'errors': ['网页证据已变化，请重新检查'],
+                                               'validator_version': 'source-governance-1'})
+        db.session.commit()
+        def validate(ident, **kwargs):
+            proposal.validation_json = json.dumps({'passed': False, 'errors': ['publisher_unconfirmed'],
+                                                   'validator_version': governance.VERSION})
+            db.session.commit()
+            return {'passed': False}
+        with patch('backend.services.source_catalog.publication_candidates', return_value=[config]), \
+                patch.object(governance, 'capture_source_evidence') as capture, \
+                patch.object(governance, 'validate_proposal', side_effect=validate), \
+                patch.object(governance, 'run_source_skill_for_proposal', return_value={'changed': False}):
+            first = governance.process_discovered_candidates(self.school.id, self.identity, site_key(self.school.url))
+            self.assertIn(proposal.id, first['proposal_ids'])
+            self.assertEqual(capture.call_count, 1)
+            second = governance.process_discovered_candidates(self.school.id, self.identity, site_key(self.school.url))
+            self.assertNotIn(proposal.id, second['proposal_ids'])
+            self.assertEqual(capture.call_count, 1)
+
     def test_adjacent_news_widget_cannot_replace_notices(self):
         html = self.html(2, '<section id="news"><h2>学院新闻</h2><ul><li><a href="article/9.htm">关于研究生报名事项的通知9</a></li></ul></section>')
         config = governance.source_config(self.dept); config['list_selector'] = '#news li'

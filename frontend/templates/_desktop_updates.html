@@ -1,0 +1,11 @@
+{% if config.DESKTOP_MODE %}
+<aside id="desktopUpdateNotice" class="desktop-update-notice" aria-label="软件更新" hidden>
+    <p id="desktopUpdateMessage" role="status" aria-live="polite"></p>
+    <div class="desktop-update-actions">
+        <button id="desktopUpdateOpen" type="button" class="btn btn-primary btn-sm">查看更新</button>
+        <button id="desktopUpdateDismiss" type="button" class="btn btn-outline btn-sm">稍后</button>
+    </div>
+</aside>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/desktop-updates.css') }}">
+<script src="{{ url_for('static', filename='js/desktop-updates.js') }}" defer></script>
+{% endif %}

@@ -17,6 +17,86 @@ from backend.services import source_governance as governance
 
 
 class SourceGovernanceRecoveryTests(unittest.TestCase):
+    def test_article_reviews_merge_into_observed_column_without_ai(self):
+        from test_wordpress_publications import article_html, ARTICLE, COLUMN, TITLE
+        from backend.database.source_governance_models import SourceProposal
+        from backend.database.models import BackgroundTask
+        first = governance.propose_source(self.school.id, {'name': TITLE, 'list_url': ARTICLE}, origin='submitted_entry')
+        second = governance.propose_source(self.school.id, {'name': TITLE + '2', 'list_url': ARTICLE.replace('20548', '20549')}, origin='submitted_entry')
+        with patch.object(governance, '_fetch', return_value=article_html()), \
+                patch.object(governance, 'run_source_skill_for_proposal') as ai:
+            one = governance.process_source_review({'proposal_id': first.id})
+            two = governance.process_source_review({'proposal_id': second.id})
+        self.assertEqual(one['state'], 'superseded')
+        self.assertEqual(two['state'], 'superseded')
+        targets = [p for p in SourceProposal.query.all() if json.loads(p.candidate_json)['list_url'] == COLUMN]
+        self.assertEqual(len(targets), 1)
+        self.assertEqual(json.loads(targets[0].candidate_json)['name'], '考试')
+        self.assertEqual(BackgroundTask.query.filter_by(kind='source_review').count(), 1)
+        ai.assert_not_called()
+        self.assertEqual(SourceConfigVersion.query.count(), 0)
+
+    def test_article_cannot_activate_even_with_matching_sidebar_heading(self):
+        from test_wordpress_publications import article_html, ARTICLE
+        html = article_html().replace('</body>', self.html() + '</body>')
+        config = {**governance.source_config(self.dept), 'list_url': ARTICLE}
+        reference = governance._snapshot(html, ARTICLE)
+        records, errors, region = governance._column_scope(config, reference)
+        self.assertIn('article_instead_of_column', errors)
+
+    def test_external_category_is_not_followed_or_sent_to_ai(self):
+        from test_wordpress_publications import article_html, ARTICLE, TITLE
+        from backend.database.source_governance_models import SourceProposal
+        proposal = governance.propose_source(self.school.id, {'name': TITLE, 'list_url': ARTICLE}, origin='submitted_entry')
+        with patch.object(governance, '_fetch', return_value=article_html('https://unrelated.example/category/exam')), \
+                patch.object(governance, 'run_source_skill_for_proposal') as ai:
+            result = governance.process_source_review({'proposal_id': proposal.id})
+        self.assertEqual(result['state'], 'superseded')
+        self.assertEqual(SourceProposal.query.count(), 1)
+        self.assertEqual(result['validation']['related_proposal_ids'], [])
+        ai.assert_not_called()
+
+    def test_recovery_requeues_finished_task_and_keeps_rejected_proposals(self):
+        from backend.database.models import BackgroundTask
+        from backend.services import tasks
+        config = governance.source_config(self.dept)
+        proposal = governance.propose_source(self.school.id, config)
+        rejected = governance.propose_source(self.school.id, {**config, 'name': '不要的栏目'})
+        rejected.state = 'rejected'
+        proposal.state = 'needs_review'
+        for item in (proposal, rejected):
+            item.validation_json = json.dumps({'errors': ['网页证据已变化，请重新检查'], 'validator_version': 'source-governance-1'})
+        db.session.commit()
+        task = tasks.enqueue('source_review', proposal.id, {'proposal_id': proposal.id})
+        task.state = 'done'; db.session.commit()
+        self.assertEqual(governance.recover_source_reviews(), 1)
+        db.session.refresh(task)
+        self.assertEqual(task.state, 'pending')
+        self.assertEqual(rejected.state, 'rejected')
+        self.assertEqual(BackgroundTask.query.count(), 1)
+
+    def test_old_snapshot_failures_get_one_automatic_retry(self):
+        from backend.database.models import BackgroundTask
+        from backend.database.source_governance_models import SourceProposal
+        proposal = governance.propose_source(self.school.id, governance.source_config(self.dept))
+        proposal.state = 'needs_review'
+        proposal.validation_json = json.dumps({'errors': ['网页证据已变化，请重新检查'], 'validator_version': 'source-governance-1'})
+        db.session.commit()
+        self.assertEqual(governance.recover_source_reviews(), 1)
+        self.assertEqual(governance.recover_source_reviews(), 0)
+        self.assertEqual(BackgroundTask.query.filter_by(kind='source_review').count(), 1)
+        self.assertEqual(db.session.get(SourceProposal, proposal.id).state, 'proposed')
+
+    def test_restricted_column_stops_before_ai_and_has_clear_reason(self):
+        proposal = governance.propose_source(self.school.id, {'name': '考试', 'list_url': self.school.url + 'category/exam'}, origin='submitted_entry')
+        html = '<main class="restricted"><h1>受限资源</h1><p>校外访问，请先统一认证登录后访问此页面。</p></main>'
+        with patch.object(governance, '_fetch', return_value=html), \
+                patch.object(governance, 'run_source_skill_for_proposal') as ai:
+            result = governance.process_source_review({'proposal_id': proposal.id})
+        self.assertEqual(result['state'], 'needs_review')
+        self.assertIn('source_login_required', result['validation']['errors'])
+        ai.assert_not_called()
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='watcher-governance-')
         self.addCleanup(self.tmp.cleanup)

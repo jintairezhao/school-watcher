@@ -1,0 +1,47 @@
+<section id="aiUsagePanel" class="ai-usage" aria-labelledby="aiUsageTitle" aria-busy="true">
+    <header class="usage-heading">
+        <div><h1 id="aiUsageTitle">API 用量</h1><p id="aiUsageRange" class="text-muted">栏目发现 · 通知摘要 · 连接测试</p></div>
+        <div class="usage-toolbar">
+            <div class="usage-switch" role="group" aria-label="统计时段">
+                <button type="button" data-usage-days="7" aria-pressed="false">近 7 天</button>
+                <button type="button" data-usage-days="30" aria-pressed="true">近 30 天</button>
+                <button type="button" data-usage-days="90" aria-pressed="false">近 90 天</button>
+            </div>
+            <button id="aiUsageRefresh" type="button" class="btn btn-outline btn-sm">刷新</button>
+            <a id="aiUsageConfigure" class="btn btn-ghost btn-sm" href="{{ url_for('admin.admin_page') }}#platform">服务设置</a>
+        </div>
+    </header>
+    <p id="aiUsageStatus" role="status" class="usage-status">正在读取用量…</p>
+    <div id="aiUsageContent" hidden>
+        <dl class="usage-metrics">
+            <div><dt>已记录 Token</dt><dd id="aiUsageTokens">—</dd><small id="aiUsageTokenDetail"></small></div>
+            <div><dt>调用次数</dt><dd id="aiUsageCalls">—</dd><small id="aiUsageCallDetail"></small></div>
+            <div><dt>调用成功率</dt><dd id="aiUsageSuccess">—</dd><small id="aiUsageSuccessDetail"></small></div>
+            <div><dt>单日 Token 峰值</dt><dd id="aiUsagePeak">—</dd><small id="aiUsagePeakDate"></small></div>
+        </dl>
+        <p id="aiUsageUnknown" class="usage-notice" hidden></p>
+        <section class="usage-activity" aria-labelledby="aiActivityTitle">
+            <div class="usage-section-heading"><h3 id="aiActivityTitle">调用活动</h3><span id="aiActivityPeriod" class="text-muted">近一年</span></div>
+            <div id="aiActivityMonths" class="usage-months" aria-hidden="true"></div>
+            <div id="aiActivityGrid" class="usage-heatmap" role="group" aria-label="每日调用活动，方向键查看日期"></div>
+            <div class="usage-calendar-footer"><span id="aiActivitySummary"></span><span class="usage-heat-legend" aria-label="颜色越深，用量越高">少 <i data-level="0"></i><i data-level="1"></i><i data-level="2"></i><i data-level="3"></i><i data-level="4"></i> 多</span></div>
+        </section>
+        <section class="usage-trend" aria-labelledby="aiTrendTitle">
+            <div class="usage-section-heading"><h3 id="aiTrendTitle">每日趋势</h3><div class="usage-switch" role="group" aria-label="趋势指标"><button type="button" data-usage-metric="tokens" aria-pressed="true">Token</button><button type="button" data-usage-metric="calls" aria-pressed="false">调用次数</button></div></div>
+            <div class="usage-plot">
+                <div id="aiUsageAxis" class="usage-axis" aria-hidden="true"></div>
+                <div id="aiUsageBars" class="usage-bars" role="group" aria-label="每日趋势，左右方向键查看日期"></div>
+            </div>
+            <div id="aiUsageDates" class="usage-dates" aria-hidden="true"></div>
+            <p id="aiUsageEmpty" class="usage-empty" hidden>这段时间还没有调用记录。使用 AI 发现栏目或生成摘要后，会在这里显示。</p>
+            <details class="usage-data-table"><summary>查看每日明细</summary><div class="usage-table-scroll"><table><caption class="sr-only">所选时段的每日 API 用量</caption><thead><tr><th scope="col">日期</th><th scope="col">Token</th><th scope="col">调用</th><th scope="col">成功</th><th scope="col">失败</th><th scope="col">待确认</th></tr></thead><tbody id="aiUsageRows"></tbody></table></div></details>
+        </section>
+        <div class="usage-breakdowns">
+            <section aria-labelledby="aiPurposeTitle"><h3 id="aiPurposeTitle">用在哪些功能</h3><div id="aiUsagePurposes"></div></section>
+            <section aria-labelledby="aiModelTitle"><h3 id="aiModelTitle">模型用量</h3><div id="aiUsageModels"></div></section>
+        </div>
+        <section class="usage-budgets" aria-labelledby="aiBudgetTitle"><div class="usage-section-heading"><h3 id="aiBudgetTitle">本月额度</h3><span id="aiBudgetMonth" class="text-muted"></span></div><div id="aiUsageBudgets"></div></section>
+        <p id="aiUsageUpdated" class="usage-updated text-muted"></p>
+    </div>
+    <div id="aiUsageTooltip" class="usage-tooltip" role="tooltip" hidden></div>
+</section>

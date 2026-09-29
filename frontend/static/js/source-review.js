@@ -4,6 +4,11 @@
     let selectedDepartment = null, pickerToken = '', pickerHash = '', picks = {}, lastNodes = [];
     const field = id => document.getElementById(id);
     const errorLabels = {
+        article_instead_of_column: '这是一篇通知，已按官网提供的链接查找所属栏目，无需逐篇确认。',
+        search_instead_of_column: '这是搜索结果页，已按官网提供的链接整理所属栏目。',
+        source_login_required: '这个栏目要求学校登录，当前无法自动访问。AI 无法解除登录限制。',
+        publisher_requires_review: '尚未确认发布部门，可先自动检查；仍无法确认时再填写归属说明。',
+        publisher_conflict: '栏目填写的发布部门与官网显示的不一致。',
         column_identity_or_scope_unconfirmed: '尚未确认栏目名称或发布范围，请核对官网身份。',
         publisher_unconfirmed: '尚未确认发布部门，请补充官网机构依据。',
         publisher_mismatch: '发布部门与官网证据不一致。',
@@ -34,11 +39,20 @@
             const data = await api('/api/admin/source-proposals/' + id); selected = id;
             selectedDepartment = data.department_id;
             pickerToken = ''; picks = {}; field('sourcePicker').hidden = true;
+            field('manualSourceReview').open = false;
             field('pickerFrame').removeAttribute('srcdoc');
             field('proposalTitle').textContent = data.candidate.name + ' · 官网证据';
             field('proposalErrors').textContent = (data.validation.errors || []).map(code => errorLabels[code] ||
                 (/[\u4e00-\u9fff]/.test(code) ? code : '网页证据尚未通过核对，请查看原始页面或重新检查。')).join('；') || '请核对原始网页与栏目归属。';
             field('proposalEvidence').replaceChildren();
+            field('proposalRelated').replaceChildren();
+            (data.validation.related_columns || []).forEach(column => {
+                const button = document.createElement('button');
+                button.className = 'btn btn-sm btn-outline';
+                button.textContent = '查看所属栏目：' + column.name;
+                button.addEventListener('click', () => inspect(column.id));
+                field('proposalRelated').append(button);
+            });
             data.evidence.forEach(item => {
                 const details = document.createElement('details');
                 const heading = document.createElement('summary'); heading.textContent = item.url || '网页样本';
@@ -46,7 +60,7 @@
                 text.style.overflowWrap = 'anywhere'; details.append(heading, text); field('proposalEvidence').append(details);
             });
             if (!data.evidence.length) field('proposalEvidence').textContent = '尚无网页证据，可重新检查。';
-            field('reviewNote').value = ''; field('reviewActions').hidden = data.state === 'activated';
+            field('reviewNote').value = ''; field('reviewActions').hidden = ['activated', 'superseded', 'rejected'].includes(data.state);
             field('proposalDetail').hidden = false;
             field('sourceVersions').hidden = !selectedDepartment;
             if (selectedDepartment) await loadVersions(selectedDepartment);

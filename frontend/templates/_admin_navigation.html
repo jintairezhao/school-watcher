@@ -5,6 +5,7 @@
     <a class="admin-tab{% if admin_section|default('overview') == key %} is-active{% endif %}" href="{{ url_for('admin.admin_page') }}#{{ key }}" {% if on_admin_home %}data-tab="{{ key }}"{% endif %} {% if admin_section|default('overview') == key %}aria-current="page"{% endif %}>{{ label }}</a>
     {% endif %}
 {% endfor %}
+    <a class="admin-tab{% if admin_section == 'ai-usage' %} is-active{% endif %}" href="{{ url_for('ai_settings.usage_page') }}" {% if admin_section == 'ai-usage' %}aria-current="page"{% endif %}>API 用量</a>
     <div class="admin-nav-divider" aria-hidden="true"></div>
     <a class="admin-tab{% if admin_section == 'source-review' %} is-active{% endif %}" href="{{ url_for('source_governance.review_page') }}" {% if admin_section == 'source-review' %}aria-current="page"{% endif %}>来源核实</a>
     <a class="admin-tab{% if admin_section == 'verification' %} is-active{% endif %}" href="{{ url_for('browser_sessions.page') }}" {% if admin_section == 'verification' %}aria-current="page"{% endif %}>访问验证</a>

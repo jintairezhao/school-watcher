@@ -22,7 +22,7 @@ from backend.database.source_governance_models import (
     SourceProposal, SourceConfigVersion, SourceReviewEvent, SchoolOnboarding)
 from backend.services.source_inventory import canonical_url, site_key
 
-VERSION = 'source-governance-1'
+VERSION = 'source-governance-3'
 FIELDS = ('name', 'list_url', 'list_selector', 'title_selector', 'link_selector',
           'date_selector', 'content_selector', 'group_name')
 ACTION_LABEL = re.compile(r'^(?:read(?:\s+more)?|more|learn\s+more|了解|更多|查看|详情)$', re.I)
@@ -99,7 +99,8 @@ def read_snapshot(reference):
         raise ValueError('网页证据标识无效')
     path = _evidence_root() / (digest + '.html.gz')
     try:
-        with gzip.open(path, 'rt', encoding='utf-8') as stream:
+        # Hashes cover the original HTML, including CRLF and lone CR characters.
+        with gzip.open(path, 'rt', encoding='utf-8', newline='') as stream:
             html = stream.read(8 * 1024 * 1024 + 1)
     except (OSError, EOFError) as exc:
         raise ValueError('网页证据不可用，请重新检查') from exc
@@ -168,6 +169,10 @@ def _column_scope(config, reference):
     """A list must remain within one actual named publishing region."""
     from backend.scraper.discovery.publication_lists import publication_lists
     html = read_snapshot(reference)
+    from backend.services.source_review_recovery import page_problem
+    problem = page_problem(html)
+    if problem:
+        return [], [problem], {}
     soup, items, records, errors = _extract(config, reference)
     if not items:
         if reference.get('outcome') == 'empty':
@@ -479,6 +484,8 @@ def review_proposal(proposal_id, action, actor_id, note=''):
         raise ValueError('未知核实操作')
     if proposal.state == 'activated':
         raise ValueError('已发布配置应通过新的修订处理')
+    if proposal.state == 'superseded':
+        raise ValueError('这条文章已整理到所属栏目，请查看对应栏目')
     if action == 'confirm_identity' and not str(note).strip():
         raise ValueError('请记录核实的官网机构与依据')
     db.session.add(SourceReviewEvent(proposal_id=proposal.id, actor_id=actor_id, action=action, note=str(note)[:2000]))
@@ -821,11 +828,21 @@ def process_discovered_candidates(school_id, inventory, key, *, limit=5):
     existing = Department.query.filter_by(school_id=school_id).all()
     handled = 0
     for raw in candidates:
+        from backend.services.discovery_control import pause_if_requested
+        pause_if_requested()
         config = {field: raw.get(field, '') for field in FIELDS}
+        from backend.services.source_review_recovery import page_problem
+        cached = inventory.snapshot(key, config['list_url'])
+        if cached and page_problem(cached) in ('article_instead_of_column', 'search_instead_of_column'):
+            continue
         digest = _hash(config)
         initial_identity = _hash([school_id, None, canonical_url(config['list_url']), config['list_selector']])
         known_proposal = known_configs.get(digest) or known_identities.get(initial_identity)
-        if (known_proposal and known_proposal.state not in ('proposed', 'validated')) or any(source_config(dept) == config for dept in existing):
+        old_validation = json.loads(known_proposal.validation_json) if known_proposal else {}
+        retry_snapshot = bool(known_proposal and known_proposal.state == 'needs_review'
+            and old_validation.get('validator_version') == 'source-governance-1'
+            and '网页证据已变化，请重新检查' in old_validation.get('errors', []))
+        if (known_proposal and known_proposal.state not in ('proposed', 'validated') and not retry_snapshot) or any(source_config(dept) == config for dept in existing):
             continue
         if handled >= limit:
             result['remaining_candidates'] += 1
@@ -873,7 +890,7 @@ def process_discovered_candidates(school_id, inventory, key, *, limit=5):
 def verify_source_proposal(proposal_id, *, fetcher=None, inventory=None):
     """Worker entrypoint for admin recheck, import and repaired list candidates."""
     proposal = db.session.get(SourceProposal, proposal_id)
-    if not proposal or proposal.state in ('activated', 'rejected'):
+    if not proposal or proposal.state in ('activated', 'rejected', 'superseded'):
         return serialize_proposal(proposal) if proposal else None
     config = json.loads(proposal.candidate_json)
     evidence = capture_source_evidence(proposal.school_id, config, department_id=proposal.department_id,
@@ -893,11 +910,14 @@ def run_source_skill_for_proposal(proposal_id, *, inventory=None):
     from backend.ai.configuration import get_model_binding, AIConfigError
     from backend.ai.runtime import run_skill
     proposal = db.session.get(SourceProposal, proposal_id)
-    if not proposal or proposal.state in ('activated', 'rejected'):
+    if not proposal or proposal.state in ('activated', 'rejected', 'superseded'):
         return {'status': 'skipped', 'changed': False}
     bundle = json.loads(proposal.evidence_json)
     if not bundle.get('list'):
         return {'status': 'missing_evidence', 'changed': False}
+    from backend.services.source_review_recovery import page_problem
+    if page_problem(read_snapshot(bundle['list'])):
+        return {'status': 'not_a_public_column', 'changed': False}
     try:
         binding = get_model_binding('directory')
     except AIConfigError:
@@ -1017,15 +1037,44 @@ def queue_source_review(school_id, candidate, *, department_id=None, requested_b
 
 def process_source_review(payload):
     """Shared queue handler, including selector-free public submissions."""
+    from backend.scraper.acquisition import FetchFailure
+    try:
+        return _process_source_review(payload)
+    except FetchFailure as exc:
+        db.session.rollback()
+        proposal = db.session.get(SourceProposal, payload['proposal_id'])
+        if not proposal:
+            return {'state': 'missing'}
+        proposal.state = 'needs_review'
+        proposal.validation_json = _json({'passed': False, 'errors': [str(exc)[:300]], 'validator_version': VERSION})
+        proposal.validator_version = VERSION
+        db.session.commit()
+        return serialize_proposal(proposal)
+
+
+def recover_source_reviews():
+    from backend.services.source_review_recovery import schedule_recovery
+    return schedule_recovery()
+
+
+def _process_source_review(payload):
     proposal = db.session.get(SourceProposal, payload['proposal_id'])
-    if not proposal or proposal.state in ('rejected', 'activated'):
+    if not proposal or proposal.state in ('rejected', 'activated', 'superseded'):
         return serialize_proposal(proposal) if proposal else {'state': 'missing'}
     config = json.loads(proposal.candidate_json)
     seed = None
+    from backend.services.runtime_catalog import RuntimeCatalog
+    from backend.services.source_review_recovery import cached_page, resolve_non_column, page_problem
+    catalog = RuntimeCatalog(current_app.config.get('SOURCE_CATALOG_PATH'))
+    cached = cached_page(proposal, catalog)
+    if cached and page_problem(cached) in ('article_instead_of_column', 'search_instead_of_column') and resolve_non_column(proposal, cached):
+        return serialize_proposal(proposal)
     if not config.get('list_selector'):
         url = config['list_url']
         db.session.commit()
         seed = _fetch(url, 'list')
+        if resolve_non_column(proposal, seed):
+            return serialize_proposal(proposal)
         from backend.scraper.discovery.publication_lists import publication_lists
         feeds = [f for f in publication_lists(seed, getattr(seed, 'final_url', url))
                  if f.get('name') and not f.get('heading_ambiguous')]
@@ -1057,8 +1106,19 @@ def process_source_review(payload):
         proposal.revision += 1
         proposal.validated_hash = None
         db.session.commit()
-    from backend.services.runtime_catalog import RuntimeCatalog
-    catalog = RuntimeCatalog(current_app.config.get('SOURCE_CATALOG_PATH'))
+    if not config.get('group_name'):
+        from backend.services.source_relationships import SourceRelationships
+        key = site_key(db.session.get(School, proposal.school_id).url)
+        report = catalog.report(key)
+        if report:
+            relations = SourceRelationships(report, catalog.structure(key))
+            owners = relations.publication_owners(config['list_url'], relations.paths_for(config['list_url']))
+            if len(owners) == 1:
+                config['group_name'] = next(iter(owners))
+                proposal.candidate_json = _json(config)
+                proposal.revision += 1
+                proposal.validated_hash = None
+                db.session.commit()
     evidence = capture_source_evidence(proposal.school_id, config, department_id=proposal.department_id,
                                       seed_html=seed, inventory=catalog)
     validation = validate_proposal(proposal.id, independent_evidence=evidence)

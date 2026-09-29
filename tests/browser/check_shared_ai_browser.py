@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / 'tests'))
 from test_shared_summaries import SharedSummaryTests, BODY
 from backend.database.db import db
 from backend.database.models import Announcement
-from backend.ai.providers import ProviderError
+from backend.ai.providers import ProviderError, ProviderResult
 from backend.ai.models import AIExecution
 from playwright.sync_api import sync_playwright, expect
 from werkzeug.serving import make_server
@@ -72,23 +72,61 @@ def main():
                 page.goto(base + '/admin#platform')
                 expect(page.locator('#aiProvider')).to_be_visible()
                 expect(page.locator('#aiProvider option')).to_have_count(4)
+                expect(page.locator('#aiName')).to_have_count(0)
+                expect(page.locator('#aiRegionGroup')).to_be_hidden()
+                expect(page.locator('#aiModelHelp')).not_to_contain_text('接入点')
+                page.locator('#aiProvider').select_option('dashscope')
+                expect(page.get_by_label('API 密钥所属区域', exact=True)).to_be_visible()
+                page.locator('#aiRegion').select_option(label='新加坡')
+                expect(page.locator('#aiRegion')).to_have_value('ap-southeast-1')
+                page.locator('#aiProvider').select_option('ark')
+                expect(page.locator('#aiRegionGroup')).to_be_hidden()
+                expect(page.locator('#aiRegion')).to_have_value('cn-beijing')
+                expect(page.locator('#aiModelHelp')).to_contain_text('ep-')
+                page.locator('#aiProvider').select_option('bigmodel')
+                expect(page.locator('#aiRegionGroup')).to_be_hidden()
+                expect(page.locator('#aiModelHelp')).not_to_contain_text('接入点')
+                page.locator('#aiProvider').select_option('deepseek')
+                expect(page.locator('#aiRegion')).to_have_value('default')
                 if label == 'desktop':
-                    page.locator('#aiName').fill('浏览器测试服务')
                     page.locator('#aiModel').fill('fixture-model')
                     page.locator('#aiKey').fill('fixture-never-sent')
-                    page.get_by_role('button', name='保存配置', exact=True).click()
-                    expect(page.locator('#aiProfiles')).to_contain_text('浏览器测试服务')
+                    page.get_by_role('button', name='保存服务', exact=True).click()
+                    expect(page.locator('#aiProfiles')).to_contain_text('DeepSeek · fixture-model · 待测试')
                     expect(page.locator('#aiKey')).to_have_value('')
                     assert paid.call_count == 0
                     page.get_by_role('button', name='测试连接（调用 API）', exact=True).click()
                     expect(page.locator('#aiStatus')).not_to_contain_text('正在测试')
                     assert paid.call_count == 1
+                    paid.side_effect = None
+                    paid.return_value = ProviderResult(content='{"ok":true}', finish_reason='stop',
+                        usage={'known': True, 'input_tokens': 8, 'output_tokens': 4, 'total_tokens': 12},
+                        request_id='fixture-connection')
+                    page.get_by_role('button', name='测试连接（调用 API）', exact=True).click()
+                    expect(page.locator('#aiProfiles')).to_contain_text('DeepSeek · fixture-model · 可用')
+                    assert paid.call_count == 2
+                    for selector in ('#aiDirectory', '#aiSummary'):
+                        expect(page.locator(selector + ' option').last).to_have_text('DeepSeek · fixture-model')
+                    page.locator('#aiProfiles').get_by_role('button', name='编辑', exact=True).click()
+                    expect(page.locator('#aiFormTitle')).to_have_text('修改 AI 服务')
+                    expect(page.locator('#aiKeyHelp')).to_contain_text('留空继续使用原密钥')
+                    expect(page.locator('#aiKey')).to_have_value('')
+                    page.get_by_role('button', name='保存服务', exact=True).click()
+                    expect(page.locator('#aiFormTitle')).to_have_text('添加 AI 服务')
+                    expect(page.locator('#aiProfiles')).to_contain_text('DeepSeek · fixture-model · 可用')
+                    expect(page.locator('#aiStatus')).to_have_text('服务已保存，可在下方选择使用它的功能。')
+                    assert paid.call_count == 2
+                page.locator('#aiProvider').select_option('dashscope')
+                page.locator('#aiRegion').select_option('ap-southeast-1')
+                page.screenshot(path=str(folder / f'instance-ai-regions-{label}.png'), full_page=True)
+                page.locator('#aiProvider').select_option('deepseek')
                 page.screenshot(path=str(folder / f'instance-ai-{label}.png'), full_page=True)
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
                 page.goto(base + '/admin/sources')
                 expect(page.locator('#proposalList')).to_contain_text('学院本科教学通知')
                 page.get_by_role('button', name='查看依据', exact=True).click()
                 expect(page.locator('#proposalDetail')).to_be_visible()
+                page.locator('#manualSourceReview > summary').click()
                 page.get_by_role('button', name='在网页中点选栏目', exact=True).click()
                 expect(page.locator('#pickerFrame')).to_be_visible()
                 preview = page.frame_locator('#pickerFrame')
@@ -106,7 +144,7 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             assert not errors, errors
             browser.close()
-        print('Passed: shared/history rendering, explicit generation error recovery, admin config save without calls, explicit mock connection test, desktop/mobile overflow and JS errors.')
+        print('Passed: shared summaries, provider-specific fields, automatic service labels, save/edit without API calls, explicit mock connection tests, desktop/mobile overflow and JS errors.')
     finally:
         if server:
             server.shutdown(); server.server_close()

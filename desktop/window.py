@@ -13,7 +13,7 @@ import urllib.request
 
 from desktop import APP_NAME, VERSION
 from desktop.runtime import resource_root
-from desktop.updater import UpdateError, check_update, download_update, file_hash
+from desktop.updater import UpdateError, check_update, download_update
 
 
 def activate_existing(data):
@@ -50,24 +50,56 @@ def request_exit(data=None):
 
 
 class UpdateAPI:
-    def __init__(self, data, quit_app):
+    def __init__(self, data, quit_app, *, install_handoff=None, change_locations=False):
         self._data, self._quit = data, quit_app
+        self._install_handoff = install_handoff
+        self._change_locations = change_locations
         self._window = None
         self._update = None
         self._path = None
         self._lock = threading.Lock()
+        self._startup_lock = threading.Lock()
+        self._startup_started = False
+        self._dismissed_version = None
         self._state = {'phase': 'idle', 'message': f'当前版本 {VERSION}', 'current': VERSION, 'progress': 0}
 
     def state(self):
         return dict(self._state)
 
-    def check(self):
+    def startup_check(self):
+        """One background check per application launch; never open a modal or download."""
+        with self._startup_lock:
+            if self._startup_started:
+                return None
+            self._startup_started = True
+        thread = threading.Thread(target=lambda: self.check(only_if_idle=True),
+                                  daemon=True, name='startup-update-check')
+        thread.start()
+        return thread
+
+    def notification(self):
+        state = self.state()
+        version = state.get('version')
+        return {'phase': state['phase'], 'version': version,
+                'available': bool(version and version != self._dismissed_version and
+                                  state['phase'] in ('available', 'downloading', 'ready', 'download-error'))}
+
+    def dismiss_notification(self):
+        self._dismissed_version = self._state.get('version')
+        return self.notification()
+
+    def check(self, only_if_idle=False):
         if not self._lock.acquire(blocking=False):
             return self.state()
         try:
+            if only_if_idle and self._state['phase'] != 'idle':
+                return self.state()
+            self._update = None
+            self._path = None
+            for key in ('version', 'notes', 'size'):
+                self._state.pop(key, None)
             self._state.update(phase='checking', message='正在检查 GitHub Release…')
             self._update = check_update()
-            self._path = None
             if self._update:
                 self._state.update(phase='available', message=f'发现新版本 {self._update.version}',
                     version=self._update.version, notes=self._update.notes, size=self._update.size)
@@ -103,31 +135,20 @@ class UpdateAPI:
         return self.state()
 
     def install(self):
-        if not self._path or not self._update or not self._lock.acquire(blocking=False):
+        if self._state['phase'] == 'installing' or not self._path or not self._update or not self._lock.acquire(blocking=False):
             return self.state()
         try:
-            if not self._path.is_file() or file_hash(self._path) != self._update.sha256:
-                raise UpdateError('安装包已发生变化，请重新下载。')
-            message = '将退出学校通知并打开安装程序。订阅、收藏和阅读记录会保留。'
+            from desktop.install_update import prepare_install
+            request = prepare_install(self._path, self._update, change_locations=self._change_locations)
+            message = ('将退出应用，在原位置更新并自动重新打开。文件位置和个人数据保持不变。'
+                       if request.in_place else '将退出应用并打开安装向导，可选择文件位置。已有数据会保留。')
             if sys.platform == 'darwin':
                 message = '将退出学校通知并打开安装镜像。请把新版拖入 Applications 并替换旧版，已有数据会保留。'
-            if not self._window.create_confirmation_dialog('安装更新', message):
+            if not self._window.create_confirmation_dialog('更新学校通知' if request.in_place else '安装更新', message):
                 return self.state()
-            if sys.platform == 'win32':
-                environment = os.environ.copy()
-                environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
-                frozen = getattr(sys, 'frozen', False)
-                if frozen:
-                    import ctypes
-                    ctypes.windll.kernel32.SetDllDirectoryW(None)
-                try:
-                    subprocess.Popen([str(self._path)], cwd=self._path.parent, env=environment)
-                finally:
-                    if frozen:
-                        ctypes.windll.kernel32.SetDllDirectoryW(str(resource_root()))
-            elif sys.platform == 'darwin':
-                subprocess.run(['open', str(self._path)], check=True)
-            self._quit()
+            self._state.update(phase='installing', message='正在关闭服务并准备更新…')
+            if not self._install_handoff or not self._install_handoff(request):
+                raise UpdateError('应用暂时无法退出，请完成当前文件操作后重试。')
         except UpdateError as exc:
             self._state.update(phase='download-error', message=str(exc))
         except Exception:
@@ -159,7 +180,17 @@ def run_window(runtime, smoke_test=False):
 
     update_window = None
     component_window = None
-    update_api = None
+    def install_handoff(request):
+        runtime.requested_update = request
+        try:
+            if quit_app():
+                return True
+        except Exception:
+            runtime.requested_update = None
+            raise
+        runtime.requested_update = None
+        return False
+    update_api = UpdateAPI(runtime.data_dir, quit_app, install_handoff=install_handoff)
     location_busy = threading.Lock()
     def start_migration(values, release):
         nonlocal migration, migration_window
@@ -246,25 +277,26 @@ def run_window(runtime, smoke_test=False):
             html=(resource_root() / 'desktop' / 'ui' / 'components.html').read_text(encoding='utf-8'),
             js_api=ComponentsAPI(), width=560, height=390, min_size=(480, 350), background_color='#f5f5f7')
     def updates():
-        nonlocal update_window, update_api
+        nonlocal update_window
         if location_busy.locked():
-            return
+            return False
         if update_window in webview.windows:
             update_window.restore()
             update_window.show()
-            return
-        api = UpdateAPI(runtime.data_dir, quit_app)
-        update_api = api
+            return True
         update_window = webview.create_window('检查更新 · School Watcher',
             html=(resource_root() / 'desktop' / 'ui' / 'updates.html').read_text(encoding='utf-8'),
-            js_api=api, width=560, height=500, min_size=(480, 420), background_color='#f5f5f7')
-        api._window = update_window
+            js_api=update_api, width=560, height=500, min_size=(480, 420), background_color='#f5f5f7')
+        update_api._window = update_window
+        return True
 
     webview.settings.update(ALLOW_DOWNLOADS=True, ALLOW_FILE_URLS=False,
                             OPEN_EXTERNAL_LINKS_IN_BROWSER=True, OPEN_DEVTOOLS_IN_DEBUG=False)
     class WindowAPI:
         def _allowed(self):
             from urllib.parse import urlsplit
+            if window.events.closed.is_set():
+                return False
             actual = urlsplit(window.get_current_url() or '')
             expected = urlsplit(runtime.address or '')
             return actual.scheme == 'http' and actual.netloc == expected.netloc and actual.hostname == '127.0.0.1'
@@ -281,7 +313,7 @@ def run_window(runtime, smoke_test=False):
             elif action == 'close':
                 quit_app()
             elif action == 'updates':
-                updates()
+                return updates()
             elif action == 'components':
                 components()
             elif action == 'data':
@@ -298,6 +330,14 @@ def run_window(runtime, smoke_test=False):
             if not self._allowed(): return None
             from desktop.locations import location_state
             return location_state(runtime.data_dir)
+
+        def update_notification(self):
+            if not self._allowed(): return None
+            return update_api.notification()
+
+        def dismiss_update(self):
+            if not self._allowed(): return None
+            return update_api.dismiss_notification()
 
         def choose_location(self, kind):
             if not self._allowed() or kind not in ('data', 'cache', 'backups', 'downloads'):
@@ -355,7 +395,7 @@ def run_window(runtime, smoke_test=False):
                 update = check_update(allow_current=True)
                 if not update: raise UpdateError('暂时没有可用的安装程序。')
                 package = download_update(update, runtime.data_dir, download_dir=effective_locations(runtime.data_dir)['downloads'])
-                api = UpdateAPI(runtime.data_dir, quit_app)
+                api = UpdateAPI(runtime.data_dir, quit_app, install_handoff=install_handoff, change_locations=True)
                 api._path, api._update, api._window = package, update, window
                 result = api.install()
                 return {'error': result['message']} if result['phase'] in ('error', 'download-error') else result
@@ -372,11 +412,16 @@ def run_window(runtime, smoke_test=False):
             return True
 
     state = {'maximized': False}
+    main_api = WindowAPI()
     window = webview.create_window(APP_NAME,
         html=(resource_root() / 'desktop' / 'ui' / 'loading.html').read_text(encoding='utf-8'),
         width=1280, height=820, min_size=(760, 520), text_select=True, zoomable=True,
-        background_color='#f5f5f7', hidden=smoke_test, js_api=WindowAPI(),
+        background_color='#f5f5f7', hidden=smoke_test, js_api=main_api,
         frameless=os.name == 'nt', easy_drag=False)
+    restore_bridge = None
+    if sys.platform == 'darwin':
+        from desktop.native_bridge import install_csp_bridge
+        restore_bridge = install_csp_bridge(window, main_api)
     def maximized():
         state['maximized'] = True
     def restored():
@@ -428,6 +473,8 @@ def run_window(runtime, smoke_test=False):
                 install_work_area(window)
             address = runtime.start()
             window.load_url(runtime.open_url())
+            if not smoke_test:
+                update_api.startup_check()
             if smoke_test:
                 print('Native check: waiting for page load', flush=True)
                 if not window.events.loaded.wait(30):
@@ -437,6 +484,16 @@ def run_window(runtime, smoke_test=False):
                 while time.monotonic() < deadline:
                     if window.run_js('location.pathname === "/" && !!document.querySelector("a[href=\\"/admin\\"]") && !document.querySelector("a[href=\\"/login\\"],input[type=password]")'):
                         print('Native check: account-free desktop rendered', flush=True)
+                        if sys.platform == 'darwin':
+                            # Wait for real page-to-native replies before the test
+                            # immediately closes the newly rendered Cocoa window.
+                            until = time.monotonic() + 10
+                            while time.monotonic() < until:
+                                if window.run_js('Object.values(window.pywebview._returnValuesCallbacks || {}).every(calls => Object.keys(calls).length === 0)'):
+                                    break
+                                time.sleep(.1)
+                            else:
+                                raise RuntimeError('Native page callbacks did not finish.')
                         if os.name == 'nt':
                             if not window.run_js('!!document.querySelector("[data-window-action=close]")'):
                                 raise RuntimeError('Desktop window controls did not render.')
@@ -505,6 +562,8 @@ def run_window(runtime, smoke_test=False):
             raise smoke_error[0]
     finally:
         runtime.stopped.set()
+        if restore_bridge:
+            restore_bridge()
         control.shutdown()
         control.server_close()
         instance.unlink(missing_ok=True)

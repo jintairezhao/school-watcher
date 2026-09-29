@@ -42,6 +42,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_desktop*.py' -v
       - name: Check imported content and session security
         run: python -m unittest discover -s tests -p 'test_security*.py' -v
+      - name: Verify native startup update notification
+        run: python tests/smoke/check_startup_updates.py
       - name: Prepare Windows WebView2 bootstrapper
         if: runner.os == 'Windows'
         shell: pwsh
@@ -56,6 +58,9 @@ jobs:
       - name: Build Windows application and installer
         if: runner.os == 'Windows'
         run: python desktop/build.py --installer
+      - name: Verify in-place upgrade preserves custom locations
+        if: runner.os == 'Windows'
+        run: python tests/smoke/check_installer_upgrade.py
       - name: Build macOS application and disk image
         if: runner.os == 'macOS'
         run: python desktop/build.py

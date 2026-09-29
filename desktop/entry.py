@@ -105,14 +105,20 @@ def main(argv=None):
                     'version': VERSION}), encoding='utf-8')
         return 0
     finally:
-        runtime.close()
-        lock.release()
+        update = getattr(runtime, 'requested_update', None)
+        try:
+            runtime.close(strict=bool(update))
+        finally:
+            lock.release()
         if args.gui_smoke_test:
             faulthandler.cancel_dump_traceback_later()
         uninstaller = getattr(runtime, 'requested_uninstaller', None)
         if uninstaller:
             from desktop.uninstall import launch_uninstaller
             launch_uninstaller(uninstaller)
+        if update:
+            from desktop.install_update import launch_install
+            launch_install(update)
         if getattr(runtime, 'restart_requested', False):
             import subprocess
             environment = os.environ.copy()
