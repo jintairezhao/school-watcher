@@ -58,7 +58,7 @@ class SourceHierarchyTests(unittest.TestCase):
         self.assertNotIn('地球科学与工程学院', tree)
         self.assertEqual(len(tree['院系设置']), 1)
         self.assertEqual([c['department'].id for c in tree['院系设置'][0]['columns']], [21, 299])
-        self.assertEqual(tree['其他栏目'][0]['columns'][0]['department'].id, 300)
+        self.assertEqual(tree['归属待核实'][0]['columns'][0]['department'].id, 300)
         self.assertEqual([d.id for d in source_groups(rows)['院系设置']], [21, 299])
         self.assertEqual(rows[0].group_name, '地球科学与工程学院')
 

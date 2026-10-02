@@ -50,10 +50,14 @@
         if (activity) activity.hidden = !(tracked || sending || recovering || reconnecting || submissionUncertain || message);
         const progress = find('#inboxRefreshProgress');
         if (progress) {
-            progress.hidden = !total || !(busy || sending || recovering || reconnecting);
-            progress.max = Math.max(1, total);
-            progress.value = Math.min(total, completed);
-            progress.setAttribute('aria-valuetext', reconnecting ? `连接中断，最近确认 ${completed}/${total} 个来源完成` : `${completed}/${total} 个来源完成`);
+            progress.hidden = !(busy || sending || recovering || reconnecting);
+            progress.classList.toggle('is-indeterminate', !total);
+            progress.style.setProperty('--progress', total ? Math.min(100, completed / total * 100) : 0);
+            progress.setAttribute('aria-valuemin', '0');
+            progress.setAttribute('aria-valuemax', String(Math.max(1, total)));
+            if (total) progress.setAttribute('aria-valuenow', String(Math.min(total, completed)));
+            else progress.removeAttribute('aria-valuenow');
+            progress.setAttribute('aria-valuetext', !total ? '正在查询更新进度' : reconnecting ? `连接中断，最近确认 ${completed}/${total} 个来源完成` : `${completed}/${total} 个来源完成`);
         }
         const refreshButton = find('#refreshCurrentSources');
         if (refreshButton) {
@@ -107,8 +111,8 @@
         let response;
         try { response = await fetch(url, {...options, cache: 'no-store', signal: AbortSignal.timeout(15000)}); }
         catch (_) { throw Object.assign(new Error('暂时无法连接网站。'), {retryable: true}); }
-        if (response.status === 401 || response.status === 403 || (response.redirected && response.url.includes('/login'))) {
-            throw Object.assign(new Error('登录状态或访问权限已变化，请重新登录后查看更新。'), {retryable: false});
+        if (response.status === 401 || response.status === 403) {
+            throw Object.assign(new Error('本机会话已失效，请重新打开应用后查看更新。'), {retryable: false});
         }
         let data;
         try { data = await response.json(); }
@@ -127,13 +131,12 @@
         scope = data.tracking?.scope || scope;
         checking = sending = recovering = reconnecting = false; retryCount = 0; message = '';
         render();
-        const signature = data.sources.filter(s => s.state === 'done' || (s.pages_checked > 0 && s.new_count > 0))
+        const signature = data.sources.filter(s => s.new_count > 0 && (s.state === 'done' || s.pages_checked > 0))
             .map(s => s.state === 'done' ? s.id + ':' + s.updated_at : s.id + ':partial:' + s.new_count).join('|');
-        if (updateList && signature && signature !== completedSignature) {
-            completedSignature = signature;
-            await window.refreshInboxView?.();
-            if (number !== generation) return;
-            render();
+        const changed = signature !== completedSignature;
+        completedSignature = signature;
+        if (updateList && signature && changed) {
+            window.notifyInboxUpdates?.();
         }
         if (busy) schedule(number, 2000);
     }
@@ -203,7 +206,7 @@
         }
     }
     document.addEventListener('click', event => {
-        if (event.target.closest('#refreshCurrentSources')) refreshView();
+        if (event.target.closest('#refreshCurrentSources, #inboxNewNotices')) refreshView();
         else if (event.target.closest('#collectCurrentSources')) collect();
         else if (event.target.closest('#collectAllSources')) collect('all');
     });

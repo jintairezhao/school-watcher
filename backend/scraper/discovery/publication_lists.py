@@ -1,5 +1,6 @@
 """Discover separately scoped publication lists, including multiple lists on one page."""
 from collections import defaultdict
+from urllib.parse import urljoin, urlsplit
 from datetime import datetime, timezone
 import hashlib
 import re
@@ -24,6 +25,69 @@ def is_more(text):
 def title_text(element):
     # Icon-font private-use characters do not belong to a column name.
     return clean(re.sub(r'[\ue000-\uf8ff]', '', element.get_text(' ', strip=True)))
+
+
+def listing_alias(block, current, url, target):
+    """Record a breadcrumb identity only when this URL matches its real pager.
+
+    Literal templates are read as data. No script is executed and no URL is
+    generated. The relationship layer still requires a second fetched list.
+    """
+    if urlsplit(target).netloc != urlsplit(url).netloc:
+        return None
+    token = r'\$?\{(?:PageIndex|page|pageNum|pageNo)\}'
+    for script in block.parent.find_all('script'):
+        for match in re.finditer(r'''(['"])([^'"\n]*\$?\{(?:PageIndex|page|pageNum|pageNo)\}[^'"\n]*)\1''', script.get_text()):
+            template = urljoin(url, match.group(2))
+            parts = re.split(token, template)
+            if len(parts) != 2:
+                continue
+            pattern = r'\d+'.join(re.escape(part) for part in parts)
+            if re.fullmatch(pattern, url):
+                return {'url': canonical_url(url), 'canonical_url': target,
+                        'breadcrumb_locator': locator(current),
+                        'template': template, 'script_locator': locator(script)}
+    return None
+
+
+def pagination_identity(first_item, heading, url):
+    """Bind pager evidence independently of which layout supplied the heading.
+
+    Use the nearest shared heading/list container. A pager from a neighboring
+    module cannot identify this list, and only literal URLs are read as data.
+    """
+    if not heading.get('column_url') or not heading.get('heading_locator'):
+        return None
+    document = first_item
+    while document.parent is not None:
+        document = document.parent
+    current = document.select_one(heading['heading_locator'])
+    if current is None:
+        return None
+    for scope in first_item.parents:
+        if scope.name in ('body', 'html', '[document]'):
+            break
+        if not any(parent is scope for parent in [current, *current.parents]):
+            continue
+        # listing_alias examines the supplied block's parent. This branch sits
+        # inside the nearest complete module containing the heading and list.
+        branch = next((child for child in scope.find_all(recursive=False)
+                       if child is first_item or any(parent is child for parent in first_item.parents)), None)
+        if branch is None:
+            return None
+        alias = listing_alias(branch, current, canonical_url(url), heading['column_url'])
+        if alias:
+            script = document.select_one(alias['script_locator'])
+            targets = {resolve_page_link(url, match.group(2)) for match in re.finditer(
+                r'''\breturn\s+(['"])([^'"\n{}]+)\1\s*;''', script.get_text())}
+            targets = {target for target in targets if target and not ARTICLE.search(target)
+                       and urlsplit(target).netloc == urlsplit(url).netloc}
+            if len(targets) == 1:
+                alias['first_page_url'] = targets.pop()
+            return alias
+        # Do not climb into another module after finding the list's own heading.
+        return None
+    return None
 
 
 def select_node(item, selector):
@@ -154,7 +218,7 @@ def heading_evidence(first_item, url, tabs=None):
         # Require the terminal crumb to point to this exact page, and bind only
         # the adjacent main article list, never another widget in the sidebar.
         listing = first_item.find_parent('ul', class_='middleArticle__articleList')
-        block = listing.parent if listing is not None else None
+        block = listing.parent if listing is not None else first_item.find_parent('div', class_='middleArticle__art')
         if block is not None and 'middleArticle__art' in block.get('class', []) and block.parent is not None:
             crumbs = block.parent.select(':scope > .middleArticle__position > .middleArticle__position--label')
             links = crumbs[0].select('a[href]') if len(crumbs) == 1 else []
@@ -166,6 +230,25 @@ def heading_evidence(first_item, url, tabs=None):
                 if target == canonical_url(url) and 2 <= len(name) <= 40 and name not in MORE | SKIP:
                     return {'name': name, 'heading_locator': locator(current), 'column_url': target,
                             'column_link_locator': locator(current), 'heading_method': 'current_page_breadcrumb'}
+                alias = listing_alias(block, current, canonical_url(url), target)
+                if alias and 2 <= len(name) <= 40 and name not in MORE | SKIP:
+                    return {'name': name, 'heading_locator': locator(current), 'column_url': target,
+                            'column_link_locator': locator(current), 'heading_method': 'pagination_page_breadcrumb',
+                            'listing_alias': alias}
+            # The card layout names the list in its explicitly selected sidebar
+            # item. Unselected navigation links cannot supply a column identity.
+            if block.parent.parent is not None:
+                selected = block.parent.parent.select(
+                    ':scope > .c-main__left li.middleLeft__left--navClick > a[href]')
+                if len(selected) == 1:
+                    current = selected[0]
+                    target = resolve_page_link(url, current['href'].strip())
+                    name = clean(current.get_text(' ', strip=True))
+                    alias = listing_alias(block, current, canonical_url(url), target)
+                    if 2 <= len(name) <= 40 and name not in MORE | SKIP and (target == canonical_url(url) or alias):
+                        return {'name':name, 'heading_locator':locator(current), 'column_url':target,
+                            'column_link_locator':locator(current), 'heading_method':'current_page_sidebar',
+                            **({'listing_alias':alias} if alias else {})}
         return {'name': '', 'heading_locator': '', 'column_url': '', 'column_link_locator': ''}
     # Action links are not part of the title, including translated buttons
     # between a Chinese title and its English subtitle.
@@ -349,6 +432,8 @@ def publication_lists(html, url):
             if len(samples) < config.get('minimum_items', 2) or len(samples) / max(1, len(selected)) < 0.6:
                 continue
             heading = heading_evidence(items[0], url, tabs)
+            if alias := pagination_identity(items[0], heading, url):
+                heading['listing_alias'] = alias
             name = heading['name']
             if name and any(name == sample['title'] for sample in samples):
                 continue  # An article headline cannot name its enclosing column.
@@ -389,7 +474,7 @@ def publication_lists(html, url):
         title = clean(soup.title.get_text(' ', strip=True))
         parts = re.split(r'\s*[|｜_—–-]\s*', title)
         label = parts[0]
-        if (len(parts) > 1 and 2 <= len(label) <= 20 and
+        if (2 <= len(label) <= 20 and
                 re.search(r'通知|公告|招生|推免|夏令营|新闻|动态|公示|讲座', label)):
             result[0].update(name=label, heading_locator=locator(soup.title),
                              heading_method='single_list_document_title')

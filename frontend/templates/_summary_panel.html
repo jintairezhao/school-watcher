@@ -10,7 +10,7 @@
         {% endif %}
     </div>
     <p class="shared-summary-text" data-summary-text {% if not state.get('summary') %}hidden{% endif %}>{{ state.get('summary', '') }}</p>
-    <p class="shared-summary-status" data-summary-message role="status" aria-live="polite">{% if active %}{{ '正在读取官网正文…' if state.get('status') == 'waiting_content' else '正在生成，完成后会显示在这里。' }}{% elif state.get('error') %}{{ state['error'] }}{% elif state.get('summary') %}根据正文生成，附件未纳入摘要。{% elif user %}{{ '点击后生成，摘要会保存在本机。' if config.DESKTOP_MODE else '点击后生成，所有读者共享这份摘要。' }}{% else %}登录后可生成摘要。{% endif %}</p>
+    <p class="shared-summary-status" data-summary-message role="status" aria-live="polite">{% if active %}{{ '正在读取官网正文…' if state.get('status') == 'waiting_content' else '正在生成，完成后会显示在这里。' }}{% elif state.get('error') %}{{ state['error'] }}{% elif state.get('summary') %}根据正文生成，附件未纳入摘要。{% elif user %}点击后生成，摘要会保存在本机。{% else %}请重新打开应用后生成摘要。{% endif %}</p>
     {% if state.get('historical') %}
     <details class="shared-summary-history">
         <summary>查看历史摘要</summary>

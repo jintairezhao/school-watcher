@@ -31,7 +31,7 @@ def source_expression(school_ids=None, department_ids=None, group=None):
     if department_ids is not None:
         allowed = allowed.where(Department.id.in_(department_ids))
     if group is not None:
-        normalized = func.coalesce(func.nullif(func.trim(Department.group_name), ''), '其他栏目')
+        normalized = func.coalesce(func.nullif(func.trim(Department.group_name), ''), '归属待核实')
         allowed = allowed.where(normalized == group)
     observed = db.select(AnnouncementSource.announcement_id).where(
         AnnouncementSource.announcement_id == Announcement.id,

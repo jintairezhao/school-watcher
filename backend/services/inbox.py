@@ -65,20 +65,38 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
         node = {'key': owner.id, 'name': owner.name}
         ancestors = parents.get(owner.id, [])
         if not ancestors:
-            return [((owner.group_name or '').strip() or '其他栏目', [node])]
+            if getattr(owner, 'kind', '') == 'group':
+                return [((owner.group_name or owner.name).strip(), [])]
+            return [((owner.group_name or '').strip() or '归属待核实', [node])]
         return [(group, chain + [{**node, 'position': position}])
                 for ancestor, position in ancestors
                 for group, chain in directory_paths(ancestor, seen | {owner.id})]
 
+    # Units exist before their first column so future columns can inherit a
+    # reader's department subscription.
+    for dept in known:
+        if getattr(dept, 'kind', '') not in ('unit', 'group'):
+            continue
+        for group, chain in directory_paths(dept):
+            if not chain:
+                continue
+            unit = put(group, chain, {'department': dept, 'label': dept.name}, directory=True)
+            unit['own_columns'] = [c for c in unit['own_columns'] if c['department'].id != dept.id]
+            unit.update(department_id=dept.id, url=dept.list_url, kind=dept.kind)
+
     for dept in departments:
+        if getattr(dept, 'kind', '') in ('unit', 'group'):
+            continue
         if dept.name.upper() == 'DAILY NEWS':
             continue
         if dept.id in directory_ids:
             continue
         if dept.id in parents:
+            labels = {p['label'] for p in placements.get(dept.id, [])}
+            label = next(iter(labels)) if len(labels) == 1 else dept.name
             for owner, position in parents[dept.id]:
                 for group, chain in directory_paths(owner):
-                    put(group, chain, {'department': dept, 'label': dept.name, 'position': position,
+                    put(group, chain, {'department': dept, 'label': label, 'position': position,
                         'unavailable': not bool(dept.list_url)}, directory=True)
             continue
         owner = next((item for item in known if item.school_id == dept.school_id and
@@ -91,7 +109,7 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
                 put(path['group'], path['nodes'], {'department': dept,
                     'label': path['label'] if dept.id in placements else label}, official=True)
         else:
-            unit = put((owner.group_name or '').strip() or '其他栏目',
+            unit = put((owner.group_name or '').strip() or '归属待核实',
                        [{'key': owner.id, 'name': owner.name}], {'department': dept, 'label': label})
             unit['expandable'] |= is_child
 
@@ -118,14 +136,15 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
 
     from backend.services.student_sources import display_priority
     ordered = {group: sorted([finish(unit) for unit in units.values()],
-                             key=lambda unit: display_priority(unit['name']))
+                             key=lambda unit: (0, unit['position']) if unit.get('kind') else (1, display_priority(unit['name'])))
                for group, units in groups.items()}
     def group_priority(item):
         group, units = item
         # A broad official organisation directory also contains the teaching
         # office and graduate school. Its generic heading must not bury them.
-        return min([display_priority(group)] + [display_priority(unit['name'])
-                   for unit in units if unit['expandable']])
+        priority = min([display_priority(group)] + [display_priority(unit['name'])
+                       for unit in units if unit['expandable']])
+        return (group == '归属待核实', priority)
     return dict(sorted(ordered.items(), key=group_priority))
 
 

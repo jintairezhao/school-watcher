@@ -22,10 +22,46 @@ from backend.database.source_governance_models import (
     SourceProposal, SourceConfigVersion, SourceReviewEvent, SchoolOnboarding)
 from backend.services.source_inventory import canonical_url, site_key
 
-VERSION = 'source-governance-3'
+VERSION = 'source-governance-7'
 FIELDS = ('name', 'list_url', 'list_selector', 'title_selector', 'link_selector',
           'date_selector', 'content_selector', 'group_name')
 ACTION_LABEL = re.compile(r'^(?:read(?:\s+more)?|more|learn\s+more|了解|更多|查看|详情)$', re.I)
+# The address is not a publication column, so sampling its entries as articles
+# would prove nothing. Every other preflight finding is a reason to gather more
+# evidence, never a reason to stop gathering it.
+PAGE_PROBLEMS = ('article_instead_of_column', 'search_instead_of_column', 'source_login_required')
+# The heading detector could not name this column, so discovery carries it under
+# a sentinel. A sentinel is a question, never an identity: comparing it against a
+# page heading for equality can only ever fail, which is what turned 63 real
+# columns into "scope unconfirmed" without a single sample ever being read.
+UNVERIFIED_COLUMN_NAME = '栏目名称待核实'
+# Official sites mix public notices with entries only their own members may read.
+# A gated entry is a fact about the site, not a defect in the column and not a
+# parser task, so it is recorded as a limitation instead of a validation error.
+# Bodies are read a few at a time; when the site gates the first entries the
+# sample extends within this ceiling rather than abandoning a real public column.
+ARTICLE_SAMPLE_TARGET = 3
+ARTICLE_SAMPLE_LIMIT = 5
+GATED_OUTCOMES = ('denied', 'needs_manual')
+GATED_CODES = ('source_login_required', 'access_denied', 'access_denied_page',
+               'human_verification', 'access_challenge', 'http_401', 'http_403')
+
+
+def gated_sample(exc):
+    """True when the site refused this entry rather than the program misreading it."""
+    from backend.scraper.acquisition import FetchFailure
+    return isinstance(exc, FetchFailure) and (exc.outcome in GATED_OUTCOMES
+                                              or exc.error_code in GATED_CODES)
+
+
+def unverified_column_name(name):
+    return not (name or '').strip() or (name or '').strip() == UNVERIFIED_COLUMN_NAME
+
+
+def adoptable_column_name(name):
+    """A heading worth installing as a column name: real text, not a call to action."""
+    text = (name or '').strip()
+    return len(_normal(text)) >= 2 and not ACTION_LABEL.match(text)
 
 
 def _json(value):
@@ -115,16 +151,32 @@ class CapturedEvidence:
     bundle: dict
 
 
-def _fetch(url, purpose):
+def _fetch(url, purpose, *, config=None):
     from backend.scraper.engine import _fetch_html
+    policy = {'exploration': config is None or purpose == 'directory'}
+    config = config or {}
+    selector = (config.get('content_selector', '') if purpose in ('body', 'article') else
+                config.get('list_selector', '') if purpose in ('list', 'independent_list') else '')
     if purpose == 'independent_list':
         return _fetch_html(url, purpose='list', raise_fetch_errors=True,
-                           policy={'verification_pass': 'independent'})
-    return _fetch_html(url, purpose=purpose, raise_fetch_errors=True)
+                           readiness_selector=selector, policy={**policy, 'verification_pass': 'independent'})
+    # Evidence roles use "body"; the shared transport calls that purpose "article".
+    return _fetch_html(url, purpose='article' if purpose == 'body' else purpose,
+                       readiness_selector=selector, policy=policy, raise_fetch_errors=True)
 
 
 def _fetch_snapshot(url, purpose, fetcher):
-    html = fetcher(url, purpose)
+    from backend.scraper.acquisition import FetchFailure
+    try:
+        html = fetcher(url, purpose)
+    except FetchFailure as exc:
+        if purpose not in ('list', 'independent_list') or exc.outcome != 'needs_adapter' or not exc.result.html:
+            raise
+        # The transport's generic list recognizer is not the authority for an
+        # AI-declared CSS plan. Retain readable material and let _column_scope,
+        # article identity and the independent sample validate the actual plan.
+        return _snapshot(exc.result.html, exc.result.final_url or url,
+                         outcome='needs_adapter', role=purpose)
     result = getattr(html, 'result', None)
     if result is not None and not result.ok:
         raise ValueError('官网返回了无效页面')
@@ -132,6 +184,17 @@ def _fetch_snapshot(url, purpose, fetcher):
     if outcome not in ('usable', 'empty'):
         raise ValueError('网页内容尚未就绪，不能审核来源')
     return _snapshot(html, getattr(html, 'final_url', url), outcome=outcome, role=purpose)
+
+
+def _exploration_html(url):
+    """Unknown readable markup is AI material, never a successful body sample."""
+    from backend.scraper.acquisition import FetchFailure, FetchedHTML
+    try:
+        return _fetch(url, 'directory')
+    except FetchFailure as exc:
+        if exc.outcome == 'needs_adapter' and exc.result.html:
+            return FetchedHTML(exc.result)
+        raise
 
 
 def _normal(text):
@@ -165,7 +228,7 @@ def _extract(config, reference):
     return soup, items, records, errors
 
 
-def _column_scope(config, reference):
+def _column_scope(config, reference, scope_evidence=None):
     """A list must remain within one actual named publishing region."""
     from backend.scraper.discovery.publication_lists import publication_lists
     html = read_snapshot(reference)
@@ -181,11 +244,36 @@ def _column_scope(config, reference):
             return records, errors + ([] if expected in headings else ['empty_column_identity_unconfirmed']), {'empty': True}
         return records, errors + ['list_missing'], {}
     expected = _normal(config['name'].split(' / ')[-1])
+    # An unnamed candidate has no claim to confirm; the page heading is itself the
+    # evidence, so scope is established structurally and the heading is returned.
+    unnamed = unverified_column_name(config['name'])
     regions = []
-    for feed in publication_lists(html, reference['url']):
+    # A model can identify a region whose markup is unknown to the optional
+    # template detector. Execute its declarative evidence against both reads;
+    # never require a new CMS rule merely because a heading uses a div or span.
+    if scope_evidence:
+        from soupsieve.util import SelectorSyntaxError
+        try:
+            containers = soup.select(scope_evidence.get('container_selector', ''))
+            headings = soup.select(scope_evidence.get('heading_selector', ''))
+            if len(containers) == len(headings) == 1:
+                container, heading = containers[0], headings[0]
+                inside = lambda node: node is container or container in node.parents
+                if (container.name not in ('html', 'body') and inside(heading)
+                        and all(inside(item) for item in items)
+                        and _normal(heading.get_text(' ', strip=True)) == expected):
+                    regions.append({'name': heading.get_text(' ', strip=True),
+                                    'container': scope_evidence['container_selector'],
+                                    'heading': scope_evidence['heading_selector'], 'basis': 'executed_ai_scope'})
+        except (ValueError, TypeError, SelectorSyntaxError):
+            pass
+    for feed in ([] if regions else publication_lists(html, reference['url'])):
         if not feed.get('name') or feed.get('heading_ambiguous'):
             continue
-        if _normal(feed['name']) != expected:
+        if unnamed:
+            if not adoptable_column_name(feed['name']):
+                continue
+        elif _normal(feed['name']) != expected:
             continue
         region_items = soup.select(feed['list_selector'])
         if all(any(item is node or any(parent is node for parent in item.parents)
@@ -204,17 +292,33 @@ def _column_scope(config, reference):
             if not all(item is parent or any(ancestor is parent for ancestor in item.parents) for item in items):
                 continue
             headings = parent.select('h1,h2,h3,h4,h5,h6')
-            if len(headings) == 1 and _normal(headings[0].get_text(' ', strip=True)) == expected:
-                regions.append({'name': headings[0].get_text(' ', strip=True), 'container': parent.get('id', ''), 'heading': headings[0].name})
-                break
+            if len(headings) != 1:
+                continue
+            observed = headings[0].get_text(' ', strip=True)
+            if unnamed:
+                # Still one named region covering exactly these entries; it only
+                # lacks a pre-existing claim to match. Never adopt a call to
+                # action ("更多") or a degenerate heading as a column name.
+                if not adoptable_column_name(observed):
+                    continue
+            elif _normal(observed) != expected:
+                continue
+            regions.append({'name': observed, 'container': parent.get('id', ''), 'heading': headings[0].name})
+            break
     if not regions:
         errors.append('column_identity_or_scope_unconfirmed')
     return records, sorted(set(errors)), regions[0] if regions else {}
 
 
+def _page_problem_errors(errors):
+    """Preflight findings that mean the address is not a column at all."""
+    return [error for error in errors if error in PAGE_PROBLEMS]
+
+
 def capture_source_evidence(school_id, candidate, *, department_id=None, seed_html=None,
-                            inventory=None, fetcher=None):
+                            inventory=None, fetcher=None, scope_evidence=None, publisher_material=None):
     """Acquire bounded fresh checks. Called by trusted workers, never model output."""
+    from backend.scraper.acquisition import FetchDeferred, FetchFailure
     config = _candidate(candidate)
     school = db.session.get(School, school_id)
     if not school:
@@ -225,13 +329,23 @@ def capture_source_evidence(school_id, candidate, *, department_id=None, seed_ht
         raise ValueError('来源不属于这所学校')
     previous = source_config(department)
     db.session.commit()
-    fetcher = fetcher or _fetch
+    fetcher = fetcher or (lambda url, purpose: _fetch(url, purpose, config=config))
     first = (_snapshot(seed_html, getattr(seed_html, 'final_url', config['list_url']),
                        outcome=getattr(getattr(seed_html, 'result', None), 'outcome', 'usable'))
              if seed_html is not None else _fetch_snapshot(config['list_url'], 'list', fetcher))
+    records, errors, region = _column_scope(config, first, scope_evidence)
+    # The official page's own region heading names an unnamed column. Adopt it
+    # here, before the evidence hash binds this capture to a config, so the
+    # proposal carries a name read from the site rather than a sentinel.
+    if unverified_column_name(config['name']) and region.get('name'):
+        config = _candidate({**config, 'name': region['name']})
+        records, errors, region = _column_scope(config, first, scope_evidence)
     bundle = {'schema': 1, 'school_id': school_id, 'school_name': school_name, 'root_url': root_url,
-              'config_hash': _hash(config), 'expected_config': previous,
+              'config_hash': _hash(config), 'expected_config': previous, 'config': config,
               'list': first, 'articles': [], 'identity_paths': [], 'identity_snapshots': []}
+    bundle['publisher_material'] = dict(publisher_material or {})
+    if scope_evidence:
+        bundle['scope_evidence'] = scope_evidence
     # Capture reference DOMs along with derived paths, so later validation does
     # not rely on candidate-supplied ownership or a mutable discovery cache.
     if inventory is not None:
@@ -246,29 +360,132 @@ def capture_source_evidence(school_id, candidate, *, department_id=None, seed_ht
             references = {r['url'] for p in bundle['identity_paths'] for r in p.get('references', []) if r.get('url')}
             for ref_url in references:
                 html = inventory.snapshot(key, ref_url)
+                if not html:
+                    stored = next((r for p in bundle['identity_paths'] for r in p.get('references', []) if r.get('url') == ref_url), {})
+                    try:
+                        html = read_snapshot({'hash': stored.get('content_hash', '')})
+                    except ValueError:
+                        pass
                 if html:
                     bundle['identity_snapshots'].append(_snapshot(html, ref_url, role='identity'))
+            # A published catalogue may retain a roster path after its small HTML
+            # cache has expired. Recapture missing public evidence instead of
+            # asking the model to rediscover an already observed department.
+            captured = {r['url']: r for r in bundle['identity_snapshots']}
+            for ref_url in references - set(captured):
+                try:
+                    captured[ref_url] = _fetch_snapshot(ref_url, 'directory', fetcher)
+                    bundle['identity_snapshots'].append(captured[ref_url])
+                except FetchDeferred:
+                    raise
+                except (FetchFailure, ValueError, OSError):
+                    continue
+            for path in bundle['identity_paths']:
+                if path.get('unit_name') != config.get('group_name'):
+                    continue
+                unit = next((n for n in reversed(path.get('nodes', [])) if n.get('kind') == 'unit'), {})
+                home = captured.get(unit.get('url'))
+                directory = next((captured.get(r['url']) for r in path.get('references', [])
+                                  if r['url'] != unit.get('url') and captured.get(r['url'])), None)
+                if not home or not directory:
+                    continue
+                root_ref = next((r for r in bundle['publisher_material'].values() if r['url'] == canonical_url(root_url)), None)
+                if not root_ref:
+                    root_html = inventory.snapshot(key, root_url)
+                    if not root_html:
+                        page = inventory.get_page(key, root_url) or {}
+                        try:
+                            root_html = read_snapshot({'hash': page.get('content_hash', '')})
+                        except ValueError:
+                            pass
+                    try:
+                        root_ref = _snapshot(root_html, root_url, role='identity') if root_html else _fetch_snapshot(root_url, 'directory', fetcher)
+                    except FetchDeferred:
+                        raise
+                    except (FetchFailure, ValueError, OSError):
+                        continue
+                bundle['publisher_material'].update(identity_root=root_ref, identity_directory=directory, identity_home=home)
+                proof = {'directory_evidence_id': 'identity_directory', 'homepage_evidence_id': 'identity_home', 'name': path['unit_name']}
+                from backend.services.source_workflow import publisher_proven
+                if publisher_proven(dict(bundle, publisher_evidence=proof), config):
+                    bundle['publisher_evidence'] = proof
+                    break
     db.session.commit()
-    records, errors, region = _column_scope(config, first)
+    records, errors, region = _column_scope(config, first, scope_evidence)
     bundle['region'] = region
     bundle['preflight_errors'] = errors
-    # Do not spend body requests on a clearly wrong adjacent list.
-    if not errors:
-        for record in records[:3]:
-            article = _fetch_snapshot(record['url'], 'body', fetcher)
-            article['listed_title'] = record['title']
-            article['listed_url'] = record['url']
-            bundle['articles'].append(article)
+    # Acquire each kind of evidence on its own and record how each one went.
+    # The list's own quality findings are findings, not a gate: an article body
+    # and the independent page are exactly the evidence needed to settle an
+    # unconfirmed column, so requiring a clean list first deadlocks every hard
+    # case (it produced 74 body-sample and 74 independent-sample gaps with zero
+    # article or independent evidence ever captured).
+    bundle['samples'] = {}
+    bundle['access_limited'] = []
+
+    def sample(key, url, purpose, **extra):
+        if not url:
+            bundle['samples'][key] = 'no_target'
+            return None
+        try:
+            snapshot = _fetch_snapshot(url, purpose, fetcher)
+        except FetchDeferred:
+            raise
+        except FetchFailure as exc:
+            # Kept distinguishable from a plain failure: "the site would not let
+            # us read it" is not "the program could not read it".
+            bundle['samples'][key] = (('access_limited:' + (exc.error_code or exc.outcome))
+                                      if gated_sample(exc) else 'failed: ' + str(exc)[:160])
+            if purpose == 'body' and exc.outcome == 'needs_adapter' and exc.result.html:
+                bundle.setdefault('exploration_pages', []).append(_snapshot(exc.result.html,
+                    exc.result.final_url or url, role='article', outcome=exc.outcome))
+            return None
+        except (ValueError, OSError) as exc:
+            bundle['samples'][key] = 'failed: ' + str(exc)[:160]
+            return None
+        bundle['samples'][key] = 'obtained'
+        snapshot.update(extra)
+        return snapshot
+
+    # A single unreachable sample must not cancel the others, so the page-level
+    # problems are the only preconditions: they mean the address is not a
+    # publication column at all, where sampling entries would be meaningless.
+    if not _page_problem_errors(errors):
+        # Fewer than three bodies is enough to confirm an article list, but a
+        # gated entry proves nothing either way, so the sample extends to the
+        # ceiling while the site keeps refusing — and stops at the first body it
+        # can read. A column whose entries are all gated still ends up with no
+        # article evidence at all, which validation refuses.
+        for index, record in enumerate(records[:ARTICLE_SAMPLE_LIMIT]):
+            article = sample('article:' + record['url'], record['url'], 'body',
+                             listed_title=record['title'], listed_url=record['url'])
+            if article:
+                bundle['articles'].append(article)
+            if bundle['articles'] and index + 1 >= ARTICLE_SAMPLE_TARGET:
+                break
+        bundle['access_limited'] = [key.split(':', 1)[1] for key, value in bundle['samples'].items()
+                                    if key.startswith('article:') and str(value).startswith('access_limited:')]
         from backend.scraper.engine import _next_page_url
         next_url = _next_page_url(read_snapshot(first), first['url'], 1)
         if next_url:
-            bundle['pagination'] = _fetch_snapshot(next_url, 'list', fetcher)
-            bundle['pagination']['observed_url'] = next_url
-        bundle['independent'] = _fetch_snapshot(config['list_url'], 'independent_list', fetcher)
+            bundle['pagination'] = sample('pagination', next_url, 'list', observed_url=next_url)
+        # The independent read is required precisely when the first pass is
+        # unclear, so it is never conditional on the list being clean.
+        bundle['independent'] = sample('independent', config['list_url'], 'independent_list')
+        if (config['group_name'] in ('', school_name) and canonical_url(config['list_url']) != canonical_url(root_url)
+                and not any(canonical_url(ref['url']) == canonical_url(root_url) for ref in bundle['publisher_material'].values())):
+            home = sample('school_home', root_url, 'directory')
+            if home:
+                bundle['publisher_material']['school_home'] = home
     return CapturedEvidence(bundle)
 
 
 def propose_source(school_id, candidate, evidence=None, *, department_id=None, origin='discovery', expected_config=None, commit=True):
+    # Evidence carries the config it was captured against, including a column name
+    # read from the page. Preferring it keeps the evidence hash and the proposal
+    # in agreement instead of demanding the caller re-derive the same correction.
+    if evidence is not None and isinstance(evidence, CapturedEvidence) and evidence.bundle.get('config'):
+        candidate = evidence.bundle['config']
     config = _candidate(candidate, allow_missing_list=origin == 'submitted_entry')
     department = db.session.get(Department, department_id) if department_id else None
     if department_id and (not department or department.school_id != school_id):
@@ -320,6 +537,9 @@ def _identity_errors(proposal, config, bundle):
         if any(_hash(read_snapshot(snapshots[ref['url']])) != ref.get('content_hash') for ref in refs):
             continue
         owners.add(path.get('unit_name'))
+    from backend.services.source_workflow import publisher_proven, school_publisher_proven
+    if publisher_proven(bundle, config) or school_publisher_proven(bundle, config):
+        return []
     if owners:
         return [] if len(owners) == 1 and group in owners else ['publisher_conflict']
     # A selector copied from YAML/import/legacy data is not ownership evidence.
@@ -352,38 +572,78 @@ def validate_proposal(proposal_id, *, independent_evidence=None):
         if not isinstance(independent_evidence, CapturedEvidence):
             raise ValueError('复测证据必须来自服务器')
         bundle = independent_evidence.bundle
+        # Fresh evidence may carry a column name read from the page for a
+        # candidate that never had one. Adopt it before the agreement check, so
+        # the proposal and its evidence describe the same config. A real name is
+        # never silently replaced: that stays a mismatch and is refused below.
+        captured = bundle.get('config')
+        if (captured and _hash(captured) == bundle.get('config_hash')
+                and unverified_column_name(config['name'])):
+            previous_name = config['name']
+            config = _candidate(captured)
+            proposal.candidate_json = _json(config)
+            db.session.add(SourceReviewEvent(proposal_id=proposal.id, action='column_named_from_page',
+                detail_json=_json({'previous_name': previous_name, 'observed_name': config['name'],
+                                   'region': bundle.get('region', {}), 'list_url': config['list_url']})))
         if bundle.get('config_hash') != _hash(config) or bundle.get('school_id') != proposal.school_id:
             raise ValueError('复测证据不属于此配置')
         proposal.evidence_json, proposal.evidence_hash = _json(bundle), _hash(bundle)
-    errors, records = [], []
+    errors, records, limitations = [], [], []
     if not bundle or not bundle.get('list'):
         errors.append('evidence_missing')
     else:
         try:
             if _hash(bundle) != proposal.evidence_hash or bundle.get('config_hash') != _hash(config):
                 raise ValueError('evidence_changed')
-            records, errors, region = _column_scope(config, bundle['list'])
+            records, errors, region = _column_scope(config, bundle['list'], bundle.get('scope_evidence'))
             errors += _identity_errors(proposal, config, bundle)
             independent = bundle.get('independent')
             if not independent:
                 errors.append('independent_sample_missing')
             else:
-                _, independent_errors, _ = _column_scope(config, independent)
+                _, independent_errors, _ = _column_scope(config, independent, bundle.get('scope_evidence'))
                 errors += ['independent_' + e for e in independent_errors]
-            required = {record['url']: record for record in records[:3]}
+            # Entries the capture actually tried to read, so a gated entry is
+            # judged as gated rather than reported as a missing sample.
+            sampled = {key[len('article:'):]: value
+                       for key, value in (bundle.get('samples') or {}).items() if key.startswith('article:')}
             articles = {ref.get('listed_url'): ref for ref in bundle.get('articles', [])}
-            for url, record in required.items():
+            if not sampled and records:
+                # Capture never sampled (the address is not a column at all);
+                # the entries stay required and unconfirmed, exactly as before.
+                sampled = {record['url']: 'unsampled' for record in records[:ARTICLE_SAMPLE_TARGET]}
+            conclusive = 0
+            for url, outcome in sorted(sampled.items()):
                 ref = articles.get(url)
                 if not ref:
-                    errors.append('article_sample_missing')
+                    if str(outcome).startswith('access_limited:'):
+                        limitations.append(outcome + ':' + url)
+                    else:
+                        errors.append('article_sample_missing')
                     continue
+                conclusive += 1
+                record = next((item for item in records if item['url'] == url), {'title': ''})
                 soup = BeautifulSoup(read_snapshot(ref), 'lxml')
                 visible = _normal(soup.get_text(' ', strip=True))
                 title = _normal(record['title'])
                 if ref.get('outcome') != 'usable' or title[:min(len(title), 20)] not in visible:
                     errors.append('article_identity_mismatch')
-                if len(visible) < len(title) + 15:
+                body = soup.select(config['content_selector']) if config.get('content_selector') else [soup]
+                body_text = _normal(' '.join(node.get_text(' ', strip=True) for node in body))
+                if len(body_text) < 15 or len(visible) < len(title) + 15:
                     errors.append('article_body_missing')
+            if sampled and not conclusive:
+                # Nothing here could be confirmed as an article of this column.
+                # That is what the missing-sample check exists for, so a list
+                # whose every entry is unreadable is still refused. The refusal
+                # stands either way; only the reason changes when the site's own
+                # sign-in requirement is what made every entry unreadable.
+                # "缺少正文样本，请重新检查" would send the reader to re-check a
+                # column that is simply not public, and no re-check can help.
+                gated = [str(value) for value in sampled.values()
+                         if str(value).startswith('access_limited:')]
+                errors.append('source_login_required'
+                              if gated and len(gated) == len(sampled) else 'article_sample_missing')
             from backend.scraper.engine import _next_page_url
             next_url = _next_page_url(read_snapshot(bundle['list']), bundle['list']['url'], 1)
             if next_url:
@@ -391,15 +651,18 @@ def validate_proposal(proposal_id, *, independent_evidence=None):
                 if not pagination or canonical_url(pagination.get('observed_url', '')) != canonical_url(next_url):
                     errors.append('pagination_sample_missing')
                 else:
-                    next_records, next_errors, _ = _column_scope(config, pagination)
+                    next_records, next_errors, _ = _column_scope(config, pagination, bundle.get('scope_evidence'))
                     errors += ['pagination_' + e for e in next_errors]
                     if next_records and {r['url'] for r in next_records} == {r['url'] for r in records}:
                         errors.append('pagination_repeats_first_page')
         except (ValueError, OSError) as exc:
             errors.append(str(exc)[:160])
     errors = sorted(set(errors))
+    limitations = sorted(set(limitations))
+    # A column whose entries are partly gated still installs; the gate is reported
+    # alongside the result so the review shows what the site would not hand over.
     result = {'passed': not errors, 'errors': errors, 'item_count': len(records),
-              'samples': records[:3], 'validator_version': VERSION}
+              'samples': records[:3], 'limitations': limitations, 'validator_version': VERSION}
     proposal.validation_json = _json(result)
     proposal.validator_version = VERSION
     proposal.validated_hash = _hash([proposal.candidate_json, proposal.evidence_hash, VERSION]) if not errors else None
@@ -458,6 +721,8 @@ def activate_proposal(proposal_id):
     db.session.add(SourceConfigVersion(department_id=department.id, proposal_id=proposal.id,
         version=latest + 1, config_json=_json(config), config_hash=_hash(config), previous_json=_json(previous)))
     proposal.department_id, proposal.state = department.id, 'activated'
+    from backend.services.directory_work import resolve_column_material
+    resolve_column_material(proposal)
     # Submission is a pending intent, never an early subscription to a guessed
     # source. Only still-subscribed users receive the now-validated column.
     from backend.database.models import Subscription
@@ -466,6 +731,11 @@ def activate_proposal(proposal_id):
         if sub and sub.department_ids is not None:
             sub.department_ids = sorted(set(sub.department_ids + [department.id]))
     db.session.add(SourceReviewEvent(proposal_id=proposal.id, action='activate', detail_json=_json({'version': latest + 1})))
+    if Subscription.query.filter_by(school_id=proposal.school_id).first():
+        collection = tasks.enqueue('collect', department.id, {'school_id': proposal.school_id, 'department_id': department.id},
+                                   replace_finished=False, commit=False)
+        if collection.state == 'pending' and collection.claim_count == 0:
+            collection.phase = 'onboarding_collection'
     # Re-check immediately before committing all source/version/result changes.
     tasks.assert_owned()
     db.session.commit()
@@ -499,10 +769,11 @@ def review_proposal(proposal_id, action, actor_id, note=''):
 
 
 def serialize_proposal(proposal):
+    from backend.services.source_workflow import workflow
     return {'id': proposal.id, 'school_id': proposal.school_id, 'department_id': proposal.department_id,
             'state': proposal.state, 'origin': proposal.origin, 'candidate': json.loads(proposal.candidate_json),
             'validation': json.loads(proposal.validation_json), 'revision': proposal.revision,
-            'updated_at': proposal.updated_at.isoformat()}
+            'updated_at': proposal.updated_at.isoformat(), 'workflow': workflow(proposal)}
 
 
 def record_onboarding_slice(school_id, report, *, error=''):
@@ -525,7 +796,9 @@ def record_onboarding_slice(school_id, report, *, error=''):
             scopes[key] = {'key': key, 'name': item['name'], 'url': item.get('url', ''),
                            'state': 'not_checked', 'reference_url': item.get('reference_url', ''),
                            'reference_hash': item.get('content_hash', ''), 'priority_scopes': {}}
-        elif key and scopes[key].get('reference_hash') and item.get('content_hash') != scopes[key]['reference_hash']:
+        elif (key and scopes[key].get('reference_hash') and
+              item.get('reference_url') == scopes[key].get('reference_url') and
+              item.get('content_hash') != scopes[key]['reference_hash']):
             scopes[key]['state'] = 'needs_review'
             scopes[key]['reference_changed'] = True
     row.scope_json = _json(list(scopes.values()))
@@ -544,6 +817,8 @@ def record_onboarding_slice(school_id, report, *, error=''):
     row.checkpoint_json = _json(checkpoint)
     row.next_check_at = datetime.utcnow() + timedelta(days=7 if (db.session.get(School, school_id).subscriber_count or 0) else 30)
     db.session.commit()
+    from backend.services.directory_work import sync_inventory
+    sync_inventory(school_id, report)
     evaluate_school_readiness(school_id)
     return school_governance_status(school_id)
 
@@ -793,9 +1068,15 @@ def propose_detected_source(department, config, html, *, origin='repair'):
 
 
 def source_skill_suggestions(school_id, evidence_bundle, execution_id, expected_version=None):
-    from backend.ai.runtime import run_skill
-    result = run_skill(skill_id='university-source-onboarding', mode='extraction',
-        evidence=evidence_bundle, purpose='directory', execution_id=execution_id, expected_version=expected_version)
+    from backend.database.models import BackgroundTask
+    from backend.ai.configuration import get_model_binding, AIConfigError
+    from backend.services.directory_work import run_material
+    binding = get_model_binding('directory')
+    if expected_version is not None and str(binding['version']) != str(expected_version):
+        raise AIConfigError('模型配置版本已变更', 'configuration_changed')
+    parent = BackgroundTask.query.filter_by(identity=f'discover:{school_id}').first()
+    result = run_material(school_id, parent.generation if parent else 1, execution_id,
+        'extraction', evidence_bundle, binding)
     created = []
     if result.get('status') == 'succeeded':
         for item in (result.get('output') or {}).get('proposals', []):
@@ -859,6 +1140,13 @@ def process_discovered_candidates(school_id, inventory, key, *, limit=5):
         proposal = known_proposal or propose_source(school_id, config,
             origin='submitted_entry' if not config['list_selector'] else 'discovery')
         result['proposal_ids'].append(proposal.id)
+        from backend.services import tasks
+        if tasks.current_execution():
+            # Discovered columns are independent queue work, not blocked by the
+            # rest of a long university crawl or another column's AI exploration.
+            tasks.enqueue('source_review', proposal.id, {'proposal_id': proposal.id},
+                          capability='directory', replace_finished=False)
+            continue
         try:
             if proposal.state == 'validated':
                 department = activate_proposal(proposal.id)
@@ -894,7 +1182,8 @@ def verify_source_proposal(proposal_id, *, fetcher=None, inventory=None):
         return serialize_proposal(proposal) if proposal else None
     config = json.loads(proposal.candidate_json)
     evidence = capture_source_evidence(proposal.school_id, config, department_id=proposal.department_id,
-                                      inventory=inventory, fetcher=fetcher)
+                                      inventory=inventory, fetcher=fetcher,
+                                      scope_evidence=json.loads(proposal.evidence_json).get('scope_evidence'))
     validation = validate_proposal(proposal.id, independent_evidence=evidence)
     if not validation['passed']:
         skill = run_source_skill_for_proposal(proposal.id, inventory=inventory)
@@ -906,109 +1195,8 @@ def verify_source_proposal(proposal_id, *, fetcher=None, inventory=None):
 
 
 def run_source_skill_for_proposal(proposal_id, *, inventory=None):
-    """At most a draft and one revision; model results still face the same gate."""
-    from backend.ai.configuration import get_model_binding, AIConfigError
-    from backend.ai.runtime import run_skill
-    proposal = db.session.get(SourceProposal, proposal_id)
-    if not proposal or proposal.state in ('activated', 'rejected', 'superseded'):
-        return {'status': 'skipped', 'changed': False}
-    bundle = json.loads(proposal.evidence_json)
-    if not bundle.get('list'):
-        return {'status': 'missing_evidence', 'changed': False}
-    from backend.services.source_review_recovery import page_problem
-    if page_problem(read_snapshot(bundle['list'])):
-        return {'status': 'not_a_public_column', 'changed': False}
-    try:
-        binding = get_model_binding('directory')
-    except AIConfigError:
-        return {'status': 'not_configured', 'changed': False}
-    # Reserve the proposal briefly even outside the normal directory-worker
-    # lease. Two invocations cannot each spend a fresh draft/revision allowance.
-    db.session.execute(db.update(SourceProposal).where(SourceProposal.id == proposal.id)
-                       .values(updated_at=datetime.utcnow()))
-    db.session.refresh(proposal)
-    bundle = json.loads(proposal.evidence_json)
-    attempt_events = SourceReviewEvent.query.filter_by(proposal_id=proposal.id, action='skill_attempt').all()
-    resume_event = next((event for event in attempt_events if json.loads(event.detail_json).get('status') is None), None)
-    if any(json.loads(event.detail_json).get('status') in ('pending', 'uncertain') for event in attempt_events):
-        db.session.commit()
-        return {'status': 'result_pending_review', 'changed': False}
-    attempts = len(attempt_events)
-    if attempts >= 2 and resume_event is None:
-        db.session.commit()
-        return {'status': 'review_required', 'changed': False}
-    config = json.loads(proposal.candidate_json)
-    html = read_snapshot(bundle['list'])
-    soup = BeautifulSoup(html, 'lxml')
-    for tag in soup.select('script,style,iframe'):
-        tag.decompose()
-    observed = {bundle['list']['url'], config['list_url']}
-    for anchor in soup.select('a[href]'):
-        target = canonical_url(urljoin(bundle['list']['url'], anchor.get('href', '')))
-        if target:
-            observed.add(target)
-    candidate_id = 'source-' + str(proposal.id)
-    references = [{'evidence_id': 'list', 'url': bundle['list']['url'], 'html': str(soup)[:160000],
-                   'scope': 'available DOM excerpt; all proposed selectors require full-page verification'}]
-    entities = []
-    for path in bundle.get('identity_paths', []):
-        entities.append({'id': path['unit_key'], 'name': path['unit_name']})
-        references.append({'evidence_id': 'identity-' + str(len(references)), 'paths': path})
-    evidence = {'school_id': proposal.school_id, 'candidates': [{'candidate_id': candidate_id, 'config': config,
-                'validation': json.loads(proposal.validation_json)}], 'entities': entities,
-                'evidence': references, 'observed_urls': sorted(observed)}
-    execution_id = (json.loads(resume_event.detail_json)['execution_id'] if resume_event else
-                    'source:' + str(proposal.id) + ':' + str(attempts) + ':' + proposal.evidence_hash[:20])
-    expected_hash = proposal.expected_config_hash
-    expected_revision = proposal.revision
-    event = resume_event or SourceReviewEvent(proposal_id=proposal.id, action='skill_attempt',
-                   detail_json=_json({'execution_id': execution_id, 'attempt': attempts + 1,
-                                      'revision': proposal.revision, 'evidence_hash': proposal.evidence_hash}))
-    if resume_event:
-        detail = json.loads(resume_event.detail_json)
-        if detail.get('revision') != proposal.revision or detail.get('evidence_hash') != proposal.evidence_hash:
-            db.session.commit()
-            return {'status': 'stale', 'changed': False}
-        attempts = detail['attempt'] - 1
-    db.session.add(event)
-    db.session.commit()
-    event_id = event.id
-    result = run_skill('university-source-onboarding', 'extraction', evidence, 'directory', execution_id,
-                       expected_version=binding['version'], binding=binding)
-    event = db.session.get(SourceReviewEvent, event_id)
-    detail = json.loads(event.detail_json)
-    detail['status'] = result.get('status')
-    event.detail_json = _json(detail)
-    db.session.commit()
-    if result.get('status') != 'succeeded':
-        return {'status': result.get('status', 'failed'), 'changed': False}
-    from backend.services import tasks
-    tasks.assert_owned()
-    db.session.refresh(proposal)
-    if proposal.expected_config_hash != expected_hash or proposal.revision != expected_revision:
-        return {'status': 'stale', 'changed': False}
-    suggestion = (result.get('output') or {}).get('proposals', [{}])[0]
-    if suggestion.get('decision') != 'propose':
-        return {'status': 'review_required', 'changed': False}
-    new_config = _candidate(suggestion['config'])
-    # The runtime also checks observed URLs; this extra source check binds the
-    # output to the one proposal being repaired, not an arbitrary other widget.
-    if new_config['list_url'] not in observed or suggestion.get('candidate_id') != candidate_id:
-        return {'status': 'invalid_reference', 'changed': False}
-    proposal.candidate_json = _json(new_config)
-    proposal.revision += 1
-    proposal.validated_hash = None
-    proposal.state = 'proposed'
-    db.session.add(SourceReviewEvent(proposal_id=proposal.id, action='skill_suggestion',
-        detail_json=_json({'provenance': result.get('provenance', {}), 'previous': config})))
-    db.session.commit()
-    captured = capture_source_evidence(proposal.school_id, new_config, department_id=proposal.department_id, inventory=inventory)
-    validation = validate_proposal(proposal.id, independent_evidence=captured)
-    # One bounded revision may use the failed check as input. No retry occurs
-    # after a supplier result-unknown status or a proposed config being rejected.
-    if not validation['passed'] and attempts == 0:
-        return run_source_skill_for_proposal(proposal.id, inventory=inventory)
-    return {'status': 'validated' if validation['passed'] else 'review_required', 'changed': True}
+    from backend.services.source_exploration import run
+    return run(proposal_id, inventory=inventory)
 
 
 def queue_source_review(school_id, candidate, *, department_id=None, requested_by=None, subscribe=False):
@@ -1036,20 +1224,36 @@ def queue_source_review(school_id, candidate, *, department_id=None, requested_b
 
 
 def process_source_review(payload):
-    """Shared queue handler, including selector-free public submissions."""
-    from backend.scraper.acquisition import FetchFailure
+    """Distinguish supplier access limits from program faults without losing history."""
+    from backend.scraper.acquisition import FetchFailure, FetchDeferred
+    from backend.services.source_exploration import save_event
     try:
         return _process_source_review(payload)
+    except FetchDeferred:
+        raise
     except FetchFailure as exc:
         db.session.rollback()
         proposal = db.session.get(SourceProposal, payload['proposal_id'])
         if not proposal:
             return {'state': 'missing'}
         proposal.state = 'needs_review'
-        proposal.validation_json = _json({'passed': False, 'errors': [str(exc)[:300]], 'validator_version': VERSION})
+        failure = {'status': 'recognition_incomplete' if exc.outcome == 'needs_adapter' else 'site_unavailable', 'outcome': exc.outcome,
+                   'error_code': exc.error_code, 'reason': str(exc)[:400]}
+        proposal.validation_json = _json({'passed': False, 'errors': [str(exc)[:300]],
+            'workflow': failure, 'validator_version': VERSION})
         proposal.validator_version = VERSION
-        db.session.commit()
+        save_event(proposal.id, 'fetch_failed', failure)
         return serialize_proposal(proposal)
+    except (ValueError, TypeError, KeyError, OSError, RuntimeError) as exc:
+        db.session.rollback()
+        proposal = db.session.get(SourceProposal, payload['proposal_id'])
+        if proposal:
+            validation = json.loads(proposal.validation_json)
+            validation.update(passed=False, workflow={'status': 'program_error',
+                'reason': str(exc)[:400], 'exception': type(exc).__name__})
+            proposal.validation_json = _json(validation)
+            save_event(proposal.id, 'program_failed', validation['workflow'])
+        raise
 
 
 def recover_source_reviews():
@@ -1066,13 +1270,55 @@ def _process_source_review(payload):
     from backend.services.runtime_catalog import RuntimeCatalog
     from backend.services.source_review_recovery import cached_page, resolve_non_column, page_problem
     catalog = RuntimeCatalog(current_app.config.get('SOURCE_CATALOG_PATH'))
+    from backend.services.source_exploration import STEP_ACTION
+    saved_material = json.loads(proposal.evidence_json)
+    steps = SourceReviewEvent.query.filter_by(proposal_id=proposal.id, action=STEP_ACTION).all()
+    pending_config = any((lambda step: step.get('config_applied') and not step.get('applied')
+                         and step.get('revision') == proposal.revision)(json.loads(event.detail_json)) for event in steps)
+    prior_validation = json.loads(proposal.validation_json)
+    prior_plan = next((json.loads(event.detail_json) for event in reversed(steps)
+        if (json.loads(event.detail_json).get('result') or {}).get('status') == 'succeeded'
+        and ((json.loads(event.detail_json)['result'].get('output') or {}).get('proposals') or [{}])[0].get('decision') == 'propose'), None)
+    if not pending_config and prior_plan and prior_validation.get('validator_version') not in (None, VERSION):
+        suggestion = prior_plan['result']['output']['proposals'][0]
+        history = SourceReviewEvent.query.filter_by(proposal_id=proposal.id, action='revalidate_after_upgrade').all()
+        record = next((event for event in history if json.loads(event.detail_json).get('validator_version') == VERSION), None)
+        if _candidate(suggestion['config']) == config and (not record or json.loads(record.detail_json).get('status') == 'pending'):
+            from backend.services.source_exploration import save_event
+            if not record:
+                record = save_event(proposal.id, 'revalidate_after_upgrade', {'validator_version': VERSION,
+                    'status': 'pending', 'previous_validation': prior_validation, 'execution_id': prior_plan.get('execution_id')})
+            # Old versions could label a homepage snapshot as a newly selected
+            # list during a browser handoff. Recapture this existing AI plan with
+            # real URL provenance; do not repay the model or trust the bad sample.
+            captured = capture_source_evidence(proposal.school_id, config, department_id=proposal.department_id,
+                inventory=catalog, scope_evidence=suggestion.get('scope_evidence'),
+                publisher_material=saved_material.get('publisher_material'))
+            captured.bundle['exploration_pages'] = saved_material.get('exploration_pages', []) + captured.bundle.get('exploration_pages', [])
+            if suggestion.get('publisher_evidence'):
+                captured.bundle['publisher_evidence'] = suggestion['publisher_evidence']
+            result = validate_proposal(proposal.id, independent_evidence=captured)
+            detail = json.loads(record.detail_json); detail.update(status='complete', validation=result)
+            record.detail_json = _json(detail); db.session.commit()
+            if not result['passed']:
+                run_source_skill_for_proposal(proposal.id, inventory=catalog)
+            if json.loads(proposal.validation_json).get('passed'):
+                activate_proposal(proposal.id)
+            return serialize_proposal(proposal)
+    if saved_material.get('list') and steps and (saved_material.get('config_hash') == _hash(config) or pending_config):
+        run_source_skill_for_proposal(proposal.id, inventory=catalog)
+        if json.loads(proposal.validation_json).get('passed'):
+            activate_proposal(proposal.id)
+        return serialize_proposal(proposal)
     cached = cached_page(proposal, catalog)
     if cached and page_problem(cached) in ('article_instead_of_column', 'search_instead_of_column') and resolve_non_column(proposal, cached):
         return serialize_proposal(proposal)
     if not config.get('list_selector'):
         url = config['list_url']
         db.session.commit()
-        seed = _fetch(url, 'list')
+        # An unconfigured entrance may be a directory or unfamiliar list. Let
+        # AI see readable DOM even when the heuristic list detector has no rule.
+        seed = _exploration_html(url)
         if resolve_non_column(proposal, seed):
             return serialize_proposal(proposal)
         from backend.scraper.discovery.publication_lists import publication_lists
@@ -1119,8 +1365,33 @@ def _process_source_review(payload):
                 proposal.revision += 1
                 proposal.validated_hash = None
                 db.session.commit()
+    # With an API configured, let AI inspect the observed list before executing
+    # a heuristic body selector. Otherwise one guessed CMS rule can spend minutes
+    # rendering several articles before the model ever sees the first page.
+    from backend.ai.configuration import get_model_binding, AIConfigError
+    try:
+        get_model_binding('directory')
+        ai_available = True
+    except AIConfigError:
+        ai_available = False
+    if ai_available:
+        seed = seed or cached or _exploration_html(config['list_url'])
+        school = db.session.get(School, proposal.school_id)
+        bundle = {'schema': 1, 'school_id': school.id, 'school_name': school.name, 'root_url': school.url,
+                  'config_hash': _hash(config), 'expected_config': source_config(
+                      db.session.get(Department, proposal.department_id)) if proposal.department_id else {},
+                  'list': _snapshot(seed, getattr(seed, 'final_url', config['list_url'])),
+                  'articles': [], 'identity_paths': [], 'identity_snapshots': []}
+        proposal.evidence_json, proposal.evidence_hash = _json(bundle), _hash(bundle)
+        proposal.validation_json = _json({'passed': False, 'errors': [], 'validator_version': VERSION})
+        db.session.commit()
+        run_source_skill_for_proposal(proposal.id, inventory=catalog)
+        if json.loads(proposal.validation_json).get('passed'):
+            activate_proposal(proposal.id)
+        return serialize_proposal(proposal)
     evidence = capture_source_evidence(proposal.school_id, config, department_id=proposal.department_id,
-                                      seed_html=seed, inventory=catalog)
+                                      seed_html=seed, inventory=catalog,
+                                      scope_evidence=json.loads(proposal.evidence_json).get('scope_evidence'))
     validation = validate_proposal(proposal.id, independent_evidence=evidence)
     if not validation['passed']:
         skill = run_source_skill_for_proposal(proposal.id, inventory=catalog)

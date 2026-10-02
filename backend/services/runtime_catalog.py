@@ -251,7 +251,7 @@ class RuntimeCatalog:
                         check.update(scope_passed=False, reference_current=False, status='reference_changed')
                 report['reference_checks'] = list(checks.values())
                 report['accepted'] = False
-        relationships = SourceRelationships(report, records)
+        relationships = SourceRelationships(report, records, directory_navigation=True)
         # Discovery spends its budget on student priorities; publishing retains
         # all observed columns so news/research/administration remain selectable.
         from backend.services.student_sources import display_priority

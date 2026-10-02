@@ -21,11 +21,13 @@ def fetch_page(url, *, purpose='directory', source_id='', readiness_selector='')
     from backend.scraper.acquisition import FetchRequest, fetch
     result = fetch(FetchRequest(url=url, purpose=purpose, source_id=str(source_id),
                    readiness_selector=readiness_selector,
+                   policy={'exploration': True},
                    browser_allowed=os.environ.get('WATCHER_BROWSER', '1') != '0'))
     notes = list(result.evidence)
     network = next(({'public_ip': note.split(':', 1)[1]} for note in notes
                     if isinstance(note, str) and note.startswith('public_dns_ipv4:')), None)
-    return {'url': result.final_url, 'status': result.status, 'html': result.html if result.ok else '',
+    return {'url': result.final_url, 'status': result.status,
+            'html': result.html if result.ok or result.outcome == 'needs_adapter' else '',
             'error': result.message or result.error_code, 'outcome': result.outcome,
             'result': result, 'transport': result.transport, 'network': network, 'network_notes': notes}
 
@@ -33,6 +35,13 @@ def fetch_page(url, *, purpose='directory', source_id='', readiness_selector='')
 def inspect_page(inventory, site, page, fetcher=fetch_page):
     key, url = site['site_key'], page['url']
     assert_current_parser()
+    from .structure import document_reference, directory_document
+    if page['kind'] != 'root' and document_reference(url, page['label']):
+        is_roster = directory_document(page['label'], page['kind'])
+        note = 'directory_document_requires_adapter' if is_roster else 'document_reference_only'
+        inventory.finish(key, url, state='blocked' if is_roster else 'reference_only',
+            error=note if is_roster else None, notes_json=json.dumps([note]))
+        return
     try:
         response = fetcher(url)
         assert_current_parser()
@@ -63,8 +72,6 @@ def inspect_page(inventory, site, page, fetcher=fetch_page):
             return
         parsed = extract_structure(html, final, site['root_url'], page['kind'], page['label'],
                                    json.loads(page['path_json']))
-        from .ai_navigation import assist_navigation
-        assist_navigation(site, dict(page, url=final), html, parsed)
         if parsed.get('branding_candidates'):
             from backend.services.source_ownership import BRANDING_PREFIX
             parsed['notes'].append(BRANDING_PREFIX + json.dumps({
@@ -130,20 +137,40 @@ def inspect_page(inventory, site, page, fetcher=fetch_page):
             parsed['notes'].append('publication_dates_incomplete')
         if page['kind'] == 'channel' and not feed:
             parsed['notes'].append('publication_list_requires_adapter')
+        from flask import has_app_context
+        snapshot_ref = None
+        if has_app_context():
+            from backend.services.source_governance import _snapshot
+            snapshot_ref = _snapshot(html, final, role='structure')
+            parsed['notes'].append('full_snapshot:' + json.dumps(snapshot_ref, ensure_ascii=False))
         inventory.finish(key, url, html=html, fetched_at=response.get('checked_at'),
                          state='fetched', status_code=response.get('status'),
                          final_url=final, title=parsed['title'], error=None,
                          health=health, latest_publication=latest, parser_revision=PARSER_REVISION,
                          feed_json=json.dumps(feed, ensure_ascii=False) if feed else None,
                          notes_json=json.dumps(parsed['notes'], ensure_ascii=False))
+        # Known navigation is already executable. AI only handles a missing
+        # structural route; column extraction has its own narrow page contract.
+        routes = [link for link in parsed['links'] if link['decision'] in ('follow', 'official_external_link')]
+        needed = ({'directory', 'unit'} if page['kind'] in ('root', 'directory') else {'channel'})
+        if page['kind'] in ('root', 'directory', 'unit') and not any(link['kind'] in needed for link in routes) and not (page['kind'] == 'unit' and feed):
+            from .ai_navigation import queue_navigation
+            queue_navigation(site, dict(page, url=final, snapshot_url=url, snapshot_ref=snapshot_ref))
     except ParserRevisionChanged:
         raise
     except ValueError as exc:
         inventory.finish(key, url, state='blocked', health='unreachable', error=str(exc)[:800])
     except Exception as exc:
         from backend.scraper.acquisition import FetchFailure
-        if isinstance(exc, FetchFailure) and exc.outcome == 'needs_manual':
+        # Storage, schema and parser exceptions are program failures. Never
+        # overwrite a fetched school's page with a fabricated "unreachable".
+        if not isinstance(exc, FetchFailure) or exc.outcome == 'needs_manual' and page['kind'] == 'root':
             raise
+        if exc.outcome == 'needs_manual':
+            inventory.finish(key, url, state='blocked', health='dynamic_content',
+                status_code=exc.result.status, final_url=exc.result.final_url,
+                error='access_verification_required', notes_json=json.dumps(['access_verification_required']))
+            return
         inventory.finish(key, url, state='failed', health='unreachable',
                          error=f'{type(exc).__name__}: {str(exc)[:700]}')
 

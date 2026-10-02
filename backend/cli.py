@@ -4,19 +4,6 @@ import click
 
 
 def register_cli(app):
-    @app.cli.command('promote-user')
-    @click.argument('username')
-    def promote_user(username):
-        """Grant administrator access to an existing registered account, locally only."""
-        from backend.database.models import User
-        from backend.database.db import db
-        user = User.query.filter_by(username=username).first()
-        if not user:
-            raise click.ClickException('User not found. Register an account first.')
-        user.role = 'admin'
-        db.session.commit()
-        click.echo('Administrator access granted to ' + username)
-
     @app.cli.command('sync-subscriber-counts')
     def sync_subscriber_counts():
         """按 subscriptions 表重算 schools.subscriber_count（缓存漂移兜底）"""

@@ -11,7 +11,7 @@ from sqlalchemy import func
 from backend.auth import admin_required
 from backend.database.db import db
 from backend.database.models import (Announcement, AppConfig, School,
-                                     ScrapeLog, Subscription, User)
+                                     ScrapeLog, Subscription)
 
 bp = Blueprint('admin', __name__)
 
@@ -77,8 +77,6 @@ def api_admin_stats():
         ScrapeLog.started_at >= d7).scalar() or 0
 
     return jsonify({
-        'users': User.query.count(),
-        'admins': User.query.filter_by(role='admin').count(),
         'schools': managed_schools().count(),
         'schools_enabled': managed_schools().filter(School.enabled.is_(True)).count(),
         'schools_active': active_schools_query().count(),
@@ -92,29 +90,7 @@ def api_admin_stats():
         'scrape_new_7d': int(new7),
         'scrape_interval': AppConfig.get('scrape_interval', '30'),
         'scrape_since_month': since_month(),
-        'open_registration': AppConfig.get('open_registration', '1'),
-        'public_read': AppConfig.get('public_read', '1'),
         'recent_logs': [log.to_dict() for log in
                         ScrapeLog.query.filter(ScrapeLog.status.in_(finished_statuses))
                         .order_by(ScrapeLog.started_at.desc(), ScrapeLog.id.desc()).limit(10)],
     })
-
-
-_TOGGLE_KEYS = ('open_registration', 'public_read')
-
-
-@bp.route('/api/admin/toggles', methods=['GET', 'POST'])
-@admin_required
-def api_admin_toggles():
-    """feature 开关：白名单两键，0/1 字符串，保存即生效"""
-    if request.method == 'GET':
-        return jsonify({k: AppConfig.get(k, '1') for k in _TOGGLE_KEYS})
-    data = request.get_json(silent=True) or {}
-    for key, val in data.items():
-        if key not in _TOGGLE_KEYS:
-            return jsonify({'error': f'未知开关: {key}'}), 400
-        if str(val) not in ('0', '1'):
-            return jsonify({'error': '开关值必须为 0 或 1'}), 400
-        AppConfig.set(key, str(val))
-    return jsonify({'success': True,
-                    **{k: AppConfig.get(k, '1') for k in _TOGGLE_KEYS}})

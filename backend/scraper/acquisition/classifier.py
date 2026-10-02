@@ -5,12 +5,25 @@ from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
+from ..auth_routes import LOGIN_REQUIRED_MESSAGE, is_sign_in_route
 from .contracts import FetchRequest, FetchResult
 
 _AUTO_CHALLENGE = ('$_ts', '/cdn-cgi/challenge-platform/', 'cf-chl-',
                    'checking your browser', 'just a moment...', '正在检查您的浏览器')
 _MANUAL_CHALLENGE = ('verify you are human', '请完成安全验证', '请完成下方验证',
                      '请输入验证码', '滑动滑块', '人机身份验证')
+# How a page names itself as an identity provider. Script-rendered login forms
+# ship no password field to detect, so the wording is what identifies the page.
+_IDENTITY_PAGE = re.compile(
+    r'统一身份|统一认证|统一登录|单点登录|身份认证|single\s*sign[-\s]?on|identity\s+provider'
+    r'|usernamepassword|webauthn|\bsso\b', re.I)
+# Where a page must say it to be *naming itself* rather than merely mentioning the
+# provider: its title, or its opening words. A size limit stood here first, and it
+# refused the provider's own page -- the real one carries over 13000 characters of
+# visible text -- so the notice reached the reader as a rule problem instead of an
+# access limit. What separates the provider's page from a page that merely mentions
+# one is that it names itself, not that it is short.
+_IDENTITY_OPENING = 200
 _EMPTY = re.compile(r'^(?:暂无(?:通知|公告|新闻|内容|信息|数据|记录)|没有(?:相关)?(?:通知|公告|记录|数据)|'
                     r'no (?:results|records|notices|data)(?: found)?)[。.!！\s]*$', re.I)
 _DATE = re.compile(r'(?:20\d{2}[-年./]\d{1,2}[-月./]\d{1,2}|\d{1,2}[-/]\d{1,2})')
@@ -30,6 +43,36 @@ def _visible(node):
         if current.has_attr('hidden') or current.get('aria-hidden') == 'true' or 'display:none' in style or 'visibility:hidden' in style:
             return False
     return True
+
+
+def _login_wall(raw, soup, visible, title):
+    """True when we landed on an identity provider instead of the content asked for.
+
+    This is an access limit the site itself imposed, not content the program
+    failed to recognise: the notice exists and is listed publicly, but reading it
+    requires a university account. Every clause is a property of the document
+    itself, and all of them must agree, because a wrong answer here would refuse a
+    column the public can read:
+
+    * the document *is* the sign-in route, carrying a hand-off that names the
+      address to return to -- not merely an address containing an authentication
+      word, since real notice lists sit behind portal hops and real publication
+      paths are named /news/login.html. The same predicates judge the redirect
+      hop in the HTTP client, so both channels agree;
+    * it *names itself* as an identity provider, in its title or its opening
+      words. A password field is not required: this provider renders its form
+      with script and ships none. Self-naming is what separates the provider's
+      own page from the pages that merely mention it -- a real notice page
+      carries a "统一身份认证" link in its header, and a portal homepage carries
+      the words in its navigation. Both are content the public can read.
+    * it carries no readable article region, so this is not content we can read.
+    """
+    if not is_sign_in_route(raw.final_url or ''):
+        return False
+    if not (_IDENTITY_PAGE.search(title) or _IDENTITY_PAGE.search(visible[:_IDENTITY_OPENING])):
+        return False
+    return not any(len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
+                   for node in soup.select(_ARTICLE))
 
 
 def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
@@ -66,6 +109,11 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
                          '官网未返回可读取的网页内容；已有通知仍保留')
     if title in ('access denied', '403 forbidden', 'forbidden', 'error', '访问被拒绝'):
         return _decision(raw, 'denied', 'access_denied_page', '官网拒绝本次访问；已有通知仍保留')
+    # Checked before any content rule: a login page can contain an article-shaped
+    # region or a script shell, and misreading it as unparsed content would send
+    # the user to fix parsers for a page that is simply not public.
+    if _login_wall(raw, soup, visible, title):
+        return _decision(raw, 'denied', 'source_login_required', LOGIN_REQUIRED_MESSAGE)
     fragment = urlsplit(request.url).fragment
     if raw.transport != 'browser' and fragment.startswith(('/', '!/')):
         return _decision(raw, 'requires_render', 'fragment_route',

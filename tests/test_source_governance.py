@@ -15,6 +15,142 @@ from backend.services import source_governance as governance
 
 
 class SourceGovernanceTests(unittest.TestCase):
+    def test_school_column_requires_observed_home_link_and_target_branding(self):
+        from backend.services.source_workflow import school_publisher_proven
+        root = self.school.url
+        target = root + 'notices/'
+        home = governance._snapshot('<a href="/notices/">通知公告</a>', root)
+        body = governance._snapshot('<title>示例大学通知公告</title>' + self.html(), target)
+        bundle = {'root_url': root, 'school_name': self.school.name, 'list': body,
+                  'publisher_material': {'home': home}}
+        config = dict(governance.source_config(self.dept), list_url=target, group_name=self.school.name)
+        self.assertTrue(school_publisher_proven(bundle, config))
+        for different in (root+'unobserved/', 'https://college.example.edu.cn/notices/'):
+            self.assertFalse(school_publisher_proven(bundle, dict(config, list_url=different)))
+        self.assertFalse(school_publisher_proven(bundle, dict(config, group_name='某学院')))
+        bundle['list'] = governance._snapshot(self.html(), target)
+        self.assertFalse(school_publisher_proven(bundle, config))
+
+    def test_ai_declared_scope_executes_without_template_and_checks_independent_read(self):
+        config = governance.source_config(self.dept)
+        html = self.html().replace('<h2>', '<div class="column-label">').replace('</h2>', '</div>')
+        scope = {'container_selector': '#notices', 'heading_selector': '#notices .column-label'}
+        with patch('backend.scraper.discovery.publication_lists.publication_lists', return_value=[]):
+            for bad, expected in ((None, True), ('body', False), ('#nonexistent', False)):
+                proof = scope if bad is None else dict(scope, container_selector=bad)
+                evidence = governance.capture_source_evidence(self.school.id, config, inventory=self.identity,
+                    fetcher=self.fetcher(html), scope_evidence=proof)
+                proposal = governance.propose_source(self.school.id, config, evidence)
+                self.assertEqual(governance.validate_proposal(proposal.id)['passed'], expected)
+            def changed(url, purpose):
+                document = html.replace('通知公告', '新闻动态') if purpose == 'independent_list' else html
+                return self.fetcher(document)(url, purpose)
+            evidence = governance.capture_source_evidence(self.school.id, config, inventory=self.identity,
+                fetcher=changed, scope_evidence=scope)
+            proposal = governance.propose_source(self.school.id, config, evidence)
+            self.assertIn('independent_column_identity_or_scope_unconfirmed', governance.validate_proposal(proposal.id)['errors'])
+
+    def test_explicit_official_publisher_link_can_cross_school_subdomains(self):
+        from backend.services.source_workflow import publisher_proven
+        directory_url = 'https://www.example.edu.cn/departments/'
+        home_url = 'https://college.example.edu.cn/'
+        column = 'https://admission.example.edu.cn/notices/'
+        refs = {
+            'root': governance._snapshot('<a href="/departments/">机构设置</a>', self.school.url),
+            'directory': governance._snapshot(f'<a href="{home_url}">示例学院</a>', directory_url),
+            'home': governance._snapshot(f'<title>示例学院</title><a href="{column}">通知公告</a>', home_url),
+        }
+        bundle = {'root_url': self.school.url, 'publisher_material': refs,
+                  'list': governance._snapshot('<title>示例学院通知公告</title>', column),
+                  'publisher_evidence': {'name': '示例学院', 'directory_evidence_id': 'directory', 'homepage_evidence_id': 'home'}}
+        config = dict(governance.source_config(self.dept), list_url=column)
+        self.assertTrue(publisher_proven(bundle, config))
+        self.assertFalse(publisher_proven(bundle, dict(config, list_url='https://other.example.edu.cn/notices/')))
+        self.assertFalse(publisher_proven(bundle, dict(config, group_name='未经证实的学院')))
+        bundle['list'] = governance._snapshot('<title>研究生院通知公告</title>', column)
+        self.assertFalse(publisher_proven(bundle, config))
+
+    def test_declared_regions_reach_real_acquisition_and_body_validation(self):
+        from backend.scraper.acquisition import FetchResult, FetchFailure
+        requests = []
+        config = dict(governance.source_config(self.dept), content_selector='.publication-copy')
+        def transport(request):
+            requests.append(request)
+            html = self.fetcher(self.html())(request.url, 'body' if request.purpose == 'article' else 'list')
+            html = html.replace('<article>', '<div class="publication-copy">').replace('</article>', '</div>')
+            return FetchResult(request.url, status=200, html=html, outcome='usable')
+        # Only replace HTTP I/O: coordinator, request validation and content
+        # classifier execute the same contract as the packaged application.
+        with patch('backend.scraper.acquisition.coordinator.http_fetch', side_effect=transport):
+            evidence = governance.capture_source_evidence(self.school.id, config, inventory=self.identity)
+            proposal = governance.propose_source(self.school.id, config, evidence)
+            result = governance.validate_proposal(proposal.id)
+            self.assertTrue(result['passed'], result)
+        self.assertEqual({r.readiness_selector for r in requests if r.purpose == 'article'}, {'.publication-copy'})
+        self.assertEqual({r.readiness_selector for r in requests if r.purpose == 'list'}, {'#notices li'})
+        wrong = dict(config, content_selector='.missing-body')
+        evidence = governance.capture_source_evidence(self.school.id, wrong, inventory=self.identity,
+                                                     fetcher=self.fetcher(self.html()))
+        proposal = governance.propose_source(self.school.id, wrong, evidence)
+        self.assertIn('article_body_missing', governance.validate_proposal(proposal.id)['errors'])
+        with patch('backend.scraper.acquisition.coordinator.http_fetch', return_value=FetchResult(
+                'https://id.example.edu.cn/cas/login?service=https://college.example.edu.cn/article/1.htm',
+                status=200, html=self.IDENTITY, outcome='usable')):
+            with self.assertRaises(FetchFailure):
+                governance._fetch('https://college.example.edu.cn/article/1.htm', 'body',
+                                  config=dict(config, content_selector='body'))
+
+    def test_readable_unrecognized_list_reaches_config_validation(self):
+        from backend.scraper.acquisition import FetchResult, FetchFailure
+        def transport(request):
+            html = self.fetcher(self.html())(request.url, 'body' if request.purpose == 'article' else 'list')
+            if request.purpose == 'list':
+                raise FetchFailure(FetchResult(request.url, status=200, html=html,
+                    outcome='needs_adapter', error_code='content_not_recognized'))
+            return FetchResult(request.url, status=200, html=html, outcome='usable')
+        with patch('backend.scraper.acquisition.fetch_or_raise', side_effect=transport):
+            config = governance.source_config(self.dept)
+            captured = governance.capture_source_evidence(self.school.id, config,
+                department_id=self.dept.id, inventory=self.identity)
+            proposal = governance.propose_source(self.school.id, config, captured, department_id=self.dept.id)
+            self.assertTrue(governance.validate_proposal(proposal.id)['passed'])
+            bad = dict(config, list_selector='body', name='无依据的栏目')
+            captured = governance.capture_source_evidence(self.school.id, bad,
+                department_id=self.dept.id, inventory=self.identity)
+            proposal = governance.propose_source(self.school.id, bad, captured, department_id=self.dept.id)
+            self.assertFalse(governance.validate_proposal(proposal.id)['passed'])
+
+    def test_complete_onboarding_through_actual_acquisition_request_contract(self):
+        from backend.scraper.acquisition import FetchResult
+        from backend.database.models import BackgroundTask
+        from backend.worker import dispatch
+        db.session.add(Subscription(school_id=self.school.id, user_id=self.user.id))
+        self.school.subscriber_count = 1
+        db.session.commit()
+        requests = []
+        def transport(request):
+            requests.append(request)
+            html = self.fetcher(self.html())(request.url, 'body' if request.purpose == 'article' else 'list')
+            return FetchResult(request.url, status=200, html=html, outcome='usable')
+        with patch('backend.scraper.acquisition.fetch_or_raise', side_effect=transport):
+            config = governance.source_config(self.dept)
+            evidence = governance.capture_source_evidence(self.school.id, config,
+                department_id=self.dept.id, inventory=self.identity)
+            proposal = governance.propose_source(self.school.id, config, evidence, department_id=self.dept.id)
+            validation = governance.validate_proposal(proposal.id)
+            self.assertTrue(validation['passed'], validation)
+            self.assertEqual(governance.activate_proposal(proposal.id).id, self.dept.id)
+            task = BackgroundTask.query.filter_by(identity=f'collect:{self.dept.id}').one()
+            self.assertEqual(task.payload['school_id'], self.school.id)
+            self.assertEqual(task.phase, 'onboarding_collection')
+            collected = dispatch(task.kind, task.payload)
+            self.assertEqual(collected['new_count'], 3)
+            self.assertEqual(dispatch(task.kind, task.payload)['new_count'], 0)
+            self.assertEqual(dispatch(task.kind, {'department_id': self.dept.id})['new_count'], 0)
+            self.assertEqual(Announcement.query.filter_by(department_id=self.dept.id).count(), 3)
+        self.assertEqual(sum(r.purpose == 'article' for r in requests), 3)
+        self.assertTrue(any(r.policy.get('verification_pass') == 'independent' for r in requests))
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -59,7 +195,7 @@ class SourceGovernanceTests(unittest.TestCase):
             for i in range(count)) + '</ul></section>' + extra
 
     def fetcher(self, html):
-        def fetch(url, purpose):
+        def fetch(url, purpose, **kwargs):
             if purpose == 'body':
                 index = url.rsplit('/', 1)[-1].split('.')[0]
                 return '<article><h1>关于研究生报名事项的通知' + index + '</h1><p>请符合条件的同学认真阅读本通知，并按照学校要求在指定时间提交报名材料。</p></article>'
@@ -82,6 +218,131 @@ class SourceGovernanceTests(unittest.TestCase):
         self.assertEqual(SourceConfigVersion.query.count(), 1)
         self.assertEqual(governance.activate_proposal(proposal.id).id, self.dept.id)
         self.assertEqual(SourceConfigVersion.query.count(), 1)
+
+    def test_unconfirmed_column_still_yields_body_and_independent_evidence(self):
+        """An ambiguous region must gather more evidence, not stop gathering it.
+
+        The preflight finding used to gate every body and independent read, so the
+        one check that could settle an unclear column was permanently starved of
+        the evidence it needed.
+        """
+        config = dict(governance.source_config(self.dept), name='研究生通知')
+        calls = []
+        base = self.fetcher(self.html())
+        def counting(url, purpose):
+            calls.append((url, purpose))
+            return base(url, purpose)
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+            seed_html=self.html(), fetcher=counting, inventory=self.identity)
+        bundle = governance.propose_source(self.school.id, config, evidence,
+            department_id=self.dept.id).evidence_json
+        bundle = json.loads(bundle)
+        self.assertIn('column_identity_or_scope_unconfirmed', bundle['preflight_errors'])
+        self.assertEqual(len(bundle['articles']), 3)
+        self.assertTrue(bundle.get('independent'), bundle.get('samples'))
+        self.assertEqual(bundle['samples']['independent'], 'obtained')
+        # Still bounded: three bodies and one independent read, as when clean.
+        self.assertEqual([purpose for _, purpose in calls].count('body'), 3)
+        self.assertEqual([purpose for _, purpose in calls].count('independent_list'), 1)
+
+    def test_non_column_page_still_costs_only_the_initial_read(self):
+        """The cost guard survives: a page that is not a column is never sampled."""
+        config = governance.source_config(self.dept)
+        article_page = ('<html><body class="single-post"><article class="type-post" id="post-1">'
+                        '<h1><a href="/notices/">2024年秋季学期本科生选课通知</a></h1>'
+                        '<p>' + '请同学们按时完成选课并核对课表。' * 20 + '</p></article></body></html>')
+        calls = []
+        def counting(url, purpose):
+            calls.append((url, purpose))
+            return article_page
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+            seed_html=article_page, fetcher=counting, inventory=self.identity)
+        bundle = json.loads(governance.propose_source(self.school.id, config, evidence,
+            department_id=self.dept.id).evidence_json)
+        self.assertEqual(bundle['preflight_errors'], ['article_instead_of_column'])
+        self.assertEqual(calls, [])
+        self.assertEqual(bundle['articles'], [])
+        self.assertIsNone(bundle.get('independent'))
+
+    def test_a_failed_sample_does_not_cancel_the_others(self):
+        """One unreachable article must not discard the independent proof."""
+        from backend.scraper.acquisition import FetchFailure, FetchResult
+        config = governance.source_config(self.dept)
+        calls = []
+        base = self.fetcher(self.html())
+        def flaky(url, purpose):
+            calls.append((url, purpose))
+            if purpose == 'body':
+                raise FetchFailure(FetchResult(url, status=503, outcome='network_error',
+                                               error_code='http_503', message='官网服务暂时不可用'))
+            return base(url, purpose)
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+            seed_html=self.html(), fetcher=flaky, inventory=self.identity)
+        bundle = json.loads(governance.propose_source(self.school.id, config, evidence,
+            department_id=self.dept.id).evidence_json)
+        self.assertEqual(bundle['articles'], [])
+        self.assertTrue(bundle.get('independent'), bundle.get('samples'))
+        # The failure is recorded per sample instead of escaping as a task crash.
+        self.assertTrue(any(value.startswith('failed:') for value in bundle['samples'].values()),
+                        bundle['samples'])
+
+    def unnamed_candidate(self):
+        # Spelled out rather than imported, so the assertions below still fail for
+        # the behavioural reason on a build that has no notion of the sentinel.
+        return dict(governance.source_config(self.dept), name='栏目名称待核实')
+
+    def test_unnamed_column_adopts_the_official_page_heading(self):
+        """A column discovery could not name is still a real, installable column.
+
+        Discovery marks it 栏目名称待核实; requiring that sentinel to equal the page
+        heading could only ever fail, so 63 real columns were recorded as scope
+        unconfirmed without a single sample ever being read.
+        """
+        config = self.unnamed_candidate()
+        db.session.delete(self.dept); db.session.commit()
+        proposal = governance.propose_source(self.school.id,
+            {field: config[field] for field in governance.FIELDS}, origin='submitted_entry')
+        self.assertEqual(json.loads(proposal.candidate_json)['name'], '栏目名称待核实')
+        with patch('backend.services.runtime_catalog.RuntimeCatalog', return_value=self.identity), \
+                patch.object(governance, '_fetch', side_effect=self.fetcher(self.html())), \
+                patch.object(governance, 'run_source_skill_for_proposal') as ai:
+            result = governance.process_source_review({'proposal_id': proposal.id})
+        self.assertEqual(result['state'], 'activated', result['validation'])
+        self.assertNotIn('column_identity_or_scope_unconfirmed', result['validation']['errors'])
+        self.assertNotIn('article_sample_missing', result['validation']['errors'])
+        # The name comes from the official page, not from the sentinel.
+        self.assertEqual(result['candidate']['name'], '通知公告')
+        self.assertEqual(db.session.get(Department, result['department_id']).name, '通知公告')
+        ai.assert_not_called()
+        # The rename is traceable, with the observed heading as its basis.
+        event = SourceReviewEvent.query.filter_by(proposal_id=proposal.id,
+                                                 action='column_named_from_page').one()
+        detail = json.loads(event.detail_json)
+        self.assertEqual(detail['observed_name'], '通知公告')
+        self.assertEqual(detail['previous_name'], '栏目名称待核实')
+
+    def test_an_action_label_is_never_adopted_as_a_column_name(self):
+        """A "更多" heading is a link caption, not a column identity."""
+        config = self.unnamed_candidate()
+        html = ('<section id="notices"><h2>更多</h2><ul>' + ''.join(
+            f'<li><a href="article/{i}.htm">关于研究生报名事项的通知{i}</a><time>2026-09-24</time></li>'
+            for i in range(3)) + '</ul></section>')
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+            seed_html=html, fetcher=self.fetcher(html), inventory=self.identity)
+        bundle = json.loads(governance.propose_source(self.school.id, config, evidence,
+            department_id=self.dept.id).evidence_json)
+        self.assertEqual(bundle['config']['name'], governance.UNVERIFIED_COLUMN_NAME)
+        self.assertIn('column_identity_or_scope_unconfirmed', bundle['preflight_errors'])
+
+    def test_a_named_candidate_is_never_renamed_by_the_page(self):
+        """Adoption is only for candidates that had no name; a claim is not overwritten."""
+        config = dict(governance.source_config(self.dept), name='研究生通知')
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+            seed_html=self.html(), fetcher=self.fetcher(self.html()), inventory=self.identity)
+        bundle = json.loads(governance.propose_source(self.school.id, config, evidence,
+            department_id=self.dept.id).evidence_json)
+        self.assertEqual(bundle['config']['name'], '研究生通知')
+        self.assertIn('column_identity_or_scope_unconfirmed', bundle['preflight_errors'])
 
     def test_snapshot_preserves_mixed_newlines_and_still_detects_changes(self):
         import gzip
@@ -295,12 +556,12 @@ class SourceGovernanceTests(unittest.TestCase):
         governance.activate_proposal(proposal.id)
         self.assertEqual(SourceConfigVersion.query.count(), 1)
 
-    def test_unknown_ai_result_is_not_automatically_retried(self):
+    def test_unknown_result_is_saved_before_scheduled_retry(self):
         proposal = self.proposal()
         with patch('backend.ai.configuration.get_model_binding', return_value={'version': 'test'}), \
              patch('backend.ai.runtime.run_skill', return_value={'status': 'uncertain'}) as skill:
-            self.assertEqual(governance.run_source_skill_for_proposal(proposal.id)['status'], 'uncertain')
-            self.assertEqual(governance.run_source_skill_for_proposal(proposal.id)['status'], 'result_pending_review')
+            self.assertEqual(governance.run_source_skill_for_proposal(proposal.id)['status'], 'pending')
+            self.assertEqual(governance.run_source_skill_for_proposal(proposal.id)['status'], 'pending')
         skill.assert_called_once()
 
     def test_rollback_requests_new_verification_without_mutating_active_source(self):
@@ -364,7 +625,7 @@ class SourceGovernanceTests(unittest.TestCase):
         with patch('backend.scraper.discovery.inventory_crawler.crawl_site', return_value={
                 'states': {'fetched': 20, 'pending': 7}, 'pages': [], 'reference_checks': []}) as crawl:
             result = adapt_site(self.school.name, self.school.url)
-        self.assertEqual(crawl.call_args.kwargs['max_pages'], 20)
+        self.assertEqual(crawl.call_args.kwargs['max_pages'], 3)
         self.assertEqual(crawl.call_args.kwargs['focus'], 'all')
         self.assertTrue(result['continuation_required'])
         self.assertFalse(result['coverage_verified'])
@@ -437,6 +698,119 @@ class SourceGovernanceTests(unittest.TestCase):
         self.assertEqual(SourceReviewEvent.query.filter_by(proposal_id=queued['proposal_id'], actor_id=self.user.id,
                                                           action='subscribe_on_activation').count(), 1)
         enqueue.assert_not_called(); fetch.assert_not_called()
+
+    IDENTITY = ('<html><head><title>示例大学统一身份认证</title></head><body>'
+                '<div>统一身份认证 UsernamePassword</div></body></html>')
+
+    def refusal(self, url, purpose, *, html=None, landed=None):
+        """What the real chain reports for a page the site will not serve.
+
+        The page is driven through the production path — evidence role, transport
+        purpose, coordinator, classifier — rather than a hand-written
+        ``FetchResult``. A change in how a refusal is reported then shows up here
+        instead of being masked by the test's own copy of the verdict.
+        """
+        from backend.scraper.acquisition import FetchFailure, FetchResult
+        landed = landed or ('https://id.example.edu.cn/cas/login?service=' + url)
+        def transport(request):
+            # The first field is the address the content actually came from.
+            return FetchResult(landed, status=200, html=html or self.IDENTITY, outcome='usable')
+        # Patch the socket, not the verdict: classification still runs for real.
+        with patch('backend.scraper.acquisition.coordinator.http_fetch', side_effect=transport):
+            try:
+                governance._fetch(url, purpose)
+            except FetchFailure as failure:
+                return failure
+        self.fail('the response was not reported as a failure: ' + url)
+
+    def gated(self, base, gated_urls):
+        """A site that serves one set of entries publicly and gates another."""
+        def fetch(url, purpose):
+            if url in gated_urls:
+                raise self.refusal(url, purpose)
+            return base(url, purpose)
+        return fetch
+
+    def test_a_gated_entry_is_a_limit_not_a_missing_sample(self):
+        """A mixed column installs and records what the site withheld.
+
+        Official columns mix public entries with ones only their own members may
+        open. Reading that gate as "not a publication column" kept a real public
+        column from ever being installed, and reported the site's access rule as
+        something the user had to fix.
+        """
+        html = self.html(5)
+        config = governance.source_config(self.dept)
+        withheld = {f'https://college.example.edu.cn/notices/article/{i}.htm' for i in range(3)}
+        calls = []
+        def fetch(url, purpose):
+            calls.append((url, purpose))
+            return self.gated(self.fetcher(html), withheld)(url, purpose)
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+                                                     seed_html=html, fetcher=fetch, inventory=self.identity)
+        proposal = governance.propose_source(self.school.id, config, evidence, department_id=self.dept.id)
+        bundle = json.loads(proposal.evidence_json)
+        self.assertEqual(sorted(bundle['access_limited']), sorted(withheld))
+        for url in withheld:
+            self.assertEqual(bundle['samples']['article:' + url], 'access_limited:source_login_required')
+        # The sample reaches past the target only as far as it must, and stops at
+        # the first body it can actually read.
+        self.assertEqual([p for _, p in calls].count('body'), 4)
+        result = governance.validate_proposal(proposal.id)
+        self.assertTrue(result['passed'], result)
+        self.assertNotIn('article_sample_missing', result['errors'])
+        self.assertEqual(len(result['limitations']), 3)
+        self.assertEqual(governance.activate_proposal(proposal.id).id, self.dept.id)
+
+    def test_a_column_whose_entries_are_all_gated_is_still_refused(self):
+        """Nothing could be confirmed as an article, so the gate still holds.
+
+        The refusal does not change; only the reason does. Reporting this as a
+        missing body sample told the reader to re-check a column that is simply
+        not public, and no amount of re-checking can sign anyone in.
+        """
+        html = self.html(6)
+        config = governance.source_config(self.dept)
+        everything = {f'https://college.example.edu.cn/notices/article/{i}.htm' for i in range(6)}
+        calls = []
+        def fetch(url, purpose):
+            calls.append((url, purpose))
+            return self.gated(self.fetcher(html), everything)(url, purpose)
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+                                                     seed_html=html, fetcher=fetch, inventory=self.identity)
+        proposal = governance.propose_source(self.school.id, config, evidence, department_id=self.dept.id)
+        result = governance.validate_proposal(proposal.id)
+        self.assertFalse(result['passed'])
+        self.assertIn('source_login_required', result['errors'])
+        self.assertNotIn('article_sample_missing', result['errors'])
+        # And it reads to the reader as an access limit, not as work for them.
+        from backend.services.inbox_refresh import source_status_kind, source_status_label
+        self.assertEqual((source_status_kind('failed', '', 'source_login_required'),
+                          source_status_label('failed', '', 'source_login_required')),
+                         ('access_limited', '访问受限'))
+        # Bounded by the ceiling, never the whole list.
+        self.assertEqual([p for _, p in calls].count('body'), governance.ARTICLE_SAMPLE_LIMIT)
+
+    def test_a_failure_that_is_not_an_access_limit_stays_fatal(self):
+        """Only the site's own refusal is tolerated; an unreadable page is not."""
+        html = self.html(5)
+        config = governance.source_config(self.dept)
+        base = self.fetcher(html)
+        login = {f'https://college.example.edu.cn/notices/article/{i}.htm' for i in (0, 1)}
+        unparsed = 'https://college.example.edu.cn/notices/article/2.htm'
+        def fetch(url, purpose):
+            if url == unparsed:
+                # An ordinary page the program could not read: no gate, no notice.
+                raise self.refusal(url, purpose, landed=url,
+                                   html='<html><body><p>普通页面</p></body></html>')
+            return self.gated(base, login)(url, purpose)
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+                                                     seed_html=html, fetcher=fetch, inventory=self.identity)
+        proposal = governance.propose_source(self.school.id, config, evidence, department_id=self.dept.id)
+        result = governance.validate_proposal(proposal.id)
+        self.assertFalse(result['passed'])
+        self.assertIn('article_sample_missing', result['errors'])
+        self.assertEqual(len(result['limitations']), 2)
 
 
 if __name__ == '__main__':

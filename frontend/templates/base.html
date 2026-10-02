@@ -65,37 +65,8 @@
                     <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                     <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 </button>
-                {% if not current_user %}
-                <a class="btn btn-sm btn-outline" href="{{ url_for('auth.login_page', next=request.path) }}">登录</a>
-                <a class="btn btn-sm btn-primary" href="{{ url_for('auth.register_page') }}">注册</a>
-                {% endif %}
-                {% if current_user and config.DESKTOP_MODE %}
+                {% if current_user and current_user.is_admin %}
                 <a class="btn btn-sm btn-outline" href="{{ url_for('admin.admin_page') }}">系统管理</a>
-                {% elif current_user %}
-                <div class="nav-item has-menu" id="settingsNavItem">
-                    <button type="button" class="nav-tab nav-tab--menu" aria-haspopup="true" aria-expanded="false" aria-controls="nav-menu-settings">
-                        <span class="nav-user-mark" aria-hidden="true">{{ current_user.username[0]|upper }}</span>
-                        <span class="nav-settings-label">{{ current_user.username }}</span>
-                        <svg class="nav-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                    <div class="nav-menu nav-menu--right" id="nav-menu-settings">
-                        <a class="nav-menu-item {% if request.path == '/me' %}is-active{% endif %}" href="{{ url_for('account.me_page') }}">
-                            <span class="nav-menu-label">个人中心</span>
-                        </a>
-                        {% if current_user.is_admin %}
-                        <a class="nav-menu-item {% if request.path.startswith('/admin') %}is-active{% endif %}" href="{{ url_for('admin.admin_page') }}">
-                            <span class="nav-menu-label">系统管理</span>
-                        </a>
-                        {% endif %}
-                        <div class="nav-menu-divider"></div>
-                        <form method="POST" action="{{ url_for('auth.logout') }}" style="margin:0;">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="nav-menu-item nav-menu-item--danger" style="width:100%;border:none;background:none;cursor:pointer;font:inherit;">
-                                <span class="nav-menu-label">退出登录</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
                 {% endif %}
                 <button type="button" class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false" aria-controls="navLinks">
                     <span></span><span></span><span></span>

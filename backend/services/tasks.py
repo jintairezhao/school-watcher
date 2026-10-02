@@ -4,12 +4,13 @@ from contextvars import ContextVar
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from sqlalchemy import or_, select, update, delete, case, func, event
+from sqlalchemy import or_, and_, select, update, delete, case, func, event
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from backend.database.db import db
-from backend.database.models import BackgroundTask, RuntimeLease, VerificationSession, VerificationWaiter
+from backend.database.models import (BackgroundTask, RuntimeLease, VerificationSession, VerificationWaiter,
+                                     WorkerHeartbeat)
 from backend.services.runtime_leases import insert_if_missing, acquire_in_transaction
 
 _execution = ContextVar('task_execution', default=None)
@@ -28,9 +29,10 @@ class PolicyChanged(LeaseLost):
 
 class TaskDeferred(BaseException):
     def __init__(self, *, capability=None, phase='fetch', checkpoint=None, delay=0,
-                 reason='', state='pending', error_code=''):
+                 reason='', state='pending', error_code='', keep_place=False):
         self.capability, self.phase, self.checkpoint = capability, phase, checkpoint
         self.delay, self.reason, self.state, self.error_code = delay, reason, state, error_code
+        self.keep_place = keep_place
         super().__init__(reason)
 
 
@@ -124,12 +126,12 @@ def _fence_commit(session):
 
 
 def default_capability(kind):
-    return 'directory' if kind in ('directory', 'discover', 'source_review', 'source_baseline') else 'http'
+    return 'directory' if kind in ('directory', 'discover', 'source_review', 'source_baseline', 'navigation_review', 'source_grouping') else 'http'
 
 
 def _freshness_column():
-    # Legacy rows without checked_at retain their pre-migration admission gate.
-    return func.coalesce(BackgroundTask.checked_at, BackgroundTask.updated_at)
+    # Completion is durable across restarts and independent of metadata edits.
+    return func.coalesce(BackgroundTask.finished_at, BackgroundTask.checked_at, BackgroundTask.updated_at)
 
 
 def enqueue(kind, key, payload=None, *, delay=0, replace_finished=True, min_interval=0,
@@ -167,23 +169,108 @@ def enqueue(kind, key, payload=None, *, delay=0, replace_finished=True, min_inte
 
 
 def _source_key(kind, payload):
-    if kind in ('directory', 'discover', 'source_review', 'source_baseline'):
+    if kind == 'onboard':
+        import hashlib
+        return 'onboard:' + str(payload['school_id']) + ':' + hashlib.sha256(payload['url'].encode()).hexdigest()[:24]
+    if kind == 'source_review':
+        return 'source-review:' + str(payload['proposal_id'])
+    if kind in ('directory', 'discover', 'source_baseline', 'navigation_review'):
         return 'directory:writer'
     if kind in ('collect', 'source_health') and payload.get('department_id') is not None:
         return f"source:{payload['department_id']}"
     return None
 
 
-def _claim_statement(eligible, now):
+def _priority(now):
     # Age removes class priority after five minutes, so body reads cannot starve
     # list refreshes. queued_at is retained on every resource/browser handoff.
-    priority = case((BackgroundTask.queued_at <= now - timedelta(minutes=5), -1),
-                    (BackgroundTask.kind == 'content', 0), (BackgroundTask.kind == 'collect', 1), else_=2)
-    statement = select(BackgroundTask).where(eligible).order_by(priority, BackgroundTask.queued_at,
+    # A large page has many bounded fragments. Its next fragment must rotate
+    # with other directory work rather than outrank every untouched school.
+    return case((and_(BackgroundTask.kind == 'collect', BackgroundTask.phase == 'onboarding_collection'), -2),
+                (BackgroundTask.queued_at <= now - timedelta(minutes=5), -1),
+                (BackgroundTask.kind == 'content', 0), (BackgroundTask.kind.in_(('collect', 'onboard')), 1), else_=2)
+
+
+def _claim_statement(eligible, now):
+    # claim_count comes before queued_at: a task that has already had its turn
+    # yields to one that has never run. queued_at is retained across handoffs
+    # (see handoff), so a column whose site is not answering returns to its old
+    # place at the head of the queue every few seconds and holds the window shut
+    # against work that has never run at all -- a school waiting to be discovered
+    # sat at position 158 of 161 behind 91 columns re-claiming every five
+    # seconds. Ordering by turns taken rotates the queue instead of blocking it;
+    # queued_at still decides between tasks with the same number of turns, so
+    # first-in-first-out is unchanged for work that has not yet run. A task a
+    # person paused gives its turn back (see handoff), so 继续 resumes it.
+    statement = select(BackgroundTask).where(eligible).order_by(_priority(now), BackgroundTask.claim_count,
+                                                              BackgroundTask.queued_at,
                                                               BackgroundTask.available_at, BackgroundTask.id)
     if db.engine.dialect.name == 'postgresql':
         statement = statement.with_for_update(skip_locked=True)
     return statement.limit(16)
+
+
+def queue_ahead(task, capability=None):
+    """How many claimable tasks the worker takes before this one, and how many
+    of those are waiting to retry a failed attempt.
+
+    Callers report a queue position to the reader, so this has to walk the same
+    order the worker walks: it reuses _priority and the same column sequence as
+    _claim_statement. A position computed from a second, hand-written ordering
+    would eventually disagree with the one that decides what actually runs --
+    which is the whole complaint against a screen that says "queued" and
+    "in progress" at the same time.
+    """
+    now = datetime.utcnow()
+    lanes = None
+    if capability:
+        lanes = (capability,)
+    else:
+        # A worker claims across every lane in its roles, so a task waits behind
+        # work of other kinds: the school below sat behind 91 collection tasks.
+        # Counting only its own lane would report an empty queue for a task that
+        # is not next. With the default all-role worker the union of live
+        # workers' roles is exactly the window claim() walks.
+        rows = db.session.execute(select(WorkerHeartbeat.roles).where(
+            WorkerHeartbeat.stopped_at.is_(None),
+            WorkerHeartbeat.heartbeat_at > now - timedelta(seconds=90))).scalars().all()
+        lanes = tuple(sorted({role for roles in rows for role in (roles or []) if role in CAPABILITIES}))
+        if not lanes:
+            lanes = CAPABILITIES
+    row = db.session.execute(select(BackgroundTask.queued_at, BackgroundTask.claim_count,
+                                    BackgroundTask.available_at, BackgroundTask.id, BackgroundTask.kind, BackgroundTask.phase)
+                             .where(BackgroundTask.id == task.id)).one()
+    if row.kind == 'collect' and row.phase == 'onboarding_collection':
+        task_priority = -2
+    elif row.queued_at <= now - timedelta(minutes=5):
+        task_priority = -1
+    elif row.kind == 'content':
+        task_priority = 0
+    elif row.kind in ('collect', 'onboard'):
+        task_priority = 1
+    else:
+        task_priority = 2
+    priority = _priority(now)
+    eligible = (BackgroundTask.capability.in_(lanes) & or_(
+        (BackgroundTask.state == 'pending') & (BackgroundTask.available_at <= now),
+        (BackgroundTask.state == 'running') & (BackgroundTask.lease_until <= now)))
+    same_count = priority == task_priority
+    same_queued = and_(same_count, BackgroundTask.claim_count == row.claim_count,
+                       BackgroundTask.queued_at == row.queued_at)
+    # Strictly-less-than on the tuple (priority, claim_count, queued_at, available_at, id),
+    # spelled out because the tuple mixes an expression with plain columns.
+    before = or_(priority < task_priority,
+                 and_(same_count, BackgroundTask.claim_count < row.claim_count),
+                 and_(same_count, BackgroundTask.claim_count == row.claim_count,
+                      BackgroundTask.queued_at < row.queued_at),
+                 and_(same_queued, BackgroundTask.available_at < row.available_at),
+                 and_(same_queued, BackgroundTask.available_at == row.available_at,
+                      BackgroundTask.id < row.id))
+    retrying = and_(BackgroundTask.phase == 'retry', BackgroundTask.attempts > 0)
+    total, blocked = db.session.execute(
+        select(func.count(), func.coalesce(func.sum(case((retrying, 1), else_=0)), 0))
+        .select_from(BackgroundTask).where(eligible, before)).one()
+    return int(total or 0), int(blocked or 0)
 
 
 def claim(lease_seconds=120, *, capabilities=None, worker_id='local'):
@@ -197,8 +284,8 @@ def claim(lease_seconds=120, *, capabilities=None, worker_id='local'):
             (BackgroundTask.state == 'running') & (BackgroundTask.lease_until <= now)))
         try:
             for row in db.session.execute(_claim_statement(eligible, now)).scalars().all():
-                if row.kind == 'discover' and (row.payload or {}).get('discovery_pause_requested'):
-                    from backend.services.discovery_control import park_requested_claim
+                from backend.services.discovery_control import should_pause, park_requested_claim
+                if should_pause(row.kind, row.payload or {}):
                     park_requested_claim(row, now)
                     continue
                 if row.deadline_at and row.deadline_at <= now:
@@ -257,7 +344,14 @@ def checkpoint(data):
     handle = current_execution()
     if not handle:
         raise RuntimeError('A running task is required for checkpoints')
-    changed = db.session.execute(update(BackgroundTask).where(*_owner_where(handle)).values(checkpoint=dict(data)))
+    values = {'checkpoint': dict(data)}
+    old = handle.get('checkpoint') or {}
+    forward = (data.get('directory_work_saved', 0) > old.get('directory_work_saved', 0) or
+        (data.get('discovery_progress') or {}).get('checked_pages', 0) >
+        (old.get('discovery_progress') or {}).get('checked_pages', 0))
+    if handle.get('kind') in ('discover', 'directory', 'navigation_review', 'source_review') and forward:
+        values['deadline_at'] = datetime.utcnow() + timedelta(hours=2)
+    changed = db.session.execute(update(BackgroundTask).where(*_owner_where(handle)).values(**values))
     if not changed.rowcount:
         raise LeaseLost('Task lease was lost')
     db.session.commit()
@@ -281,6 +375,11 @@ def handoff(handle, deferred):
             state=deferred.state, phase=deferred.phase, capability=lane, checkpoint=dict(data),
             available_at=now + timedelta(seconds=max(0, deferred.delay)), token=None, worker_id=None,
             lease_until=None, error=deferred.reason[:500], error_code=deferred.error_code, updated_at=now)
+        if deferred.keep_place:
+            # A person paused this, not the queue, so give the turn back: 继续 must
+            # carry on with the interrupted work rather than queue behind every
+            # task that has never run (see _claim_statement).
+            values['claim_count'] = case((BackgroundTask.claim_count > 0, BackgroundTask.claim_count - 1), else_=0)
         if deferred.state == 'waiting' and data.get('verification_id'):
             verified = db.session.execute(select(VerificationSession.id).where(
                 VerificationSession.id == data['verification_id'], VerificationSession.status == 'verified')).scalar_one_or_none()

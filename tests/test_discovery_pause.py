@@ -48,13 +48,118 @@ class DiscoveryPauseTests(unittest.TestCase):
             self.assertEqual(self.command('pause').json['state'], 'paused')
             self.assertEqual(self.client.get(self.endpoint).json['state'], 'paused')
             self.assertIn('>继续</button>', self.client.get(f'/subscriptions/{self.school_id}').text)
-            self.assertEqual(self.command('resume').json['state'], 'pending')
+        self.assertEqual(self.command('resume').json['state'], 'queued')
         db.session.refresh(self.row)
         self.assertEqual(self.row.checkpoint, checkpoint)
         self.assertEqual((self.row.id, self.row.generation), (identity, generation))
         handle = tasks.claim(capabilities=['directory'])
         self.assertEqual(handle['checkpoint'], checkpoint)
         self.assertEqual(handle['generation'], generation)
+
+    def test_pause_parks_independent_columns_and_navigation_without_consuming_budget(self):
+        children = [tasks.enqueue(kind, 'pause-child', {'school_id': self.school_id,
+                    'url': 'https://example.edu.cn/notices/'})
+                    for kind in ('onboard', 'navigation_review')]
+        for row in children:
+            row.checkpoint = {'saved': 'same-material'}
+        db.session.commit()
+        self.assertEqual(self.command('pause').json['state'], 'paused')
+        for row in children:
+            db.session.refresh(row)
+            self.assertEqual((row.state, row.phase), ('waiting', 'user_paused'))
+            row.deadline_at = datetime.utcnow() - timedelta(days=1)
+        db.session.commit()
+        self.assertIsNone(tasks.claim())
+        self.assertEqual(self.command('resume').status_code, 200)
+        for row in children:
+            db.session.refresh(row)
+            self.assertEqual(row.state, 'pending')
+            self.assertEqual(row.generation, 1)
+            self.assertEqual(row.attempts, 0)
+            self.assertEqual(row.checkpoint, {'saved': 'same-material'})
+            self.assertGreater(row.deadline_at, datetime.utcnow())
+
+    def test_completed_crawl_can_pause_remaining_columns_and_resume_without_recrawling(self):
+        child = tasks.enqueue('onboard', 'after-crawl', {'school_id': self.school_id,
+            'url': 'https://example.edu.cn/notices/'})
+        self.row.state, self.row.phase = 'done', 'complete'; db.session.commit()
+        self.assertTrue(self.client.get(self.endpoint).json['can_pause'])
+        self.assertEqual(self.command('pause').status_code, 200)
+        self.assertIsNone(tasks.claim(capabilities=['http']))
+        self.assertEqual(self.command('resume').status_code, 200)
+        db.session.refresh(self.row)
+        self.assertEqual(self.row.state, 'done')
+        self.assertEqual(tasks.claim(capabilities=['http'])['id'], child.id)
+
+    def test_running_column_saves_before_pause_then_resumes_same_browser_request(self):
+        child = tasks.enqueue('onboard', 'running-column', {'school_id': self.school_id,
+            'url': 'https://example.edu.cn/notices/'})
+        handle = tasks.claim(capabilities=['http'])
+        self.assertEqual(self.command('pause').json['state'], 'pausing')
+        self.assertEqual(self.command('resume').status_code, 409)
+        tasks.handoff(handle, tasks.TaskDeferred(capability='browser', phase='render',
+            checkpoint={'browser': {'request_id': 'original'}}, delay=45))
+        self.assertEqual(self.client.get(self.endpoint).json['state'], 'paused')
+        self.assertEqual(self.command('resume').status_code, 200)
+        db.session.refresh(child)
+        self.assertEqual((child.state, child.phase, child.capability), ('pending', 'render', 'browser'))
+        self.assertEqual(child.checkpoint['browser']['request_id'], 'original')
+        self.assertGreater(child.available_at, datetime.utcnow())
+
+    def test_child_created_during_pause_is_parked_before_expired_deadline(self):
+        self.command('pause')
+        child = tasks.enqueue('onboard', 'late-column', {'school_id': self.school_id,
+            'url': 'https://example.edu.cn/notices/'})
+        child.deadline_at = datetime.utcnow() - timedelta(days=1); db.session.commit()
+        self.assertIsNone(tasks.claim(capabilities=['http']))
+        db.session.refresh(child)
+        self.assertEqual((child.state, child.phase), ('waiting', 'user_paused'))
+        self.command('resume')
+        self.assertEqual(tasks.claim(capabilities=['http'])['id'], child.id)
+
+    def test_last_crawl_page_keeps_children_paused_when_it_finishes(self):
+        child = tasks.enqueue('onboard', 'last-page', {'school_id': self.school_id,
+            'url': 'https://example.edu.cn/notices/'})
+        handle = tasks.claim(capabilities=['directory'])
+        self.command('pause')
+        tasks.finish(handle, result={'complete': True})
+        self.assertEqual(self.client.get(self.endpoint).json['state'], 'paused')
+        self.assertIsNone(tasks.claim(capabilities=['http']))
+        self.command('resume')
+        db.session.refresh(self.row)
+        self.assertEqual(self.row.state, 'done')
+        self.assertEqual(tasks.claim(capabilities=['http'])['id'], child.id)
+
+    def test_navigation_finishing_while_paused_keeps_its_new_routes_for_resume(self):
+        from backend.services.discovery_cache import DiscoveryCache
+        from backend.scraper.discovery.ai_navigation import process_navigation
+        path = Path(self.fixture.temp.name) / 'paused-navigation.db'
+        self.fixture.app.config['DISCOVERY_CACHE_PATH'] = str(path)
+        inventory = DiscoveryCache(path)
+        root = 'https://example.edu.cn/'
+        key = inventory.ensure_site('测试学校', root)
+        inventory.finish(key, root, state='fetched', html='<a href="/ai-unit/">了解更多</a>')
+        site, page = inventory.report(key)['site'], inventory.get_page(key, root)
+        self.row.state, self.row.phase = 'done', 'complete'; db.session.commit()
+        tasks.enqueue('navigation_review', 'late-route', {'school_id': self.school_id,
+            'parent_task_id': self.row.id, 'parent_generation': self.row.generation,
+            'site': site, 'page': page})
+        handle = tasks.claim(capabilities=['directory'])
+        def complete_navigation(site, page, html, parsed):
+            control(self.school_id, 'pause')
+            parsed['links'].append({'url': root + 'ai-unit/', 'label': '测试学院',
+                'kind': 'unit', 'decision': 'follow', 'path': [], 'locator': 'a'})
+            return {'status': 'succeeded'}
+        with tasks.execution_scope(handle), patch('backend.scraper.discovery.ai_navigation.assist_navigation',
+                side_effect=complete_navigation):
+            result = process_navigation(handle['payload'])
+        tasks.finish(handle, result)
+        self.assertEqual(result['queued_pages'], 1)
+        self.assertEqual(self.client.get(self.endpoint).json['state'], 'paused')
+        control(self.school_id, 'resume')
+        db.session.refresh(self.row)
+        self.assertEqual((self.row.state, self.row.phase), ('pending', 'directory_slice'))
+        self.assertEqual(tasks.claim(capabilities=['directory'])['id'], self.row.id)
 
     def test_running_pause_waits_for_safe_boundary_and_releases_lane(self):
         handle = tasks.claim(capabilities=['directory'])
@@ -197,13 +302,19 @@ class DiscoveryPauseTests(unittest.TestCase):
     def test_pause_during_ai_keeps_its_discovered_links_without_a_second_call(self):
         from backend.services.source_inventory import Inventory
         from backend.scraper.discovery.inventory_crawler import crawl_site
-        inventory = Inventory(Path(self.fixture.temp.name) / 'pause-ai.db')
+        from backend.scraper.discovery.ai_navigation import process_navigation
+        from datetime import datetime, timedelta
+        path = Path(self.fixture.temp.name) / 'pause-ai.db'
+        self.fixture.app.config['DISCOVERY_CACHE_PATH'] = str(path)
+        inventory = Inventory(path)
         root_url = 'https://example.edu.cn/'
         key = inventory.ensure_site('测试学校', root_url)
-        # Run the real assist_navigation, including its mid-page ledger checkpoint.
         self.row.checkpoint = {}; db.session.commit()
         handle = tasks.claim(capabilities=['directory'])
         def ai_result(*args, **kwargs):
+            from filelock import FileLock
+            with FileLock(str(path) + '.worker.lock', timeout=0):
+                pass  # A paid model request must leave the shared crawl cache free.
             def pause_request():
                 with self.fixture.app.app_context():
                     control(self.school_id, 'pause')
@@ -211,16 +322,24 @@ class DiscoveryPauseTests(unittest.TestCase):
             with ThreadPoolExecutor(max_workers=1) as pool:
                 pool.submit(pause_request).result(timeout=10)
             return {'status':'succeeded', 'output':{'results':[
-                {'candidate_id':'link-0', 'decision':'propose', 'kind':'unit'}]}}
+                {'candidate_id':args[2]['candidates'][0]['candidate_id'], 'decision':'propose', 'kind':'unit'}]}}
         def fetcher(url):
             return {'html':'<html><title>测试学校</title><a href="/ai-unit/">了解更多</a></html>'
                     if url == root_url else '<html><title>下属单位</title></html>', 'status':200, 'url':url}
         with patch('backend.ai.runtime.run_skill', side_effect=ai_result) as ai:
-            with tasks.execution_scope(handle), self.assertRaises(tasks.TaskDeferred) as deferred:
-                crawl_site(inventory, key, fetcher=fetcher)
-            db.session.rollback(); tasks.handoff(handle, deferred.exception)
+            with tasks.execution_scope(handle):
+                crawl_site(inventory, key, fetcher=fetcher, max_pages=1)
+            self.assertEqual(ai.call_count, 0, 'First discovery must not wait for AI')
+            tasks.handoff(handle, tasks.TaskDeferred(capability='directory', delay=3600, checkpoint=handle['checkpoint']))
+            navigation = tasks.claim(capabilities=['directory'])
+            self.assertEqual(navigation['kind'], 'navigation_review')
+            with tasks.execution_scope(navigation):
+                result = process_navigation(navigation['payload'])
+            tasks.finish(navigation, result)
             self.assertEqual(ai.call_count, 1)
             self.command('resume')
+            self.row = db.session.get(BackgroundTask, handle['id'])
+            self.row.available_at = datetime.utcnow() - timedelta(seconds=1); db.session.commit()
             resumed = tasks.claim(capabilities=['directory'])
             with tasks.execution_scope(resumed):
                 crawl_site(inventory, key, fetcher=fetcher)

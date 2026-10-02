@@ -61,6 +61,142 @@ class SourceRelationshipTests(unittest.TestCase):
         self.assertEqual(self.paths(), [])
         self.assertEqual(self.paths(UNIT + 'notices/'), [])
 
+    def listing(self, page_url, canonical=None, *, template_id='42', unrelated=False, sidebar=False, heading=False):
+        canonical = canonical or UNIT + 'notices/'
+        articles = ''.join('<li class="middleArticle--articleList"><a '
+            'class="middleArticle__articleList--article" href="' + UNIT + 'c/2026-09-18/' + str(n) +
+            '.shtml">学生学业奖学金评审公示事项' + str(n) + '</a>'
+            '<span class="middleArticle__articleList--date">2026-09-18</span></li>'
+            for n in (range(100, 103) if unrelated else range(1, 4)))
+        html = '<title>某大学能源-材料研究中心</title><div class="c-main__right">' + \
+            '<div class="middleArticle__position"><div class="middleArticle__position--label">' + \
+            '<a href="' + UNIT + '">首页</a><a href="' + canonical + '">通知公告</a></div></div>' + \
+            '<div class="middleArticle__art"><ul class="middleArticle__articleList">' + articles + \
+            '</ul></div><div class="middlePag"><script>function page(n) { return "' + \
+            ROOT + 'zcms/catalog/' + template_id + '/pc/index_{PageIndex}.shtml".replace("{PageIndex}", n); }' + \
+            '</script></div></div>'
+        if sidebar:
+            html = html.replace('<div class="c-main__right">', '<div class="c-main">'
+                '<div class="c-main__left"><ul><li class="middleLeft__left--navClick"><a href="' +
+                canonical + '">通知公告</a></li></ul></div><div class="c-main__right">')
+            begin = html.index('<div class="middleArticle__position">')
+            end = html.index('<div class="middleArticle__art">', begin)
+            html = html[:begin] + html[end:] + '</div>'
+        if heading:
+            html = html.replace('<div class="middleArticle__position"><div class="middleArticle__position--label">',
+                '<h2>').replace('</div></div><div class="middleArticle__art">',
+                '</h2><div class="middleArticle__art">')
+        self.page(page_url, '通知公告', 'channel', html)
+
+    def test_pagination_identity_is_retained_when_an_ordinary_heading_names_the_list(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + '">通知公告</a>')
+        self.listing(normal, heading=True)
+        self.listing(cms, heading=True)
+        self.assertEqual([p['unit_name'] for p in self.paths(cms)], ['能源-材料研究中心'])
+
+    def test_failed_navigation_url_keeps_evidenced_placement_without_aliasing_or_activation(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + '">通知公告</a>')
+        self.listing(cms)
+        self.inventory.finish(self.key, normal, state='failed', status_code=403, health='unreachable')
+        self.assertEqual(self.paths(cms), [])
+        relationships = SourceRelationships(self.inventory.report(self.key), self.inventory.structure(self.key),
+            directory_navigation=True)
+        paths = relationships.paths_for(cms)
+        self.assertEqual([p['unit_name'] for p in paths], ['能源-材料研究中心'])
+        self.assertEqual(paths[0]['basis'], 'official_directory_navigation')
+        self.assertTrue(paths[0]['pagination_identity_pending'])
+        self.assertNotIn(normal, relationships._addresses(cms))
+        self.assertEqual(relationships.publication_owners(cms, paths), set())
+
+    def test_successful_but_different_navigation_listing_is_a_conflict_not_a_weak_placement(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + '">通知公告</a>')
+        self.listing(normal)
+        self.listing(cms, unrelated=True)
+        relationships = SourceRelationships(self.inventory.report(self.key), self.inventory.structure(self.key),
+            directory_navigation=True)
+        self.assertEqual(relationships.paths_for(cms), [])
+
+    def test_missing_aggregate_link_can_keep_directory_placement_with_exact_branding_and_scoped_pager(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + 'students/">通知公告</a>')
+        self.listing(cms)
+        relationships = SourceRelationships(self.inventory.report(self.key), self.inventory.structure(self.key),
+            directory_navigation=True)
+        paths = relationships.paths_for(cms)
+        self.assertEqual([p['unit_name'] for p in paths], ['能源-材料研究中心'])
+        self.assertEqual(relationships.publication_owners(cms, paths), set())
+        self.assertEqual(self.paths(cms), [])
+
+    def test_unreachable_column_with_foreign_articles_cannot_claim_a_unit_from_its_copied_branding(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + '">通知公告</a>')
+        self.listing(cms)
+        with self.inventory.connect() as connection:
+            row = connection.execute('SELECT feed_json FROM pages WHERE site_key=? AND url=?', (self.key, cms)).fetchone()
+            feed = json.loads(row[0])
+            for listing in feed['lists']:
+                for sample in listing['samples']:
+                    sample['url'] = sample['url'].replace(UNIT, 'https://partner.example.org/')
+            connection.execute('UPDATE pages SET feed_json=? WHERE site_key=? AND url=?',
+                (json.dumps(feed),self.key,cms))
+        relationships = SourceRelationships(self.inventory.report(self.key), self.inventory.structure(self.key),
+            directory_navigation=True)
+        self.assertEqual(relationships.paths_for(cms), [])
+
+    def test_observed_pagination_alias_keeps_official_group_and_both_page_proofs(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + '">通知公告</a>')
+        self.listing(normal)
+        self.listing(cms)
+        paths = self.paths(cms)
+        self.assertEqual([p['unit_name'] for p in paths], ['能源-材料研究中心'])
+        self.assertEqual({r['url'] for r in paths[0]['references']}, {ROSTER, UNIT, normal, cms})
+
+    def test_breadcrumb_and_title_alone_cannot_alias_an_unrelated_listing(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + '">通知公告</a>')
+        self.listing(normal)
+        self.listing(cms, unrelated=True)
+        self.assertEqual(self.paths(cms), [])
+
+    def test_active_sidebar_can_identify_the_same_paginated_column_without_breadcrumbs(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + '">通知公告</a>')
+        self.listing(normal, sidebar=True)
+        self.listing(cms, sidebar=True)
+        self.assertEqual([p['unit_name'] for p in self.paths(cms)], ['能源-材料研究中心'])
+
+    def test_wrong_pagination_template_cannot_supply_a_listing_alias(self):
+        normal, cms = UNIT + 'notices/', ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + normal + '">通知公告</a>')
+        self.listing(normal)
+        self.listing(cms, template_id='99')
+        self.assertEqual(self.paths(cms), [])
+
+    def test_protocol_variants_need_two_fetched_matching_lists(self):
+        normal = UNIT + 'notices/'
+        old = normal.replace('https:', 'http:')
+        cms = ROOT + 'zcms/catalog/42/pc/index_1.shtml'
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<a href="' + old + '">通知公告</a>')
+        self.listing(normal)
+        self.listing(cms)
+        self.assertEqual(self.paths(cms), [])
+        self.listing(old, canonical=old)
+        self.assertEqual([p['unit_name'] for p in self.paths(cms)], ['能源-材料研究中心'])
+
     def test_observed_teaching_page_preserves_college_for_its_notice_link(self):
         self.roster()
         teaching, notices = UNIT + 'teaching/', UNIT + 'teaching/notices/'
@@ -186,6 +322,18 @@ class SourceRelationshipTests(unittest.TestCase):
         self.page(UNIT, '能源-材料研究中心', 'unit', '<title>某大学科学学院</title><header>'
                   '<a href="' + NOTICES + '">通知公告</a></header><article>能源-材料研究中心介绍</article>')
         self.assertEqual(self.paths(), [])
+
+    def test_directory_navigation_is_a_placement_and_never_a_publishing_owner(self):
+        self.roster()
+        self.page(UNIT, '能源-材料研究中心', 'unit', '<title>旧版网站名称</title><a href="' + NOTICES + '">通知公告</a>')
+        self.assertEqual(self.paths(), [])
+        relationships = SourceRelationships(self.inventory.report(self.key),
+            self.inventory.structure(self.key), directory_navigation=True)
+        paths = relationships.paths_for(NOTICES)
+        self.assertEqual(len(paths), 1)
+        self.assertEqual(paths[0]['basis'], 'official_directory_navigation')
+        self.assertTrue(paths[0]['identity_pending'])
+        self.assertEqual(relationships.publication_owners(NOTICES, paths), set())
 
     def test_exact_header_identity_connects_student_column_when_title_is_generic(self):
         self.roster()

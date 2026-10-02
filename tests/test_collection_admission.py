@@ -95,7 +95,8 @@ class CollectionAdmissionTests(unittest.TestCase):
         db.session.refresh(task)
         self.assertEqual(task.state, 'failed')
         self.assertEqual(task.error, '官网暂不可用')
-        task.updated_at = datetime.utcnow() - timedelta(minutes=31); db.session.commit()
+        task.updated_at = task.finished_at = task.checked_at = datetime.utcnow() - timedelta(minutes=31)
+        db.session.commit()
         self.assertEqual(self.sync().status_code, 202)
         db.session.refresh(task)
         self.assertEqual(task.state, 'pending')
@@ -105,7 +106,8 @@ class CollectionAdmissionTests(unittest.TestCase):
         self.dept.last_scraped_at = datetime.utcnow() - timedelta(minutes=2); db.session.commit()
         self.assertEqual(self.sync().get_json()['scheduled'], 0)
         self.dept.last_scraped_at = datetime.utcnow() - timedelta(minutes=40)
-        task.updated_at = datetime.utcnow() - timedelta(minutes=2); db.session.commit()
+        task.updated_at = task.finished_at = task.checked_at = datetime.utcnow() - timedelta(minutes=2)
+        db.session.commit()
         self.assertEqual(self.sync().get_json()['scheduled'], 0)
 
     def test_settings_take_effect_without_restarting_web_or_worker(self):
@@ -189,7 +191,8 @@ class CollectionAdmissionTests(unittest.TestCase):
                 # Simulate a worker completing after enqueue SELECT but before
                 # its UPDATE. A state-only WHERE would wrongly reopen this job.
                 original(db.update(BackgroundTask).where(BackgroundTask.id == task.id).values(
-                    state='done', updated_at=datetime.utcnow(), result={'new_count': 9}))
+                    state='done', updated_at=datetime.utcnow(), finished_at=datetime.utcnow(),
+                    checked_at=datetime.utcnow(), result={'new_count': 9}))
             return original(statement, *args, **kwargs)
 
         with patch.object(db.session, 'execute', side_effect=finish_before_update):

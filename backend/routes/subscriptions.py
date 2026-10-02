@@ -36,8 +36,7 @@ def subscribe_school(school, user_id):
     if revived:
         if not school.departments.count():
             from backend.services.tasks import enqueue
-            enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': True,
-                'require_ai': current_app.config.get('DESKTOP_MODE', False)}, expedite=True)
+            enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': True}, expedite=True)
         start_background_scrape(school.id)
     return revived
 
@@ -99,7 +98,8 @@ def api_unsubscribe(school_id):
 @bp.route('/subscriptions/<int:school_id>', methods=['GET', 'POST'])
 @login_required
 def manage_sources(school_id):
-    from backend.services.inbox import source_groups
+    from backend.services.inbox import source_hierarchy
+    from backend.services.directory_options import directory_entries_for, expand_directory_ids
     school = db.get_or_404(School, school_id)
     sub = Subscription.query.filter_by(user_id=g.user.id, school_id=school_id).first()
     if not sub or not school.enabled:
@@ -111,7 +111,7 @@ def manage_sources(school_id):
         ids = request.form.getlist('department', type=int)
         valid = {d.id for d in departments if d.name.upper() != 'DAILY NEWS'}
         if mode not in ('all', 'selected') or (mode == 'selected' and (not ids or set(ids) - valid)):
-            flash('至少选择一个本校栏目，或选择全部栏目', 'error')
+            flash('至少选择一个本校部门或栏目，或选择全部栏目', 'error')
         else:
             sub.department_ids = None if mode == 'all' else sorted(set(ids))
             db.session.commit()
@@ -130,7 +130,8 @@ def manage_sources(school_id):
     return render_template('sources.html', school=school, subscription=sub,
                            discovery=status(school),
                            onboarding=school_governance_status(school.id),
-                           groups=source_groups(departments), latest=latest,
+                           groups=source_hierarchy(departments, directory_entries=directory_entries_for(school.id)), latest=latest,
+                           selected_ids=expand_directory_ids(school.id, sub.department_ids),
                            source_paths={d.id: relationships.paths_for(d.list_url) for d in departments})
 
 
@@ -156,8 +157,6 @@ def subscription_discovery(school_id):
                 db.session.rollback()
                 return jsonify(error=str(exc)), 409
     if request.method == 'POST' and action == 'retry':
-        if not ai_available():
-            return jsonify(error='请先配置目录识别 AI', setup_url=url_for('admin.admin_page', onboarding=school.id, _anchor='platform')), 409
         from backend.services.tasks import enqueue
         from backend.auth.rate_limit import check_rate_limit
         if not check_rate_limit(f'discovery-retry:{g.user.id}:{school.id}', 8, 3600)[0]:
@@ -171,13 +170,16 @@ def subscription_discovery(school_id):
                 state='pending', phase='fetch', available_at=now, updated_at=now,
                 deadline_at=now + timedelta(hours=2), error='', error_code=''))
         db.session.commit()
-    from backend.services.inbox import source_groups
+    from backend.services.inbox import source_hierarchy
+    from backend.services.directory_options import directory_entries_for, expand_directory_ids
     from backend.services.source_inventory import site_key
     from backend.services.runtime_catalog import runtime_catalog, relationships_for
     relationships = relationships_for(runtime_catalog(), site_key(school.url))
     departments = school.departments.order_by(Department.id).all()
     sub = Subscription.query.filter_by(user_id=g.user.id, school_id=school.id).first()
-    choices = render_template('_source_choices.html', groups=source_groups(departments), subscription=sub,
+    choices = render_template('_source_tree_choices.html', school=school,
+                              groups=source_hierarchy(departments, directory_entries=directory_entries_for(school.id)), subscription=sub,
+                              selected_ids=expand_directory_ids(school.id, sub.department_ids),
                               source_paths={d.id: relationships.paths_for(d.list_url) for d in departments})
     return jsonify(**status(school), choices_html=choices)
 

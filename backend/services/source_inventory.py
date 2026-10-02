@@ -227,10 +227,12 @@ class Inventory:
             school_name = school['name'] if school else ''
             c.create_function('student_priority', 3, lambda kind, label, path:
                               student_priority(kind, label, path, school_name))
-            # All-information discovery retains every frontier item while
-            # prioritising student routes. A bounded slice does not drop the rest.
+            # Establish the school's directory first, then connect observed
+            # columns before expanding every unit. Retain the whole frontier.
             if focus == 'all':
-                order = 'coalesce(student_priority(kind,label,path_json),20),depth+priority,depth,url'
+                order = ("CASE WHEN kind='root' THEN 0 WHEN kind='directory' THEN 1 WHEN kind='channel' AND "
+                         "student_priority(kind,label,path_json) IS NOT NULL THEN 2 ELSE 3 END,"
+                         'coalesce(student_priority(kind,label,path_json),20),depth+priority,depth,url')
             if focus == 'student':
                 condition = 'AND student_priority(kind,label,path_json) IS NOT NULL '
                 order = 'student_priority(kind,label,path_json),depth,priority,url'
@@ -266,7 +268,21 @@ class Inventory:
                     parent.site_key=e.site_key AND parent.url=e.parent_url
                     WHERE e.site_key=? AND parent.state='fetched' AND parent.content_hash=e.content_hash
                     GROUP BY e.target_url HAVING min(e.decision='article_reference')=1)""", (key, key))
-            return result.rowcount
+            count = result.rowcount
+            from backend.scraper.discovery.structure import document_reference, directory_document
+            for row in c.execute("SELECT url,label,kind,notes_json FROM pages WHERE site_key=? AND kind<>'root' AND state<>'running'", (key,)).fetchall():
+                if not document_reference(row['url'], row['label']):
+                    continue
+                notes = json.loads(row['notes_json'] or '[]')
+                is_roster = directory_document(row['label'], row['kind'])
+                note = 'directory_document_requires_adapter' if is_roster else 'document_reference_only'
+                if note not in notes:
+                    notes.append(note)
+                state = 'blocked' if is_roster else 'reference_only'
+                changed = c.execute("UPDATE pages SET state=?,notes_json=?,error=? WHERE site_key=? AND url=? AND state<>?",
+                    (state, json.dumps(notes), note if is_roster else None, key, row['url'], state))
+                count += changed.rowcount
+            return count
 
     def recover(self, key):
         # Caller must own this site's process lock; a status record alone is not proof a worker died.

@@ -64,7 +64,8 @@ def configured_request(request):
         policy = dict(profile.get('policy', {}), **request.policy)
         revision = str(profile['version']) + ':' + hashlib.sha256(payload).hexdigest()[:16]
         return replace(request, policy=policy, policy_version=revision,
-                       readiness_selector=profile.get('readiness_selector') or request.readiness_selector,
+                       readiness_selector=request.readiness_selector or (
+                           '' if request.policy.get('exploration') else profile.get('readiness_selector', '')),
                        expected_response_url=profile.get('expected_response_url') or request.expected_response_url)
     except (OSError, ValueError, TypeError, AttributeError) as exc:
         raise ValueError('Invalid source profile configuration: ' + str(exc)) from exc

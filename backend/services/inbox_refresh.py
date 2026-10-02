@@ -17,6 +17,7 @@ def subscribed_sources(school, department_ids=None):
     directories = {e.parent_id for e in entries}
     wanted = expand_directory_ids(school.id, department_ids, entries)
     return [d for d in school.departments.order_by(Department.id) if d.list_url
+            and d.kind not in ('unit', 'group')
             and d.id not in directories and d.name.upper() != 'DAILY NEWS'
             and (wanted is None or d.id in wanted)]
 
@@ -84,7 +85,7 @@ def queue_sources(departments, *, manual=False):
                 jobs.append(task.id)
                 continue
             checked = [stamp for stamp in (dept.last_scraped_at,
-                       (task.checked_at or task.updated_at) if task else None) if stamp]
+                       (task.finished_at or task.checked_at or task.updated_at) if task else None) if stamp]
             if checked and max(checked) > cutoff:
                 continue
         jobs.append(enqueue('collect', dept.id, {'school_id': dept.school_id, 'department_id': dept.id},
@@ -178,25 +179,54 @@ def remember_refresh_scope(user_id, departments, scope, *, baseline):
     abort(503, description='更新已提交，正在恢复进度，请稍后重试。')
 
 
-def source_status_label(state, message, error_code=''):
-    if state == 'waiting' or error_code == 'needs_manual':
-        return '需要验证'
+# Codes the acquisition classifier actually emits. Keep the legacy spellings
+# too: rows written before the classifier existed still carry them.
+MANUAL_CODES = ('needs_manual', 'human_verification', 'access_challenge')
+LIMITED_CODES = ('access_denied', 'http_forbidden', 'challenge_denied', 'access_denied_page',
+                 'http_401', 'http_403',
+                 # The official site sent us to its identity provider. The column
+                 # and its public notices are fine; nothing here is a parser task.
+                 'source_login_required')
+THROTTLED_CODES = ('http_429', 'http_budget_exhausted', 'origin_busy', 'browser_busy', 'browser_pending')
+ADAPTER_CODES = ('needs_adapter', 'content_not_found', 'invalid_api_profile', 'content_not_recognized',
+                 'readiness_missing', 'invalid_readiness_selector', 'invalid_empty_selector',
+                 'empty_response', 'non_html_resource', 'api_response_changed', 'api_mapping_changed',
+                 'invalid_source_profile')
+GONE_CODES = ('http_404', 'http_410')
+RENDER_CODES = ('fragment_route', 'javascript_shell', 'http_412', 'page_size_requires_review')
+
+
+def source_status_kind(state, message, error_code=''):
+    """Machine-readable category so the UI need not parse Chinese labels.
+
+    Distinguishes an official-site access limit (nothing is broken here) from a
+    program/rule fault (the program must fix it) and from a genuine user task.
+    """
+    if state == 'waiting' or error_code in MANUAL_CODES:
+        return 'manual_verification'
     if state == 'failed':
-        if error_code in ('access_denied', 'http_forbidden', 'challenge_denied'):
-            return '访问受限'
-        if error_code in ('needs_adapter', 'content_not_found', 'invalid_api_profile'):
-            return '待适配'
+        if error_code in LIMITED_CODES:
+            return 'access_limited'
+        if error_code in THROTTLED_CODES or 'HTTP 429' in message:
+            return 'throttled'
+        if error_code in ADAPTER_CODES or any(word in message for word in ('未识别', '解析规则')):
+            return 'needs_adapter'
+        if error_code in GONE_CODES:
+            return 'address_gone'
+        if error_code in RENDER_CODES:
+            return 'render_required'
         if any(word in message for word in ('访问校验', '拒绝自动访问', 'HTTP 401', 'HTTP 403')):
-            return '访问受限'
-        if 'HTTP 429' in message:
-            return '请求受限'
-        if any(word in message for word in ('未识别', '解析规则')):
-            return '待适配'
-        if 'HTTP 412' in message:
-            return '访问异常'
-        return '暂不可读'
-    return {'unloaded': '待采集', 'pending': '等待更新', 'running': '更新中',
-            'unavailable': '官网未提供链接'}.get(state, '')
+            return 'access_limited'
+        return 'unreadable'
+    return {'unloaded': 'unloaded', 'pending': 'pending', 'running': 'running',
+            'unavailable': 'unavailable'}.get(state, '')
+
+
+def source_status_label(state, message, error_code=''):
+    return {'manual_verification': '需要验证', 'access_limited': '访问受限', 'throttled': '请求受限',
+            'needs_adapter': '待适配', 'address_gone': '地址失效', 'render_required': '需要渲染',
+            'unreadable': '暂不可读', 'unloaded': '待采集', 'pending': '等待更新', 'running': '更新中',
+            'unavailable': '官网未提供链接'}.get(source_status_kind(state, message, error_code), '')
 
 
 def refresh_status(departments):
@@ -215,6 +245,7 @@ def refresh_status(departments):
                 message = f"已检查 {latest['page'] - 1} 页，继续抓取历史通知"
         sources.append({'id': dept.id, 'name': dept.name, 'state': state,
                         'status_label': source_status_label(state, message, task.error_code if task else ''),
+                        'status_kind': source_status_kind(state, message, task.error_code if task else ''),
                         'error_code': task.error_code if task else '',
                         'new_count': result.get('new_count', latest.get('new', 0)),
                         'pages_checked': max(0, latest.get('page', 1) - (0 if latest.get('finished') else 1)),

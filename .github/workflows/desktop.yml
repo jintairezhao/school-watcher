@@ -4,7 +4,7 @@ on:
   push:
     tags: ['v*']
     branches: ['main', 'codex/desktop-release', 'codex/security-fixes', 'codex/desktop-onboarding']
-    paths: ['desktop/**', 'backend/**', 'frontend/**', 'requirements/**', 'migrations/**', 'scripts/maintenance/migrate_safely.py', 'tests/test_desktop*.py', 'config/**', '.github/workflows/desktop.yml', '.github/workflows/runtime.yml']
+    paths: ['app.py', 'desktop/**', 'backend/**', 'frontend/**', 'requirements.txt', 'requirements/**', 'migrations/**', 'scripts/**', 'tests/**', 'config/**', 'deploy/**', '.github/workflows/desktop.yml', '.github/workflows/runtime.yml']
   pull_request:
     paths: ['desktop/**', 'requirements/desktop.txt', 'requirements/build.txt', 'tests/test_desktop*.py', 'config/**', '.github/workflows/desktop.yml']
 permissions:
@@ -13,6 +13,8 @@ concurrency:
   group: desktop-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  acceptance:
+    uses: ./.github/workflows/runtime.yml
   build:
     strategy:
       fail-fast: false
@@ -115,7 +117,7 @@ jobs:
           retention-days: 3
   release:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [build, acceptance]
     runs-on: ubuntu-latest
     permissions:
       contents: write

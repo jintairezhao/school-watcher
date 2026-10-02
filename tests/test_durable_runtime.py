@@ -18,6 +18,25 @@ from backend.services.content_cache import prune_content, fetch_content, request
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_mixed_worker_gives_onboarding_and_collection_one_existing_slot_each(self):
+        from backend.worker import run
+        from threading import Barrier
+        for ident in range(10,30):
+            task = tasks.enqueue('collect', ident, {'school_id': self.school_id, 'department_id': ident})
+            task.queued_at = datetime.utcnow()-timedelta(minutes=10)
+        tasks.enqueue('source_review',1,{'proposal_id':1},capability='directory')
+        tasks.enqueue('source_review',2,{'proposal_id':2},capability='directory')
+        db.session.commit()
+        seen=[]; barrier=Barrier(2)
+        def process(app,handle,pause):
+            seen.append(handle['kind']); barrier.wait(timeout=5)
+            with app.app_context():
+                tasks.finish(handle, result={'completed':True})
+        with patch('backend.worker.execute',side_effect=process):
+            run(self.app,once=True,roles=('http','directory'),concurrency=2)
+        self.assertCountEqual(seen,['source_review','collect'])
+        self.assertEqual(BackgroundTask.query.filter_by(state='done').count(),2)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)

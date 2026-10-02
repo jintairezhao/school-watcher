@@ -9,6 +9,17 @@
     let controller;
     let failedURL;
     let openNoticePopover = '';
+    let updatesAvailable = false;
+    function pendingUpdates(value) {
+        updatesAvailable = value;
+        const button = find('#inboxNewNotices');
+        if (button) button.hidden = !value;
+    }
+    function listKey(url) {
+        const next = new URL(url);
+        next.searchParams.delete('selected');
+        return readingView.dataKey(next);
+    }
     const noticePopoverTriggers = {noticeFilterPanel: 'toggleNoticeFilters', noticeActionsMenu: 'toggleNoticeActions'};
 
     function setNoticePopover(id = '', {focus = false, returnFocus = false} = {}) {
@@ -120,6 +131,7 @@
     }
     async function navigate(url, options = {}) {
         url = new URL(url, location.origin);
+        const keepList = options.preserveList && !options.refreshList && listKey(url) === listKey(appliedURL);
         if (url.searchParams.get('school') !== appliedURL.searchParams.get('school') || readingView.mailbox(url) !== readingView.mailbox(appliedURL)) setNoticePopover();
         desiredURL = url;
         saveSources();
@@ -128,7 +140,7 @@
         const activeController = controller;
         const number = ++requestNumber;
         const timeout = setTimeout(() => activeController.abort(), 15000);
-        setFeedback('正在更新通知…', 'loading');
+        if (!keepList) setFeedback('正在更新通知…', 'loading');
         find('.notice-panel').setAttribute('aria-busy', 'true');
         try {
             const response = await fetch(url.pathname + url.search, {
@@ -174,7 +186,28 @@
             } else {
                 oldPanel.replaceWith(newPanel);
             }
-            ['.notice-panel', '.reader-panel'].forEach(selector => find(selector).replaceWith(next.querySelector(selector)));
+            if (keepList) {
+                // Selecting an article changes the reader, not the DOM under
+                // the pointer. New arrivals stay behind the explicit update.
+                const selected = url.searchParams.get('selected');
+                const nextRows = new Map([...next.querySelectorAll('[data-notice-link]')].map(row => [row.dataset.announcementId, row]));
+                const currentRows = [...find('#noticeList').querySelectorAll('[data-notice-link]')];
+                if ([...nextRows.keys()].some(id => !currentRows.some(row => row.dataset.announcementId === id))) updatesAvailable = true;
+                currentRows.forEach(row => {
+                    row.classList.toggle('is-selected', row.dataset.announcementId === selected);
+                    const fresh = nextRows.get(row.dataset.announcementId);
+                    if (fresh || row.dataset.announcementId === selected) {
+                        row.classList.toggle('is-unread', !!fresh?.classList.contains('is-unread'));
+                        if (fresh?.hasAttribute('aria-label')) row.setAttribute('aria-label', fresh.getAttribute('aria-label'));
+                        else row.removeAttribute('aria-label');
+                    }
+                });
+            } else {
+                find('.notice-panel').replaceWith(next.querySelector('.notice-panel'));
+                updatesAvailable = false;
+            }
+            find('.reader-panel').replaceWith(next.querySelector('.reader-panel'));
+            pendingUpdates(updatesAvailable);
             setNoticePopover(openNoticePopover);
             if (refreshDetailsOpen && find('#inboxRefreshDetails') && !openNoticePopover) find('#inboxRefreshDetails').open = true;
             workspace.className = next.className;
@@ -194,7 +227,7 @@
             sources.render();
             if (!sameSources) sources.restore();
             readingView.render(url, {restore: options.preserveList && sameArticle});
-            setFeedback('已更新', 'success');
+            if (!keepList) setFeedback('已更新', 'success');
             const restoreFocus = focusId ? document.getElementById(focusId) : focusChoice ?
                 document.querySelector(`[${focusChoice[0]}="${focusChoice[1]}"]`) : null;
             if (restoreFocus?.id !== 'inboxQuery' && restoreFocus?.getClientRects().length && !restoreFocus.closest('[inert]')) restoreFocus.focus({preventScroll: true});
@@ -326,11 +359,11 @@
                     if (!saved && readingView.mailbox(appliedURL) === 'saved') {
                         const keepSelected = button.dataset.id !== appliedURL.searchParams.get('selected');
                         await navigate(readingView.withMode(keepSelected ? appliedURL : workspace.dataset.backUrl,
-                            readingView.mode(appliedURL) === 'focus'), {preserveList: true});
+                            readingView.mode(appliedURL) === 'focus'), {preserveList: true, refreshList: true});
                     }
                 } else {
                     await navigate(readingView.withMode(workspace.dataset.backUrl,
-                        readingView.mode(appliedURL) === 'focus'), {preserveList: true});
+                        readingView.mode(appliedURL) === 'focus'), {preserveList: true, refreshList: true});
                 }
             } catch (error) { button.disabled = false; showToast('error', error.message); }
         }
@@ -376,8 +409,9 @@
         if (readingView.dataKey(next) === readingView.dataKey(appliedURL)) switchReadingView(next, {history: 'none'});
         else navigate(next, {history: 'none'});
     });
+    window.notifyInboxUpdates = () => pendingUpdates(true);
     window.refreshInboxView = () => appliedURL.href === desiredURL.href && !inboxSearch.isComposing()
-        ? navigate(appliedURL, {history: 'none', preserveList: true}) : Promise.resolve();
+        ? navigate(appliedURL, {history: 'none', preserveList: true, refreshList: true}) : Promise.resolve();
     syncUnits();
     const initialURL = initialConditionsURL();
     if (initialURL.href !== appliedURL.href) navigate(initialURL, {history: 'replace'});

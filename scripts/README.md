@@ -6,12 +6,12 @@
 
 | 入口 | 用途 |
 | --- | --- |
-| `setup.bat` | Windows 创建环境、安装依赖和迁移数据库 |
+| `setup.bat` | Windows 创建环境并安装桌面依赖；迁移由应用启动时执行 |
 | `run.bat` | Windows 启动桌面实例 |
-| `launch_desktop.py` | 管理本机网站、采集和浏览器进程 |
+| `launch_desktop.py` | 与 `app.py` 相同，调用桌面程序入口 |
 | `run_worker.py` | 独立采集与任务进程 |
 | `run_browser.py` | 独立浏览器服务 |
-| `initialize_runtime.py` | 服务器首次启动前的迁移与种子初始化 |
+| `initialize_runtime.py` | 历史数据初始化工具，不作为网站启动入口 |
 | `create-shortcut.ps1` | 按需创建 Windows 桌面快捷方式 |
 | `school-notifier.bat` | 兼容已有 Windows 启动入口 |
 

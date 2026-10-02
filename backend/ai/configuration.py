@@ -1,4 +1,4 @@
-"""Instance-only configuration; this module never exposes plaintext credentials."""
+"""Instance AI configuration; only explicit administrator reveal returns credentials."""
 from datetime import datetime
 import hashlib
 import re
@@ -87,8 +87,8 @@ def credential_for(binding, *, allow_untested=False):
 def public_settings():
     from backend.database.models import AppConfig
     bindings = {row.purpose: row.profile_id for row in AIBinding.query.all()}
-    profiles = [_metadata(p) for p in AIProfile.query.order_by(AIProfile.id).all()]
-    legacy = _legacy_binding() if not profiles else None
+    profiles = [_metadata(p) for p in AIProfile.query.filter_by(deleted_at=None).order_by(AIProfile.id).all()]
+    legacy = _legacy_binding() if not AIProfile.query.first() else None
     return {'providers': [{'id': key, 'name': PROVIDER_NAMES[key], 'regions': list(value)}
                           for key, value in ENDPOINTS.items()],
             'profiles': profiles, 'bindings': bindings, 'legacy': legacy,
@@ -107,8 +107,10 @@ def save_profile(payload, profile_id=None):
     allowed = {'name', 'provider', 'model', 'region', 'api_key', 'max_output_tokens', 'enabled', 'expected_version'}
     if set(payload) - allowed:
         raise AIConfigError('包含不支持的配置字段')
+    if 'enabled' in payload and type(payload['enabled']) is not bool:
+        raise AIConfigError('启用状态必须为布尔值')
     row = db.session.get(AIProfile, profile_id) if profile_id else None
-    if profile_id and not row:
+    if profile_id and (not row or row.deleted_at is not None):
         raise AIConfigError('配置不存在', 'not_found')
     if row and payload.get('expected_version') is not None and payload['expected_version'] != row.version:
         raise AIConfigError('配置已被其他管理员更新', 'configuration_changed')
@@ -142,9 +144,14 @@ def save_profile(payload, profile_id=None):
     if changed:
         row.enabled, row.tested_version, row.last_test_code = False, None, 'not_tested'
     elif 'enabled' in payload:
-        if payload['enabled'] and row.tested_version != row.version:
+        tested = row.tested_version == row.version
+        if payload['enabled'] and (not tested or not row.encrypted_key):
             raise AIConfigError('请先完成连接与结构化输出测试', 'not_tested')
-        row.enabled = bool(payload['enabled'])
+        if row.enabled != payload['enabled']:
+            # Fence queued calls and in-flight test results while retaining validation.
+            row.version += 1
+            row.tested_version = row.version if tested else None
+        row.enabled = payload['enabled']
     db.session.commit()
     return _metadata(row)
 
@@ -166,14 +173,28 @@ def bind_profile(purpose, profile_id):
 
 def delete_profile(profile_id):
     row = db.session.get(AIProfile, int(profile_id))
-    if row is None:
+    if row is None or row.deleted_at is not None:
         raise AIConfigError('配置不存在', 'not_found')
     AIBinding.query.filter_by(profile_id=row.id).delete()
-    # Retain provenance and prevent legacy fallback after intentional revocation.
+    # Only deletion clears credentials and bindings; pause/resume uses save_profile.
     row.encrypted_key, row.enabled, row.tested_version = '', False, None
     row.version += 1
+    row.updated_at = datetime.utcnow()
+    # Keep a credential-free tombstone for billing and queued configuration references.
+    row.deleted_at = row.updated_at
     db.session.commit()
-    return {'revoked': True, 'id': row.id}
+    return {'deleted': True, 'id': row.id}
+
+
+def reveal_profile_key(profile_id, payload):
+    if not isinstance(payload, dict) or type(payload.get('expected_version')) is not int:
+        raise AIConfigError('请重新选择需要查看密钥的服务')
+    row = db.session.get(AIProfile, int(profile_id))
+    if row is None or row.deleted_at is not None:
+        raise AIConfigError('配置不存在', 'not_found')
+    if row.version != payload['expected_version']:
+        raise AIConfigError('配置已更新，请重新编辑后查看密钥', 'configuration_changed')
+    return {'api_key': credential_for(_metadata(row), allow_untested=True)}
 
 
 def save_limits(payload):

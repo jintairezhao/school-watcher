@@ -1,8 +1,13 @@
 {% macro content_loader(announcement) %}
 <div class="body-loader" data-content-id="{{ announcement.id }}" data-cached="{{ 'true' if announcement.content_html or announcement.content_cached_at else 'false' }}">
+    {% if not announcement.content_html and not announcement.content_cached_at %}
+    <div class="body-loader-placeholder" aria-hidden="true" hidden>
+        {% for paragraph in range(3) %}<div class="skeleton-paragraph">{% for line in range(4) %}<span class="skeleton-line"></span>{% endfor %}</div>{% endfor %}
+    </div>
+    {% endif %}
     <div class="body-loader-content">
     {% if announcement.content_html %}
-        {{ announcement.content_html|article_html|safe }}
+        {{ announcement.content_html|article_html(announcement.id, announcement.url)|safe }}
     {% elif announcement.content_cached_at and announcement.content_text %}
         <p>{{ announcement.content_text }}</p>
     {% endif %}

@@ -1,0 +1,40 @@
+{% macro column_choice(column) %}
+{% set dept = column.department %}
+<div class="source-entry" data-source-id="{{ dept.id }}">
+    <div class="source-choice"><label><input type="checkbox" name="department" value="{{ dept.id }}" {% if selected_ids is none or dept.id in selected_ids %}checked{% endif %}><span>{{ column.label }}</span></label>{% if dept.list_url %}<a href="{{ dept.list_url }}" target="_blank" rel="noopener noreferrer" aria-label="打开{{ dept.name }}官网栏目">官网栏目</a>{% endif %}</div>
+    {% if source_paths.get(dept.id) %}
+    <details class="source-paths"><summary>官网层级与出处</summary>
+        {% for path in source_paths[dept.id] %}<div class="source-path">
+            <ol aria-label="官网列示路径">
+                {% for node in path.nodes %}<li>{{ node.name }}</li>{% else %}<li>学校主页</li>{% endfor %}
+                {% for node in path.entry_nodes %}<li>{{ node.name }}</li>{% endfor %}
+                <li>{{ path.entry_names|join(' / ') if path.entry_names else dept.name }}</li>
+            </ol>
+            <ul class="source-path-references" aria-label="路径出处">{% for reference in path.references %}<li><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=reference.url) }}">查看{{ reference.title }}的结构</a> · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer">官网出处</a><span>检查于 {{ reference.checked_at[:10] }}</span></li>{% endfor %}</ul>
+        </div>{% endfor %}
+    </details>
+    {% else %}<p class="source-path-pending">单位与栏目关系待核实，当前栏目可以单独订阅。</p>{% endif %}
+</div>
+{% endmacro %}
+{% macro unit_choice(unit, depth=0) %}
+{% if unit.expandable or unit.department_id is defined %}
+<details class="source-unit" data-unit-key="{{ unit.key }}" {% if depth == 0 %}open{% endif %}>
+    <summary>
+        {% if unit.department_id is defined %}<label><input type="checkbox" name="department" value="{{ unit.department_id }}" data-source-unit {% if selected_ids is none or unit.department_id in selected_ids %}checked{% endif %}><span>{{ unit.name }}</span></label>{% else %}<span>{{ unit.name }}</span>{% endif %}
+        <span class="source-unit-count">{{ unit.columns|length }} 个栏目</span>
+    </summary>
+    <div class="source-unit-contents">
+        {% for column in unit.own_columns %}{{ column_choice(column) }}{% endfor %}
+        {% for child in unit.children %}{{ unit_choice(child, depth + 1) }}{% endfor %}
+        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">{% if not unit.url %}官网未提供网站链接{% else %}暂未找到可接入栏目{% endif %}。可以先订阅这个部门。</p>{% endif %}
+    </div>
+</details>
+{% else %}
+{% for column in unit.own_columns %}{{ column_choice(column) }}{% endfor %}
+{% endif %}
+{% endmacro %}
+{% for group_name, units in groups.items() %}
+<fieldset class="source-group"><legend>{{ group_name }}</legend>
+    {% for unit in units %}{{ unit_choice(unit) }}{% endfor %}
+</fieldset>
+{% else %}<p class="source-sync">官网中的部门和栏目会出现在这里。</p>{% endfor %}

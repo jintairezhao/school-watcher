@@ -1,0 +1,117 @@
+/* A quiet, interactive letter for the reader before a notice is selected. */
+.reader-placeholder.reader-welcome {
+    display: flex; align-items: center; justify-content: center;
+    padding: 32px 24px 64px; overflow: auto; color: var(--color-text);
+}
+.reader-welcome-content { width: 100%; max-width: 380px; margin-block: auto; text-align: center; }
+.reader-welcome h2 { margin: 28px 0 10px; font-size: var(--text-section-title); font-weight: 600; line-height: 1.5; text-wrap: balance; }
+.reader-welcome p { margin: 0; color: var(--color-text-secondary); font-size: var(--text-control); line-height: 1.8; text-wrap: pretty; }
+.reader-letter {
+    --letter-ink: var(--color-primary);
+    --letter-stock: color-mix(in srgb, var(--color-primary) 35%, #e2eff7);
+    --letter-lining: color-mix(in srgb, var(--color-primary) 52%, #466883);
+    --letter-fold: color-mix(in srgb, var(--color-primary) 38%, #7794af);
+    display: inline-flex; flex-direction: column; align-items: center;
+    padding: 0 12px 10px; border: 0; border-radius: 16px; background: transparent;
+    color: var(--letter-ink); font: inherit; cursor: pointer; touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+.reader-letter:focus-visible, .reader-start-link:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 6px; }
+.letter-scene { position: relative; display: block; width: 288px; height: 244px; perspective: 700px; pointer-events: none; }
+.letter-envelope {
+    position: absolute; top: 85px; left: 36px; width: 216px; height: 140px;
+    transform-style: preserve-3d;
+    transform: translate(var(--letter-x, 0px), var(--letter-y, 0px)) rotateX(var(--letter-rx, 14deg)) rotateY(var(--letter-ry, -16deg)) rotateZ(var(--letter-angle, -8deg));
+    transition: transform 450ms cubic-bezier(.16, 1, .3, 1);
+}
+.letter-back {
+    position: absolute; inset: 0; border-radius: 10px;
+    background: linear-gradient(145deg, var(--letter-lining), var(--letter-stock));
+    box-shadow: inset 0 2px 3px rgb(20 46 70 / .18), 1px 2px 0 var(--letter-fold), 2px 4px 0 var(--letter-lining), 5px 12px 22px rgb(0 0 0 / .15);
+}
+.letter-flap {
+    position: absolute; z-index: 4; inset: 0 0 auto; height: 79px;
+    background: linear-gradient(165deg, #e1edf6, var(--letter-stock) 45%, var(--letter-fold));
+    clip-path: polygon(0 0, 100% 0, 53% 97%, 50% 100%, 47% 97%);
+    transform: translateZ(6px);
+    transform-origin: center top;
+    transition: transform 400ms cubic-bezier(.16, 1, .3, 1), z-index 0s 180ms;
+}
+.letter-paper {
+    position: absolute; z-index: 2; left: 20px; bottom: 12px; width: 176px; height: 126px;
+    display: flex; flex-direction: column; align-items: flex-start;
+    padding: 20px; border-radius: 5px;
+    background: linear-gradient(120deg, #fffdf6, #f7f1e5 80%, #eae3d6);
+    box-shadow: 0 1px 0 #e3daca, 0 3px 0 #f9f3e8, 0 4px 0 #d4cabc, 0 7px 14px rgb(20 46 70 / .16);
+    color: #374858; text-align: left; transform: translateZ(3px);
+    transition: transform 500ms cubic-bezier(.16, 1, .3, 1);
+}
+.letter-paper-stamp { position: absolute; top: 13px; right: 13px; display: grid; place-items: center; width: 25px; height: 30px; border: 2px dotted #8d9eac; background: #e3e9e9; color: #60778b; transform: rotate(8deg); }
+.reader-welcome .letter-paper-stamp svg { width: 19px; height: 19px; stroke-width: 1.3; }
+.letter-paper-mark { width: 21px; height: 3px; margin-bottom: 10px; border-radius: 2px; background: #68839a; }
+.letter-paper-greeting { font-size: 17px; line-height: 1.5; font-weight: 500; white-space: nowrap; }
+.letter-paper-line { width: 100%; height: 2px; flex-shrink: 0; margin-top: 9px; background: #d7d6cf; }
+.letter-paper-line + .letter-paper-line { width: 68%; }
+.letter-paper-signature { align-self: flex-end; margin-top: 7px; color: #667887; font-size: 10px; line-height: 1; }
+.reader-welcome .letter-pocket { position: absolute; z-index: 3; inset: 0; width: 100%; height: 100%; stroke-width: 1; transform: translateZ(5px); }
+.letter-light-stop { stop-color: color-mix(in srgb, var(--letter-stock) 85%, white); }
+.letter-dark-stop { stop-color: var(--letter-fold); }
+.letter-fold-light-stop { stop-color: color-mix(in srgb, var(--letter-stock) 92%, white); }
+.letter-fold-dark-stop { stop-color: var(--letter-stock); }
+.letter-pocket-fill { fill: url(#letter-stock-shade); }
+.letter-pocket-front { fill: url(#letter-fold-shade); }
+.letter-pocket-fold { stroke: var(--letter-fold); stroke-opacity: .55; }
+.letter-pocket-rim { stroke: #e3f0fa; stroke-opacity: .55; }
+.letter-seal {
+    position: absolute; z-index: 5; left: 90px; top: 57px; width: 38px; height: 38px;
+    display: grid; place-items: center; border-radius: 47% 50% 46% 49%;
+    background: radial-gradient(circle at 35% 25%, #dcb680, #b48750 65%, #9b6b39);
+    box-shadow: inset 0 1px 1px #f2d8ad, inset 0 -2px 2px #80572e, 0 3px 5px rgb(41 48 61 / .24);
+    color: #70502f; transform: translateZ(8px);
+    transition: opacity 150ms ease-out, transform 300ms ease-out;
+}
+.letter-seal::before { content: ''; position: absolute; inset: 5px; border: 1px solid rgb(112 80 47 / .4); border-radius: 50%; box-shadow: 0 1px 0 rgb(255 238 204 / .4); }
+.reader-welcome .letter-seal svg { width: 23px; height: 23px; stroke-width: 1.4; filter: drop-shadow(0 1px 0 rgb(255 238 204 / .5)); }
+.letter-shadow {
+    position: absolute; left: 61px; bottom: 14px; width: 166px; height: 10px;
+    border-radius: 50%; box-shadow: 0 14px 18px rgb(0 0 0 / .18);
+    transition: transform 450ms ease-out, opacity 450ms ease-out;
+}
+.letter-invitation { display: inline-flex; align-items: center; gap: 7px; min-height: 24px; color: var(--color-text-secondary); font-size: var(--text-meta); }
+.reader-welcome .letter-invitation svg { width: 13px; height: 13px; stroke-width: 1.5; transition: transform 180ms ease-out; }
+.reader-letter[aria-pressed="true"] .letter-envelope { transform: translate(var(--letter-x, 0px), var(--letter-y, 0px)) rotateX(var(--letter-rx, 4deg)) rotateY(var(--letter-ry, -6deg)) rotateZ(var(--letter-angle, -3deg)); }
+.reader-letter[aria-pressed="true"] .letter-flap { z-index: 1; transform: translateZ(1px) rotateX(180deg); }
+.reader-letter[aria-pressed="true"] .letter-paper { transform: translateY(-73px) translateZ(3px) rotate(-3deg); transition-delay: 80ms; }
+.reader-letter[aria-pressed="true"] .letter-seal { opacity: 0; transform: translateZ(8px) scale(.8); }
+.reader-letter[aria-pressed="true"] .letter-shadow { transform: scaleX(.85); opacity: .65; }
+.reader-letter[aria-pressed="true"] .letter-invitation svg { transform: rotate(90deg); }
+.reader-letter:active .letter-scene { scale: .96; }
+.letter-scene { transition: scale 150ms ease-out; }
+.reader-start-link {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; margin-top: 20px; padding: 8px 16px; border-radius: 8px;
+    color: var(--color-primary); background: var(--color-primary-subtle);
+    font-size: var(--text-control); font-weight: 500; text-decoration: none;
+    transition: background-color 150ms ease-out;
+}
+.reader-welcome .reader-start-link svg { width: 16px; height: 16px; stroke-width: 1.7; }
+.reader-start-link:hover { color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface)); text-decoration: none; }
+@media (hover: hover) and (pointer: fine) {
+    .reader-letter:hover .letter-invitation { color: var(--color-primary); }
+    .reader-letter[aria-pressed="false"]:hover .letter-flap { z-index: 1; transform: translateZ(1px) rotateX(155deg); }
+    .reader-letter[aria-pressed="false"]:hover .letter-paper { transform: translateY(-22px) translateZ(3px); transition-delay: 60ms; }
+    .reader-letter:hover .letter-seal { opacity: 0; transform: translateZ(8px) scale(.8); }
+}
+.reader-letter:focus-visible .letter-invitation { color: var(--color-primary); }
+@media (max-height: 650px) {
+    .reader-placeholder.reader-welcome { padding-block: 20px; }
+    .reader-welcome h2 { margin-top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .reader-welcome :is(.letter-envelope, .letter-flap, .letter-paper, .letter-seal, .letter-shadow, .letter-scene, .letter-invitation svg) { transition: none; }
+    .reader-letter .letter-envelope, .reader-letter[aria-pressed="true"] .letter-envelope { transform: none; }
+    .reader-letter:active .letter-scene { scale: 1; }
+    .reader-letter[aria-pressed="false"]:hover .letter-flap { transform: translateZ(6px); z-index: 4; }
+    .reader-letter[aria-pressed="false"]:hover .letter-paper { transform: translateZ(3px); }
+    .reader-letter[aria-pressed="false"]:hover .letter-seal { opacity: 1; transform: translateZ(8px); }
+}

@@ -15,7 +15,7 @@ from backend.database.db import db
 from backend.database import models
 from backend.ai.models import AIProfile, AIBinding, AIExecution, AIBudget
 from backend.ai.configuration import (save_profile, bind_profile, get_model_binding, public_settings,
-                                     save_limits, delete_profile, AIConfigError)
+                                     save_limits, delete_profile, credential_for, AIConfigError)
 from backend.ai.providers import ProviderResult, ProviderError, complete
 from backend.ai.runtime import run_skill, recover_uncertain_executions, reconcile_usage, test_connection
 from backend.ai.skill_loader import load_skill, validate_input, validate_output, SkillValidationError
@@ -129,6 +129,75 @@ class AIRuntimeTests(unittest.TestCase):
             with self.assertRaises(AIConfigError): self.invoke()
             transport.assert_not_called()
 
+    def test_deleted_profile_leaves_settings_but_preserves_billing(self):
+        with patch('backend.ai.providers.complete', return_value=self.response()):
+            self.invoke()
+        models.AppConfig.set('deepseek_api_key', 'fixture-legacy-key')
+        delete_profile(self.binding['id'])
+        self.assertEqual(public_settings()['profiles'], [])
+        self.assertEqual(public_settings()['bindings'], {})
+        self.assertIsNone(public_settings()['legacy'])
+        self.assertEqual(db.session.get(AIExecution, 'one').usage['total_tokens'], 70)
+        self.assertTrue(all(b.used_tokens == 70 for b in AIBudget.query.all()))
+        with self.assertRaises(AIConfigError):
+            get_model_binding('summary')
+        with self.assertRaises(AIConfigError):
+            save_profile({'api_key': 'replacement-fixture-key'}, self.binding['id'])
+        with self.assertRaises(AIConfigError):
+            test_connection(self.binding['id'])
+
+    def test_disabled_profile_can_be_deleted_and_is_never_reused(self):
+        save_profile({'enabled': False}, self.binding['id'])
+        self.assertTrue(public_settings()['profiles'][0]['has_key'])
+        delete_profile(self.binding['id'])
+        self.assertEqual(public_settings()['profiles'], [])
+        new = save_profile({'provider': 'deepseek', 'model': 'deepseek-chat', 'api_key': 'new-fixture-key'})
+        self.assertNotEqual(new['id'], self.binding['id'])
+        with patch('backend.ai.providers.complete') as transport:
+            with self.assertRaises(AIConfigError): self.invoke()
+            transport.assert_not_called()
+
+    def test_disable_enable_keeps_key_validation_and_bindings_without_paid_calls(self):
+        profile_id = self.binding['id']
+        encrypted = db.session.get(AIProfile, profile_id).encrypted_key
+        bindings = public_settings()['bindings']
+        with patch('backend.ai.providers.complete') as transport:
+            disabled = save_profile({'enabled': False, 'expected_version': self.binding['version']}, profile_id)
+            self.assertFalse(disabled['enabled'])
+            self.assertTrue(disabled['has_key'])
+            self.assertTrue(disabled['tested'])
+            self.assertEqual(public_settings()['bindings'], bindings)
+            self.assertEqual(db.session.get(AIProfile, profile_id).encrypted_key, encrypted)
+            with self.assertRaises(AIConfigError): get_model_binding('summary')
+            with self.assertRaises(AIConfigError): self.invoke()
+            self.assertEqual(credential_for(disabled, allow_untested=True), 'never-a-real-key')
+            enabled = save_profile({'enabled': True, 'expected_version': disabled['version']}, profile_id)
+            self.assertTrue(enabled['enabled'])
+            self.assertTrue(enabled['tested'])
+            self.assertEqual(get_model_binding('summary')['id'], profile_id)
+            self.assertEqual(get_model_binding('directory')['id'], profile_id)
+            self.assertEqual(credential_for(enabled), 'never-a-real-key')
+            self.assertEqual(db.session.get(AIProfile, profile_id).encrypted_key, encrypted)
+            with self.assertRaises(AIConfigError): credential_for(self.binding)
+            transport.assert_not_called()
+
+    def test_disable_during_connection_test_stays_disabled(self):
+        def respond(*args, **kwargs):
+            save_profile({'enabled': False}, self.binding['id'])
+            return self.response({'ok': True})
+        with patch('backend.ai.providers.complete', side_effect=respond):
+            test_connection(self.binding['id'])
+        profile = public_settings()['profiles'][0]
+        self.assertFalse(profile['enabled'])
+        self.assertTrue(profile['has_key'])
+        self.assertTrue(profile['tested'])
+
+    def test_enable_requires_tested_config_and_boolean_state(self):
+        profile_id = self.binding['id']
+        with self.assertRaises(AIConfigError): save_profile({'enabled': 'false'}, profile_id)
+        save_profile({'model': 'untested-model'}, profile_id)
+        with self.assertRaises(AIConfigError): save_profile({'enabled': True}, profile_id)
+
 
     def test_legacy_summary_key_does_not_authorize_new_directory_spend(self):
         AIBinding.query.delete(); AIProfile.query.delete(); db.session.commit()
@@ -157,11 +226,22 @@ class AIRuntimeTests(unittest.TestCase):
             self.invoke()
         row=db.session.get(AIExecution,'one');row.status='sending';row.active_released=False
         row.created_at=datetime.utcnow()-timedelta(minutes=5)
+        row.heartbeat_at=row.created_at
         for budget in AIBudget.query.all():budget.active_count=1
         db.session.commit()
         self.assertEqual(recover_uncertain_executions(),1)
         self.assertEqual(db.session.get(AIExecution,'one').status,'uncertain')
         self.assertTrue(all(b.active_count==0 and b.reserved_tokens>0 for b in AIBudget.query.all()))
+
+    def test_old_call_with_live_heartbeat_is_not_interrupted(self):
+        with patch('backend.ai.providers.complete',side_effect=ProviderError('unknown',uncertain=True)):
+            self.invoke()
+        row=db.session.get(AIExecution,'one');row.status='sending';row.active_released=False
+        row.created_at=datetime.utcnow()-timedelta(minutes=8)
+        row.heartbeat_at=datetime.utcnow()
+        db.session.commit()
+        self.assertEqual(recover_uncertain_executions(),0)
+        self.assertEqual(row.status,'sending')
 
     def test_execution_identity_cannot_be_reused_for_other_input(self):
         with patch('backend.ai.providers.complete',return_value=self.response()):self.invoke()

@@ -1,6 +1,0 @@
-# Run Caddy on the host with WATCHER_PUBLIC_ORIGIN set to your HTTPS origin.
-# Access logging is intentionally not enabled: verification query tickets are secret.
-{$WATCHER_PUBLIC_ORIGIN} {
-    encode zstd gzip
-    reverse_proxy 127.0.0.1:8080
-}

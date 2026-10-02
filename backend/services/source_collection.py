@@ -48,7 +48,9 @@ def fetch_source_page(url, *, purpose='directory', source_id=''):
     if page.get('status', 200) >= 400:
         raise http_failure(page['status'])
     from backend.scraper.acquisition import FetchRequest, FetchResult, FetchFailure, FetchedHTML, classify_result
-    result = classify_result(FetchRequest(url), FetchResult(page.get('url') or url,
+    # The caller's purpose decides which content rule applies; defaulting here
+    # would let an article page pass as a list merely because it has links.
+    result = classify_result(FetchRequest(url, purpose=purpose), FetchResult(page.get('url') or url,
                              status=page.get('status', 200), html=html))
     if not result.ok:
         raise FetchFailure(result)

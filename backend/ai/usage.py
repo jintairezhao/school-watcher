@@ -27,18 +27,19 @@ def usage_dashboard(days=30, offset_minutes=0, *, now=None):
     first = today - timedelta(days=364)
     selected_first = today - timedelta(days=days - 1)
     calendar = {first + timedelta(days=i): _counter() for i in range(365)}
-    total, models, purposes = _counter(), {}, {}
+    total, lifetime, models, purposes = _counter(), _counter(), {}, {}
+    history_start = None
     # Only select metadata needed by the charts; prompts, outputs and keys never leave the DB.
     rows = db.session.query(AIExecution.created_at, AIExecution.provider, AIExecution.model,
                             AIExecution.purpose, AIExecution.skill_id, AIExecution.status,
                             AIExecution.usage).filter(
-        AIExecution.created_at >= datetime.combine(first, datetime.min.time()) - offset,
         AIExecution.created_at <= now).yield_per(1000)
     for row in rows:
         # Reserved requests may not have been dispatched yet.
         if row.status == 'reserved':
             continue
         date = (row.created_at + offset).date()
+        history_start = min(history_start, date) if history_start else date
         usage = row.usage if isinstance(row.usage, dict) else {}
         known = usage.get('known') is True and type(usage.get('total_tokens')) is int and usage['total_tokens'] >= 0
         tokens = usage['total_tokens'] if known else 0
@@ -53,7 +54,9 @@ def usage_dashboard(days=30, offset_minutes=0, *, now=None):
         status_key = {'sending': 'pending', 'succeeded': 'succeeded',
                       'failed': 'failed', 'uncertain': 'uncertain'}.get(row.status, 'uncertain')
         counts[status_key] = 1
-        targets = [calendar[date]]
+        targets = [lifetime]
+        if date in calendar:
+            targets.append(calendar[date])
         if date >= selected_first:
             # Connection tests share the summary budget, but get their own usage category.
             purpose = 'test' if row.skill_id == 'connection-test' else row.purpose
@@ -82,6 +85,8 @@ def usage_dashboard(days=30, offset_minutes=0, *, now=None):
     return dict(days=days, start=selected_first.isoformat(), end=today.isoformat(),
                 offset_minutes=offset_minutes, generated_at=now.isoformat() + 'Z',
                 summary=total, daily=series, calendar=daily,
+                lifetime=dict(start=history_start.isoformat() if history_start else None,
+                              end=today.isoformat(), **lifetime),
                 models=sorted([dict(provider=provider, provider_name=PROVIDER_NAMES.get(provider, provider),
                                     model=model, **counts) for (provider, model), counts in models.items()],
                               key=lambda item: (-item['tokens'], -item['calls'], item['model'])),

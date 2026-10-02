@@ -3,7 +3,7 @@ import hashlib
 import json
 import re
 from datetime import datetime, timezone
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import parse_qs, urljoin, urlsplit
 
 from bs4 import BeautifulSoup, Tag
 
@@ -27,6 +27,20 @@ FILES = re.compile(r'\.(pdf|docx?|xlsx?|pptx?|zip|rar|7z|mp4|jpe?g|png|gif|svg|c
 SKIP = {'首页', '返回首页', '网站首页', '联系我们', '联系方式', 'English', 'ENGLISH', 'EN',
         'Русский', '中文', '打印', '关闭', '返回', 'TOP', 'Top'}
 MORE = {'更多', '更多>>', '更多>', '查看更多', 'more', 'MORE', 'More', '>>', '>'}
+
+
+def document_reference(url, label=''):
+    """CMS attachment URLs need not have a file extension in their path."""
+    if FILES.search(url or '') or FILES.search(label or ''):
+        return True
+    parts = urlsplit(url or '')
+    query = {key.lower(): values for key, values in parse_qs(parts.query).items()}
+    return any(value.lower() == 'news.downloadattachurl' for value in query.get('urltype', [])) or (
+        parts.path.lower().endswith('/download.jsp') and 'wbfileid' in query)
+
+
+def directory_document(label, kind):
+    return kind == 'directory' or any(name in (label or '') for name in DIRECTORIES)
 
 
 def clean(text):
@@ -108,6 +122,18 @@ def nearby_heading(element):
     return '', None
 
 
+def auxiliary_navigation(element):
+    """Page chrome is not an official roster, even on a directory page.
+
+    Nested lists alone are not navigation: the directory body may use them to
+    express real administrative parent/child relationships.
+    """
+    return any(tag.name in ('nav', 'header', 'footer') or re.search(
+        r'nav|menu|header|footer|foot|breadcrumb',
+        ' '.join(tag.get('class', [])) + ' ' + tag.get('id', ''), re.I)
+        for tag in [element, *element.parents] if isinstance(tag, Tag))
+
+
 def table_cell_entries(cell, base_url):
     """Keep block/line boundaries while joining inline fragments of a single name."""
     entries, fragments = [], []
@@ -157,13 +183,15 @@ def table_relationships(soup, page_url, base_url, owner_key):
         nodes.append({'key': key, 'name': name, 'kind': kind, 'url': url,
                       'parent': parent, 'locator': loc, 'relation': relation})
         decision = ('missing_link' if not url else 'restricted_or_service' if SERVICE.search(name)
-                    else 'document_reference' if FILES.search(url)
+                    else 'document_reference' if document_reference(url, name)
                     else 'follow' if same_school_url(url, base_url) else 'official_external_link')
         links.append({'label': name, 'url': url, 'kind': kind, 'path': [],
                       'locator': loc, 'decision': decision})
         return key
 
     for table in soup.find_all('table'):
+        if auxiliary_navigation(table):
+            continue
         rows = [r for r in table.find_all('tr') if r.find_parent('table') is table]
         if not rows:
             continue
@@ -229,6 +257,8 @@ def heading_relationships(soup, page_url, base_url, owner_key):
     standard = [(h, h.find_next_sibling()) for h in soup.select('h2,h3,h4')]
     adapted = list(heading_lists(soup, page_url))
     for heading, listing in standard + adapted:
+        if auxiliary_navigation(heading):
+            continue
         name = clean(heading.get_text(' ', strip=True))
         is_adapted = any(heading is h for h, _ in adapted)
         parent_kind = 'unit' if classify(name) == 'unit' else 'group'
@@ -324,6 +354,20 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
     owner_key = node_key(owner_kind, page_label, page_url)
     nodes.append({'key': owner_key, 'name': page_label, 'kind': owner_kind, 'url': page_url,
                   'parent': '', 'locator': 'document', 'relation': 'page_identity'})
+
+    def directory_parent(element):
+        # Directory cards commonly use a local title and a sibling grid of
+        # departments. Keep that explicit category without guessing a unit.
+        name, heading = nearby_heading(element)
+        if (heading is None or name == page_label or classify(name) in ('unit', 'channel')
+                or auxiliary_navigation(heading)):
+            return owner_key
+        position = locator(heading)
+        key = node_key('group', name, page_url + '#parent:' + owner_key)
+        nodes.append({'key': key, 'name': name, 'kind': 'group', 'url': '',
+                      'parent': owner_key, 'locator': position, 'relation': 'directory_group'})
+        return key
+
     elements = soup.select('a, area[href], option[value], [onclick]')
     from .medical_publications import medical_article_locators
     publication_positions = medical_article_locators(soup, page_url)
@@ -384,7 +428,7 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
             decision = 'restricted_or_service'
         elif not url:
             decision = 'missing_link'
-        elif FILES.search(url):
+        elif document_reference(url, label):
             decision = 'document_reference'
         elif position in post_positions or ARTICLE.search(url) and not (
                 (kind == 'directory' and (label in DIRECTORIES or nav_container)) or
@@ -401,7 +445,8 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
             links.append({'label': label, 'raw_label': raw_label, 'url': url, 'kind': kind,
                           'path': path, 'locator': locator(a), 'decision': decision})
             continue
-        parent = owner_key
+        auxiliary = auxiliary_navigation(a)
+        parent = directory_parent(a) if page_kind == 'directory' and not auxiliary and not trail else owner_key
         for text, tag in trail:
             # Menu grouping is not evidence of administrative subordination.
             ancestor_kind = 'unit' if classify(text) == 'unit' else 'group'
@@ -410,12 +455,8 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
             if group_key != parent:
                 nodes.append({'key': group_key, 'name': text, 'kind': ancestor_kind, 'url': ancestor_url,
                               'parent': parent, 'locator': locator(tag),
-                              'relation': 'nested_directory_entry' if page_kind == 'directory' else 'menu_group'})
+                              'relation': 'nested_directory_entry' if page_kind == 'directory' and not auxiliary else 'menu_group'})
             parent = group_key
-        auxiliary = nav_container or any(
-            p.name in ('header', 'footer') or re.search(r'header|footer|foot|breadcrumb',
-                ' '.join(p.get('class', [])) + ' ' + p.get('id', ''), re.I)
-            for p in a.parents if isinstance(p, Tag))
         relation = 'directory_entry' if page_kind == 'directory' and not auxiliary else 'navigation_entry'
         if page_kind == 'unit' and kind == 'unit':
             if trail:
@@ -445,14 +486,15 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
     # No-link units in official directories remain represented, including heading-only parents.
     if page_kind == 'directory':
         for tag in soup.select('h2,h3,h4,td,li,dt,dd'):
-            if tag.find('a') or tag.find(['li', 'td', 'dt', 'dd']):
+            if auxiliary_navigation(tag) or tag.find('a') or tag.find(['li', 'td', 'dt', 'dd']):
                 continue
             text = clean(tag.get_text(' ', strip=True))
             if 2 <= len(text) <= 70 and classify(text) == 'unit':
                 loc = locator(tag)
-                nkey = node_key('unit', text, page_url + '#parent:' + owner_key)
+                parent = directory_parent(tag)
+                nkey = node_key('unit', text, page_url + '#parent:' + parent)
                 nodes.append({'key': nkey, 'name': text, 'kind': 'unit', 'url': '',
-                              'parent': owner_key, 'locator': loc, 'relation': 'directory_entry_no_link'})
+                              'parent': parent, 'locator': loc, 'relation': 'directory_entry_no_link'})
                 links.append({'label': text, 'url': '', 'kind': 'unit', 'path': inherited_path,
                               'locator': loc, 'decision': 'missing_link'})
         table_nodes, table_links, table_locations = table_relationships(soup, page_url, base_url, owner_key)

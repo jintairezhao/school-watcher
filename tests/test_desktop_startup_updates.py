@@ -42,6 +42,15 @@ class StartupUpdateTests(unittest.TestCase):
                 api.startup_check().join(3)
             self.assertFalse(api.notification()['available'])
 
+    def test_manual_check_reports_network_failure_after_silent_startup_failure(self):
+        with patch('desktop.window.check_update',side_effect=UpdateError('暂时无法连接 GitHub，请检查网络后重试。')) as check:
+            self.api.startup_check().join(3)
+            self.assertFalse(self.api.notification()['available'])
+            manual=self.api.check()
+        self.assertEqual(check.call_count,2)
+        self.assertEqual(manual['phase'],'error')
+        self.assertIn('请检查网络后重试',manual['message'])
+
     def test_dismissal_survives_navigation_and_recheck_but_not_next_launch(self):
         with patch('desktop.window.check_update', return_value=self.update):
             self.api.startup_check().join(3)

@@ -57,24 +57,27 @@ class FirstSubscriptionTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.tearDown()
 
-    def test_first_subscription_queues_ai_and_missing_configuration_is_actionable(self):
+    def test_first_subscription_runs_rules_without_ai_configuration(self):
         from backend.database.models import BackgroundTask
         from backend.services import tasks
         from backend.worker import dispatch
         row = BackgroundTask.query.filter_by(identity=f'discover:{self.school.id}').one()
         self.assertTrue(row.payload['ai_assist'])
-        self.assertTrue(row.payload['require_ai'])
+        self.assertFalse(row.payload.get('require_ai'))
         handle = tasks.claim(capabilities=['directory'])
-        with tasks.execution_scope(handle), self.assertRaises(tasks.TaskDeferred) as raised:
-            dispatch('discover', handle['payload'])
-        tasks.handoff(handle, raised.exception)
+        with tasks.execution_scope(handle), patch('backend.services.discovery_cache.adapt_site',
+                return_value={'activated_ids': [], 'continuation_required': False}) as adapt:
+            outcome = dispatch('discover', handle['payload'])
+        tasks.finish(handle, outcome)
+        adapt.assert_called_once()
         result = self.client.get(f'/api/subscriptions/{self.school.id}/discovery')
         self.assertEqual(result.status_code, 200)
-        self.assertEqual(result.json['state'], 'waiting')
+        self.assertEqual(result.json['state'], 'done')
         self.assertFalse(result.json['needs_verification'])
-        self.assertIn('配置 AI', result.json['message'])
+        self.assertTrue(result.json['can_retry'])
         page = self.client.get(f'/subscriptions/{self.school.id}')
-        self.assertIn('配置 AI 并继续', page.text)
+        self.assertNotIn('配置 AI 并继续', page.text)
+        self.assertIn('重新查找栏目', page.text)
         self.assertNotIn('正在等待首次同步', page.text)
 
     def test_configured_ai_resumes_waiting_job_without_duplicate_work(self):
@@ -109,6 +112,23 @@ class FirstSubscriptionTests(unittest.TestCase):
         other, _ = ensure_school('其他学校', 'https://other.edu.cn/')
         self.assertEqual(self.client.get(f'/api/subscriptions/{other.id}/discovery').status_code, 403)
         self.assertEqual(self.client.post(f'/api/subscriptions/{other.id}/discovery', headers=self.headers).status_code, 403)
+
+    def test_progress_renders_official_path_references_after_a_column_is_added(self):
+        from types import SimpleNamespace
+        from backend.database.db import db
+        from backend.database.models import Department
+        department = Department(school_id=self.school.id, name='培训招生',
+                                group_name='继续教育学院', list_url='https://cce.shu.edu.cn/jypx/pxzs.htm')
+        db.session.add(department); db.session.commit()
+        path = {'nodes': [{'name': '继续教育学院'}], 'entry_nodes': [],
+                'entry_names': ['培训招生'], 'references': [{'title': '院系设置',
+                    'url': self.school.url + 'yxsz.htm', 'checked_at': '2026-10-02T00:00:00'}]}
+        relationships = SimpleNamespace(paths_for=lambda url: [path])
+        with patch('backend.services.runtime_catalog.relationships_for', return_value=relationships):
+            response = self.client.get(f'/api/subscriptions/{self.school.id}/discovery')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('院系设置', response.json['choices_html'])
+        self.assertIn(f'/schools/{self.school.id}/structure', response.json['choices_html'])
 
     def test_pending_columns_and_partial_ai_success_are_explained(self):
         from backend.database.db import db
@@ -267,7 +287,7 @@ class FirstSubscriptionTests(unittest.TestCase):
         site = {'root_url': self.school.url, 'name': self.school.name, 'site_key': 'shu'}
         parsed = {'links': []}
         output = {'status': 'succeeded', 'output': {'results': [
-            {'candidate_id': 'link-0', 'kind': 'directory', 'decision': 'propose'},
+            {'candidate_id': 'link-' + __import__('hashlib').sha256(b'https://www.shu.edu.cn/units/').hexdigest()[:24], 'kind': 'directory', 'decision': 'propose'},
             {'candidate_id': 'invented', 'kind': 'channel', 'decision': 'propose'}]}}
         with tasks.execution_scope(handle), patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
                 patch('backend.ai.runtime.run_skill', return_value=output) as run:
@@ -276,7 +296,7 @@ class FirstSubscriptionTests(unittest.TestCase):
             self.assertEqual(len(run.call_args.args[2]['candidates']), 1)
             self.assertEqual(parsed['links'][0]['url'], 'https://www.shu.edu.cn/units/')
             self.assertEqual(len(parsed['links']), 1)
-            assist_navigation(site, page, '<a href="/units/">机构设置</a>', parsed)
+            assist_navigation(site, page, '<a href="/units/">机构设置</a><a href="http://127.0.0.1/">内网</a>', parsed)
             self.assertEqual(run.call_count, 1)
         self.assertEqual(Department.query.count(), 0)
 

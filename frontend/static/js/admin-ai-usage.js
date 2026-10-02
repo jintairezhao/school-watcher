@@ -3,8 +3,7 @@
     const field = id => document.getElementById(id);
     const panel = field('aiUsagePanel');
     if (!panel) return;
-    let days = 30, metric = 'tokens', data = null, serial = 0, controller;
-    const narrow = matchMedia('(max-width:640px)');
+    let days = 30, trendDays = 30, activityMode = 'daily', metric = 'tokens', data = null, serial = 0, controller;
     const number = value => Number(value).toLocaleString('zh-CN');
     const compact = value => value >= 100000000 ? (value / 100000000).toLocaleString('zh-CN', {maximumFractionDigits:1}) + ' 亿'
         : value >= 10000 ? (value / 10000).toLocaleString('zh-CN', {maximumFractionDigits:1}) + ' 万' : number(value);
@@ -84,57 +83,82 @@
     function renderCalendar() {
         if (!data) return;
         hideTooltip();
-        const entries = narrow.matches ? data.calendar.slice(-91) : data.calendar;
+        const cumulative = activityMode === 'cumulative';
+        const scroll = field('aiActivityScroll');
+        scroll.hidden = cumulative;
+        field('aiActivityLifetime').hidden = !cumulative;
+        if (cumulative) {
+            const total = data.lifetime;
+            text('aiLifetimeTokens', number(total.tokens));
+            text('aiLifetimeCalls', number(total.calls));
+            text('aiLifetimeBreakdown', '输入 ' + number(total.input_tokens) + ' · 输出 ' + number(total.output_tokens)
+                + (total.unclassified_tokens ? ' · 未细分 ' + number(total.unclassified_tokens) : ''));
+            text('aiLifetimeOutcomes', total.succeeded + ' 次成功 · ' + total.failed + ' 次失败'
+                + (total.uncertain ? ' · ' + total.uncertain + ' 次结果待确认' : '')
+                + (total.pending ? ' · ' + total.pending + ' 次进行中' : ''));
+            field('aiLifetimeUnknown').hidden = !total.unknown_usage;
+            text('aiLifetimeUnknown', total.unknown_usage + ' 次调用未返回用量，未计入 Token 总量。');
+            field('aiActivityLifetime').setAttribute('aria-label', total.start
+                ? total.start + ' — ' + total.end + ' · 本站记录的全部历史用量' : '尚无调用记录');
+            return;
+        }
+        const entries = data.calendar;
         const startDay = new Date(entries[0].date + 'T00:00:00Z').getUTCDay();
-        const padding = (startDay + 6) % 7;
+        const padding = activityMode === 'weekly' ? (startDay + 6) % 7 : 0;
         const weeks = Math.ceil((padding + entries.length) / 7);
         const grid = field('aiActivityGrid'), months = field('aiActivityMonths');
         grid.replaceChildren(); months.replaceChildren();
         grid.style.setProperty('--weeks', weeks); months.style.setProperty('--weeks', weeks);
         for (let i = 0; i < padding; i++) grid.append(node('span'));
+        grid.setAttribute('aria-label', activityMode === 'weekly'
+            ? '最近365天，每列一周，从上到下为周一至周日，方向键查看日期'
+            : '最近365天，每格一天，从上到下、从左到右按日期排列，方向键查看日期');
         const max = Math.max(...entries.map(d => d.tokens), 1);
         let lastMonth = '', lastColumn = -4;
         entries.forEach((day, index) => {
             const button = inspectable(node('button', '', 'usage-day'), day);
+            button.dataset.date = day.date;
             button.dataset.level = day.tokens ? Math.min(4, Math.ceil(day.tokens / max * 4)) : 0;
             // A failed/unknown call with no reported tokens still has visible activity.
             if (!day.tokens && day.calls) button.dataset.level = 1;
             grid.append(button);
             const month = day.date.slice(0, 7), column = Math.floor((padding + index) / 7) + 1;
             if (month !== lastMonth && (index > 0 || Number(day.date.slice(8)) <= 7)
-                && column - lastColumn >= (narrow.matches ? 3 : 4) && column < weeks - 1) {
+                && column - lastColumn >= 3 && column < weeks - 1) {
                 const label = node('span', Number(day.date.slice(5, 7)) + '月');
                 label.style.gridColumn = column + ' / span 2'; months.append(label); lastColumn = column;
             }
             lastMonth = month;
         });
         grid.lastElementChild.tabIndex = 0;
-        text('aiActivityPeriod', narrow.matches ? '近 13 周' : '近一年');
-        text('aiActivitySummary', entries.filter(d => d.calls > 0).length + ' 天有调用');
+        // Keep the entire year on small screens, starting at the most recent dates.
+        requestAnimationFrame(() => { scroll.scrollLeft = scroll.scrollWidth; });
     }
     function renderTrend() {
         hideTooltip();
-        const values = data.daily.map(d => d[metric]);
+        const entries = data.calendar.slice(-trendDays);
+        const values = entries.map(d => d[metric]);
         const max = Math.max(...values, 0);
         const magnitude = Math.pow(10, Math.floor(Math.log10(max || 1)));
         const ceiling = Math.max(2, Math.ceil(max / magnitude) * magnitude);
         field('aiUsageAxis').replaceChildren(...[ceiling, ceiling / 2, 0].map(value => node('span', compact(value))));
-        const bars = field('aiUsageBars'); bars.replaceChildren(); bars.style.setProperty('--days', days);
-        data.daily.forEach(day => {
+        const bars = field('aiUsageBars'); bars.replaceChildren(); bars.style.setProperty('--days', trendDays);
+        entries.forEach(day => {
             const button = inspectable(node('button', '', 'usage-bar'), day);
             const bar = node('span'); bar.style.height = day[metric] / ceiling * 100 + '%';
             button.dataset.zero = String(day[metric] === 0); button.append(bar); bars.append(button);
         });
         bars.lastElementChild.tabIndex = 0;
-        field('aiUsageDates').replaceChildren(...[data.daily[0], data.daily[Math.floor((days - 1) / 2)], data.daily[days - 1]]
+        field('aiUsageDates').replaceChildren(...[entries[0], entries[Math.floor((trendDays - 1) / 2)], entries[trendDays - 1]]
             .map(day => node('span', day.date.slice(5).replace('-', '/'))));
-        field('aiUsageEmpty').hidden = data.summary.calls > 0;
-        if (data.summary.calls && !max) {
+        const calls = entries.reduce((sum, entry) => sum + entry.calls, 0);
+        field('aiUsageEmpty').hidden = calls > 0;
+        if (calls && !max) {
             field('aiUsageEmpty').hidden = false;
             text('aiUsageEmpty', '这段时间有调用记录，已记录的 Token 用量为 0。');
         } else text('aiUsageEmpty', '这段时间还没有调用记录。使用 AI 发现栏目或生成摘要后，会在这里显示。');
         const rows = field('aiUsageRows'); rows.replaceChildren();
-        [...data.daily].reverse().forEach(day => {
+        [...entries].reverse().forEach(day => {
             const row = node('tr');
             [day.date, number(day.tokens), number(day.calls), number(day.succeeded), number(day.failed), number(day.uncertain)]
                 .forEach(value => row.append(node('td', value)));
@@ -159,9 +183,19 @@
             box.append(row);
         });
     }
-    function render() {
-        const summary = data.summary;
-        text('aiUsageRange', data.start.replaceAll('-', '/') + ' — ' + data.end.replaceAll('-', '/'));
+    function renderOverview() {
+        if (!data) return;
+        const entries = data.calendar.slice(-days);
+        const summary = {};
+        ['tokens', 'input_tokens', 'output_tokens', 'unclassified_tokens', 'calls', 'succeeded',
+            'failed', 'uncertain', 'pending', 'unknown_usage'].forEach(key => {
+            summary[key] = entries.reduce((sum, entry) => sum + entry[key], 0);
+        });
+        const completed = summary.succeeded + summary.failed;
+        summary.success_rate = completed ? Math.round(summary.succeeded / completed * 1000) / 10 : null;
+        const peak = entries.reduce((best, entry) => entry.tokens > best.tokens ? entry : best);
+        summary.peak_tokens = peak.tokens; summary.peak_date = peak.tokens ? peak.date : null;
+        text('aiUsageRange', entries[0].date.replaceAll('-', '/') + ' — ' + data.end.replaceAll('-', '/'));
         text('aiUsageTokens', compact(summary.tokens)); field('aiUsageTokens').title = number(summary.tokens) + ' Token';
         text('aiUsageTokenDetail', '输入 ' + compact(summary.input_tokens) + ' · 输出 ' + compact(summary.output_tokens)
             + (summary.unclassified_tokens ? ' · 未细分 ' + compact(summary.unclassified_tokens) : ''));
@@ -175,6 +209,9 @@
         text('aiUsagePeakDate', summary.peak_date || '暂无 Token 用量');
         field('aiUsageUnknown').hidden = !summary.unknown_usage;
         text('aiUsageUnknown', summary.unknown_usage + ' 次调用未返回用量，未计入 Token 统计。');
+    }
+    function render() {
+        renderOverview();
         renderCalendar(); renderTrend();
         ranks('aiUsagePurposes', data.purposes, false); ranks('aiUsageModels', data.models, true);
         text('aiBudgetMonth', data.budget_month + ' · UTC 月度');
@@ -207,7 +244,7 @@
         hideTooltip(); panel.setAttribute('aria-busy', 'true');
         field('aiUsageStatus').hidden = false; text('aiUsageStatus', data ? '正在刷新…' : '正在读取用量…');
         try {
-            const response = await fetch('/api/admin/ai/usage?days=' + days + '&offset=' + (-new Date().getTimezoneOffset()), {signal:requestController.signal});
+            const response = await fetch('/api/admin/ai/usage?days=30&offset=' + (-new Date().getTimezoneOffset()), {signal:requestController.signal});
             if (!response.ok) throw new Error('无法读取');
             const result = await response.json();
             if (current !== serial) return;
@@ -223,14 +260,19 @@
         }
     };
     panel.querySelectorAll('[data-usage-days]').forEach(button => button.addEventListener('click', () => {
-        days = Number(button.dataset.usageDays); pressed('data-usage-days', days); window.loadAIUsage();
+        days = Number(button.dataset.usageDays); pressed('data-usage-days', days); renderOverview();
+    }));
+    panel.querySelectorAll('[data-trend-days]').forEach(button => button.addEventListener('click', () => {
+        trendDays = Number(button.dataset.trendDays); pressed('data-trend-days', trendDays); if (data) renderTrend();
+    }));
+    panel.querySelectorAll('[data-activity-mode]').forEach(button => button.addEventListener('click', () => {
+        activityMode = button.dataset.activityMode; pressed('data-activity-mode', activityMode); renderCalendar();
     }));
     panel.querySelectorAll('[data-usage-metric]').forEach(button => button.addEventListener('click', () => {
         metric = button.dataset.usageMetric; pressed('data-usage-metric', metric); if (data) renderTrend();
     }));
     field('aiUsageRefresh').addEventListener('click', () => window.loadAIUsage());
     keyboardChart(field('aiActivityGrid'), true); keyboardChart(field('aiUsageBars'), false);
-    narrow.addEventListener('change', renderCalendar);
     window.addEventListener('scroll', () => {
         if (tooltipTarget && (document.activeElement === tooltipTarget || tooltipTarget.matches(':hover'))) {
             const box = tooltipTarget.getBoundingClientRect();

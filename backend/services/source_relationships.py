@@ -21,15 +21,27 @@ PATH_RELATIONS = ROSTER_RELATIONS | {'shared_table_row', 'menu_group', 'page_ide
                                    'publication_group'}
 
 
+def _page_address(url):
+    parts = urlsplit(canonical_url(url))
+    return parts.hostname, parts.port, parts.path, parts.query, parts.fragment
+
+
+def _same_listing(a, b):
+    samples = {_page_address(s['url']) for s in a.get('samples', [])}
+    return (bool(a.get('name')) and a.get('name') == b.get('name') and
+            len(samples & {_page_address(s['url']) for s in b.get('samples', [])}) >= 2)
+
+
 def teaching_entrance(node):
     return node['kind'] == 'group' and len(node['name']) <= 18 and bool(TEACHING.search(node['name']))
 
 
 class SourceRelationships:
-    def __init__(self, report, records):
+    def __init__(self, report, records, *, directory_navigation=False):
         self.entries = defaultdict(list)
         self.pages = {}
         self.aliases = defaultdict(set)
+        self.alias_references = defaultdict(list)
         self.site = report['site'] if report else {}
         self.ownership_pages = [p for p in (report or {}).get('pages', [])
                                 if PREFIX in (p.get('notes_json') or '')]
@@ -42,6 +54,44 @@ class SourceRelationships:
                 a, b = canonical_url(page['url']), canonical_url(page['final_url'])
                 self.aliases[a].add(b)
                 self.aliases[b].add(a)
+        # A CMS can serve one column at its navigation URL and at a pager URL
+        # without redirecting. Both fetched lists must agree on their articles,
+        # heading and website identity; a copied breadcrumb is insufficient.
+        by_address = {canonical_url(p.get('final_url') or p['url']): p for p in report['pages']
+                      if p['state'] == 'fetched' and p.get('feed_json') and p.get('content_hash')}
+        protocol_variants = defaultdict(list)
+        for address, page in by_address.items():
+            for other_address, other in protocol_variants[_page_address(address)]:
+                if (not self._school_page(address) or not page.get('title') or
+                        normalized_name(page['title']) != normalized_name(other.get('title', ''))):
+                    continue
+                pair = next(((a,b) for a in json.loads(page['feed_json']).get('lists', [])
+                    for b in json.loads(other['feed_json']).get('lists', []) if _same_listing(a,b)), None)
+                if pair:
+                    self.aliases[address].add(other_address); self.aliases[other_address].add(address)
+                    refs = [self._reference(p['url'], [f['heading_locator'], f['container_locator']])
+                            for p,f in zip((page,other),pair)]
+                    self.alias_references[address].extend(refs)
+                    self.alias_references[other_address].extend(refs)
+            protocol_variants[_page_address(address)].append((address,page))
+        for address, page in by_address.items():
+            for feed in json.loads(page['feed_json']).get('lists', []):
+                alias = feed.get('listing_alias') or {}
+                target = canonical_url(alias.get('canonical_url', ''))
+                other = by_address.get(target)
+                if (not other or alias.get('url') != address or not self._school_page(address)
+                        or not self._school_page(target) or not page.get('title')
+                        or normalized_name(page['title']) != normalized_name(other.get('title', ''))):
+                    continue
+                matched = next((f for f in json.loads(other['feed_json']).get('lists', [])
+                    if _same_listing(feed,f)), None)
+                if not matched:
+                    continue
+                self.aliases[address].add(target); self.aliases[target].add(address)
+                refs = [self._reference(page['url'], [alias['breadcrumb_locator'], alias['script_locator']]),
+                        self._reference(other['url'], [matched['heading_locator'], matched['container_locator']])]
+                self.alias_references[address].extend(refs)
+                self.alias_references[target].extend(refs)
         by_reference = defaultdict(list)
         for record in records:
             page = self.pages.get(record['reference_url'])
@@ -84,6 +134,13 @@ class SourceRelationships:
                     if identity:
                         own_paths.append(dict(owner, website_identity=identity,
                             references=owner['references'] + [self._reference(reference, [identity['locator']])]))
+                    elif directory_navigation and 'unit_profile_page:' not in (page.get('notes_json') or ''):
+                        # An official directory can establish a website placement
+                        # even when that site's branding is stale. This weaker
+                        # basis cannot establish a publishing owner or activation.
+                        own_paths.append(dict(owner, basis='official_directory_navigation',
+                            identity_pending=True, references=owner['references'] +
+                            [self._reference(reference, ['title'])]))
             if self._addresses(reference) & self._addresses(root):
                 own_paths.append({'unit_key': 'school:' + self.site['site_key'],
                                   'unit_name': self.site['name'], 'nodes': [], 'references': [],
@@ -118,6 +175,56 @@ class SourceRelationships:
                                       and n['locator'] == feed.get('column_group_locator')]
                             self._add(feed['column_url'], owner, reference,
                                       locators, feed['name'], groups)
+
+        if directory_navigation:
+            # A failed navigation endpoint does not erase the official unit
+            # placement of a still-readable pager. This is deliberately not a
+            # URL alias or publishing-owner verdict. Keep activation strict.
+            unit_entrances = [owner for entrance, entries in list(self.entries.items()) for owner in entries
+                if owner.get('website_identity') and (unit := next(
+                    (n for n in reversed(owner['nodes']) if n['kind'] == 'unit'), None))
+                and entrance in self._addresses(unit['url'])]
+            for address, page in by_address.items():
+                if 'unit_profile_page:' in (page.get('notes_json') or ''):
+                    continue
+                for feed in json.loads(page['feed_json']).get('lists', []):
+                    alias = feed.get('listing_alias') or {}
+                    target = canonical_url(alias.get('canonical_url', ''))
+                    other = self.pages.get(target)
+                    if (alias.get('url') != address or not self._school_page(address)
+                            or other and other['state'] == 'fetched'):
+                        continue
+                    candidates = list(self.entries.get(target, []))
+                    # An old aggregate column may have disappeared from the
+                    # homepage menu. Its observed pager link, exact current
+                    # website branding and scoped articles still locate the unit.
+                    for owner in unit_entrances:
+                        unit = next(n for n in reversed(owner['nodes']) if n['kind'] == 'unit')
+                        navigation = urlsplit(target)
+                        if any(navigation.netloc == (scope := urlsplit(u)).netloc
+                            and not scope.query and not scope.fragment
+                            and (navigation.path == scope.path.rstrip('/') or
+                                 navigation.path.startswith(scope.path.rstrip('/') + '/'))
+                            for u in self._addresses(unit['url'])):
+                            candidates.append(owner)
+                    for owner in candidates:
+                        identity = self._unit_website_identity(page, owner)
+                        unit = next((n for n in reversed(owner['nodes']) if n['kind'] == 'unit'), None)
+                        if not identity or not unit:
+                            continue
+                        scopes = [urlsplit(u) for u in self._addresses(unit['url'])]
+                        articles = {canonical_url(s['url']) for s in feed.get('samples', [])}
+                        scoped = [url for url in articles if any(
+                            (p := urlsplit(url)).netloc == scope.netloc and not scope.query and not scope.fragment
+                            and (p.path == scope.path.rstrip('/') or p.path.startswith(scope.path.rstrip('/') + '/'))
+                            for scope in scopes)]
+                        if len(scoped) < 2 or len(scoped) != len(articles):
+                            continue
+                        evidence = dict(owner, basis='official_directory_navigation', website_identity=identity,
+                            pagination_identity_pending=True, navigation_target_url=target)
+                        self._add(address, evidence, page['url'],
+                            [alias['breadcrumb_locator'], alias['script_locator'], identity['locator'],
+                             feed['container_locator']], feed['name'], owner.get('entry_nodes', []))
 
         # Follow observed menus inside an identified unit website. Colleges
         # commonly put notices one level below a teaching/admissions landing
@@ -255,7 +362,9 @@ class SourceRelationships:
         evidence = dict(owner, references=owner['references'] + [self._reference(reference, locators)],
                         entry_name=entry_name, entry_url=target, entry_nodes=list(entry_nodes))
         for address in self._addresses(target):
-            self.entries[address].append(evidence)
+            self.entries[address].append(dict(evidence,
+                references=evidence['references'] + (self.alias_references[address]
+                    if address != canonical_url(target) else [])))
 
     def paths_for(self, url):
         result = {}

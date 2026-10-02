@@ -6,6 +6,16 @@ class SourceAccessError(RuntimeError):
     retryable = False
 
 
+class SourceLoginRequired(SourceAccessError):
+    """The site redirected this address to its own sign-in route.
+
+    Raised by the HTTP client when the hand-off cannot be completed. However the
+    hand-off fails -- refused handshake, reset, timeout -- no page reaches the
+    classifier, so the site's access rule would otherwise be reported to the
+    reader as a parser problem they cannot fix.
+    """
+
+
 class SourceNetworkError(RuntimeError):
     retryable = True
 
@@ -22,6 +32,20 @@ def http_failure(status):
     return SourceAccessError(f'官网返回异常状态（HTTP {status}），请核对来源状态')
 
 
+def _network_failure(error, message):
+    """A reader sees the Chinese summary; the transport text stays for diagnosis.
+
+    urllib3 and OpenSSL describe their failures in English, naming hosts, ports
+    and error codes. Those strings became the stored task error and the reader's
+    only explanation, which reads as an infrastructure fault rather than "the
+    official site could not be reached". The original error is kept as the cause
+    so the technical detail is still available to a log or a developer.
+    """
+    failure = SourceNetworkError(message)
+    failure.__cause__ = error
+    return failure
+
+
 def describe_fetch_error(error):
     if isinstance(error, (SourceAccessError, SourceNetworkError)):
         return error
@@ -32,5 +56,5 @@ def describe_fetch_error(error):
     if 'No public IPv4 address could be verified' in str(error):
         return SourceNetworkError('官网域名未能解析到可验证的公网地址，请检查网络解析；已有消息仍保留')
     if isinstance(error, requests.ConnectionError) or 'Public campus endpoint did not respond' in str(error):
-        return SourceNetworkError(f'官网网络连接失败：{error}')
-    return SourceNetworkError(f'官网请求失败（{type(error).__name__}）：{error}')
+        return _network_failure(error, '官网网络连接失败，稍后重试；已有消息仍保留')
+    return _network_failure(error, f'官网请求失败（{type(error).__name__}），稍后重试；已有消息仍保留')

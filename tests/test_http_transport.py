@@ -68,6 +68,44 @@ class TransportTests(unittest.TestCase):
             self.assertEqual(PublicHTTPClient().get('https://www.example.edu.cn/').status_code, 403)
             self.assertEqual(transport.call_count, 1)
 
+    def test_a_sign_in_hop_that_cannot_be_completed_reports_the_site_rule(self):
+        # A hand-off that cannot be completed never returns a page for the
+        # classifier to read, so "this needs an account" would otherwise reach the
+        # reader as a connection error, and onward as a parser problem. The TLS
+        # EOF below stands for any transport failure on the provider's address --
+        # refused handshake, reset, timeout. It is a shape, not a measurement of
+        # one host: a real provider's host was observed failing this way once and
+        # then answering normally on retest, which is exactly why the program must
+        # not depend on which transport error it happens to get.
+        from backend.scraper.fetch_errors import SourceLoginRequired
+        sign_in = 'https://id.example.edu.cn/cas/login?service=https%3A%2F%2Fwww.example.edu.cn%2Ftzgg.htm'
+        with patch('requests.utils.get_environ_proxies', return_value={}), \
+             patch(TRANSPORT, side_effect=[self.response(302, sign_in),
+                     requests.exceptions.SSLError('SSL: UNEXPECTED_EOF_WHILE_READING')]):
+            with self.assertRaises(SourceLoginRequired) as caught:
+                PublicHTTPClient().get('https://www.example.edu.cn/tzggcontent.jsp?wbnewsid=1')
+        self.assertEqual(str(caught.exception), sign_in)
+
+    def test_an_ordinary_hop_that_cannot_be_completed_stays_a_transport_error(self):
+        # The same failure without a sign-in hand-off is the network, and must not
+        # be reported to anyone as an access rule the site imposed.
+        from backend.scraper.fetch_errors import SourceLoginRequired
+        with patch('requests.utils.get_environ_proxies', return_value={}), \
+             patch(TRANSPORT, side_effect=[self.response(302, 'https://www.example.edu.cn/tzgg/'),
+                     requests.exceptions.SSLError('SSL: UNEXPECTED_EOF_WHILE_READING')]):
+            with self.assertRaises(requests.exceptions.SSLError) as caught:
+                PublicHTTPClient().get('https://www.example.edu.cn/tzggcontent.jsp?wbnewsid=1')
+        self.assertNotIsInstance(caught.exception, SourceLoginRequired)
+
+    def test_a_completed_sign_in_hop_reaches_the_classifier_as_a_page(self):
+        # The hop succeeding is not an error here: the provider's own page is what
+        # came back, and it is the classifier's judgement to make.
+        sign_in = 'https://id.example.edu.cn/cas/login?service=https%3A%2F%2Fwww.example.edu.cn%2Ftzgg.htm'
+        with patch(TRANSPORT, side_effect=[self.response(302, sign_in), self.response()]):
+            result = PublicHTTPClient().get('https://www.example.edu.cn/tzggcontent.jsp?wbnewsid=1')
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.url, 'https://www.example.edu.cn/')
+
     def test_same_host_duplicated_https_redirect_preserves_path_and_query(self):
         url = 'http://www.example.edu.cn/notices/?page=2'
         malformed = 'https://www.example.edu.cn' + url

@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT), str(ROOT / 'tests')]
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 from test_source_governance import SourceGovernanceTests
 from test_wordpress_publications import ARTICLE, TITLE, article_html
 from backend.database.db import db
@@ -26,6 +26,8 @@ try:
     target = db.session.get(SourceProposal, result['validation']['related_proposal_ids'][0])
     target.state = 'needs_review'
     target.validation_json = json.dumps({'errors': ['source_login_required']})
+    from backend.database.models import BackgroundTask
+    BackgroundTask.query.filter_by(identity=f'source_review:{target.id}').update({'state': 'done'})
     db.session.commit()
     client = fixture.app.test_client()
     with client.session_transaction() as session:
@@ -47,17 +49,20 @@ try:
             page.route('**/*', serve)
             page.add_init_script("if (window === window.top) localStorage.setItem('theme', 'dark')")
             page.goto('http://localhost/admin/sources')
+            page.locator('#proposalState').select_option('login_required')
+            expect(page.locator('#proposalList button')).to_have_count(1)
             page.locator('#proposalList button').click()
-            page.get_by_text('这个栏目要求学校登录', exact=False).wait_for()
+            page.locator('#proposalWorkflow').filter(has_text='官网要求登录').wait_for()
             assert page.locator('[data-review="recheck"]').inner_text() == '自动检查'
             assert not page.locator('#reviewNote').is_visible()
+            assert page.locator('#sourcePicker, #manualSourceReview').count() == 0
             page.screenshot(path=str(output / f'review-{width}.png'), full_page=True)
             page.locator('#proposalState').select_option('superseded')
             page.locator('#proposalList button').click()
             page.get_by_role('button', name='查看所属栏目：考试').wait_for()
             assert not page.locator('#reviewActions').is_visible()
             page.get_by_role('button', name='查看所属栏目：考试').click()
-            page.get_by_text('这个栏目要求学校登录', exact=False).wait_for()
+            page.locator('#proposalWorkflow').filter(has_text='官网要求登录').wait_for()
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             assert not errors, errors
             page.close()

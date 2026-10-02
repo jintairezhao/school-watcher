@@ -1,0 +1,38 @@
+<div class="reader-placeholder reader-welcome">
+    <div class="reader-welcome-content">
+        <button type="button" class="reader-letter" data-reader-letter aria-label="拆开信封" aria-pressed="false">
+            <span class="letter-scene" aria-hidden="true">
+                <span class="letter-shadow"></span>
+                <span class="letter-envelope">
+                    <span class="letter-back"></span>
+                    <span class="letter-flap"></span>
+                    <span class="letter-paper">
+                        <span class="letter-paper-stamp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-5 9 5-9 5-9-5Z"/><path d="M7 12v5c3 2 7 2 10 0v-5"/></svg></span>
+                        <span class="letter-paper-mark"></span>
+                        <span class="letter-paper-greeting">见字如面</span>
+                        <span class="letter-paper-line"></span>
+                        <span class="letter-paper-line"></span>
+                        <span class="letter-paper-signature">校园来信</span>
+                    </span>
+                    <svg class="letter-pocket" viewBox="0 0 180 116" fill="none">
+                        <defs>
+                            <linearGradient id="letter-stock-shade" x1="18" y1="0" x2="166" y2="120" gradientUnits="userSpaceOnUse"><stop class="letter-light-stop"/><stop offset="1" class="letter-dark-stop"/></linearGradient>
+                            <linearGradient id="letter-fold-shade" x1="90" y1="49" x2="90" y2="116" gradientUnits="userSpaceOnUse"><stop class="letter-fold-light-stop"/><stop offset="1" class="letter-fold-dark-stop"/></linearGradient>
+                        </defs>
+                        <path class="letter-pocket-fill" d="M0 0 90 60 180 0v106a10 10 0 0 1-10 10H10a10 10 0 0 1-10-10Z"/>
+                        <path class="letter-pocket-front" d="m1 111 76-58a21 21 0 0 1 26 0l76 58a10 10 0 0 1-9 5H10a10 10 0 0 1-9-5Z"/>
+                        <path class="letter-pocket-fold" d="m1 113 64-51m114 51-64-51"/>
+                        <path class="letter-pocket-rim" d="M1 2v104a9 9 0 0 0 9 9h160a9 9 0 0 0 9-9V2"/>
+                    </svg>
+                    <span class="letter-seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-5 9 5-9 5-9-5Z"/><path d="M7 12v5c3 2 7 2 10 0v-5"/></svg></span>
+                </span>
+            </span>
+            <span class="letter-invitation" aria-hidden="true"><span data-letter-hint>点一下，拆封</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="m9 5 7 7-7 7"/></svg></span>
+        </button>
+        <h2>{{ '校园来信，等你展开' if announcements else '留个位置，等新消息' }}</h2>
+        <p>{{ '从左侧选一条通知，在这里慢慢读。' if announcements else '调整左侧筛选，找到想读的校园消息。' }}</p>
+        {% if announcements %}
+        <a class="reader-start-link" data-reader-start href="{{ notice_urls[announcements[0].id] }}">阅读第一条通知<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></a>
+        {% endif %}
+    </div>
+</div>

@@ -54,6 +54,8 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
     name = db.Column(db.String(200), nullable=False, comment='部门名称')
+    kind = db.Column(db.String(16), nullable=False, default='column', server_default='column')
+    structure_key = db.Column(db.String(64), unique=True, index=True, comment='官网目录节点的稳定标识')
     list_url = db.Column(db.String(1000), comment='通知列表页URL')
     list_selector = db.Column(db.String(500), comment='列表项CSS选择器')
     title_selector = db.Column(db.String(500), comment='标题CSS选择器')

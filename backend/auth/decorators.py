@@ -1,12 +1,12 @@
-"""当前用户与权限装饰器
+"""Data-owner guards; production requests use the native launch capability.
 
-多用户化的身份锚点：session['user_id'] → g.user。
-login_required / admin_required 对 /api/* 返回 JSON，对页面返回重定向/403。
+Legacy record IDs remain valid for stored subscriptions and isolated service
+tests. There is no endpoint that issues username/password sessions.
 """
 
 import functools
 
-from flask import g, jsonify, redirect, request, session, url_for, abort
+from flask import g, jsonify, request, session, abort
 
 from backend.database.models import User
 
@@ -29,8 +29,8 @@ def _is_api():
 
 def _unauthorized():
     if _is_api():
-        return jsonify({'error': '未登录', 'redirect': url_for('auth.login_page')}), 401
-    return redirect(url_for('auth.login_page', next=request.full_path))
+        return jsonify({'error': '本机会话已失效，请重新打开应用'}), 401
+    abort(403)
 
 
 def _forbidden():
@@ -40,7 +40,7 @@ def _forbidden():
 
 
 def login_required(fn):
-    """登录用户（含 admin）"""
+    """Require an active local data-owner context."""
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         if g.get('user') is None:

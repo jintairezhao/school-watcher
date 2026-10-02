@@ -1,18 +1,22 @@
 <section id="aiUsagePanel" class="ai-usage" aria-labelledby="aiUsageTitle" aria-busy="true">
     <header class="usage-heading">
-        <div><h1 id="aiUsageTitle">API 用量</h1><p id="aiUsageRange" class="text-muted">栏目发现 · 通知摘要 · 连接测试</p></div>
+        <div><h1 id="aiUsageTitle">API 用量</h1><p class="text-muted">栏目发现 · 通知摘要 · 连接测试</p></div>
         <div class="usage-toolbar">
-            <div class="usage-switch" role="group" aria-label="统计时段">
-                <button type="button" data-usage-days="7" aria-pressed="false">近 7 天</button>
-                <button type="button" data-usage-days="30" aria-pressed="true">近 30 天</button>
-                <button type="button" data-usage-days="90" aria-pressed="false">近 90 天</button>
-            </div>
             <button id="aiUsageRefresh" type="button" class="btn btn-outline btn-sm">刷新</button>
             <a id="aiUsageConfigure" class="btn btn-ghost btn-sm" href="{{ url_for('admin.admin_page') }}#platform">服务设置</a>
         </div>
     </header>
     <p id="aiUsageStatus" role="status" class="usage-status">正在读取用量…</p>
     <div id="aiUsageContent" hidden>
+        <section class="usage-overview" aria-labelledby="aiOverviewTitle">
+        <div class="usage-section-heading">
+            <div><h3 id="aiOverviewTitle">用量概览</h3><p id="aiUsageRange" class="usage-period text-muted"></p></div>
+            <div class="usage-switch" role="group" aria-label="概览统计时段">
+                <button type="button" data-usage-days="7" aria-pressed="false">近 7 天</button>
+                <button type="button" data-usage-days="30" aria-pressed="true">近 30 天</button>
+                <button type="button" data-usage-days="90" aria-pressed="false">近 90 天</button>
+            </div>
+        </div>
         <dl class="usage-metrics">
             <div><dt>已记录 Token</dt><dd id="aiUsageTokens">—</dd><small id="aiUsageTokenDetail"></small></div>
             <div><dt>调用次数</dt><dd id="aiUsageCalls">—</dd><small id="aiUsageCallDetail"></small></div>
@@ -20,14 +24,22 @@
             <div><dt>单日 Token 峰值</dt><dd id="aiUsagePeak">—</dd><small id="aiUsagePeakDate"></small></div>
         </dl>
         <p id="aiUsageUnknown" class="usage-notice" hidden></p>
+        </section>
         <section class="usage-activity" aria-labelledby="aiActivityTitle">
-            <div class="usage-section-heading"><h3 id="aiActivityTitle">调用活动</h3><span id="aiActivityPeriod" class="text-muted">近一年</span></div>
-            <div id="aiActivityMonths" class="usage-months" aria-hidden="true"></div>
-            <div id="aiActivityGrid" class="usage-heatmap" role="group" aria-label="每日调用活动，方向键查看日期"></div>
-            <div class="usage-calendar-footer"><span id="aiActivitySummary"></span><span class="usage-heat-legend" aria-label="颜色越深，用量越高">少 <i data-level="0"></i><i data-level="1"></i><i data-level="2"></i><i data-level="3"></i><i data-level="4"></i> 多</span></div>
+            <div class="usage-section-heading"><h3 id="aiActivityTitle">Token 活动</h3><div class="usage-switch usage-activity-switch" role="group" aria-label="活动统计方式"><button type="button" data-activity-mode="daily" aria-pressed="true">每日</button><button type="button" data-activity-mode="weekly" aria-pressed="false">每周</button><button type="button" data-activity-mode="cumulative" aria-pressed="false">累计</button></div></div>
+            <div id="aiActivityScroll" class="usage-calendar-scroll" tabindex="0" role="region" aria-label="Token 活动日历，可横向滚动">
+                <div class="usage-calendar-canvas">
+                    <div id="aiActivityGrid" class="usage-heatmap" role="group" aria-label="每日调用活动，方向键查看日期"></div>
+                    <div id="aiActivityMonths" class="usage-months" aria-hidden="true"></div>
+                </div>
+            </div>
+            <div id="aiActivityLifetime" class="usage-lifetime" hidden>
+                <dl><div><dt>累计已记录 Token</dt><dd id="aiLifetimeTokens">—</dd><small id="aiLifetimeBreakdown"></small></div><div><dt>累计调用</dt><dd id="aiLifetimeCalls">—</dd><small id="aiLifetimeOutcomes"></small></div></dl>
+                <p id="aiLifetimeUnknown" class="text-muted" hidden></p>
+            </div>
         </section>
         <section class="usage-trend" aria-labelledby="aiTrendTitle">
-            <div class="usage-section-heading"><h3 id="aiTrendTitle">每日趋势</h3><div class="usage-switch" role="group" aria-label="趋势指标"><button type="button" data-usage-metric="tokens" aria-pressed="true">Token</button><button type="button" data-usage-metric="calls" aria-pressed="false">调用次数</button></div></div>
+            <div class="usage-section-heading"><h3 id="aiTrendTitle">每日趋势</h3><div class="usage-toolbar"><div class="usage-switch" role="group" aria-label="趋势统计时段"><button type="button" data-trend-days="7" aria-pressed="false">近 7 天</button><button type="button" data-trend-days="30" aria-pressed="true">近 30 天</button><button type="button" data-trend-days="90" aria-pressed="false">近 90 天</button></div><div class="usage-switch" role="group" aria-label="趋势指标"><button type="button" data-usage-metric="tokens" aria-pressed="true">Token</button><button type="button" data-usage-metric="calls" aria-pressed="false">调用次数</button></div></div></div>
             <div class="usage-plot">
                 <div id="aiUsageAxis" class="usage-axis" aria-hidden="true"></div>
                 <div id="aiUsageBars" class="usage-bars" role="group" aria-label="每日趋势，左右方向键查看日期"></div>
@@ -37,8 +49,8 @@
             <details class="usage-data-table"><summary>查看每日明细</summary><div class="usage-table-scroll"><table><caption class="sr-only">所选时段的每日 API 用量</caption><thead><tr><th scope="col">日期</th><th scope="col">Token</th><th scope="col">调用</th><th scope="col">成功</th><th scope="col">失败</th><th scope="col">待确认</th></tr></thead><tbody id="aiUsageRows"></tbody></table></div></details>
         </section>
         <div class="usage-breakdowns">
-            <section aria-labelledby="aiPurposeTitle"><h3 id="aiPurposeTitle">用在哪些功能</h3><div id="aiUsagePurposes"></div></section>
-            <section aria-labelledby="aiModelTitle"><h3 id="aiModelTitle">模型用量</h3><div id="aiUsageModels"></div></section>
+            <section aria-labelledby="aiPurposeTitle"><h3 id="aiPurposeTitle">用在哪些功能 <span class="usage-scope text-muted">近 30 天</span></h3><div id="aiUsagePurposes"></div></section>
+            <section aria-labelledby="aiModelTitle"><h3 id="aiModelTitle">模型用量 <span class="usage-scope text-muted">近 30 天</span></h3><div id="aiUsageModels"></div></section>
         </div>
         <section class="usage-budgets" aria-labelledby="aiBudgetTitle"><div class="usage-section-heading"><h3 id="aiBudgetTitle">本月额度</h3><span id="aiBudgetMonth" class="text-muted"></span></div><div id="aiUsageBudgets"></div></section>
         <p id="aiUsageUpdated" class="usage-updated text-muted"></p>

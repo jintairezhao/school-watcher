@@ -46,6 +46,8 @@ def create_app(test_config=None):
     )
     if test_config:
         app.config.update(test_config)
+    if not app.config['TESTING'] and not app.config['DESKTOP_MODE']:
+        raise RuntimeError('School Watcher 0.2.0 uses the desktop runtime. Start with python app.py.')
     from pathlib import Path
     app.config.setdefault('SOURCE_GOVERNANCE_EVIDENCE_PATH', os.environ.get('WATCHER_SOURCE_EVIDENCE_DIR') or
         str(Path(app.config.get('SOURCE_INVENTORY_PATH') or app.config['SOURCE_CATALOG_PATH']).parent / 'source-governance-evidence'))
@@ -91,8 +93,8 @@ def create_app(test_config=None):
 
     from backend.services.source_labels import source_breadcrumb
     app.jinja_env.filters['source_breadcrumb'] = source_breadcrumb
-    from backend.scraper.sanitizer import sanitize_html
-    app.jinja_env.filters['article_html'] = sanitize_html
+    from backend.services.article_images import render_article_html
+    app.jinja_env.filters['article_html'] = render_article_html
 
     # ---- 错误处理 ----
     @app.errorhandler(404)

@@ -195,6 +195,10 @@ class AcquisitionTests(unittest.TestCase):
                 initial = profile_fingerprint()
                 matched = configured_request(FetchRequest(ROOT + 'news/', purpose='list'))
                 self.assertEqual(matched.readiness_selector, '.notices li')
+                explicit = configured_request(FetchRequest(ROOT, purpose='list', readiness_selector='#observed-region > div'))
+                self.assertEqual(explicit.readiness_selector, '#observed-region > div')
+                exploration = configured_request(FetchRequest(ROOT, purpose='list', policy={'exploration': True}))
+                self.assertEqual(exploration.readiness_selector, '')
                 fake = FetchRequest('https://example.edu.cn.attacker.example/', purpose='list')
                 self.assertEqual(configured_request(fake), fake)
                 catalog['profiles'][0]['version'] = 'r3'

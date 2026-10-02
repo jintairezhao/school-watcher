@@ -52,57 +52,110 @@ def _ai_message(task, data, available):
 
 
 def status(school):
+    """Report actual work and usable columns; coverage audits are not onboarding."""
+    from backend.database.source_governance_models import SourceProposal, SchoolOnboarding
+    from backend.services.discovery_control import requested
     task = BackgroundTask.query.filter_by(identity=f'discover:{school.id}').first()
     data = dict((task.checkpoint or {}).get('discovery_progress') or {}) if task else {}
-    count = Department.query.filter_by(school_id=school.id).count()
-    from backend.database.source_governance_models import SourceProposal
-    review_count = SourceProposal.query.filter_by(school_id=school.id, state='needs_review').count()
-    available = ai_available()
-    state = task.state if task else 'idle'
+    columns = Department.query.filter_by(school_id=school.id).all()
+    count = sum(bool(d.list_selector) for d in columns)
+    jobs = [t for t in BackgroundTask.query.filter(BackgroundTask.kind.in_(
+        ('onboard', 'navigation_review', 'source_grouping'))).all() if t.payload.get('school_id') == school.id]
     now = datetime.utcnow()
-    worker = WorkerHeartbeat.query.filter(WorkerHeartbeat.stopped_at.is_(None),
-        WorkerHeartbeat.heartbeat_at > now - timedelta(seconds=90)).first()
-    phase = data.get('phase', 'fetch')
-    message = {'fetch': '正在读取官网', 'ai': 'AI 正在识别部门与栏目',
-               'crawl': '正在发现部门与栏目', 'verify': '正在核实栏目',
-               'complete': '本轮发现已完成'}.get(phase, '正在发现部门与栏目')
-    if state == 'idle':
-        message = '尚未开始发现栏目'
-    elif state == 'failed':
-        message = '栏目发现未完成，请重试'
+    live = [t for t in jobs if t.state in ('pending', 'running', 'waiting')]
+    running = [t for t in live if t.state == 'running' and (not t.lease_until or t.lease_until > now)]
+    parent_running = bool(task and task.state == 'running' and (not task.lease_until or task.lease_until > now))
+    pause = requested(task)
+    busy = bool(parent_running or running) and not pause
+    state = task.state if task else 'idle'
+    message = '尚未开始查找栏目'
+    active = bool(live or task and task.state in ('pending', 'running'))
+    retry_at = None
+    if pause:
+        state = 'paused' if task.state == 'waiting' and task.phase == 'user_paused' and not any(
+            t.kind in ('onboard', 'navigation_review') for t in running) else 'pausing'
+        message = '已暂停，进度已保存' if state == 'paused' else '正在暂停，等待当前处理完成'
+        active = state == 'pausing'
+    elif busy:
+        state = 'running'
+        message = '正在接入通知栏目' if any(t.kind == 'onboard' for t in running) else '正在查找官网栏目'
+        if not parent_running and running and all(t.kind == 'source_grouping' for t in running):
+            message = '正在核对部门与栏目归属'
+        if count:
+            message += '，已接入的栏目可以使用'
+    elif active:
+        pending = [t for t in live if t.state == 'pending']
+        if task and task.state == 'pending':
+            pending.append(task)
+        ready = [t for t in pending if t.available_at <= now]
+        if ready:
+            state, message = 'queued', '等待继续查找栏目' if data else '等待查找官网栏目'
+            if task in ready:
+                from backend.services.tasks import queue_ahead
+                from flask import current_app
+                isolated = task.capability == 'directory' and int(current_app.config.get('WORKER_CONCURRENCY', 2)) > 1
+                ahead, _ = queue_ahead(task, capability='directory' if isolated else None)
+                if ahead:
+                    message = f'正在排队：前面还有 {ahead} 个任务'
+        elif pending:
+            state = 'retry_wait'
+            retry_at = min(t.available_at for t in pending).isoformat() + 'Z'
+            message = '暂时无法继续，稍后自动重试'
+        elif any(t.state == 'waiting' and t.phase == 'verification' for t in live):
+            state, message = 'waiting', '部分官网需要访问验证，已接入栏目仍可使用' if count else '官网需要访问验证，完成后继续'
+        else:
+            state, message = 'recovering', '正在恢复上次保存的进度'
+        worker = WorkerHeartbeat.query.filter(WorkerHeartbeat.stopped_at.is_(None),
+            WorkerHeartbeat.heartbeat_at > now - timedelta(seconds=90)).first()
+        queued = min(t.queued_at for t in ([task] if task else []) + live)
+        if not worker and (now - queued).total_seconds() > 90:
+            state, message, active = 'unavailable', '后台服务未响应，请重启应用后重试', False
     elif state == 'waiting':
-        message = '配置 AI 后开始发现栏目' if task.phase == 'ai_setup' else '官网需要访问验证，完成后继续'
-    elif state == 'done':
-        message = ('本轮发现已完成' if count else
-                   '已发现候选栏目，核实后可订阅' if review_count else '暂未找到可订阅栏目，可用 AI 重新识别')
-    elif state == 'pending':
-        if task.phase == 'retry':
-            message = '上次发现中断，正在等待重试'
-        elif task.phase == 'origin_wait':
-            message = '等待官网响应，稍后继续'
-        else:
-            message = '等待继续发现' if data else '已加入发现队列'
-        if worker is None and (now - task.queued_at).total_seconds() > 90:
-            message = '发现服务暂未响应，请重启应用后重试'
-            state = 'unavailable'
-    elif state == 'running' and task.lease_until and task.lease_until < now:
-        state, message = 'recovering', '发现任务中断，正在恢复'
-    from backend.services.discovery_control import requested
-    pause_requested = requested(task)
-    if pause_requested and task.state in ('pending', 'running', 'waiting'):
-        if task.state == 'waiting' and task.phase == 'user_paused':
-            state, message = 'paused', '已暂停，进度已保存'
-        else:
-            state, message = 'pausing', '正在暂停，等待当前处理完成'
-    return {'state': state, 'message': message, 'phase': phase,
-            'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
-            'failed_pages': data.get('failed_pages', 0), 'current_label': data.get('current_label', ''),
-            'updated_at': data.get('updated_at'), 'source_count': count, 'review_count': review_count,
-            'ai_available': available, 'ai_state': data.get('ai_state', 'not_started'),
-            'ai_message': _ai_message(task, data, available),
-            'needs_verification': bool(task and task.state == 'waiting' and task.phase == 'verification'),
-            'active': state in ('pending', 'running', 'recovering', 'pausing'),
-            'can_pause': state in ('pending', 'running', 'recovering', 'waiting', 'unavailable'),
-            'can_resume': state == 'paused',
-            'can_retry': state in ('idle', 'done', 'failed', 'unavailable'),
-            'task_id': task.id if task else None}
+        message = '可直接开始查找栏目' if task.phase == 'ai_setup' else '官网需要访问验证，完成后继续'
+    elif state == 'failed':
+        message = '本轮查找未完成，可以重试；已接入的栏目仍可使用' if count else '本轮查找未完成，可以重试'
+    elif state == 'done' or count:
+        message = f'已接入 {count} 个栏目' if count else '本轮暂未找到可接入的栏目'
+    gaps = []
+    for job in jobs:
+        if job.kind == 'source_grouping':
+            continue
+        result = job.result or {}
+        if job.state == 'failed' or result.get('state') == 'unsupported' or result.get('issues'):
+            gaps.append({'name': job.payload.get('label', ''), 'url': job.payload.get('url', ''),
+                'reason': result.get('reason') or '该页面暂未接入，稍后可重试'})
+    from backend.services.source_grouping import placement_gaps
+    grouping_gaps = placement_gaps(school.id)
+    gaps.extend(grouping_gaps)
+    if data.get('entry_failure'):
+        gaps.insert(0, {'name': school.name, 'url': school.url, 'reason': data['entry_failure']['reason']})
+    if data.get('failed_pages'):
+        gaps.append({'reason': f"有 {data['failed_pages']} 个官网入口暂未读取成功"})
+    if not active and not pause and count and gaps:
+        message = f'已接入 {count} 个栏目，部分页面暂未接入'
+    onboarding = db.session.get(SchoolOnboarding, school.id)
+    import json
+    departments = len(json.loads(onboarding.scope_json or '[]')) if onboarding else len({d.group_name for d in columns if d.group_name})
+    official_units = sum(d.kind == 'unit' for d in columns)
+    if official_units:
+        departments = official_units
+    available = ai_available()
+    review_count = SourceProposal.query.filter_by(school_id=school.id, state='needs_review').count()
+    return {'state': state, 'message': message, 'phase': data.get('phase', 'fetch'),
+        'busy': busy, 'active': active, 'retry_at': retry_at,
+        'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
+        'failed_pages': data.get('failed_pages', 0), 'current_label': data.get('current_label', '') if busy else '',
+        'updated_at': data.get('updated_at'), 'source_count': len(columns), 'verified_source_count': count,
+        'department_count': departments, 'processing_count': len(live), 'failed_count': len(gaps),
+        'waiting_recovery_count': 0, 'review_count': review_count, 'queued_review_count': 0,
+        'background_exploration': any(t.kind == 'navigation_review' for t in live),
+        'ai_available': available, 'ai_state': data.get('ai_state', 'not_started'),
+        'ai_message': _ai_message(task, data, available),
+        'coverage': {'complete': False, 'gaps': gaps, 'placement_gap_count':len(grouping_gaps)},
+        'incomplete_reasons': [g['reason'] for g in gaps],
+        'needs_verification': any(t.state == 'waiting' and t.phase == 'verification' for t in ([task] if task else []) + live),
+        'can_pause': bool(task and not pause and (task.state in ('pending', 'running', 'waiting') or any(
+            t.kind in ('onboard', 'navigation_review') for t in live))),
+        'can_resume': state == 'paused',
+        'can_retry': not active and state != 'paused' and (state != 'waiting' or task.phase == 'ai_setup'),
+        'task_id': task.id if task else None}

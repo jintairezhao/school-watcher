@@ -104,13 +104,12 @@
             </div>
             <div class="inbox-refresh-activity" id="inboxRefreshActivity" aria-label="官网通知更新情况" hidden>
                 <details id="inboxRefreshDetails">
-                    <summary id="inboxRefreshSummary"><span id="inboxRefreshStatus" role="status" aria-live="polite"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+                    <summary id="inboxRefreshSummary"><span id="inboxRefreshProgress" class="refresh-ring" role="progressbar" aria-label="官网通知更新进度" hidden><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle class="refresh-ring-track" cx="16" cy="16" r="13"/><circle class="refresh-ring-value" cx="16" cy="16" r="13" pathLength="100"/></svg></span><span id="inboxRefreshStatus" role="status" aria-live="polite"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
                     <div class="refresh-status-panel notice-popover"><strong>更新情况</strong><ul id="inboxRefreshSources"></ul></div>
                 </details>
-                <progress id="inboxRefreshProgress" max="1" value="0" aria-label="官网通知更新进度" hidden></progress>
             </div>
         </header>
-
+        {% if view == 'inbox' %}<button type="button" id="inboxNewNotices" class="notice-updates-button" hidden>有新通知，点击更新列表</button>{% endif %}
         <div class="notice-scroll" id="noticeList" tabindex="-1">
             {% if announcements %}
                 {% for date_label, date_announcements in grouped.items() %}
@@ -183,10 +182,7 @@
             {{ reader_document(selected_announcement, selected_source, announcement_sources.get(selected_announcement.id, []), selected_provenance, summary_state, current_user) }}
         </article>
         {% else %}
-        <div class="reader-placeholder">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>
-            <p>从列表中选择一条通知查看详情。</p>
-        </div>
+        {% include '_reader_empty.html' %}
         {% endif %}
     </aside>
 </div>

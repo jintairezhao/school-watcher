@@ -50,6 +50,12 @@ def update_profile(profile_id):
                  else configuration.save_profile(request.get_json(silent=True), profile_id))
 
 
+@bp.route('/api/admin/ai/profiles/<int:profile_id>/key', methods=['POST'])
+@admin_required
+def reveal_profile_key(profile_id):
+    return _call(lambda: configuration.reveal_profile_key(profile_id, request.get_json(silent=True)))
+
+
 @bp.route('/api/admin/ai/profiles/<int:profile_id>/test', methods=['POST'])
 @admin_required
 def test_profile(profile_id):

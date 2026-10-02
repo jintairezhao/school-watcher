@@ -51,7 +51,7 @@ class SourceGovernanceRecoveryTests(unittest.TestCase):
         with patch.object(governance, '_fetch', return_value=article_html('https://unrelated.example/category/exam')), \
                 patch.object(governance, 'run_source_skill_for_proposal') as ai:
             result = governance.process_source_review({'proposal_id': proposal.id})
-        self.assertEqual(result['state'], 'superseded')
+        self.assertEqual(result['state'], 'needs_review')
         self.assertEqual(SourceProposal.query.count(), 1)
         self.assertEqual(result['validation']['related_proposal_ids'], [])
         ai.assert_not_called()
@@ -123,7 +123,7 @@ class SourceGovernanceRecoveryTests(unittest.TestCase):
             f'<li><a href="article/{i}.htm">关于研究生报名事项的通知{i}</a><time>2026-09-24</time></li>'
             for i in range(3)) + '</ul></section>'
 
-    def fetch(self, url, purpose):
+    def fetch(self, url, purpose, **kwargs):
         if purpose == 'body':
             index = url.rsplit('/', 1)[-1].split('.')[0]
             return ('<article><h1>关于研究生报名事项的通知' + index + '</h1>'
@@ -224,12 +224,13 @@ class SourceGovernanceRecoveryTests(unittest.TestCase):
             result = governance.run_source_skill_for_proposal(proposal_id)
         self.assertEqual(result['status'], 'review_required')
         self.assertEqual(skill.call_count, 2)
-        events = SourceReviewEvent.query.filter_by(proposal_id=proposal_id, action='skill_attempt').all()
+        from backend.services.source_exploration import STEP_ACTION
+        events = SourceReviewEvent.query.filter_by(proposal_id=proposal_id, action=STEP_ACTION).all()
         self.assertEqual(len(events), 2)
         self.assertTrue(all(json.loads(event.detail_json)['status'] == 'succeeded' for event in events))
         self.assertEqual(SourceConfigVersion.query.count(), 0)
 
-    def test_interrupted_attempt_reuses_execution_identity_and_uncertainty_stops_retry(self):
+    def test_interrupted_before_reservation_reuses_identity_and_unknown_result_waits(self):
         class WorkerExit(BaseException):
             pass
         config = governance.source_config(self.dept)
@@ -242,12 +243,13 @@ class SourceGovernanceRecoveryTests(unittest.TestCase):
             with self.assertRaises(WorkerExit):
                 governance.run_source_skill_for_proposal(proposal_id)
             db.session.remove()
-            self.assertEqual(governance.run_source_skill_for_proposal(proposal_id)['status'], 'uncertain')
-            self.assertEqual(governance.run_source_skill_for_proposal(proposal_id)['status'], 'result_pending_review')
+            self.assertEqual(governance.run_source_skill_for_proposal(proposal_id)['status'], 'pending')
+            self.assertEqual(governance.run_source_skill_for_proposal(proposal_id)['status'], 'pending')
         self.assertEqual(skill.call_count, 2)
         self.assertEqual(skill.call_args_list[0].args[4], skill.call_args_list[1].args[4])
-        event = SourceReviewEvent.query.filter_by(proposal_id=proposal_id, action='skill_attempt').one()
-        self.assertEqual(json.loads(event.detail_json)['status'], 'uncertain')
+        from backend.services.source_exploration import STEP_ACTION
+        event = SourceReviewEvent.query.filter_by(proposal_id=proposal_id, action=STEP_ACTION).one()
+        self.assertEqual(json.loads(event.detail_json)['status'], 'pending')
 
 
 if __name__ == '__main__':

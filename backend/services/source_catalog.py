@@ -44,7 +44,10 @@ def publication_candidates(report, structure=(), focus='all'):
                                                 if p.get('basis') == 'school_website_entry'}
             feed_group = next(iter(feed_owners)) if len(feed_owners) == 1 else ''
             heading_pending = not feed.get('name') or bool(feed.get('heading_ambiguous'))
-            name = '栏目名称待核实' if heading_pending else feed['name']
+            # A sentinel, not a name: the region heading is still readable from the
+            # page, and evidence capture adopts it before anything is installed.
+            from backend.services.source_governance import UNVERIFIED_COLUMN_NAME
+            name = UNVERIFIED_COLUMN_NAME if heading_pending else feed['name']
             student_rank = None
             if focus == 'student':
                 from .student_sources import student_priority, TEACHING, NON_STUDENT

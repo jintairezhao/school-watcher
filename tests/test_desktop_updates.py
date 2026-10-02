@@ -103,26 +103,6 @@ class UpdateTests(unittest.TestCase):
 
 
 class DesktopOwnershipTests(unittest.TestCase):
-    def test_server_registration_never_grants_admin(self):
-        from backend import create_app
-        from backend.database.db import db
-        from backend.database.models import User
-        for desktop, expected in ((False,'user'),):
-            app = create_app({'TESTING':True,'SECRET_KEY':'isolated-desktop-test',
-                              'SQLALCHEMY_DATABASE_URI':'sqlite://','DESKTOP_MODE':desktop})
-            with app.app_context():
-                db.create_all()
-                for number in (1,2):
-                    client = app.test_client()
-                    with client.session_transaction() as session:
-                        session['_csrf_token'] = 'test-token'
-                    response = client.post('/register',data={'username':f'local{number}','password':'test-password',
-                        'confirm':'test-password','csrf_token':'test-token'})
-                    self.assertEqual(response.status_code,302)
-                    self.assertEqual(db.session.get(User,number).role,expected if number==1 else 'user')
-                db.session.remove()
-                db.engine.dispose()
-
     def test_mac_verification_does_not_start_linux_display_services(self):
         from backend.browser_service.display import PrivateDisplay
         async def check():

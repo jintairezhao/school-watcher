@@ -14,7 +14,10 @@
           "decision": {
             "enum": [
               "propose",
-              "review"
+              "review",
+              "explore",
+              "choose",
+              "not_column"
             ]
           },
           "config": {
@@ -88,6 +91,15 @@
             ],
             "additionalProperties": false
           },
+          "scope_evidence": {
+            "type": "object",
+            "properties": {
+              "container_selector": {"type": "string", "minLength": 1, "maxLength": 500},
+              "heading_selector": {"type": "string", "minLength": 1, "maxLength": 500}
+            },
+            "required": ["container_selector", "heading_selector"],
+            "additionalProperties": false
+          },
           "evidence_ids": {
             "type": "array",
             "items": {
@@ -106,6 +118,131 @@
               "type": "string",
               "maxLength": 1000
             }
+          },
+          "actions": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "read_page",
+                    "read_reference"
+                  ]
+                },
+                "url": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "purpose": {
+                  "enum": [
+                    "directory",
+                    "list",
+                    "article"
+                  ]
+                },
+                "reference": {
+                  "enum": [
+                    "identity",
+                    "page-types",
+                    "extraction-patterns"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "maxLength": 500
+                }
+              },
+              "required": [
+                "type",
+                "reason"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "publisher_evidence": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "directory_evidence_id": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "homepage_evidence_id": {
+                "type": "string",
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "name",
+              "directory_evidence_id",
+              "homepage_evidence_id"
+            ],
+            "additionalProperties": false
+          },
+          "question": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "options": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "label": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "field": {
+                      "enum": [
+                        "list_url"
+                      ]
+                    },
+                    "value": {
+                      "type": "string",
+                      "maxLength": 2000
+                    },
+                    "evidence_ids": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "field",
+                    "value",
+                    "evidence_ids"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "purpose": {
+                "const": "subscription_preference"
+              }
+            },
+            "required": [
+              "text",
+              "options",
+              "purpose"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [

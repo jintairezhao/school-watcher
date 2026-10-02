@@ -184,7 +184,7 @@ selector_profiles:
     list_selector: 'ul.news_list li:has(a[title]), ul.news_list li.news:has(a[href])'
     title_selector: 'a[title], a[data-title], a'
     link_selector: 'a[href*="/page.htm"], a[href]'
-    date_selector: 'div.news_days, div.news_year, span.news_date, span.date'
+    date_selector: 'div.news_date, div.news_days, div.news_year, span.news_date, span.date'
     content_selector: 'div.wp_articlecontent, div.article-content, div.content, article'
 
   - name: '苏迪列表 (wp_news 区块)'

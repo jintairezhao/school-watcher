@@ -13,6 +13,48 @@ from backend.database.models import School, Department, User, Subscription, Back
 
 
 class InboxRefreshTests(unittest.TestCase):
+    def test_reopen_uses_persisted_completion_not_task_metadata_touch(self):
+        from datetime import timedelta
+        from backend.services.inbox_refresh import queue_sources
+        from backend.database.models import AppConfig
+        AppConfig.set('scrape_interval','30')
+        self.post({'scope':'all'})
+        task=BackgroundTask.query.one()
+        task.state='done'; task.finished_at=datetime.utcnow()-timedelta(minutes=31)
+        task.checked_at=None; task.updated_at=datetime.utcnow()
+        self.a.last_scraped_at=task.finished_at
+        ident=self.a.id; db.session.commit(); db.session.remove()
+        self.assertTrue(queue_sources([db.session.get(Department,ident)]))
+        self.assertEqual(BackgroundTask.query.one().state,'pending')
+
+    def test_reopen_skips_recent_completion_and_obeys_changed_interval(self):
+        from datetime import timedelta
+        from backend.services.inbox_refresh import queue_sources
+        from backend.database.models import AppConfig
+        self.post({'scope':'all'})
+        task=BackgroundTask.query.one()
+        task.state='done';task.finished_at=datetime.utcnow()-timedelta(minutes=20)
+        task.checked_at=task.finished_at;self.a.last_scraped_at=task.finished_at
+        ident=self.a.id;db.session.commit();db.session.remove()
+        AppConfig.set('scrape_interval','30')
+        self.assertEqual(queue_sources([db.session.get(Department,ident)]),[])
+        AppConfig.set('scrape_interval','10')
+        self.assertTrue(queue_sources([db.session.get(Department,ident)]))
+
+    def test_scheduler_uses_current_interval_instead_of_old_next_run_estimate(self):
+        from datetime import timedelta
+        from backend.services import tasks
+        from backend.worker import _schedule_due
+        from backend.database.models import AppConfig
+        self.school.subscriber_count=1
+        task=tasks.enqueue('scrape',self.school.id,{'school_id':self.school.id})
+        task.state='done';task.finished_at=datetime.utcnow()-timedelta(minutes=20)
+        task.checked_at=task.finished_at;task.next_run_at=datetime.utcnow()+timedelta(hours=1)
+        db.session.commit();ident=task.id
+        AppConfig.set('scrape_interval','10')
+        _schedule_due()
+        self.assertEqual(db.session.get(BackgroundTask,ident).state,'pending')
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.app = create_app({'TESTING': True, 'SECRET_KEY': 'refresh-test', 'SQLALCHEMY_DATABASE_URI': 'sqlite://',

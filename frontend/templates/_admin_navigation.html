@@ -1,13 +1,11 @@
 {% set on_admin_home = request.endpoint == 'admin.admin_page' %}
 <nav class="admin-nav" aria-label="管理功能">
-{% for key, label in [('overview','概览'), ('schools','学校与部门'), ('scrape','抓取任务'), ('logs','抓取记录'), ('users','用户'), ('platform','平台设置')] %}
-    {% if key != 'users' or not config.DESKTOP_MODE %}
+{% for key, label in [('overview','概览'), ('schools','学校与部门'), ('scrape','抓取任务'), ('logs','抓取记录'), ('platform','平台设置')] %}
     <a class="admin-tab{% if admin_section|default('overview') == key %} is-active{% endif %}" href="{{ url_for('admin.admin_page') }}#{{ key }}" {% if on_admin_home %}data-tab="{{ key }}"{% endif %} {% if admin_section|default('overview') == key %}aria-current="page"{% endif %}>{{ label }}</a>
-    {% endif %}
 {% endfor %}
     <a class="admin-tab{% if admin_section == 'ai-usage' %} is-active{% endif %}" href="{{ url_for('ai_settings.usage_page') }}" {% if admin_section == 'ai-usage' %}aria-current="page"{% endif %}>API 用量</a>
     <div class="admin-nav-divider" aria-hidden="true"></div>
-    <a class="admin-tab{% if admin_section == 'source-review' %} is-active{% endif %}" href="{{ url_for('source_governance.review_page') }}" {% if admin_section == 'source-review' %}aria-current="page"{% endif %}>来源核实</a>
+    <a class="admin-tab{% if admin_section == 'source-review' %} is-active{% endif %}" href="{{ url_for('source_governance.review_page') }}" {% if admin_section == 'source-review' %}aria-current="page"{% endif %}>接入进度</a>
     <a class="admin-tab{% if admin_section == 'verification' %} is-active{% endif %}" href="{{ url_for('browser_sessions.page') }}" {% if admin_section == 'verification' %}aria-current="page"{% endif %}>访问验证</a>
     <a class="admin-tab{% if admin_section == 'storage' %} is-active{% endif %}" href="{{ url_for('operations.storage_page') }}" {% if admin_section == 'storage' %}aria-current="page"{% endif %}>存储管理</a>
 </nav>

@@ -4,12 +4,13 @@
 
 | 场景 | 安装命令 | 包含内容 |
 | --- | --- | --- |
-| 基础运行 | `python -m pip install -r requirements.txt` | 网站、SQLite、HTTP 抓取、解析与凭据加密 |
+| 基础组件 | `python -m pip install -r requirements.txt` | SQLite、HTTP 抓取、解析与凭据加密 |
 | 本机动态页面抓取 | `python -m pip install -r requirements.txt -r requirements/browser.txt` | 基础功能及 Playwright 浏览器服务 |
-| PostgreSQL 服务器 | `python -m pip install -r requirements/server.txt` | 基础、浏览器及 PostgreSQL 驱动 |
-| 开发与测试 | `python -m pip install -r requirements/test.txt` | 服务器依赖及测试工具 |
+| 桌面源码运行 | `python -m pip install -r requirements.txt -r requirements/browser.txt -r requirements/desktop.txt` | 与安装版相同的原生窗口及本机进程管理 |
+| 历史 PostgreSQL 数据维护 | `python -m pip install -r requirements/server.txt` | 基础、浏览器及旧数据库驱动；保留文件名兼容历史工具 |
+| 开发与测试 | `python -m pip install -r requirements/test.txt` | 数据库兼容依赖及测试工具 |
 
-安装浏览器依赖后，再运行 `python -m playwright install chromium` 下载匹配的浏览器。Windows 的 `scripts/setup.bat` 已包含这一步。
+桌面启动时优先检测 Edge／Chrome，缺少时自动准备采集组件。独立浏览器测试可用 `python -m playwright install chromium` 下载测试用浏览器。
 
 - `base.txt` 是基础依赖的实际清单；根目录 `requirements.txt` 只引用它。
 - `constraints.txt` 统一限定依赖版本，被基础和浏览器清单引用；它本身不会安装全部依赖。

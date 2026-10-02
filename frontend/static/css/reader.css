@@ -50,6 +50,15 @@
 .body-loader-content :is(td, th) { padding: .625rem .75rem; border: 1px solid var(--color-border); }
 .body-loader-status { color: var(--color-text-secondary); font-size: var(--text-control); line-height: 1.8; }
 .body-loader-retry { min-height: 44px; margin-block: .5rem; }
+.body-loader-placeholder { padding-block: 8px; max-width: 70ch; }
+.body-loader-placeholder[hidden], .body-loader-retry[hidden] { display: none; }
+.skeleton-paragraph { margin-bottom: 28px; }
+.skeleton-line { position: relative; display: block; overflow: hidden; height: 14px; margin-bottom: 14px; border-radius: 4px; background: var(--color-surface-2); }
+.skeleton-line:last-child { width: 68%; }
+.skeleton-paragraph:nth-child(2) .skeleton-line:last-child { width: 84%; }
+.skeleton-line::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, var(--color-border-strong), transparent); animation: body-shimmer 1.7s ease-in-out infinite; }
+@keyframes body-shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .skeleton-line::after { animation: none; display: none; } }
 .standalone-reading { max-width: 56rem; }
 .standalone-reader-toolbar {
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1rem;

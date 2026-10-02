@@ -45,6 +45,9 @@ class PlacementEvidenceTests(unittest.TestCase):
         self.assertEqual(notice[0]['nodes'], news[0]['nodes'])
         self.assertEqual([notice[0]['label'], news[0]['label']], ['通知公告', '院内新闻'])
 
+    def test_missing_legacy_group_can_be_restored_from_one_official_path(self):
+        self.assertEqual(self.resolve(source(group=''), [route()], groups=())[0]['group'], '院系设置')
+
     def test_shared_table_caption_is_not_an_extra_unit_and_nested_units_survive(self):
         path = route('组织机构', ('教务部', '创新创业学院'),
                      (ROOT + 'jwb/', ROOT + 'innovation/'))

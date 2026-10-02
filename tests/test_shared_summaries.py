@@ -277,12 +277,62 @@ class SharedSummaryTests(unittest.TestCase):
         admin = self.client(self.admin)
         for path, method in [('/api/admin/ai', 'get'), ('/api/admin/ai/profiles', 'post'),
                 ('/api/admin/ai/profiles/1/test', 'post'), ('/api/admin/ai/profiles/1', 'delete'),
+                ('/api/admin/ai/profiles/1/key', 'post'), ('/api/admin/ai/profiles/1', 'put'),
                 ('/api/admin/ai/bindings/summary', 'put'), ('/api/admin/ai/limits', 'put')]:
             self.assertEqual(getattr(reader, method)(path, headers=headers).status_code, 403)
         with patch('backend.ai.providers.complete', side_effect=AssertionError('paid operation')):
             self.assertEqual(admin.get('/api/admin/ai').status_code, 200)
             self.assertEqual(admin.put('/api/admin/ai/limits', json={'total': 0}, headers=headers).status_code, 200)
         self.assertEqual(AIExecution.query.count(), 0)
+
+    def test_admin_can_explicitly_reveal_toggle_and_delete_saved_service(self):
+        import os
+        from backend.ai.models import AIProfile, AIExecution
+        client = self.client(self.admin)
+        headers = {'X-CSRF-Token': 'token'}
+        with patch.dict(os.environ, {'FIELD_ENC_KEY': 'isolated-key-reveal-test'}), \
+             patch('backend.ai.providers.complete') as paid:
+            created = client.post('/api/admin/ai/profiles', headers=headers, json={
+                'provider': 'deepseek', 'model': 'fixture-model', 'api_key': 'fixture-saved-key'})
+            self.assertEqual(created.status_code, 200)
+            profile = created.get_json()
+            path = '/api/admin/ai/profiles/' + str(profile['id'])
+            self.assertNotIn('fixture-saved-key', created.get_data(as_text=True))
+            self.assertNotIn('fixture-saved-key', client.get('/api/admin/ai').get_data(as_text=True))
+            self.assertNotIn('fixture-saved-key', db.session.get(AIProfile, profile['id']).encrypted_key)
+            payload = {'expected_version': profile['version']}
+            self.assertEqual(client.post(path + '/key', json=payload).status_code, 403)
+            self.assertEqual(client.get(path + '/key').status_code, 405)
+            stale = client.post(path + '/key', json={'expected_version': 999}, headers=headers)
+            self.assertEqual(stale.get_json()['error_code'], 'configuration_changed')
+            revealed = client.post(path + '/key', json=payload, headers=headers)
+            self.assertEqual(revealed.status_code, 200)
+            self.assertEqual(revealed.get_json(), {'api_key': 'fixture-saved-key'})
+            self.assertEqual(revealed.headers['Cache-Control'], 'no-store')
+            with patch.dict(os.environ, {'FIELD_ENC_KEY': 'different-test-master-key'}):
+                unavailable = client.post(path + '/key', json=payload, headers=headers)
+                self.assertEqual(unavailable.get_json()['error_code'], 'credential_unavailable')
+            row = db.session.get(AIProfile, profile['id'])
+            row.enabled, row.tested_version = True, row.version
+            db.session.commit()
+            self.assertEqual(client.put(path, json={'enabled': False}).status_code, 403)
+            self.assertEqual(client.put(path, json={'enabled': False}, headers=headers).status_code, 200)
+            disabled = client.get('/api/admin/ai').get_json()['profiles'][0]
+            self.assertFalse(disabled['enabled'])
+            self.assertTrue(disabled['has_key'])
+            self.assertTrue(disabled['tested'])
+            revealed = client.post(path + '/key', json={'expected_version': disabled['version']}, headers=headers)
+            self.assertEqual(revealed.get_json(), {'api_key': 'fixture-saved-key'})
+            enabled = client.put(path, json={'enabled': True, 'expected_version': disabled['version']}, headers=headers)
+            self.assertTrue(enabled.get_json()['enabled'])
+            self.assertEqual(client.delete(path, headers=headers).status_code, 200)
+            self.assertEqual(client.get('/api/admin/ai').get_json()['profiles'], [])
+            db.session.expire_all()
+            self.assertEqual(db.session.get(AIProfile, profile['id']).encrypted_key, '')
+            self.assertEqual(client.post(path + '/key', json=payload, headers=headers).get_json()['error_code'], 'not_found')
+            self.assertEqual(client.put(path, json={'api_key': 'another-fixture-key'}, headers=headers).status_code, 400)
+            paid.assert_not_called()
+            self.assertEqual(AIExecution.query.count(), 0)
 
     def test_imported_source_rules_wait_for_review_and_keep_existing_rules(self):
         from backend.services.data_transfer import export_data, read_backup, merge_data

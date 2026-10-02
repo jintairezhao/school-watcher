@@ -40,10 +40,12 @@ def check():
                 Department(id=2,school_id=1,name='物理学院',group_name='学院部门',list_url='https://physics.example.edu.cn/',last_scraped_at=recent),
                 Department(id=3,school_id=2,name='教务处',list_url='https://other.edu.cn/',last_scraped_at=recent)])
             db.session.add_all([Subscription(user_id=user.id,school_id=1),Subscription(user_id=user.id,school_id=2)])
+            for dept in Department.query.all():
+                dept.list_selector='ul.news-list li';dept.title_selector='a';dept.link_selector='a';dept.date_selector='span'
             db.session.commit()
             cookie=app.session_interface.get_signing_serializer(app).dumps({'user_id':user.id,'_csrf_token':'fixture'})
         calls=[];blocked=[False];stop=threading.Event()
-        def fetch(url):
+        def fetch(url, **kwargs):
             calls.append(url)
             if blocked[0] and 'med.' in url:
                 raise SourceAccessError('官网当前返回访问校验页面，暂时无法读取通知；已有消息仍保留')
@@ -60,7 +62,7 @@ def check():
         threading.Thread(target=server.serve_forever,daemon=True).start()
         base=f'http://127.0.0.1:{server.server_port}'
         try:
-            with patch('backend.services.source_collection.fetch_source_page',side_effect=fetch):
+            with patch('backend.scraper.engine._fetch_html',side_effect=fetch):
                 worker=threading.Thread(target=work,daemon=True);worker.start()
                 with sync_playwright() as p:
                     browser=p.chromium.launch(channel='msedge',headless=True)
@@ -82,6 +84,8 @@ def check():
                     page.locator('#toggleNoticeActions').click()
                     page.locator('#collectCurrentSources').click()
                     expect(page.locator('#inboxRefreshStatus')).to_contain_text('更新完成',timeout=15000)
+                    expect(page.locator('[data-notice-link]')).to_have_count(0)
+                    page.locator('#inboxNewNotices').click()
                     expect(page.locator('[data-notice-link]')).to_have_count(5)
                     assert calls==['https://med.example.edu.cn/'],calls
                     expect(page.locator('.department-option:has(input[value="1"]) .department-count')).to_have_text('5')
@@ -109,7 +113,7 @@ def check():
                     blocked[0]=True
                     with app.app_context():
                         task=BackgroundTask.query.filter_by(identity='collect:1').one()
-                        task.updated_at=datetime.utcnow()-timedelta(minutes=2);db.session.commit()
+                        task.updated_at=task.finished_at=task.checked_at=datetime.utcnow()-timedelta(minutes=2);db.session.commit()
                     page.locator('#toggleNoticeActions').click()
                     page.locator('#collectCurrentSources').click()
                     expect(page.locator('#inboxRefreshStatus')).to_contain_text('暂未成功',timeout=15000)

@@ -64,7 +64,12 @@ def proposals():
     if school_id:
         query = query.filter_by(school_id=school_id)
     state = request.args.get('state', 'needs_review')
-    if state != 'all':
+    workflow_states = {'checking', 'recognition_incomplete', 'site_unavailable', 'login_required', 'access_limited', 'program_error', 'user_choice', 'not_a_column'}
+    if state in workflow_states:
+        from backend.services.source_workflow import workflow
+        ids = [p.id for p in query.all() if workflow(p)['status'] == state]
+        query = query.filter(SourceProposal.id.in_(ids))
+    elif state != 'all':
         query = query.filter_by(state=state)
     page = max(1, request.args.get('page', 1, type=int))
     records = query.order_by(SourceProposal.updated_at.desc()).paginate(page=page, per_page=30, error_out=False)
@@ -82,8 +87,8 @@ def proposal_detail(proposal_id):
     # Serve evidence as text via JSON. Never execute a captured school's scripts.
     from bs4 import BeautifulSoup
     snapshots = []
-    for reference in [bundle.get('list'), bundle.get('independent'), *bundle.get('articles', []),
-                      *bundle.get('identity_snapshots', [])]:
+    for reference in [bundle.get('list'), bundle.get('independent'), bundle.get('pagination'), *bundle.get('articles', []),
+                      *bundle.get('identity_snapshots', []), *bundle.get('exploration_pages', [])]:
         if not reference:
             continue
         try:
@@ -94,7 +99,11 @@ def proposal_detail(proposal_id):
                               'hash': reference.get('hash'), 'text': soup.get_text(' ', strip=True)[:8000]})
         except (ValueError, OSError):
             snapshots.append({'url': reference.get('url'), 'error': '证据缓存已过期，请重新检查'})
-    return jsonify(dict(data, evidence=snapshots))
+    from backend.database.source_governance_models import SourceReviewEvent
+    history = [{'action': e.action, 'note': e.note, 'created_at': e.created_at.isoformat(),
+                'detail': {k: v for k, v in json.loads(e.detail_json).items() if k not in ('input', 'result')}}
+               for e in SourceReviewEvent.query.filter_by(proposal_id=proposal.id).order_by(SourceReviewEvent.id).all()]
+    return jsonify(dict(data, evidence=snapshots, history=history))
 
 
 @bp.route('/api/admin/source-proposals/<int:proposal_id>/review', methods=['POST'])
@@ -105,7 +114,13 @@ def review(proposal_id):
         return jsonify(error='操作格式不正确'), 400
     try:
         action = payload.get('action')
-        result = governance.review_proposal(proposal_id, action, g.user.id, payload.get('note', ''))
+        if action == 'select_option':
+            from backend.services.source_workflow import select_option
+            proposal = db.get_or_404(SourceProposal, proposal_id)
+            select_option(proposal, payload.get('choice'), g.user.id)
+            result = governance.serialize_proposal(proposal)
+        else:
+            result = governance.review_proposal(proposal_id, action, g.user.id, payload.get('note', ''))
         if action != 'reject':
             from backend.services.tasks import enqueue
             task = enqueue('source_review', proposal_id, {'proposal_id': proposal_id}, capability='directory')

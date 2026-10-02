@@ -25,7 +25,7 @@ MAX_ROWS = 200000
 FORMAT = 'school-watcher-collected-data'
 TABLES = {
     'schools': (School, ('id', 'name', 'url', 'enabled', 'created_at')),
-    'departments': (Department, ('id', 'school_id', 'name', 'list_url', 'group_name',
+    'departments': (Department, ('id', 'school_id', 'name', 'list_url', 'group_name', 'kind',
         'list_selector', 'title_selector', 'link_selector', 'date_selector', 'content_selector')),
     'announcements': (Announcement, ('id', 'school_id', 'department_id', 'title', 'url',
         'content_html', 'content_text', 'content_hash', 'summary', 'published_at', 'created_at', 'is_updated')),
@@ -408,14 +408,18 @@ def merge_data(data, progress=None):
             elif entry.school_id is None:
                 entry.school_id = school.id
             school_map[row['id']] = school
-        dept_index = {(d.school_id, _url(d.list_url), d.name.strip()): d for d in Department.query.order_by(Department.id.desc()).all()}
+        dept_index = {(d.school_id, _url(d.list_url), d.name.strip(), d.kind): d for d in Department.query.order_by(Department.id.desc()).all()}
         dept_map = {}
         source_reviews = []
         for row in _rows_progress(data['departments'], progress, 'merging_departments'):
-            key = (school_map[row['school_id']].id, _url(row.get('list_url')), row['name'].strip())
+            kind = row.get('kind') or 'column'
+            if kind not in ('column', 'unit', 'group'):
+                raise ValueError('备份中的部门类型无效')
+            key = (school_map[row['school_id']].id, _url(row.get('list_url')), row['name'].strip(), kind)
             dept = dept_index.get(key)
             if dept is None:
                 values = {c: row.get(c) for c in TABLES['departments'][1] if c not in ('id', 'school_id')}
+                values['kind'] = kind
                 # Ordinary data packages are evidence of history, not authority to
                 # install scraping rules. Complete DB restores use a separate path.
                 for field in ('list_selector', 'title_selector', 'link_selector', 'date_selector', 'content_selector'):

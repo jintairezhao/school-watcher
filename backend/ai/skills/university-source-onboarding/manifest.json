@@ -1,9 +1,14 @@
 {
   "id": "university-source-onboarding",
-  "version": "1.0.0",
-  "contract_version": "1",
+  "version": "2.1.0",
+  "contract_version": "2",
   "input_schema": "input.schema.json",
   "modes": {
+    "column": {
+      "standalone": true,
+      "references": ["references/column.md"],
+      "schema": "column.schema.json"
+    },
     "classify": {
       "references": [
         "references/classify.md"

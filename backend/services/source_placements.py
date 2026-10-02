@@ -105,7 +105,7 @@ def placements_from_paths(source, school_url, paths, known_groups):
     candidates = []
     current_group = (source.group_name or '').strip()
     for path in paths:
-        if path.get('basis') != 'official_website_entry':
+        if path.get('basis') not in ('official_website_entry', 'official_directory_navigation'):
             continue
         nodes = path.get('nodes') or []
         if any(n.get('kind') == 'major' for n in nodes):
@@ -122,7 +122,7 @@ def placements_from_paths(source, school_url, paths, known_groups):
             continue
         # Existing navigation groups suppress side-site/admissions directories.
         # An accidentally promoted unit name can be repaired from its own path.
-        if group not in known_groups and current_group not in {n['name'].strip() for n in units}:
+        if group not in known_groups and current_group and current_group not in {n['name'].strip() for n in units}:
             continue
         if not (_named_owner(source, units) or
                 _within_unit(source.list_url, units[-1].get('url'), school_url)):
@@ -181,7 +181,7 @@ def _unit_path_index(paths):
     result, seen = {}, set()
     for entries in paths.values():
         for path in entries:
-            if path.get('basis') != 'official_website_entry':
+            if path.get('basis') not in ('official_website_entry', 'official_directory_navigation'):
                 continue
             units = _path_units(path)
             if not units:

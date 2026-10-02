@@ -5,7 +5,7 @@
     {% from '_school_header.html' import school_header with context %}
     {% call school_header(school, 'preview', '查看已接入的官网通知，订阅后可管理阅读状态。') %}
         {% if current_user %}<button class="btn btn-primary" data-subscribe-name="{{ school.name }}" data-school-id="{{ school.id }}">订阅并选择栏目</button>
-        {% else %}<a class="btn btn-primary" href="{{ url_for('auth.login_page', next=request.full_path) }}">登录后订阅</a>{% endif %}
+        {% else %}<span>请从桌面应用打开</span>{% endif %}
     {% endcall %}
     <form class="preview-filters" method="get" role="search">
         <div><label for="previewColumn">官网栏目</label><select name="dept" id="previewColumn" class="form-input"><option value="">全部栏目</option>

@@ -8,29 +8,62 @@
     function updateChoices() {
         const all = document.querySelector('[name="mode"]:checked').value === 'all';
         document.querySelectorAll('[name="department"]').forEach(input => { input.disabled = all; });
+        if (field('sourceClearSelection')) field('sourceClearSelection').hidden = all;
     }
-    document.querySelector('.sources-form').addEventListener('change', () => { dirty = true; updateChoices(); });
+    field('sourceClearSelection')?.addEventListener('click', () => {
+        dirty = true;
+        document.querySelectorAll('[name="department"]').forEach(input => { input.checked = false; });
+    });
+    document.querySelector('.sources-form').addEventListener('change', event => {
+        dirty = true;
+        const input = event.target;
+        if (input.matches('[name="department"]')) {
+            const unit = input.closest('.source-unit');
+            if (unit && input.hasAttribute('data-source-unit')) {
+                unit.querySelectorAll('[name="department"]').forEach(child => { child.checked = input.checked; });
+            }
+            if (!input.checked) {
+                let parent = unit;
+                while (parent) {
+                    const selector = parent.querySelector(':scope > summary [data-source-unit]');
+                    if (selector) selector.checked = false;
+                    parent = parent.parentElement.closest('.source-unit');
+                }
+            }
+        }
+        updateChoices();
+    });
     function render(data) {
         state = data.state;
         field('discoveryMessage').textContent = data.message;
-        field('discoveryProgress').hidden = !data.active;
-        field('discoveryActivity').textContent = data.state === 'pausing' ? '正在暂停' : data.state === 'paused' ? '已暂停' : data.active ? '进行中' : '';
+        field('discoveryProgress').hidden = !data.busy;
+        field('discoveryActivity').textContent = data.state === 'pausing' ? '正在暂停' : data.state === 'paused' ? '已暂停'
+            : data.state === 'queued' ? '排队中' : data.state === 'retry_wait' ? '等待重试' : data.busy ? '进行中' : '';
         const pause = field('discoveryPause');
         if (pause) {
             pause.hidden = !data.can_pause && !data.can_resume && data.state !== 'pausing';
             pause.dataset.action = data.can_resume ? 'resume' : 'pause';
             pause.textContent = data.can_resume ? '继续' : data.state === 'pausing' ? '正在暂停…' : '暂停';
         }
-        field('discoveryCounts').textContent = '已检查 ' + data.checked_pages + ' 页 · 已接入 ' + data.source_count + ' 项'
-            + (data.review_count ? ' · 待核实 ' + data.review_count + ' 项' : '')
-            + (data.pending_pages ? ' · 待检查 ' + data.pending_pages + ' 页' : '');
-        if (field('discoveryReview')) field('discoveryReview').hidden = !data.review_count;
+        field('discoveryCounts').textContent = '已列出 ' + (data.department_count ?? 0) + ' 个部门 · 已接入 ' + (data.verified_source_count ?? 0) + ' 个栏目'
+            + (data.processing_count ? ' · 还有 ' + data.processing_count + ' 个页面待处理' : '');
+        if (field('discoveryGaps')) {
+            const gaps = data.coverage?.gaps || [];
+            field('discoveryGaps').hidden = gaps.length === 0;
+            field('discoveryGapList').replaceChildren(...gaps.map(gap => {
+                const item = document.createElement('li'); item.textContent = gap.reason || '该项尚未完成';
+                if (/^https?:\/\//i.test(gap.url || '')) {
+                    const link = document.createElement('a'); link.href = gap.url;
+                    link.textContent = gap.name || gap.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+                    item.append(document.createTextNode(' · '), link);
+                }
+                return item;
+            }));
+        }
         field('discoveryCurrent').textContent = data.state === 'paused' ? '' : data.current_label || '';
         document.querySelector('.source-mode').hidden = data.source_count === 0;
         document.querySelector('.source-save').hidden = data.source_count === 0;
-        field('discoveryAI').textContent = data.state === 'paused' ? '' : data.ai_message || (data.ai_available ? 'AI 辅助已开启' : '开启 AI 辅助，识别学校部门与栏目');
-        if (field('discoverySetup')) field('discoverySetup').hidden = data.ai_available;
-        field('discoveryRetry').hidden = !data.ai_available || !data.can_retry;
+        field('discoveryRetry').hidden = !data.can_retry;
         if (field('discoveryVerify')) field('discoveryVerify').hidden = !data.needs_verification;
         // Preserve unsaved selections while new results arrive.
         if (data.choices_html !== choices && !dirty) {
@@ -38,9 +71,11 @@
             choices = data.choices_html;
             updateChoices();
         }
-        if (data.updated_at && data.active && data.state !== 'pausing') {
+        // A queued task's stored timestamp is from whenever it last did work, so
+        // "still working, last update N seconds ago" would be untrue of it.
+        if (data.updated_at && data.busy) {
             const elapsed = Math.max(0, Math.floor((Date.now() - Date.parse(data.updated_at)) / 1000));
-            if (elapsed > 30) field('discoveryActivity').textContent = '仍在处理 · ' + elapsed + ' 秒前更新';
+            if (elapsed > 30) field('discoveryActivity').textContent = elapsed + ' 秒前更新';
         }
         return data.active || data.state === 'waiting' || data.state === 'idle';
     }

@@ -29,7 +29,7 @@ python -m playwright install chromium
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
-本地测试使用隔离数据库；需要 PostgreSQL 或真实浏览器的测试在环境不可用时会跳过。通过基础测试不等于完成服务器或容量验收。数据库与浏览器部署选项见 [部署说明](deploy/README.md) 和 [浏览器服务说明](backend/browser_service/README.md)。
+本地测试使用隔离数据库；需要 PostgreSQL 或真实浏览器的测试在环境不可用时会跳过。通过基础测试不等于完成安装包验收。桌面运行与历史数据维护见 [维护说明](deploy/README.md) 和 [浏览器服务说明](backend/browser_service/README.md)。
 
 前端使用 Jinja、原生 JavaScript 和 CSS，无需 Node 构建。字体随项目提供，修改字体时需保留许可并运行 `python scripts/assets/vendor_fonts.py --verify`。
 

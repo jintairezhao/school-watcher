@@ -27,9 +27,10 @@ def _schedule_due(lease=None):
             if not renew(lease, seconds=90):
                 raise tasks.LeaseLost('Scheduler lease was lost')
         task = BackgroundTask.query.filter_by(identity=f'{kind}:{key}').first()
-        checked = (task.checked_at or task.updated_at) if task else None
-        next_run = task.next_run_at if task and task.kind == 'scrape' else None
-        if not task or (task.state in ('done', 'failed') and (next_run <= now if next_run else checked < now - timedelta(seconds=seconds))):
+        checked = (task.finished_at or task.checked_at or task.updated_at) if task else None
+        # Apply the current setting, including interval changes made while the
+        # app was closed. An old next_run_at is only a display estimate.
+        if not task or (task.state in ('done', 'failed') and checked <= now - timedelta(seconds=seconds)):
             import hashlib
             delay = int(hashlib.sha256(f'{kind}:{key}'.encode()).hexdigest()[:8], 16) % min(60, max(1, seconds // 10))
             tasks.enqueue(kind, key, payload, min_interval=seconds, delay=delay)
@@ -40,6 +41,9 @@ def _schedule_due(lease=None):
         if school.subscriber_count > 0:
             due('scrape', school.id, {'school_id': school.id}, interval)
             due('health', school.id, {'school_id': school.id}, 86400)
+            from backend.services.source_grouping import missing_groups
+            if missing_groups(school.id):
+                due('source_grouping', school.id, {'school_id':school.id, 'ai_assist':False}, 7 * 86400)
         due('discover', school.id, {'school_id': school.id, 'refresh': True},
             (7 if school.subscriber_count > 0 else 30) * 86400)
     due('maintenance', 'daily', {}, 86400)
@@ -62,10 +66,14 @@ def schedule_due(owner_id='local'):
     if not lease:
         return False
     try:
+        from backend.services.source_onboarding import resume_rule_discovery
+        resume_rule_discovery()
         from backend.services.scrape_logs import recover_interrupted_logs
         recover_interrupted_logs()
         from backend.ai.runtime import recover_uncertain_executions
         recover_uncertain_executions()
+        from backend.services.directory_recovery import recover_legacy
+        recover_legacy()
         from backend.services.source_governance import recover_source_reviews
         recover_source_reviews()
         _schedule_due(lease)
@@ -124,6 +132,16 @@ def dispatch(kind, payload):
     if kind == 'source_review':
         from backend.services.source_governance import process_source_review
         return process_source_review(payload)
+    if kind == 'source_grouping':
+        from backend.services.source_grouping import run_grouping
+        result = run_grouping(payload)
+        if result['continuation_required']:
+            tasks.defer(capability='directory', phase='grouping_slice', checkpoint=result['checkpoint'], delay=1,
+                        reason='已保存官网归属证据，继续核对剩余栏目')
+        return result
+    if kind == 'navigation_review':
+        from backend.scraper.discovery.ai_navigation import process_navigation
+        return process_navigation(payload)
     if kind == 'directory':
         from backend.services.discovery_cache import adapt_site
         checkpoint = (tasks.current_execution() or {}).get('checkpoint') or {}
@@ -150,22 +168,40 @@ def dispatch(kind, payload):
     if kind == 'selectors':
         from backend.scraper.engine import _fetch_html
         from backend.scraper.detectors.list_detector import test_selectors
+        # Administrator selector test: fetch permissively so the reported result
+        # is "your selectors matched nothing", never "the page was rejected".
         html = _fetch_html(payload['url'])
         return test_selectors(html, payload['url'], payload['list_selector'], payload.get('title_selector', 'a'),
                               payload.get('link_selector', 'a'), payload.get('date_selector', 'span'))
+    # Recover an already queued column job from versions which omitted school_id.
+    # Resolve the persisted relationship, never infer school ownership from a URL.
+    if kind in ('collect', 'source_health') and 'school_id' not in payload:
+        from backend.database.models import Department
+        department = db.session.get(Department, payload.get('department_id'))
+        if department is None:
+            return {'skipped': True, 'message': '栏目已不存在'}
+        payload = dict(payload, school_id=department.school_id)
     school = db.session.get(School, payload['school_id'])
     if not school or not school.enabled:
         return {'skipped': True}
+    if kind == 'onboard':
+        from backend.services.source_onboarding import onboard_page
+        return onboard_page(payload)
     if kind == 'discover':
-        from backend.services.onboarding_progress import ai_available
-        if payload.get('require_ai') and not ai_available():
-            tasks.defer(capability='directory', phase='ai_setup', state='waiting',
-                        reason='请先配置目录识别 AI', error_code='ai_not_configured')
         from backend.services.discovery_cache import adapt_site
         name, url = school.name, school.url
         db.session.commit()
         checkpoint = (tasks.current_execution() or {}).get('checkpoint') or {}
-        result = adapt_site(name, url, monthly=bool(payload.get('refresh') and not checkpoint.get('directory_refresh_started')))
+        result = adapt_site(name, url, monthly=bool((payload.get('refresh') or checkpoint.get('entry_retries'))
+                                                  and not checkpoint.get('directory_refresh_started')))
+        if result.get('entry_failure'):
+            checkpoint = dict((tasks.current_execution() or {}).get('checkpoint') or {})
+            retries = checkpoint.get('entry_retries', 0)
+            if retries < 2 and result['entry_failure'].get('status_code') not in (401, 403):
+                checkpoint.update(entry_retries=retries + 1, directory_refresh_started=False)
+                tasks.defer(capability='directory', phase='entry_retry', checkpoint=checkpoint, delay=30,
+                            reason='官网首页暂未读取成功，程序将自动重试')
+            return result
         school = db.session.get(School, payload['school_id'])
         if school:
             from backend.services.directory_options import sync_directory_options
@@ -227,6 +263,7 @@ def dispatch(kind, payload):
         from backend.scraper.selector_monitor import evaluate_and_repair, mark_needs_review
         checked = 0
         needs_adaptation = False
+        access_limited = 0
         # Successful collection already checks selectors against its fetched DOM.
         # Avoid requesting the same column again when the daily audit overlaps it.
         if dept.last_scraped_at and dept.last_scraped_at >= datetime.utcnow() - timedelta(minutes=15):
@@ -238,6 +275,12 @@ def dispatch(kind, payload):
             html = _fetch_html(url, raise_fetch_errors=True, purpose='list', source_id=str(dept.id)) if url else ''
             if html:
                 result = evaluate_and_repair(dept, html)
+                if result['action'] == 'browser_needed':
+                    # The transport already tried the browser lane and still got a
+                    # challenge shell. Re-crawling the whole school would not help,
+                    # and this is an official-site access limit, not a user task.
+                    access_limited += 1
+                    continue
                 needs_adaptation |= result['action'] in ('needs_review', 'skip')
                 checked += 1
             else:
@@ -245,7 +288,8 @@ def dispatch(kind, payload):
                 needs_adaptation = True
         if needs_adaptation:
             tasks.enqueue('discover', school.id, {'school_id': school.id}, replace_finished=False)
-        return {'checked': checked, 'adaptation_queued': needs_adaptation}
+        return {'checked': checked, 'adaptation_queued': needs_adaptation,
+                'access_limited': access_limited}
     if kind == 'scrape':
         from backend.services.source_catalog import apply_source_configs
         from backend.services.directory_options import sync_directory_options
@@ -369,7 +413,19 @@ def run(app, *, once=False, roles=None, concurrency=None, worker_id=None):
                 if maintenance.pause.is_set():
                     break
                 with app.app_context():
-                    handle = tasks.claim(capabilities=lanes, worker_id=worker_id)
+                    # With the existing two slots, offer one to onboarding and
+                    # one to collection. A retrying host must not occupy both
+                    # ahead of every new school's first AI check. Empty lanes
+                    # borrow the other slot; no additional threads or processes.
+                    preferred = ()
+                    if slots > 1 and 'directory' in lanes and len(lanes) > 1:
+                        if 'directory' not in active.values():
+                            preferred = ('directory',)
+                        elif all(lane == 'directory' for lane in active.values()):
+                            preferred = tuple(lane for lane in lanes if lane != 'directory')
+                    handle = tasks.claim(capabilities=preferred, worker_id=worker_id) if preferred else None
+                    if not handle:
+                        handle = tasks.claim(capabilities=lanes, worker_id=worker_id)
                     db.session.remove()
                 if not handle:
                     break

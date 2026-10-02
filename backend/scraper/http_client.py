@@ -126,8 +126,11 @@ class PublicHTTPClient:
         # Every collection path uses the same pinned transport. Browser fallback
         # remains available when a site requires a browser TLS/session profile.
         kwargs.pop('impersonate', None)
+        from backend.scraper.auth_routes import is_sign_in_route
+        from backend.scraper.fetch_errors import SourceLoginRequired
         from backend.scraper.pinned_transport import pinned_request, public_addresses
         transport_notes = []
+        sign_in_hop = ''
         for _ in range(6):
             addresses = public_addresses(url)
             permit = _shared_permit(url, kwargs.get('timeout'))
@@ -138,8 +141,15 @@ class PublicHTTPClient:
                     proxies = standard_requests.utils.get_environ_proxies(url)
                     if (method not in ('GET', 'HEAD') or 'proxies' in kwargs or
                             not any(proxies.get(key) for key in ('http', 'https', 'all'))):
+                        if sign_in_hop:
+                            raise SourceLoginRequired(sign_in_hop) from exc
                         raise
-                    response = pinned_request(method, url, addresses=addresses, trust_env=False, **kwargs)
+                    try:
+                        response = pinned_request(method, url, addresses=addresses, trust_env=False, **kwargs)
+                    except (standard_requests.exceptions.ConnectionError, standard_requests.exceptions.Timeout) as direct:
+                        if sign_in_hop:
+                            raise SourceLoginRequired(sign_in_hop) from direct
+                        raise
                     transport_notes.append('direct_after_proxy_error:' + type(exc).__name__)
                 _guard_response(response, permit)
             except BaseException:
@@ -156,6 +166,11 @@ class PublicHTTPClient:
                     transport_notes.append('repaired_same_host_https_redirect:' + location)
                 else:
                     target = urljoin(url, location)
+                if is_sign_in_route(target):
+                    # Remembered so that if the hand-off itself fails at the
+                    # transport layer, the caller is told the site requires a
+                    # sign-in rather than being handed a connection error.
+                    sign_in_hop = target
                 response.close()
                 url = target
                 continue

@@ -18,6 +18,7 @@ class AIProfile(db.Model):
     last_test_code = db.Column(db.String(80), nullable=False, default='not_tested')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    deleted_at = db.Column(db.DateTime)
 
 
 class AIBinding(db.Model):
@@ -59,4 +60,6 @@ class AIExecution(db.Model):
     active_released = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     finished_at = db.Column(db.DateTime)
+    heartbeat_at = db.Column(db.DateTime)
+    diagnostics = db.Column(db.JSON, nullable=False, default=dict)
     __table_args__ = (db.Index('ix_ai_execution_status_created', 'status', 'created_at'),)

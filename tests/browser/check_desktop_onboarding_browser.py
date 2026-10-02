@@ -54,7 +54,8 @@ try:
             assert '本机应用' not in page.locator('.admin-account').inner_text()
             page.screenshot(path=str(output / f'admin-{width}.png'), full_page=True)
             page.goto(f'http://localhost/subscriptions/{fixture.school.id}')
-            page.locator('#discoverySetup').wait_for()
+            page.locator('#discoveryMessage').wait_for()
+            assert page.locator('#discoverySetup').count() == 0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), ('sources overflow', width)
             assert page.locator('[data-window-action="close"]').count() == 1
             row = BackgroundTask.query.filter_by(kind='discover').one()
@@ -63,7 +64,7 @@ try:
             row.checkpoint = {'discovery_progress': {'phase': 'ai', 'ai_state': 'running', 'checked_pages': 2, 'pending_pages': 6}}
             db.session.commit()
             page.locator('#discoveryRefresh').click()
-            page.wait_for_function("() => document.getElementById('discoveryCounts').textContent.includes('已检查 2 页')")
+            page.wait_for_function("() => document.getElementById('discoveryMessage').textContent.includes('正在查找')")
             assert page.locator('#discoveryProgress').is_visible()
             page.screenshot(path=str(output / f'subscription-{width}.png'), full_page=True)
             row.checkpoint = {'discovery_progress': {'phase': 'crawl', 'ai_state': 'failed',
@@ -71,10 +72,9 @@ try:
                               'ai_navigation': {'one': 'succeeded', 'two': 'failed', 'three': 'failed'}}
             db.session.commit()
             page.locator('#discoveryRefresh').click()
-            page.wait_for_function("() => document.getElementById('discoveryCounts').textContent.includes('待核实 1 项')")
-            assert '1 次成功、2 次未完成' in page.locator('#discoveryAI').inner_text()
-            assert '模型输出不完整' in page.locator('#discoveryAI').inner_text()
-            assert page.locator('#discoveryReview').is_visible()
+            page.wait_for_function("() => document.getElementById('discoveryCounts').textContent.includes('已接入')")
+            assert page.locator('#discoveryAI').count() == 0
+            assert page.locator('#discoveryReview').count() == 0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), ('progress overflow', width)
             page.screenshot(path=str(output / f'discovery-results-{width}.png'), full_page=True)
             if width == 1280:

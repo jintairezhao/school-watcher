@@ -103,6 +103,36 @@ class AIUsageTests(unittest.TestCase):
         self.assertEqual(result['summary']['unclassified_tokens'], 55)
         self.assertEqual(sum(m['tokens'] for m in result['models']), 155)
 
+    def test_lifetime_includes_history_before_calendar_without_reserved_or_future_calls(self):
+        old = self.now - timedelta(days=800)
+        db.session.add_all([
+            execution('old', old, tokens=700),
+            execution('old-failed', old + timedelta(days=1), tokens=30, status='failed'),
+            execution('old-unknown', old + timedelta(days=2), status='uncertain', usage={'known': False}),
+            execution('today', self.now, tokens=20),
+            execution('reserved', self.now, status='reserved', tokens=999),
+            execution('future', self.now + timedelta(seconds=1), tokens=999),
+        ])
+        db.session.commit()
+        result = usage_dashboard(7, 480, now=self.now)
+        lifetime = result['lifetime']
+        self.assertEqual(lifetime['tokens'], 750)
+        self.assertEqual(lifetime['calls'], 4)
+        self.assertEqual(lifetime['unknown_usage'], 1)
+        self.assertEqual(lifetime['start'], (old + timedelta(hours=8)).date().isoformat())
+        self.assertEqual(lifetime['end'], '2026-09-30')
+        self.assertEqual(result['summary']['tokens'], 20)
+        self.assertEqual(sum(day['tokens'] for day in result['calendar']), 20)
+
+    def test_calendar_has_exactly_365_local_days_across_leap_day(self):
+        result = usage_dashboard(now=datetime(2024, 3, 1, 8), offset_minutes=480)
+        self.assertEqual(len(result['calendar']), 365)
+        self.assertEqual(result['calendar'][0]['date'], '2023-03-03')
+        self.assertEqual(result['calendar'][-2]['date'], '2024-02-29')
+        self.assertEqual(result['calendar'][-1]['date'], '2024-03-01')
+        self.assertEqual(result['lifetime']['tokens'], 0)
+        self.assertIsNone(result['lifetime']['start'])
+
     def test_budgets_use_current_utc_month_and_do_not_invent_limits(self):
         db.session.add_all([
             AIBudget(key='total:2026-09', used_tokens=999, reserved_tokens=12),
@@ -153,7 +183,7 @@ class AIUsageTests(unittest.TestCase):
         settings = client.get('/admin')
         self.assertIn(b'id="aiProfileForm"', settings.data)
         self.assertNotIn(b'id="aiUsagePanel"', settings.data)
-        self.assertEqual(self.fixture.client().get('/admin/ai-usage').status_code, 302)
+        self.assertEqual(self.fixture.client().get('/admin/ai-usage').status_code, 403)
         self.assertEqual(self.fixture.client(self.fixture.reader).get('/admin/ai-usage').status_code, 403)
 
 

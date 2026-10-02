@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "required": ["candidate_id", "status", "columns", "reason"],
+  "additionalProperties": false,
+  "properties": {
+    "candidate_id": {"type": "string", "minLength": 1, "maxLength": 120},
+    "status": {"enum": ["ready", "not_column", "unsupported"]},
+    "reason": {"type": "string", "maxLength": 500},
+    "columns": {
+      "type": "array", "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "list_selector", "title_selector", "link_selector", "date_selector", "content_selector", "container_selector", "heading_selector"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 200},
+          "list_selector": {"type": "string", "minLength": 1, "maxLength": 500},
+          "title_selector": {"type": "string", "minLength": 1, "maxLength": 500},
+          "link_selector": {"type": "string", "minLength": 1, "maxLength": 500},
+          "date_selector": {"type": "string", "maxLength": 500},
+          "content_selector": {"type": "string", "maxLength": 500},
+          "container_selector": {"type": "string", "minLength": 1, "maxLength": 500},
+          "heading_selector": {"type": "string", "minLength": 1, "maxLength": 500}
+        }
+      }
+    }
+  }
+}

@@ -105,6 +105,16 @@ def http_fetch(request):
                            evidence=evidence, timings={'http_ms': round((time.monotonic() - start) * 1000)},
                            retry_after=float(retry_after) if str(retry_after).isdigit() else None)
     except Exception as exc:
+        from backend.scraper.auth_routes import LOGIN_REQUIRED_MESSAGE
+        from backend.scraper.fetch_errors import SourceLoginRequired
+        if isinstance(exc, SourceLoginRequired):
+            # The site sent us to its identity provider and the hand-off did not
+            # complete. This is the site's access rule, not a program fault, and
+            # must not be retried as if the network were merely unwell.
+            return FetchResult(request.url, outcome='denied', error_code='source_login_required',
+                               message=LOGIN_REQUIRED_MESSAGE,
+                               evidence=('sign_in_hop:' + str(exc),),
+                               timings={'http_ms': round((time.monotonic() - start) * 1000)})
         error = describe_fetch_error(exc)
         return FetchResult(request.url, outcome='network_error' if error.retryable else 'denied',
                            error_code='http_' + type(exc).__name__.lower(), message=str(error),

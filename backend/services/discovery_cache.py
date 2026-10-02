@@ -7,15 +7,15 @@ from backend.services.source_inventory import Inventory, canonical_url
 
 class DiscoveryCache(Inventory):
     max_bytes = 100 * 1024 * 1024
-    max_pages_per_site = 1000
+    max_pages_per_site = None
 
     def enqueue(self, key, url, label, kind, depth, path, authority):
         with self.connect() as c:
             count = c.execute('SELECT count(*) FROM pages WHERE site_key=?', (key,)).fetchone()[0]
             known = c.execute('SELECT 1 FROM pages WHERE site_key=? AND url=?', (key, url)).fetchone()
-        if count >= self.max_pages_per_site and not known:
+        if self.max_pages_per_site and count >= self.max_pages_per_site and not known:
             raise RuntimeError('本校待检查入口达到容量上限，已保留进度，不能认定检查完成')
-        return super().enqueue(key, url, label, kind, depth, path[-6:], authority)
+        return super().enqueue(key, url, label, kind, depth, path, authority)
 
     def record_edges(self, key, parent_url, links, content_hash):
         # Intermediate navigation is evidence of a discovered route, including
@@ -59,8 +59,22 @@ class DiscoveryCache(Inventory):
         with self.connect() as c:
             c.execute('PRAGMA wal_checkpoint(TRUNCATE)')
         if limit and self.path.stat().st_size > limit:
+            active_keys = set()
+            if has_app_context():
+                from backend.database.models import BackgroundTask, School
+                from backend.database.source_governance_models import SourceProposal
+                from backend.services.source_inventory import site_key
+                schools = {s.id: site_key(s.url) for s in School.query.all()}
+                proposals = {p.id: p.school_id for p in SourceProposal.query.all()}
+                for task in BackgroundTask.query.filter(BackgroundTask.state.in_(('pending', 'running', 'waiting')),
+                        BackgroundTask.kind.in_(('discover', 'directory', 'navigation_review', 'source_review', 'source_grouping'))).all():
+                    ident = task.payload.get('school_id') or proposals.get(task.payload.get('proposal_id'))
+                    active_keys.add(schools.get(ident) or task.payload.get('site', {}).get('site_key') or task.payload.get('site_key'))
             with self.connect() as c:
                 completed = c.execute("SELECT site_key,url FROM pages WHERE state NOT IN ('pending','running') ORDER BY checked_at").fetchall()
+                # The visited set is part of an unfinished checklist. Removing
+                # it would rediscover the same pages and silently reopen work.
+                completed = [row for row in completed if row['site_key'] not in active_keys]
                 for row in completed[:max(1, len(completed) // 2)]:
                     c.execute('DELETE FROM snapshots WHERE site_key=? AND url=?', tuple(row))
                     c.execute('DELETE FROM structure WHERE site_key=? AND reference_url=?', tuple(row))
@@ -83,6 +97,15 @@ def adapt_site(name, root_url, *, monthly=False):
         inventory.trim()
         key = inventory.ensure_site(name, root_url)
         catalog = RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH'])
+        from backend.database.models import School
+        from backend.services import tasks
+        from backend.services.source_onboarding import queue_columns, retry_unconnected_columns
+        school = next((s for s in School.query.filter_by(name=name).all()
+                       if canonical_url(s.url) == canonical_url(root_url)), None)
+        handle = tasks.current_execution()
+        if monthly and school:
+            refresh_key = f"{handle['id']}:{handle['generation']}" if handle else datetime.now(timezone.utc).isoformat()
+            retry_unconnected_columns(school.id, refresh_key)
         report = catalog.report(key)
         if monthly and report:
             # Refresh the known entrances. Generic website navigation is not a crawl seed.
@@ -92,13 +115,13 @@ def adapt_site(name, root_url, *, monthly=False):
                                       json.loads(page['path_json']), page['authority'])
                     with inventory.connect() as c:
                         c.execute("UPDATE pages SET state='pending' WHERE site_key=? AND url=? AND state!='running'", (key, page['url']))
-        from backend.services import tasks
-        handle = tasks.current_execution()
         if handle:
             tasks.checkpoint(dict(handle.get('checkpoint') or {}, directory_refresh_started=True))
         # A slice prioritizes student entrances but must eventually visit other
         # official information too; student_priority is ordering, not exclusion.
         from backend.services.onboarding_progress import record_progress
+        from backend.services.school_structure import sync_official_structure
+        queued_columns = []
         def progress(processed, snapshot):
             states = snapshot['states']
             record_progress(phase='crawl', checked_pages=sum(v for k, v in states.items() if k not in ('pending', 'running')),
@@ -107,31 +130,37 @@ def adapt_site(name, root_url, *, monthly=False):
                 current_label=snapshot.get('current_label', ''))
             if processed:
                 catalog.publish(inventory, key, merge=True)
-        # Make the first results available without waiting for a twenty-page crawl.
-        first_slice = bool(handle) and not handle.get('checkpoint', {}).get('first_slice_finished')
-        result = crawl_site(inventory, key, max_pages=3 if first_slice else 20, workers=2,
+                if school:
+                    sync_official_structure(school, catalog)
+                    queued_columns.extend(queue_columns(school.id, inventory, key)['onboarding_ids'])
+        result = crawl_site(inventory, key, max_pages=3, workers=2,
                             focus='all', retry_failed=monthly, progress=progress)
         from backend.services.discovery_control import pause_if_requested
         pause_if_requested()
-        from backend.database.models import School
-        from backend.services.source_governance import process_discovered_candidates, record_onboarding_slice
+        from backend.services.source_governance import record_onboarding_slice
         from backend.services.source_relationships import ROSTER_RELATIONS
-        school = next((s for s in School.query.filter_by(name=name).all()
-                       if canonical_url(s.url) == canonical_url(root_url)), None)
         governance = {'proposal_ids': [], 'activated_ids': [], 'remaining_candidates': 0}
         if school:
-            record_progress(phase='verify', current_label='')
-            governance = process_discovered_candidates(school.id, inventory, key)
+            governance = queue_columns(school.id, inventory, key)
+            governance['onboarding_ids'] = list(dict.fromkeys(queued_columns + governance['onboarding_ids']))
             result['official_units'] = [n for n in inventory.structure(key) if n['kind'] == 'unit' and n['relation'] in ROSTER_RELATIONS]
             record_onboarding_slice(school.id, result)
-        # Publication carries observed structure and explicit candidate states;
-        # installation in the reading database is exclusively the gated path.
+        # Publish navigation separately; each page installs its first notices in
+        # an independent onboarding task without waiting for the school crawl.
         catalog.publish(inventory, key, merge=True)
+        if school:
+            from backend.services.school_structure import sync_official_structure
+            sync_official_structure(school, catalog)
         inventory.trim()
         pending = result['states'].get('pending', 0) + result['states'].get('running', 0)
+        entry = next((p for p in result['pages'] if p['kind'] == 'root' and p['state'] in ('failed', 'blocked')), None)
+        entry_failure = ({'reason': entry.get('error') or '学校官网暂未读取成功',
+                          'status_code': entry.get('status_code'), 'health': entry.get('health')}
+                         if entry and not result['states'].get('fetched') else None)
         if handle:
             tasks.checkpoint(dict(handle.get('checkpoint') or {}, first_slice_finished=True))
-        record_progress(phase='crawl' if pending or governance['remaining_candidates'] else 'complete')
+        record_progress(phase='crawl' if pending or governance['remaining_candidates'] else 'complete', entry_failure=entry_failure)
         return {'departments': catalog.candidates(key), 'pending_pages': pending,
+                'entry_failure': entry_failure,
                 'continuation_required': bool(pending or governance['remaining_candidates']), **governance,
-                'coverage_verified': False, 'message': '本轮来源检查已保存；剩余入口将继续检查，待核实栏目不会直接生效'}
+                'coverage_verified': False, 'message': '已找到的栏目正在接入，其他官网入口继续查找'}

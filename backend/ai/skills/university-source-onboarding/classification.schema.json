@@ -157,6 +157,42 @@
               "type": "string",
               "maxLength": 1000
             }
+          },
+          "actions": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "read_page"
+                  ]
+                },
+                "url": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "purpose": {
+                  "enum": [
+                    "directory",
+                    "list",
+                    "article"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "maxLength": 500
+                }
+              },
+              "required": [
+                "type",
+                "url",
+                "purpose",
+                "reason"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [

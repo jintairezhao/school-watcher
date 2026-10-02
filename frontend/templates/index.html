@@ -2,11 +2,15 @@
 {% block title %}通知收件箱 — 学校通知{% endblock %}
 {% block body_class %}page-inbox{% endblock %}
 {% block main_class %}main-content--inbox{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reader-empty.css') }}">
+{% endblock %}
 {% block content %}{% include '_inbox_workspace.html' %}{% endblock %}
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/inbox-sources.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inbox-search.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inbox-view.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inbox.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reader-empty.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inbox-refresh.js') }}"></script>
 {% endblock %}

@@ -24,9 +24,6 @@
             </div>
         </div>
         <div class="manage-actions">
-            <button class="btn btn-sm btn-accent" onclick="startDiscovery({{ school.id }})" title="自动发现部门">
-                自动发现
-            </button>
             <button class="btn btn-sm btn-outline" onclick="manageDept({{ school.id }})" title="管理部门">
                 部门
             </button>
@@ -45,54 +42,9 @@
     {% else %}
     <div class="empty-state">
         <h3>还没有添加学校</h3>
-        <p>点击上方按钮添加学校，再使用“自动发现”识别部门。</p>
+        <p>点击上方按钮添加学校。</p>
     </div>
     {% endif %}
-</div>
-
-<!-- ============================================================ -->
-<!-- 发现向导模态框 -->
-<!-- ============================================================ -->
-<div class="modal-overlay" id="discoveryModal" style="display:none;">
-    <div class="modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
-        <div class="modal-header">
-            <h3 id="discoveryTitle">自动发现部门</h3>
-            <button class="modal-close" onclick="closeDiscovery()">&times;</button>
-        </div>
-        <div class="modal-body" id="discoveryBody">
-            <!-- 进度阶段 -->
-            <div id="discoveryPhase">
-                <div id="discoveryProgressBar" style="height:6px;background:#e0e0e0;border-radius:3px;margin-bottom:16px;">
-                    <div id="discoveryProgressFill" style="height:100%;width:100%;border-radius:3px;transform:scaleX(0);transform-origin:left;transition:transform 0.5s;"></div>
-                </div>
-                <div id="discoveryStatus" style="text-align:center;color:#666;padding:20px;">
-                    准备开始...
-                </div>
-                <div id="discoveryLog" style="max-height:200px;overflow-y:auto;font-size:13px;color:#888;"></div>
-            </div>
-
-            <!-- 结果预览（发现完成后显示） -->
-            <div id="discoveryResults" style="display:none;">
-                <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-                    <strong id="discoverySummary"></strong>
-                    <div>
-                        <button class="btn btn-sm btn-outline" onclick="selectAllDepts(true)">全选</button>
-                        <button class="btn btn-sm btn-outline" onclick="selectAllDepts(false)">取消全选</button>
-                    </div>
-                </div>
-                <div id="deptChecklist" style="max-height:400px;overflow-y:auto;"></div>
-                <div style="margin-top:16px;text-align:right;">
-                    <button class="btn btn-outline" onclick="closeDiscovery()">取消</button>
-                    <button class="btn btn-primary" onclick="applyDiscovery()" id="applyDiscoveryBtn">
-                        确认并添加部门
-                    </button>
-                </div>
-            </div>
-
-            <!-- 错误显示 -->
-            <div id="discoveryError" style="display:none;text-align:center;padding:20px;color:#e53e3e;"></div>
-        </div>
-    </div>
 </div>
 
 <!-- 部门管理区域 -->
@@ -100,7 +52,6 @@
     <hr style="margin: 24px 0;">
     <div class="page-header">
         <h2 id="deptSchoolName"></h2>
-        <button class="btn btn-outline" onclick="startDiscovery(currentDeptSchoolId)" style="margin-right:8px;">重新发现</button>
         <button class="btn btn-primary" onclick="showAddDept()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             添加部门
@@ -175,10 +126,6 @@
 // 全局状态
 // ============================================================
 let currentDeptSchoolId = null;
-let currentDiscoverySchoolId = null;
-let currentDiscoverySessionId = null;
-let discoveredDepts = [];
-let eventSource = null;
 
 // ============================================================
 // 学校操作
@@ -229,7 +176,7 @@ async function saveSchool() {
         });
         const data = await resp.json();
         if (resp.ok) {
-            showToast('success', id ? '学校已更新' : '学校已添加。点击“自动发现”开始识别部门');
+            showToast('success', id ? '学校已更新' : '学校已添加');
             closeModal();
             setTimeout(() => location.reload(), 800);
         } else {
@@ -298,258 +245,6 @@ async function deleteSchool(id) {
 }
 
 // ============================================================
-// 自动发现向导
-// ============================================================
-async function startDiscovery(schoolId) {
-    currentDiscoverySchoolId = schoolId;
-    discoveredDepts = [];
-
-    // 重置 UI
-    document.getElementById('discoveryPhase').style.display = 'block';
-    document.getElementById('discoveryResults').style.display = 'none';
-    document.getElementById('discoveryError').style.display = 'none';
-    document.getElementById('discoveryProgressFill').style.transform = 'scaleX(0)';
-    document.getElementById('discoveryStatus').innerHTML = '<div class="spinner"></div><p>正在启动发现...</p>';
-    document.getElementById('discoveryLog').innerHTML = '';
-    document.getElementById('discoveryTitle').textContent = '自动发现部门';
-    document.getElementById('discoveryModal').style.display = 'flex';
-
-    // 关闭旧 SSE 连接
-    if (eventSource) { eventSource.close(); eventSource = null; }
-
-    try {
-        // 启动发现
-        const resp = await fetch('/api/schools/' + schoolId + '/discover', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'}
-        });
-        const data = await resp.json();
-        if (!resp.ok) {
-            showDiscoveryError(data.error || '启动失败');
-            return;
-        }
-        currentDiscoverySessionId = data.session_id;
-
-        // 连接 SSE
-        connectSSE(schoolId);
-    } catch(e) {
-        showDiscoveryError('启动发现失败: ' + e.message);
-    }
-}
-
-function connectSSE(schoolId) {
-    const url = '/api/schools/' + schoolId + '/discover/events';
-
-    eventSource = new EventSource(url);
-
-    eventSource.onmessage = function(event) {
-        try {
-            const data = JSON.parse(event.data);
-
-            if (data.type === 'stream_end') {
-                eventSource.close();
-                eventSource = null;
-                return;
-            }
-
-            if (data.type === 'error') {
-                showDiscoveryError(data.message);
-                return;
-            }
-
-            if (data.type === 'phase') {
-                updateDiscoveryPhase(data);
-            } else if (data.type === 'dept_found') {
-                addDiscoveryLog('✓ ' + data.dept.name + ' (' + data.dept.item_count + '条, 置信度' + Math.round(data.dept.confidence * 100) + '%)');
-                discoveredDepts.push(data.dept);
-            } else if (data.type === 'dept_skipped') {
-                addDiscoveryLog('⏭️ ' + data.name + ' — ' + data.reason);
-            } else if (data.type === 'completed') {
-                showDiscoveryResults(data);
-            } else if (data.type === 'failed') {
-                showDiscoveryError(data.message);
-            }
-        } catch(e) {
-            console.error('SSE parse error:', e);
-        }
-    };
-
-    eventSource.onerror = function() {
-        console.error('SSE connection error');
-        if (eventSource) {
-            eventSource.close();
-            eventSource = null;
-        }
-        // 尝试轮询回退
-        startPolling(schoolId);
-    };
-}
-
-function startPolling(schoolId) {
-    const pollInterval = setInterval(async () => {
-        try {
-            const resp = await fetch('/api/schools/' + schoolId + '/discover/status');
-            const data = await resp.json();
-
-            if (data.status === 'completed') {
-                clearInterval(pollInterval);
-                updateDiscoveryPhase({phase: 'completed', message: '发现完成！', progress_pct: 100});
-                showDiscoveryResults({result: data.result});
-            } else if (data.status === 'failed') {
-                clearInterval(pollInterval);
-                showDiscoveryError(data.error || '发现失败');
-            } else if (data.status === 'none') {
-                clearInterval(pollInterval);
-            } else {
-                updateDiscoveryPhase({
-                    phase: data.current_phase,
-                    message: data.current_phase,
-                    progress_pct: data.progress_pct
-                });
-            }
-        } catch(e) {
-            clearInterval(pollInterval);
-        }
-    }, 2000);
-}
-
-function updateDiscoveryPhase(data) {
-    const pct = data.progress_pct || 0;
-    document.getElementById('discoveryProgressFill').style.transform = 'scaleX(' + (pct / 100) + ')';
-
-    const phaseLabels = {
-        'fetching_homepage': '🌐 正在获取学校首页...',
-        'parsing_navigation': '📋 正在分析导航结构...',
-        'enumerating': '📂 正在访问汇总页面...',
-        'discovering_departments': '🔎 已发现候选部门，准备探测...',
-        'probing_selectors': '🎯 正在探测部门通知列表...',
-        'completed': '发现完成！',
-    };
-
-    const label = phaseLabels[data.phase] || data.message || data.phase;
-    document.getElementById('discoveryStatus').innerHTML = `
-        <p style="font-size:16px;margin-bottom:8px;">${escHtml(label)}</p>
-        <p style="font-size:13px;color:#999;">${escHtml(data.message || '')}</p>
-    `;
-}
-
-function addDiscoveryLog(msg) {
-    const log = document.getElementById('discoveryLog');
-    const entry = document.createElement('div');
-    entry.textContent = msg;
-    log.appendChild(entry);
-    log.scrollTop = log.scrollHeight;
-}
-
-function showDiscoveryResults(data) {
-    document.getElementById('discoveryPhase').style.display = 'none';
-
-    const result = data.result || {};
-    const depts = result.departments || discoveredDepts;
-
-    document.getElementById('discoverySummary').textContent =
-        '发现 ' + depts.length + ' 个候选部门（共探测 ' +
-        (result.total_candidates || '?') + ' 个链接）';
-
-    // 渲染勾选列表
-    const container = document.getElementById('deptChecklist');
-    container.innerHTML = depts.map((d, i) => `
-        <div class="discovery-dept-item" style="border:1px solid #e0e0e0;border-radius:8px;padding:12px;margin-bottom:8px;">
-            <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
-                <input type="checkbox" class="dept-checkbox" data-index="${i}" checked
-                       style="margin-top:3px;transform:scale(1.2);">
-                <div style="flex:1;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <strong>${d.column_group_name && d.column_group_name !== d.name ? escHtml(d.column_group_name) + ' · ' : ''}${escHtml(d.name)}</strong>
-                        <span style="font-size:12px;padding:2px 8px;border-radius:12px;background:${d.confidence >= 0.7 ? '#c6f6d5' : d.confidence >= 0.5 ? '#fefcbf' : '#fed7d7'};color:${d.confidence >= 0.7 ? '#276749' : d.confidence >= 0.5 ? '#975a16' : '#c53030'};">
-                            ${Math.round(d.confidence * 100)}%
-                        </span>
-                    </div>
-                    <div style="font-size:12px;color:#888;margin:4px 0;">
-                        📋 ${escHtml(d.list_selector || '—')} |
-                        📅 ${escHtml(d.date_selector || '—')} |
-                        📝 ${escHtml(d.content_selector || '—')}
-                        ${d.group_name ? ' | 📂 ' + escHtml(d.group_name) : ''}
-                    </div>
-                    <div style="font-size:12px;color:#999;">
-                        ${d.sample_titles ? d.sample_titles.map(t => '• ' + escHtml(t)).join('<br>') : ''}
-                    </div>
-                    <div style="font-size:11px;color:#aaa;margin-top:2px;">
-                        ${escHtml(d.list_url || '')} · 方法: ${escHtml(d.method || '?')}
-                    </div>
-                </div>
-            </label>
-        </div>
-    `).join('');
-
-    document.getElementById('discoveryResults').style.display = 'block';
-    document.getElementById('discoveryTitle').textContent =
-        '发现结果 — ' + depts.length + ' 个候选部门';
-}
-
-function showDiscoveryError(msg) {
-    document.getElementById('discoveryPhase').style.display = 'none';
-    document.getElementById('discoveryResults').style.display = 'none';
-    document.getElementById('discoveryError').style.display = 'block';
-    document.getElementById('discoveryError').innerHTML =
-        '<p style="font-size:18px;">❌</p><p>' + escHtml(msg) + '</p>';
-    document.getElementById('discoveryTitle').textContent = '发现失败';
-
-    if (eventSource) { eventSource.close(); eventSource = null; }
-}
-
-function selectAllDepts(checked) {
-    document.querySelectorAll('.dept-checkbox').forEach(cb => { cb.checked = checked; });
-}
-
-async function applyDiscovery() {
-    const checkboxes = document.querySelectorAll('.dept-checkbox:checked');
-    const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
-
-    const allDepts = discoveredDepts.length > 0 ? discoveredDepts :
-        (window._lastDiscoveryResult ? window._lastDiscoveryResult.departments : []);
-
-    const selected = selectedIndices.map(i => allDepts[i]).filter(Boolean);
-
-    if (selected.length === 0) {
-        showToast('error', '请至少选择一个部门');
-        return;
-    }
-
-    const btn = document.getElementById('applyDiscoveryBtn');
-    btn.disabled = true;
-    btn.textContent = '正在保存...';
-
-    try {
-        const resp = await fetch('/api/schools/' + currentDiscoverySchoolId + '/discover/apply', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ departments: selected })
-        });
-        const data = await resp.json();
-        if (resp.ok) {
-            showToast('success', '已添加 ' + data.created + ' 个部门！');
-            closeDiscovery();
-            setTimeout(() => location.reload(), 800);
-        } else {
-            showToast('error', data.error || '保存失败');
-            btn.disabled = false;
-            btn.textContent = '确认并添加部门';
-        }
-    } catch(e) {
-        showToast('error', '请求失败: ' + e.message);
-        btn.disabled = false;
-        btn.textContent = '确认并添加部门';
-    }
-}
-
-function closeDiscovery() {
-    if (eventSource) { eventSource.close(); eventSource = null; }
-    document.getElementById('discoveryModal').style.display = 'none';
-    currentDiscoverySchoolId = null;
-}
-
-// ============================================================
 // 部门操作
 // ============================================================
 async function manageDept(schoolId) {
@@ -585,7 +280,7 @@ async function loadDepts(schoolId) {
         const container = document.getElementById('deptList');
 
         if (!depts || depts.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>该学校还没有部门，请使用“自动发现”或手动添加。</p></div>';
+            container.innerHTML = '<div class="empty-state"><p>该学校还没有部门，点击“添加部门”手动添加。</p></div>';
             return;
         }
 
@@ -773,7 +468,6 @@ async function saveDept() {
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal-overlay')) {
         e.target.style.display = 'none';
-        if (eventSource) { eventSource.close(); eventSource = null; }
     }
 });
 </script>

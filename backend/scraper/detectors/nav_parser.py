@@ -559,6 +559,9 @@ def find_dept_notice_url(html, dept_base_url):
     for path in standard_paths:
         test_url = urljoin(dept_base_url.rstrip('/') + '/', path)
         try:
+            # Permissive purpose on purpose: this is a probe that only wants the
+            # bytes. The list contract is enforced below by find_repeating_blocks,
+            # which is stricter here than the transport's list heuristic.
             resp_html = _fetch_html(test_url, allow_browser_fallback=False)
             if resp_html:
                 soup_test = BeautifulSoup(resp_html, 'lxml')

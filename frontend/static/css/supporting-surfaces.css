@@ -43,12 +43,22 @@
 .discovery-status-heading span { color:var(--color-text-secondary); font-size:var(--text-meta,.8125rem); }
 .discovery-status progress { display:block; width:100%; height:6px; margin-top:16px; accent-color:var(--color-primary); }
 .discovery-status [hidden] { display:none!important; }
+.discovery-status li { overflow-wrap:anywhere; }
 .discovery-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
 .discovery-actions .btn { white-space:normal; }
 .source-group { padding-top:24px; margin-bottom:32px; }
 .source-mode legend,.source-group legend { font-size:var(--text-section-title,1.25rem); font-weight:600; margin-bottom:16px; }
 .source-mode label { line-height:1.7; font-size:var(--text-control,.875rem); }
 .source-entry { padding-bottom:16px; }
+.sources-page .source-unit { margin-bottom:12px; }
+.sources-page .source-unit > summary { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; padding:10px 0; cursor:pointer; }
+.sources-page .source-unit > summary::before { content:""; width:7px; height:7px; border-right:1px solid currentColor; border-bottom:1px solid currentColor; transform:rotate(-45deg); margin-right:2px; }
+.sources-page .source-unit[open] > summary::before { transform:rotate(45deg); }
+.sources-page .source-unit > summary label { display:flex; align-items:center; gap:8px; min-width:0; }
+.sources-page .source-unit > summary label span { overflow-wrap:anywhere; }
+.source-unit-count { color:var(--color-text-secondary); font-size:var(--text-meta,.8125rem); font-variant-numeric:tabular-nums; }
+.source-unit-contents { margin-left:12px; padding:12px 0 0 20px; border-left:1px solid var(--color-border); }
+.source-unit-empty { color:var(--color-text-secondary); font-size:var(--text-meta,.8125rem); margin:0 0 12px; }
 .source-choice label { min-width:0; line-height:1.7; font-size:var(--text-control,.875rem); }
 .source-choice label span { overflow-wrap:anywhere; }
 .source-choice a { font-size:var(--text-meta,.8125rem); }
@@ -134,6 +144,12 @@
 .ai-section-title { margin:0 0 16px; font-size:var(--text-body,1rem); font-weight:600; line-height:1.5; }
 #aiProfileForm { margin-top:28px; }
 .ai-profile-label { min-width:0; overflow-wrap:anywhere; }
+.ai-key-control { position:relative; }
+.ai-key-control .form-input { padding-inline-end:52px; }
+.ai-key-toggle { position:absolute; inset-inline-end:0; inset-block:0; margin-block:auto; width:44px; height:44px; padding:0; color:var(--color-text-secondary); }
+.ai-key-toggle:hover { color:var(--color-text); }
+.ai-key-toggle svg[hidden] { display:none; }
+#aiProfiles .admin-user-row { flex-wrap:wrap; }
 #aiProfileForm .text-muted,#aiBindingForm .text-muted { font-size:var(--text-control,.875rem); line-height:1.7; max-width:70ch; }
 #aiProfileForm+hr { border:0; border-top:1px solid var(--color-border); margin-block:28px; }
 #aiBindingForm+details { margin-top:24px; }

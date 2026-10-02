@@ -1,11 +1,10 @@
-"""Regression coverage for untrusted imports, historical HTML and account revocation."""
+"""Regression coverage for untrusted imports, historical HTML and removed account routes."""
 from pathlib import Path
 import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from bs4 import BeautifulSoup
-from werkzeug.security import generate_password_hash
 from backend.database.db import db
 from backend.database.models import Announcement
 from backend.scraper.sanitizer import sanitize_html
@@ -85,51 +84,18 @@ class ImportAndSessionSecurityTests(unittest.TestCase):
         body = BeautifulSoup(rendered, 'html.parser').select_one('.body-loader-content')
         assert_inert(self, str(body))
 
-    def login(self):
-        client = self.fixture.app.test_client()
-        with client.session_transaction() as state:
-            state['_csrf_token'] = 'token'
-        response = client.post('/login', data={'username':'admin', 'password':'original-password', 'csrf_token':'token'})
-        self.assertEqual(response.status_code, 302)
-        with client.session_transaction() as state:
-            state['_csrf_token'] = 'token'
-        return client
-
-    def clients(self):
-        self.fixture.admin.password_hash = generate_password_hash('original-password')
-        db.session.commit()
-        return self.login(), self.login()
-
-    def test_administrator_reset_revokes_old_cookie(self):
-        old, admin = self.clients()
-        response = admin.post(f'/api/admin/users/{self.fixture.admin.id}/reset-password', json={}, headers=self.fixture.headers)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(old.get('/api/admin/stats').status_code, 401)
-
-    def test_self_password_change_keeps_current_session_but_revokes_other(self):
-        old, current = self.clients()
-        response = current.post('/api/me/password', json={'current_password':'original-password','new_password':'new-password'}, headers=self.fixture.headers)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(old.get('/api/admin/stats').status_code, 401)
-        self.assertEqual(current.get('/api/admin/stats').status_code, 200)
-
-    def test_recovery_proof_is_invalid_after_password_reset_and_after_use(self):
-        from backend.auth import hash_answer
-        old, admin = self.clients()
-        self.fixture.admin.security_question = 'test question'
-        self.fixture.admin.security_answer_hash = hash_answer('test answer')
-        db.session.commit()
-        recovery = self.fixture.app.test_client()
-        with recovery.session_transaction() as state:
-            state['_csrf_token'] = 'token'
-        response = recovery.post('/api/recovery/verify', json={'username':'admin','answer':'test answer'}, headers=self.fixture.headers)
-        self.assertEqual(response.status_code, 200)
-        stale_cookie = recovery.get_cookie('session').value
-        reset = recovery.post('/api/recovery/reset', json={'password':'recovered-password'}, headers=self.fixture.headers)
-        self.assertEqual(reset.status_code, 200)
-        self.assertEqual(old.get('/api/admin/stats').status_code, 401)
-        recovery.set_cookie('session', stale_cookie)
-        self.assertEqual(recovery.post('/api/recovery/reset', json={'password':'replayed-password'}, headers=self.fixture.headers).status_code, 400)
+    def test_account_endpoints_are_absent_even_outside_native_window(self):
+        routes = ('/login', '/register', '/logout', '/recovery', '/me',
+                  '/api/recovery/question', '/api/recovery/verify', '/api/recovery/reset',
+                  '/api/me/password', '/api/me/security', '/api/admin/users',
+                  '/api/admin/users/1/reset-password', '/api/admin/users/1/role', '/api/admin/toggles')
+        for path in routes:
+            for method in ('GET', 'POST'):
+                with self.subTest(path=path, method=method):
+                    self.assertEqual(self.fixture.client.open(path, method=method,
+                        headers=self.fixture.headers).status_code, 404)
+        self.assertNotIn('promote-user', self.fixture.app.cli.commands)
+        self.assertFalse({'auth', 'account'} & self.fixture.app.blueprints.keys())
 
 
 if __name__ == '__main__':

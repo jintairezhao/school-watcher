@@ -92,7 +92,7 @@ def load_skill(skill_id, mode, version=None):
             raise SkillValidationError('resource_path_outside_skill')
         resources[name] = file.read_text(encoding='utf-8')
     schema = json.loads(resources[spec['schema']])
-    prompt = '\n\n'.join([resources['SKILL.md'], *[resources[n] for n in spec['references']],
+    prompt = '\n\n'.join([*([] if spec.get('standalone') else [resources['SKILL.md']]), *[resources[n] for n in spec['references']],
                             '只输出符合下列 JSON Schema 的 JSON 对象：', canonical(schema)])
     return LoadedSkill(skill_id, manifest['version'], manifest['contract_version'], mode,
                        digest(resources), prompt, json.loads(resources[manifest['input_schema']]), schema)
@@ -129,8 +129,22 @@ def _tokens_present(text, corpus):
             raise SkillValidationError('unsupported_link')
 
 
-def validate_output(skill, output, evidence):
+def validate_output(skill, output, evidence, *, allow_partial=False):
     validate_schema(output, skill.output_schema)
+    if skill.id == 'university-source-onboarding' and skill.mode == 'column':
+        if [output['candidate_id']] != [row['candidate_id'] for row in evidence['candidates']]:
+            raise SkillValidationError('candidate_coverage_mismatch')
+        if (output['status'] == 'ready') != bool(output['columns']):
+            raise SkillValidationError('column_status_mismatch')
+        import soupsieve
+        for column in output['columns']:
+            for field, value in column.items():
+                if field.endswith('_selector') and value:
+                    try:
+                        soupsieve.compile(value)
+                    except Exception:
+                        raise SkillValidationError('invalid_css_selector') from None
+        return output
     if skill.id == 'summarize-university-notice':
         paragraphs = {item['id']: item['text'] for item in evidence['paragraphs']}
         coverage = output['coverage']['paragraph_ids']
@@ -150,9 +164,25 @@ def validate_output(skill, output, evidence):
     candidates = {row['candidate_id']: row for row in evidence['candidates']}
     known = {row['evidence_id']: row for row in evidence['evidence']}
     rows = output['proposals'] if skill.mode == 'extraction' else output['results']
+    for row in rows:
+        for action in row.get('actions', []):
+            if action['type'] == 'read_page':
+                if action.get('url') not in evidence.get('observed_urls', []) or action.get('purpose') not in ('directory', 'list', 'article'):
+                    raise SkillValidationError('unobserved_or_invalid_operation')
+            elif action.get('reference') not in ('identity', 'page-types', 'extraction-patterns'):
+                raise SkillValidationError('unknown_skill_reference')
+        if row.get('decision') == 'explore' and not row.get('actions'):
+            raise SkillValidationError('explore_without_operation')
+        if row.get('decision') == 'choose' and not row.get('question'):
+            raise SkillValidationError('choice_without_question')
+        if row.get('decision') == 'not_column' and not row.get('evidence_ids'):
+            raise SkillValidationError('classification_without_evidence')
+        proof = row.get('publisher_evidence')
+        if proof:
+            _refs([proof['directory_evidence_id'], proof['homepage_evidence_id']], known)
     ids = [row['candidate_id'] for row in rows]
-    if len(ids) != len(set(ids)) or set(ids) != set(candidates):
-        raise SkillValidationError('candidate_coverage_mismatch')
+    if len(ids) != len(set(ids)) or set(ids) - set(candidates) or (not allow_partial and set(ids) != set(candidates)):
+        raise SkillValidationError('candidate_coverage_mismatch: expected=' + canonical(sorted(candidates)) + '; received=' + canonical(ids))
     if skill.mode == 'extraction':
         observed = set(evidence.get('observed_urls', []))
         def urls(value):

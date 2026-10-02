@@ -62,3 +62,26 @@ class SchoolOnboarding(db.Model):
     reviewed_at = db.Column(db.DateTime)
     next_check_at = db.Column(db.DateTime)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DiscoveryWorkItem(db.Model):
+    """One versioned input has one result and a shared three-dispatch budget."""
+    __tablename__ = 'discovery_work_items'
+    id = db.Column(db.Integer, primary_key=True)
+    identity = db.Column(db.String(64), nullable=False, unique=True)
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id', ondelete='CASCADE'), nullable=False, index=True)
+    generation = db.Column(db.Integer, nullable=False)
+    group_key = db.Column(db.String(240), nullable=False, index=True)
+    candidate_id = db.Column(db.String(120), nullable=False)
+    kind = db.Column(db.String(30), nullable=False)
+    reference_url = db.Column(db.Text, nullable=False, default='')
+    material_hash = db.Column(db.String(64), nullable=False)
+    input_json = db.Column(db.JSON, nullable=False)
+    result_json = db.Column(db.JSON)
+    state = db.Column(db.String(30), nullable=False, default='pending', index=True)
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    execution_id = db.Column(db.String(240))
+    error_code = db.Column(db.String(80), nullable=False, default='')
+    next_run_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

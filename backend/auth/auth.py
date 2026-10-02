@@ -1,32 +1,14 @@
-"""认证钩子与 CSRF
+"""Native launch capability, internal browser authentication and CSRF."""
 
-多用户化后的职责边界：
-- 身份加载（g.user）与模板注入 current_user
-- CSRF 校验（写方法必须带 X-CSRF-Token 头或 csrf_token 表单域）
-- public_read 开关：'0' 时整站回退为「仅登录可读」（公开服务一键降级闸门）
-- 采集由独立 worker 运行
-
-密码/限流/权限装饰器分别在 decorators.py / rate_limit.py，路由级鉴权用装饰器声明。
-"""
-
-import hashlib
 import secrets
 import logging
 
 from flask import g, request, jsonify, redirect, url_for, session, current_app
 
-from backend.database.models import AppConfig
-
 logger = logging.getLogger(__name__)
 
-# 认证相关路径（匿名可访问，不做 public_read 门控）
-_AUTH_PATHS = ('/login', '/register', '/recovery', '/logout')
+_REMOVED_ACCOUNT_PATHS = ('/login', '/register', '/recovery', '/logout', '/me', '/api/admin/toggles')
 _HEALTH_PATHS = ('/health/live', '/health/ready')
-
-
-def hash_answer(answer: str) -> str:
-    """密保答案 SHA256（不区分大小写，去首尾空白）"""
-    return hashlib.sha256(answer.strip().lower().encode('utf-8')).hexdigest()
 
 
 def generate_csrf_token() -> str:
@@ -80,29 +62,14 @@ def register_hooks(app):
             g.user = local_owner()
             if g.user is None:
                 return jsonify(error='本机数据尚未准备好，请重新打开应用'), 503
-            if request.blueprint in ('auth', 'account') or request.path == '/api/admin/toggles':
-                if request.method == 'GET' and request.path in ('/login', '/register', '/recovery', '/me'):
-                    return redirect(url_for('pages.index'))
-                return jsonify(error='桌面版无需账号'), 404
             return None
         g.user = None if request.path in _HEALTH_PATHS or g.internal_browser else get_current_user()
 
     @app.before_request
-    def _public_gate():
-        """public_read='0' 时整站仅登录可读（降级回私有工具形态）"""
-        if request.path in _HEALTH_PATHS or g.internal_browser:
-            return None
-        if AppConfig.get('public_read', '1') != '0':
-            return None
-        if request.path.startswith('/static/'):
-            return None
-        if request.path in _AUTH_PATHS or request.path.startswith('/api/recovery/'):
-            return None
-        if g.get('user'):
-            return None
-        if request.path.startswith('/api/'):
-            return jsonify({'error': '未登录', 'redirect': url_for('auth.login_page')}), 401
-        return redirect(url_for('auth.login_page', next=request.full_path))
+    def _removed_account_routes():
+        if request.path in _REMOVED_ACCOUNT_PATHS or request.path.startswith(
+                ('/api/me/', '/api/recovery/', '/api/admin/users')):
+            return jsonify(error='本机应用无需账号'), 404
 
     @app.before_request
     def _csrf_protect():

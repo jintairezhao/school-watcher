@@ -7,7 +7,7 @@
 {% block content %}
 <header class="surface-heading admin-page-header">
     <div><h1 id="adminPageTitle">系统概览</h1><p id="adminPageDescription">先处理需要介入的事项，再查看近期运行情况。</p></div>
-    {% if not config.DESKTOP_MODE %}<span class="admin-access-label">仅管理员</span>{% endif %}
+
 </header>
 
 <!-- ================= 概览 ================= -->
@@ -45,16 +45,7 @@
 </section>
 
 <!-- ================= 用户 ================= -->
-{% if not config.DESKTOP_MODE %}
-<section class="admin-tab-panel" id="panel-users" hidden>
-    <div class="setting-card">
-        <div class="setting-card-header"><h3>用户管理</h3><p>重置密码与角色；不能修改自己的角色</p></div>
-        <div class="setting-card-body"><div id="userList" class="text-muted">加载中…</div></div>
-    </div>
-</section>
 
-<!-- ================= 抓取 ================= -->
-{% endif %}
 <section class="admin-tab-panel" id="panel-scrape" hidden>
     <div class="settings-grid">
         <div class="setting-card">
@@ -90,16 +81,7 @@
     {% if onboarding_school %}<p class="ai-onboarding-return"><a href="{{ url_for('subscriptions.manage_sources', school_id=onboarding_school.id) }}">返回{{ onboarding_school.name }}</a> · 保存目录识别用途后继续发现栏目</p>{% endif %}
     <div class="settings-grid">
         {% include '_admin_ai.html' %}
-        {% if not config.DESKTOP_MODE %}
-        <div class="setting-card">
-            <div class="setting-card-header"><h3>服务开关</h3><p>控制注册与匿名阅读，保存后立即生效</p></div>
-            <div class="setting-card-body">
-                <div class="form-group"><label><input type="checkbox" id="tgReg"> 开放注册（关闭后仅存量用户可登录）</label></div>
-                <div class="form-group"><label><input type="checkbox" id="tgPub"> 匿名可浏览（关闭后整站仅登录可读）</label></div>
-                <button class="btn btn-primary" onclick="saveToggles()">保存开关</button>
-            </div>
-        </div>
-        {% endif %}
+
     </div>
 </section>
 {% endblock %}
@@ -113,8 +95,7 @@ function showTab(name) {
         schools: ['学校与部门', '维护学校、官网栏目与来源关系。'],
         scrape: ['抓取任务', '设置检查间隔，或主动更新已订阅的来源。'],
         logs: ['抓取记录', '按学校查看同步结果、时间和未完成的原因。'],
-        users: ['用户管理', '管理账户权限和密码。'],
-        platform: ['平台设置', {{ ('配置本机使用的 AI 服务。' if config.DESKTOP_MODE else '配置共享 AI 服务与平台访问方式。')|tojson }}]
+        platform: ['平台设置', '配置本机使用的 AI 服务。']
     };
     var heading = headings[name] || headings.overview;
     document.getElementById('adminPageTitle').textContent = heading[0];
@@ -128,10 +109,9 @@ function showTab(name) {
         p.hidden = p.id !== 'panel-' + name;
     });
     if (name === 'overview') loadStats();
-    if (name === 'users') loadUsers();
     if (name === 'scrape') loadInterval();
     if (name === 'logs' && window.loadScrapeLogHistory) window.loadScrapeLogHistory();
-    if (name === 'platform') { if (document.getElementById('tgReg')) loadToggles(); if (window.loadAISettings) window.loadAISettings(); }
+    if (name === 'platform') { if (window.loadAISettings) window.loadAISettings(); }
 }
 document.querySelectorAll('.admin-tab[data-tab]').forEach(function (t) {
     t.addEventListener('click', function (event) {
@@ -165,7 +145,7 @@ async function loadStats() {
         explanation.textContent = '近 7 天：成功 ' + (outcomes.success || 0) + '、部分完成 ' + (outcomes.partial || 0) + '、失败 ' + (outcomes.failed || 0) + '、中断 ' + (outcomes.interrupted || 0) + '。成功率只统计已结束记录，运行与排队不计入，重试分别计数。';
         explanation.hidden = false;
         var cards = [
-            {% if not config.DESKTOP_MODE %}['用户', s.users, '其中管理员 ' + s.admins],{% endif %}
+
             ['学校', s.schools, '上架 ' + s.schools_enabled + ' · 活跃 ' + s.schools_active],
             ['订阅', s.subscriptions, '订阅驱动抓取'],
             ['通知', s.announcements, '近24h +' + s.announcements_24h],
@@ -186,36 +166,6 @@ async function loadStats() {
         document.getElementById('statGrid').innerHTML = '<p class="text-muted">运行概况加载失败，请刷新页面重试。</p>';
         document.getElementById('recentLogs').textContent = '近期记录暂时无法读取，请前往抓取记录重试。';
     }
-}
-
-// ---- 用户 ----
-async function loadUsers() {
-    var box = document.getElementById('userList');
-    try {
-        var resp = await fetch('/api/admin/users');
-        var users = await resp.json();
-        box.innerHTML = users.map(function (u) {
-            var roleName = u.role === 'admin' ? '管理员' : '普通用户';
-            return '<div class="admin-user-row">' +
-                '<span class="admin-user-identity"><strong>' + escHtml(u.username) + '</strong><small>' + roleName + ' · 注册于 ' + (u.created_at || '').slice(0, 10) + '</small></span>' +
-                '<span class="admin-user-actions"><button class="btn btn-xs btn-outline" onclick="resetPw(' + u.id + ')">重置密码</button>' +
-                '<button class="btn btn-xs btn-ghost" onclick="setRole(' + u.id + ',\'' + (u.role === 'admin' ? 'user' : 'admin') + '\')">' + (u.role === 'admin' ? '取消管理员' : '设为管理员') + '</button></span></div>';
-        }).join('');
-    } catch (e) { box.textContent = '加载失败'; }
-}
-async function resetPw(uid) {
-    var resp = await fetch('/api/admin/users/' + uid + '/reset-password', { method: 'POST' });
-    var d = await resp.json();
-    if (d.success) prompt('临时密码（仅显示一次）：', d.temp_password);
-    else showToast('error', d.error || '失败');
-}
-async function setRole(uid, role) {
-    var resp = await fetch('/api/admin/users/' + uid + '/role', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: role }) });
-    var d = await resp.json();
-    showToast(d.success ? 'success' : 'error', d.success ? '角色已更新' : (d.error || '失败'));
-    if (d.success) loadUsers();
 }
 
 // ---- 抓取 ----
@@ -258,23 +208,6 @@ async function triggerSummarize() {
     finally { btn.disabled = false; }
 }
 
-// ---- 平台设置 ----
-async function loadToggles() {
-    var r = await fetch('/api/admin/toggles');
-    var t = await r.json();
-    document.getElementById('tgReg').checked = t.open_registration === '1';
-    document.getElementById('tgPub').checked = t.public_read === '1';
-}
-async function saveToggles() {
-    var resp = await fetch('/api/admin/toggles', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            open_registration: document.getElementById('tgReg').checked ? '1' : '0',
-            public_read: document.getElementById('tgPub').checked ? '1' : '0'
-        }) });
-    var d = await resp.json();
-    showToast(d.success ? 'success' : 'error', d.success ? '开关已保存' : (d.error || '失败'));
-}
 </script>
 <script src="{{ url_for('static', filename='js/admin-logs.js') }}"></script>
 <script src="{{ url_for('static', filename='js/admin-ai.js') }}"></script>

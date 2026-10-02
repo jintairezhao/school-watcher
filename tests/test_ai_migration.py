@@ -86,6 +86,23 @@ class AIMigrationTests(unittest.TestCase):
             self.assertFalse(AIProfile.query.one().enabled)
             self.assertEqual(AppConfig.get('ai_restore_review_required'),'1')
 
+    def test_profile_deletion_upgrade_preserves_existing_service(self):
+        app = self.app()
+        with app.app_context():
+            upgrade(directory=str(ROOT_DIR / 'migrations'), revision='45d9fc6271b3')
+            profiles = sa.Table('ai_profiles', sa.MetaData(), autoload_with=db.engine)
+            with db.engine.begin() as connection:
+                connection.execute(profiles.insert().values(name='saved service', provider='deepseek',
+                    model='fixture', region='default', encrypted_key='enc:fixture', version=3,
+                    tested_version=3, enabled=True, max_output_tokens=4096, last_test_code='ok',
+                    created_at=datetime.utcnow(), updated_at=datetime.utcnow()))
+            upgrade(directory=str(ROOT_DIR / 'migrations'))
+            profile = AIProfile.query.one()
+            self.assertIsNone(profile.deleted_at)
+            self.assertTrue(profile.enabled)
+            self.assertEqual(profile.encrypted_key, 'enc:fixture')
+            self.assertEqual(profile.tested_version, 3)
+
     def test_local_master_key_persists_and_production_requires_configuration(self):
         folder=self.root/'data';folder.mkdir()
         with patch('backend.core.config.DATA_DIR',folder), patch.dict(os.environ,{'FIELD_ENC_KEY':'','WATCHER_ENV':''}):

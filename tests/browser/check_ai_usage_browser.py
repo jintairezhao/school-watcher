@@ -34,6 +34,7 @@ def main():
                     model='deepseek-chat' if purpose == 'directory' else 'qwen-plus',
                     provider='deepseek' if purpose == 'directory' else 'dashscope'))
         db.session.add_all([
+            execution('before-calendar', now - timedelta(days=800), tokens=123456),
             execution('today-test', now - timedelta(seconds=30), tokens=12, skill_id='connection-test', purpose='summary'),
             execution('failed', now - timedelta(seconds=20), tokens=80, status='failed'),
             execution('unknown', now - timedelta(seconds=15), status='uncertain', usage={'known': False}),
@@ -41,6 +42,7 @@ def main():
             AppConfig(key='ai_token_limit_total', value='1000000'),
         ])
         db.session.commit()
+        expected_lifetime = sum(row.usage.get('total_tokens', 0) for row in AIExecution.query.all() if row.usage.get('known'))
         server = make_server('127.0.0.1', 0, fixture.app, threaded=True)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         base = f'http://127.0.0.1:{server.server_port}'
@@ -51,8 +53,9 @@ def main():
             browser = pw.chromium.launch(channel=os.environ.get('WATCHER_TEST_BROWSER_CHANNEL', 'msedge'), headless=True)
             context = browser.new_context(timezone_id='Asia/Shanghai', reduced_motion='reduce')
             context.add_cookies([{'name': 'session', 'value': cookie, 'url': base}])
-            page = context.new_page(); errors = []
+            page = context.new_page(); errors = []; usage_requests = []
             page.on('pageerror', lambda error: errors.append(str(error)))
+            page.on('request', lambda request: usage_requests.append(request.url) if '/api/admin/ai/usage?' in request.url else None)
             for theme, width in (('dark', 1440), ('light', 1440), ('dark', 390), ('light', 390)):
                 page.set_viewport_size({'width': width, 'height': 1050 if width > 1000 else 844})
                 page.goto(base + '/admin/ai-usage')
@@ -63,8 +66,33 @@ def main():
                 expect(page.locator('#aiUsageUnknown')).to_contain_text('1 次调用未返回用量')
                 expect(page.locator('#aiUsagePurposes')).to_contain_text('连接测试')
                 expect(page.locator('#aiUsageBudgets')).to_contain_text('50,000')
-                expect(page.locator('#aiActivityGrid button')).to_have_count(91 if width < 640 else 365)
+                expect(page.locator('#aiActivityGrid button')).to_have_count(365)
+                assert page.locator('#aiActivityGrid').evaluate('(el)=>el.children.length') == 365
+                assert page.locator('#aiActivityGrid button').evaluate_all('(items)=>new Set(items.map(el=>el.dataset.date)).size') == 365
                 expect(page.locator('#aiUsageBars button')).to_have_count(30)
+                request_count = len(usage_requests)
+                page.locator('[data-activity-mode="weekly"]').click()
+                expect(page.locator('#aiActivityWeekdays,#aiActivityPeriod')).to_have_count(0)
+                expect(page.locator('#aiActivityGrid button')).to_have_count(365)
+                positions = page.locator('#aiActivityGrid').evaluate('''grid => {
+                    const buttons=[...grid.querySelectorAll('button')];
+                    const weekday=(new Date(buttons[0].dataset.date+'T00:00:00Z').getUTCDay()+6)%7;
+                    const monday=buttons[(7-weekday)%7].getBoundingClientRect();
+                    const nextMonday=buttons[(7-weekday)%7+7].getBoundingClientRect();
+                    return {rows:getComputedStyle(grid).gridTemplateRows.split(' ').length,
+                        mondayTop:monday.top,gridTop:grid.getBoundingClientRect().top,
+                        nextTop:nextMonday.top,nextLeft:nextMonday.left,left:monday.left};
+                }''')
+                assert positions['rows']==7 and abs(positions['mondayTop']-positions['gridTop'])<1,positions
+                assert abs(positions['nextTop']-positions['mondayTop'])<1 and positions['nextLeft']>positions['left'],positions
+                page.locator('.usage-activity').screenshot(path=str(folder / f'weekly-{theme}-{width}.png'))
+                page.locator('[data-activity-mode="cumulative"]').click()
+                expect(page.locator('#aiActivityScroll')).to_be_hidden()
+                expect(page.locator('#aiLifetimeTokens')).to_have_text(f'{expected_lifetime:,}')
+                expect(page.locator('#aiLifetimeUnknown')).to_contain_text('1 次调用未返回用量')
+                page.locator('.usage-activity').screenshot(path=str(folder / f'cumulative-{theme}-{width}.png'))
+                page.locator('[data-activity-mode="daily"]').click()
+                expect(page.locator('#aiActivityGrid button')).to_have_count(365)
                 page.locator('#aiActivityGrid button').last.hover()
                 expect(page.locator('#aiUsageTooltip')).to_be_visible()
                 expect(page.locator('#aiUsageTooltip')).to_contain_text('Token')
@@ -79,11 +107,24 @@ def main():
                 expect(page.locator('[data-usage-metric="calls"]')).to_have_attribute('aria-pressed', 'true')
                 page.locator('[data-usage-metric="tokens"]').click()
                 page.locator('[data-usage-days="7"]').click()
-                expect(page.locator('#aiUsageBars button')).to_have_count(7)
+                expect(page.locator('#aiUsageBars button')).to_have_count(30)
+                expected_seven=fixture.client(fixture.admin).get('/api/admin/ai/usage?days=7&offset=480').get_json()
+                expect(page.locator('#aiUsageTokens')).to_have_attribute('title', f"{expected_seven['summary']['tokens']:,} Token")
+                expect(page.locator('#aiUsageCalls')).to_have_text(str(expected_seven['summary']['calls']))
+                page.evaluate('window.calendarNode=document.querySelector("#aiActivityGrid button"); window.modelsBefore=document.querySelector("#aiUsageModels").textContent')
                 page.locator('[data-usage-days="90"]').click()
+                expect(page.locator('#aiUsageBars button')).to_have_count(30)
+                assert page.evaluate('calendarNode===document.querySelector("#aiActivityGrid button") && modelsBefore===document.querySelector("#aiUsageModels").textContent')
+                page.locator('[data-trend-days="7"]').click()
+                expect(page.locator('#aiUsageBars button')).to_have_count(7)
+                expect(page.locator('[data-usage-days="90"]')).to_have_attribute('aria-pressed','true')
+                page.locator('[data-trend-days="90"]').click()
                 expect(page.locator('#aiUsageBars button')).to_have_count(90)
                 page.locator('[data-usage-days="30"]').click()
+                expect(page.locator('#aiUsageBars button')).to_have_count(90)
+                page.locator('[data-trend-days="30"]').click()
                 expect(page.locator('#aiUsageBars button')).to_have_count(30)
+                assert len(usage_requests)==request_count, 'View switches must reuse the loaded data'
                 if width < 640:
                     page.evaluate('window.scrollTo(0, 0)')
                     page.screenshot(path=str(folder / f'usage-{theme}-{width}.png'), full_page=True)
@@ -96,25 +137,15 @@ def main():
             expect(page.locator('#aiUsagePanel')).to_have_count(0)
             page.get_by_role('link', name='API 用量', exact=True).click()
             expect(page.locator('#aiUsageContent')).to_be_visible()
-            # Reordered responses must never replace a more recent time-range selection.
+            # Rapid local selections stay scoped to the overview without new requests.
+            request_count = len(usage_requests)
             page.evaluate('''() => {
-                const original = window.fetch;
-                window.fetch = async function (url, options) {
-                    if (String(url).includes('/api/admin/ai/usage?days=7')) {
-                        const response = await original(url, {...options, signal:undefined});
-                        await new Promise(resolve => setTimeout(resolve, 250));
-                        return response;
-                    }
-                    return original(url, options);
-                };
                 document.querySelector('[data-usage-days="7"]').click();
                 document.querySelector('[data-usage-days="90"]').click();
-                window.__restoreUsageFetch = () => {window.fetch = original;};
             }''')
-            expect(page.locator('#aiUsageBars button')).to_have_count(90)
-            page.wait_for_timeout(350)
-            expect(page.locator('#aiUsageBars button')).to_have_count(90)
-            page.evaluate('window.__restoreUsageFetch()')
+            expect(page.locator('[data-usage-days="90"]')).to_have_attribute('aria-pressed','true')
+            expect(page.locator('#aiUsageBars button')).to_have_count(30)
+            assert len(usage_requests)==request_count
             page.locator('[data-usage-days="30"]').click()
             expect(page.locator('#aiUsageBars button')).to_have_count(30)
             # Failed reads must not leave old data presented as the newly selected period.
@@ -131,6 +162,10 @@ def main():
             expect(page.locator('#aiUsageEmpty')).to_contain_text('还没有调用记录')
             expect(page.locator('#aiUsageTokens')).to_have_text('0')
             expect(page.locator('#aiUsageSuccess')).to_have_text('—')
+            page.locator('[data-activity-mode="cumulative"]').click()
+            expect(page.locator('#aiLifetimeTokens')).to_have_text('0')
+            expect(page.locator('#aiActivityLifetime')).to_have_attribute('aria-label','尚无调用记录')
+            page.locator('[data-activity-mode="daily"]').click()
             page.evaluate('window.scrollTo(0, 0)')
             page.screenshot(path=str(folder / 'usage-empty.png'), full_page=True)
             bad_model = '<img src=x onerror=alert(1)>' + 'very-long-model-' * 7

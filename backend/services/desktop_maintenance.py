@@ -69,4 +69,4 @@ def before_fetch(pause):
         handle = tasks.current_execution()
         tasks.defer(capability=handle['capability'], phase=handle['phase'],
                     checkpoint=handle.get('checkpoint'), reason='更改文件位置，抓取已暂停',
-                    error_code='desktop_paused')
+                    error_code='desktop_paused', keep_place=True)
