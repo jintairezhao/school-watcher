@@ -49,7 +49,7 @@ def main():
         with patch.dict(os.environ, {'FIELD_ENC_KEY': 'isolated-browser-fixture-only'}), \
              patch('backend.ai.providers.complete', side_effect=ProviderError('fixture_offline')) as paid, \
              sync_playwright() as playwright:
-            browser = playwright.chromium.launch(channel='msedge', headless=True, chromium_sandbox=True)
+            browser = playwright.chromium.launch(channel=os.environ.get('WATCHER_TEST_BROWSER_CHANNEL', 'msedge'), headless=True, chromium_sandbox=True)
             context = browser.new_context(reduced_motion='reduce')
             context.add_cookies([{'name': 'session', 'value': cookie, 'url': base}])
             page = context.new_page(); errors = []
@@ -124,19 +124,11 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
                 page.goto(base + '/admin/sources')
                 expect(page.locator('#proposalList')).to_contain_text('学院本科教学通知')
-                page.get_by_role('button', name='查看依据', exact=True).click()
+                page.get_by_role('button', name='查看详情', exact=True).click()
                 expect(page.locator('#proposalDetail')).to_be_visible()
-                page.locator('#manualSourceReview > summary').click()
-                page.get_by_role('button', name='在网页中点选栏目', exact=True).click()
-                expect(page.locator('#pickerFrame')).to_be_visible()
-                preview = page.frame_locator('#pickerFrame')
-                preview.locator('a').first.click()
-                expect(page.locator('#pickerStatus')).to_contain_text('已选择')
-                for target, selector in [('title', 'a'), ('link', 'a'), ('date', 'span')]:
-                    page.locator('#pickerField').select_option(target)
-                    preview.locator(selector).first.click()
-                page.get_by_role('button', name='提交点选并重新检查', exact=True).click()
-                expect(page.locator('#pickerStatus')).to_contain_text('点选已提交')
+                expect(page.locator('#manualSourceReview, #pickerFrame')).to_have_count(0)
+                page.get_by_role('button', name='自动检查', exact=True).click()
+                expect(page.locator('#reviewStatus')).to_contain_text('已加入检查队列')
                 assert page.evaluate('window.pwned') is None
                 assert not [url for url in outgoing if url.startswith('https://attacker.invalid')]
                 page.evaluate('scrollTo(0, 0)')
