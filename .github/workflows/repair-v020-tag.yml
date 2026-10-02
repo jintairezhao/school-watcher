@@ -1,0 +1,30 @@
+name: Repair confirmed v0.2.0 release tag
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/repair-v020-tag.yml']
+permissions:
+  contents: write
+jobs:
+  align-published-source:
+    if: github.repository == 'jintairezhao/school-watcher'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Align the stale tag with the validated release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: jintairezhao/school-watcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_old=2b5949465d3c32e59257d9a3d34193bc8db3549e
+          validated=3b96f318ffa23439113ab517e4ed76d307695815
+          current="$(gh api repos/$GH_REPO/git/ref/tags/v0.2.0 --jq .object.sha)"
+          target="$(gh api repos/$GH_REPO/releases/tags/v0.2.0 --jq .target_commitish)"
+          test "$target" = "$validated"
+          test "$(gh api repos/$GH_REPO/actions/runs/37008466452 --jq .conclusion)" = success
+          if test "$current" != "$validated"; then
+            test "$current" = "$expected_old"
+            gh api --method PATCH repos/$GH_REPO/git/refs/tags/v0.2.0 -f sha="$validated" -F force=true
+          fi
+          test "$(gh api repos/$GH_REPO/git/ref/tags/v0.2.0 --jq .object.sha)" = "$validated"
