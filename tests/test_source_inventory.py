@@ -390,7 +390,7 @@ class FrontierTests(unittest.TestCase):
                 self.assertEqual(full_report.call_count, 1)
             self.assertEqual([count for count, _ in seen], [1, 2, 3])
             self.assertEqual([snapshot['states']['fetched'] for _, snapshot in seen], [1, 2, 3])
-            self.assertTrue(all(set(snapshot) == {'site', 'states'} for _, snapshot in seen))
+            self.assertTrue(all({'site', 'states'} <= set(snapshot) and 'pages' not in snapshot for _, snapshot in seen))
             self.assertEqual(seen[-1][1]['states'], result['states'])
             self.assertEqual(len(result['pages']), 3)
             self.assertFalse(result['accepted'])

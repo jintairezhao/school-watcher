@@ -1265,6 +1265,8 @@ def _process_source_review(payload):
     proposal = db.session.get(SourceProposal, payload['proposal_id'])
     if not proposal or proposal.state in ('rejected', 'activated', 'superseded'):
         return serialize_proposal(proposal) if proposal else {'state': 'missing'}
+    if proposal.origin == 'repair':
+        return dict(serialize_proposal(proposal), automatic_repair_disabled=True)
     config = json.loads(proposal.candidate_json)
     seed = None
     from backend.services.runtime_catalog import RuntimeCatalog

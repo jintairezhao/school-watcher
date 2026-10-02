@@ -44,18 +44,8 @@ def _schedule_due(lease=None):
             from backend.services.source_grouping import missing_groups
             if missing_groups(school.id):
                 due('source_grouping', school.id, {'school_id':school.id, 'ai_assist':False}, 7 * 86400)
-        due('discover', school.id, {'school_id': school.id, 'refresh': True},
-            (7 if school.subscriber_count > 0 else 30) * 86400)
     due('maintenance', 'daily', {}, 86400)
     due('backup', 'daily', {}, 86400)
-    from backend.services.runtime_catalog import RuntimeCatalog
-    registered = {(s.name, s.url) for s in School.query.all()}
-    for site in RuntimeCatalog(__import__('flask').current_app.config['SOURCE_CATALOG_PATH']).all_sites():
-        if (site['name'], site['root_url']) in registered:
-            continue
-        published = datetime.fromisoformat(site['updated_at']).replace(tzinfo=None)
-        if published < now - timedelta(days=30):
-            due('directory', site['site_key'], dict(site, refresh=True), 30 * 86400)
     AppConfig.set('worker_heartbeat', now.isoformat())
     db.session.remove()
 
@@ -90,9 +80,16 @@ def dispatch(kind, payload):
     from flask import current_app
     from backend.services.runtime_catalog import RuntimeCatalog
     from backend.services.source_inventory import site_key
+    # Pre-upgrade periodic jobs used refresh=True without an explicit AI/user
+    # trigger. Do not drain that old queue into paid whole-school scans.
+    if kind in ('discover', 'directory') and payload.get('refresh') is True and not payload.get('trigger') and 'ai_assist' not in payload:
+        return {'skipped': True, 'automatic_discovery_disabled': True, 'message': '定期目录重查已关闭，可手动检查官网变化'}
     if kind == 'content':
         from backend.services.content_cache import fetch_content
         return fetch_content(payload['announcement_id'])
+    if kind == 'student_assessment':
+        from backend.services.student_information import process
+        return process(payload)
     if kind == 'maintenance':
         from backend.services.content_cache import prune_content
         from backend.services.backups import expire_rollback
@@ -284,11 +281,9 @@ def dispatch(kind, payload):
                 needs_adaptation |= result['action'] in ('needs_review', 'skip')
                 checked += 1
             else:
-                mark_needs_review(dept, '官网栏目暂时无法读取，已安排受限适配')
+                mark_needs_review(dept, '官网栏目暂时无法读取，可在栏目订阅中检查官网变化')
                 needs_adaptation = True
-        if needs_adaptation:
-            tasks.enqueue('discover', school.id, {'school_id': school.id}, replace_finished=False)
-        return {'checked': checked, 'adaptation_queued': needs_adaptation,
+        return {'checked': checked, 'adaptation_queued': False, 'needs_check': needs_adaptation,
                 'access_limited': access_limited}
     if kind == 'scrape':
         from backend.services.source_catalog import apply_source_configs
@@ -298,8 +293,8 @@ def dispatch(kind, payload):
         sync_directory_options(school, catalog)
         configured = any(d.list_selector for d in school.departments)
         if not configured:
-            tasks.enqueue('discover', school.id, {'school_id': school.id,
-                'name': school.name, 'root_url': school.url}, replace_finished=False)
+            from backend.services.discovery_changes import ensure_initial
+            ensure_initial(school)
         subs = Subscription.query.filter_by(school_id=school.id).all()
         wanted = None if any(s.department_ids is None for s in subs) else {i for s in subs for i in s.department_ids}
         jobs = queue_sources(subscribed_sources(school, wanted), manual=payload.get('manual') is True)

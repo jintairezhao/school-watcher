@@ -127,7 +127,7 @@ class DirectoryOptionTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('信通学院测试通知', response.text)
         self.assertIn('信息与通信工程学院', response.text)
-        self.assertIn('43 个单位', response.text)
+        self.assertIn('43 个栏目', response.text)
         self.assertIn('官网未提供链接', response.text)
         self.assertNotIn('信通学院测试通知', self.app.test_client().get('/?period=all').text)
 

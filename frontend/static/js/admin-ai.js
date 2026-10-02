@@ -161,7 +161,7 @@
                     }));
                 field(id).value = settings.bindings[purpose] || '';
             }
-            for (const [id, key] of [['aiTotalLimit', 'total'], ['aiDirectoryLimit', 'directory'], ['aiSummaryLimit', 'summary']]) field(id).value = settings.limits[key];
+            for (const [id, key] of [['aiTotalLimit', 'total'], ['aiDirectoryLimit', 'directory'], ['aiSummaryLimit', 'summary'], ['aiSchoolLimit', 'school_discovery']]) field(id).value = settings.limits[key];
             field('aiConcurrent').value = settings.max_concurrent;
         } catch (error) { field('aiStatus').textContent = error.message; }
     };
@@ -206,7 +206,7 @@
     field('aiLimitsForm').addEventListener('submit', event => {
         event.preventDefault(); action(event.submitter, async () => {
             await api('/api/admin/ai/limits', 'PUT', {total: Number(field('aiTotalLimit').value), directory: Number(field('aiDirectoryLimit').value),
-                summary: Number(field('aiSummaryLimit').value), max_concurrent: Number(field('aiConcurrent').value)});
+                summary: Number(field('aiSummaryLimit').value), school_discovery: Number(field('aiSchoolLimit').value), max_concurrent: Number(field('aiConcurrent').value)});
             field('aiStatus').textContent = '用量设置已保存。';
         });
     });

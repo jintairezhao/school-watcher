@@ -2,6 +2,7 @@
 {% set dept = column.department %}
 <div class="source-entry" data-source-id="{{ dept.id }}">
     <div class="source-choice"><label><input type="checkbox" name="department" value="{{ dept.id }}" {% if selected_ids is none or dept.id in selected_ids %}checked{% endif %}><span>{{ column.label }}</span></label>{% if dept.list_url %}<a href="{{ dept.list_url }}" target="_blank" rel="noopener noreferrer" aria-label="打开{{ dept.name }}官网栏目">官网栏目</a>{% endif %}</div>
+    <p class="source-value-note text-muted">{{ student_source_view(dept.id) }} · 可自行调整订阅</p>
     {% if source_paths.get(dept.id) %}
     <details class="source-paths"><summary>官网层级与出处</summary>
         {% for path in source_paths[dept.id] %}<div class="source-path">

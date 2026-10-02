@@ -18,7 +18,8 @@ bp = Blueprint('discovery', __name__)
 def api_discover_school(school_id):
     db.get_or_404(School, school_id)
     from backend.services.tasks import enqueue
-    task = enqueue('discover', school_id, {'school_id': school_id})
+    task = enqueue('discover', school_id, {'school_id': school_id, 'refresh': True,
+                                         'ai_assist': True, 'trigger': 'manual_changes'})
     return jsonify(success=True, session_id=str(task.id), task_id=task.id, message='来源检查已加入队列'), 202
 
 

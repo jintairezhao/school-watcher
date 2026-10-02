@@ -86,6 +86,17 @@ def _reserve(execution_id, purpose, binding, skill_id, skill_version, skill_dige
     limits, max_concurrent = _config_limits(purpose)
     month = datetime.utcnow().strftime('%Y-%m')
     keys = ['total:' + month, purpose + ':' + month]
+    per_key_limits = [limits['total'], limits[purpose]]
+    from backend.services.tasks import current_execution
+    handle = current_execution() or {}
+    payload = handle.get('payload') or {}
+    if purpose == 'directory' and payload.get('school_id') and handle.get('kind') in (
+            'discover', 'directory', 'navigation_review', 'onboard'):
+        from backend.database.models import AppConfig
+        parent = payload.get('parent_task_id') or handle['id']
+        generation = payload.get('parent_generation') or handle['generation']
+        keys.append(f"school-discovery:{payload['school_id']}:{parent}:{generation}")
+        per_key_limits.append(max(0, int(AppConfig.get('ai_token_limit_school_discovery', '200000') or 0)))
     _ensure_budgets(keys)
     try:
         row = AIExecution(execution_id=execution_id, purpose=purpose,
@@ -103,7 +114,7 @@ def _reserve(execution_id, purpose, binding, skill_id, skill_version, skill_dige
                 other_active = db.session.query(db.func.coalesce(db.func.sum(AIBudget.active_count), 0)).filter(
                     AIBudget.key.like('total:%'), AIBudget.key != key).scalar() or 0
                 query = query.where(AIBudget.active_count < max(0, max_concurrent - other_active))
-            limit = limits['total' if index == 0 else purpose]
+            limit = per_key_limits[index]
             if limit:
                 query = query.where(AIBudget.used_tokens + AIBudget.reserved_tokens + reservation <= limit)
             changed = db.session.execute(query.values(
@@ -273,7 +284,8 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
 
 def run_skill(skill_id, mode, evidence, purpose, execution_id, expected_version=None,
               profile_id=None, binding=None, version=None, repair_feedback=None):
-    expected_purpose = {'university-source-onboarding': 'directory', 'summarize-university-notice': 'summary'}
+    expected_purpose = {'university-source-onboarding': 'directory', 'summarize-university-notice': 'summary',
+                        'student-information': 'directory'}
     if expected_purpose.get(skill_id) != purpose:
         raise AIConfigError('Skill 与用途不匹配')
     skill = load_skill(skill_id, mode, version)
@@ -313,7 +325,7 @@ def run_skill(skill_id, mode, evidence, purpose, execution_id, expected_version=
                     skill_digest=skill.resource_digest, input_digest=input_fingerprint, mode=mode,
                     messages=messages, validator=lambda output: validate_output(skill, output, evidence),
                     partial_validator=(lambda content: validated_partial(skill, content, evidence))
-                        if purpose == 'directory' and mode != 'column' else None)
+                        if skill_id == 'university-source-onboarding' and mode != 'column' else None)
 
 
 class SkillRunner:

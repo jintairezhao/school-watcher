@@ -20,7 +20,9 @@ def validate_month(value):
 
 
 def since_month():
-    default = f'{date.today().year}-01'
+    # Keep several application/award cycles available for preparation. This is
+    # a user-adjustable collection window, never a judgment that old is useless.
+    default = f'{date.today().year - 3}-01'
     try:
         return validate_month(AppConfig.get('scrape_since_month', default))
     except ValueError:

@@ -7,3 +7,4 @@
 - list_selector 相对整页选择重复列表项；title_selector、link_selector、date_selector 相对每一项，节点自身可用 :scope。标题取 title/data-title 属性优先，否则取文字；链接取 href；日期不能定位浏览量。没有日期规则用空字符串。
 - content_selector 仅在所给材料确实包含正文结构时填写，否则为空。不要猜测正文规则，不返回网址、学校或部门归属。
 - 程序会在原始网页实际执行全部选择器，检查列表范围、标题、链接并抽查正文。返回 ready 不代表通过；不要为了返回 ready 而补造名称或规则。
+- 若 evidence 提供 original_root_selector，html 是原网页的一个完整局部区域。container_selector、heading_selector、list_selector 必须从该原始根选择器定位；根节点自身直接使用 original_root_selector，其内部节点在其后追加相对路径。不要按片段包装出的 html/body 编写路径。此片段没有的栏目不代表整页没有。

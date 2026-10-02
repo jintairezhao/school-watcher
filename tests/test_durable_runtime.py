@@ -153,7 +153,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(response.status_code, 503)
             self.assertEqual(response.get_json()['status'], 'unavailable')
 
-    def test_daily_health_checks_all_selected_columns_and_queues_one_adaptation(self):
+    def test_daily_health_checks_all_selected_columns_without_restarting_discovery(self):
         from backend.worker import dispatch
         user = User(username='subscriber', password_hash='unused', security_answer_hash='unused')
         db.session.add(user); db.session.flush()
@@ -176,7 +176,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(result['queued'], 10)
         self.assertEqual(fetch.call_count, 10)
         self.assertNotIn('https://example.edu.cn/unselected', [c.args[0] for c in fetch.call_args_list])
-        self.assertEqual(BackgroundTask.query.filter_by(kind='discover').count(), 1)
+        self.assertEqual(BackgroundTask.query.filter_by(kind='discover').count(), 0)
 
 
 if __name__ == '__main__':

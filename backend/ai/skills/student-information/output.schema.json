@@ -1,0 +1,109 @@
+{
+  "type": "object",
+  "properties": {
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "directory",
+              "unit",
+              "publishing",
+              "gateway",
+              "reference",
+              "unknown"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "enum": [
+              "relevant",
+              "potential",
+              "mixed",
+              "low",
+              "unknown"
+            ]
+          },
+          "historical": {
+            "type": "string",
+            "enum": [
+              "high",
+              "possible",
+              "low",
+              "unknown"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 600
+          },
+          "facts": {
+            "type": "array",
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "audience",
+                    "eligibility",
+                    "action",
+                    "deadline",
+                    "policy",
+                    "history",
+                    "relevance"
+                  ]
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 600
+                },
+                "evidence_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 800
+                }
+              },
+              "required": [
+                "kind",
+                "text",
+                "evidence_id",
+                "quote"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "candidate_id",
+          "role",
+          "value",
+          "historical",
+          "reason",
+          "facts"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "results"
+  ],
+  "additionalProperties": false
+}

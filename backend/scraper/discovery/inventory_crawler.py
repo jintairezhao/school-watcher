@@ -32,7 +32,7 @@ def fetch_page(url, *, purpose='directory', source_id='', readiness_selector='')
             'result': result, 'transport': result.transport, 'network': network, 'network_notes': notes}
 
 
-def inspect_page(inventory, site, page, fetcher=fetch_page):
+def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
     key, url = site['site_key'], page['url']
     assert_current_parser()
     from .structure import document_reference, directory_document
@@ -111,7 +111,12 @@ def inspect_page(inventory, site, page, fetcher=fetch_page):
                         decision = 'external_review'
                     parsed['links'].append({'url': target, 'label': column['name'], 'kind': 'channel',
                                             'path': json.loads(page['path_json']) + [page['label']],
-                                            'locator': column['column_link_locator'], 'decision': decision})
+                                            'locator': column['column_link_locator'], 'decision': decision, 'publication_route': True})
+        if focus == 'layered':
+            from .layered import route_structure
+            route_structure(parsed, page, html, site['root_url'], bool(feed))
+        from backend.services.discovery_changes import compare, put
+        change = compare(page, parsed, feed, html, final) if focus == 'layered' else None
         assert_current_parser()
         inventory.record_edges(key, url, parsed['links'], content_hash)
         inventory.record_structure(key, url, parsed['nodes'], content_hash)
@@ -137,6 +142,10 @@ def inspect_page(inventory, site, page, fetcher=fetch_page):
             parsed['notes'].append('publication_dates_incomplete')
         if page['kind'] == 'channel' and not feed:
             parsed['notes'].append('publication_list_requires_adapter')
+        if change:
+            if not any(l['decision'] == 'navigation_pending' for l in parsed['links']):
+                change['navigation_complete'] = True
+            parsed['notes'] = put(parsed['notes'], change)
         from flask import has_app_context
         snapshot_ref = None
         if has_app_context():
@@ -153,9 +162,11 @@ def inspect_page(inventory, site, page, fetcher=fetch_page):
         # structural route; column extraction has its own narrow page contract.
         routes = [link for link in parsed['links'] if link['decision'] in ('follow', 'official_external_link')]
         needed = ({'directory', 'unit'} if page['kind'] in ('root', 'directory') else {'channel'})
-        if page['kind'] in ('root', 'directory', 'unit') and not any(link['kind'] in needed for link in routes) and not (page['kind'] == 'unit' and feed):
+        uncertain_routes = focus == 'layered' and any(l['decision'] == 'navigation_pending' for l in parsed['links'])
+        legacy_missing = focus != 'layered' and page['kind'] in ('root', 'directory', 'unit') and not any(link['kind'] in needed for link in routes) and not (page['kind'] == 'unit' and feed)
+        if (uncertain_routes and not (change and change['navigation_complete'])) or legacy_missing:
             from .ai_navigation import queue_navigation
-            queue_navigation(site, dict(page, url=final, snapshot_url=url, snapshot_ref=snapshot_ref))
+            queue_navigation(site, dict(page, url=final, snapshot_url=url, snapshot_ref=snapshot_ref, discovery_policy=focus))
     except ParserRevisionChanged:
         raise
     except ValueError as exc:
@@ -206,12 +217,12 @@ def crawl_site(inventory, key, max_pages=250, workers=4, fetcher=fetch_page, pro
                     if durable:
                         from backend.services.onboarding_progress import record_progress
                         record_progress(phase='crawl', current_label=batch[0]['label'])
-                    futures = [pool.submit(inspect_page, inventory, site, p, fetcher) for p in batch] if pool else batch
+                    futures = [pool.submit(inspect_page, inventory, site, p, fetcher, focus) for p in batch] if pool else batch
                     for future in as_completed(futures) if pool else futures:
                         if pool:
                             future.result()
                         else:
-                            inspect_page(inventory, site, future, fetcher)
+                            inspect_page(inventory, site, future, fetcher, focus)
                         processed += 1
                         if progress:
                             progress(processed, inventory.progress_snapshot(key))

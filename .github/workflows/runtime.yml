@@ -53,6 +53,16 @@ jobs:
         run: python tests/browser/check_subscription_structure_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify manual change detection, explicit analysis and historical value
+        run: |
+          python tests/browser/check_change_discovery_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/browser/check_student_information_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/browser/check_reader_letter_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify AI configuration and source review recovery
         run: |
           python tests/browser/check_shared_ai_browser.py

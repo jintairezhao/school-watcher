@@ -28,7 +28,7 @@
         <hr>
         <form id="aiBindingForm" aria-labelledby="aiFunctionsTitle">
             <h4 id="aiFunctionsTitle" class="ai-section-title">这两个功能使用哪个 AI</h4>
-            <div class="form-group"><label for="aiDirectory">发现学校栏目</label><select id="aiDirectory" class="form-input" aria-describedby="aiDirectoryHelp"></select><p id="aiDirectoryHelp" class="text-muted">在学校官网中辅助识别院系、部门和通知栏目，供你选择订阅。</p></div>
+            <div class="form-group"><label for="aiDirectory">发现学校栏目与信息分析</label><select id="aiDirectory" class="form-input" aria-describedby="aiDirectoryHelp"></select><p id="aiDirectoryHelp" class="text-muted">辅助识别用途不明的官网入口和栏目，也用于你主动点击的信息用途与时间分析。普通阅读不调用 AI。</p></div>
             <div class="form-group"><label for="aiSummary">生成通知摘要</label><select id="aiSummary" class="form-input" aria-describedby="aiSummaryHelp"></select><p id="aiSummaryHelp" class="text-muted">在通知详情中点击“生成摘要”，提炼事项、对象和时间。仅处理正文，不包含附件。</p></div>
             <button class="btn btn-primary" type="submit">保存功能设置</button>
         </form>
@@ -38,6 +38,7 @@
                 <p class="text-muted">每月 Token 上限，0 表示不限。</p>
                 <div class="form-group"><label for="aiTotalLimit">每月总上限</label><input type="number" id="aiTotalLimit" class="form-input" min="0" step="1" value="0" required></div>
                 <div class="form-group"><label for="aiDirectoryLimit">目录识别每月上限</label><input type="number" id="aiDirectoryLimit" class="form-input" min="0" step="1" value="0" required></div>
+                <div class="form-group"><label for="aiSchoolLimit">每所学校每轮查找上限</label><input type="number" id="aiSchoolLimit" class="form-input" min="0" step="1" value="200000" required><p class="text-muted">首次发现和每次手动检查分别计量，默认 200,000 Token。续跑共用本轮额度；到限后保留进度，明确栏目继续接入。</p></div>
                 <div class="form-group"><label for="aiSummaryLimit">摘要每月上限</label><input type="number" id="aiSummaryLimit" class="form-input" min="0" step="1" value="0" required></div>
                 <div class="form-group"><label for="aiConcurrent">同时执行数量</label><input type="number" id="aiConcurrent" class="form-input" min="1" max="16" step="1" value="2" required></div>
                 <button class="btn btn-outline" type="submit">保存用量设置</button>

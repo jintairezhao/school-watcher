@@ -64,7 +64,7 @@ class OnboardingIntegrationTests(unittest.TestCase):
     def test_continuation_yields_same_directory_task_without_retry(self):
         with self.app.app_context():
             school, _ = ensure_school('例校', 'https://example.edu.cn/')
-            payload = {'name': school.name, 'root_url': school.url, 'refresh': True}
+            payload = {'name': school.name, 'root_url': school.url, 'refresh': True, 'trigger': 'manual_changes'}
             tasks.enqueue('directory', 'fixture', payload)
             handle = tasks.claim(worker_id='integration-worker', capabilities=['directory'])
             fake = {'continuation_required': True, 'pending_pages': 17, 'activated_ids': []}

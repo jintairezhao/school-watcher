@@ -61,7 +61,7 @@ def collect_source(department):
     from backend.scraper.engine import scrape_department, _process_announcement_item
     from backend.scraper.discovery.publication_lists import publication_lists
     from backend.scraper.discovery.lightweight import discover_columns
-    is_unit = DepartmentDirectoryEntry.query.filter_by(department_id=department.id).first() is not None
+    is_unit = department.kind in ('unit', 'group') or DepartmentDirectoryEntry.query.filter_by(parent_id=department.id).first() is not None
     if department.list_selector and not is_unit:
         new, total = scrape_department(department, department.school.url, strict_fetch=True)
         if not total and not getattr(department, '_fetch_confirmed_empty', False):
@@ -71,9 +71,10 @@ def collect_source(department):
     # Unit homepages and sources without a valid configured list enter the
     # directory pipeline. A temporary detector must never ingest homepage/news
     # widgets under the unit identity before their own scopes are verified.
-    from backend.services.tasks import enqueue
-    from backend.services.source_inventory import site_key
-    enqueue('discover', department.school_id, {'school_id': department.school_id,
-            'name': department.school.name, 'root_url': department.school.url}, replace_finished=False)
+    from backend.services.discovery_changes import ensure_initial
+    job = ensure_initial(department.school)
+    if not job or job.state in ('done', 'failed'):
+        return {'new_count': 0, 'checked': 0, 'partial': True, 'state': 'needs_check',
+                'message': '该部门尚无可用栏目，可在栏目订阅中检查官网变化；已有通知仍保留'}
     return {'new_count': 0, 'checked': 0, 'partial': True, 'state': 'discovering',
             'message': '学院栏目正在核实，已确认的栏目会陆续接入；已有通知继续保留'}

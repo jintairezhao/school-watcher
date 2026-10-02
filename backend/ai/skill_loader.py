@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).parent / 'skills'
-SKILLS = {'university-source-onboarding', 'summarize-university-notice'}
+SKILLS = {'university-source-onboarding', 'summarize-university-notice', 'student-information'}
 VALIDATOR_VERSION = '1'
 
 
@@ -131,6 +131,24 @@ def _tokens_present(text, corpus):
 
 def validate_output(skill, output, evidence, *, allow_partial=False):
     validate_schema(output, skill.output_schema)
+    if skill.id == 'student-information':
+        candidates = {r['candidate_id'] for r in evidence['candidates']}
+        rows = output['results']
+        if len(rows) != len(candidates) or {r['candidate_id'] for r in rows} != candidates:
+            raise SkillValidationError('candidate_coverage_mismatch')
+        known = {r['evidence_id']: r for r in evidence['evidence']}
+        for row in rows:
+            if (row['value'] != 'unknown' or row['historical'] != 'unknown') and not row['facts']:
+                raise SkillValidationError('value_without_evidence')
+            if skill.mode == 'navigation' and row['role'] != 'unknown' and not row['facts']:
+                raise SkillValidationError('route_without_evidence')
+            for fact in row['facts']:
+                proof = known.get(fact['evidence_id'])
+                if (not proof or proof['candidate_id'] != row['candidate_id']
+                        or not fact['quote'].strip() or fact['quote'] not in proof['text']):
+                    raise SkillValidationError('unsupported_student_fact')
+                _tokens_present(fact['text'], fact['quote'])
+        return output
     if skill.id == 'university-source-onboarding' and skill.mode == 'column':
         if [output['candidate_id']] != [row['candidate_id'] for row in evidence['candidates']]:
             raise SkillValidationError('candidate_coverage_mismatch')

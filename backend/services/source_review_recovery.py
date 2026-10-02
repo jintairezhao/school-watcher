@@ -115,13 +115,13 @@ def schedule_recovery():
     from backend.services import source_governance as governance, tasks
     from backend.services.runtime_catalog import RuntimeCatalog
     marked = db.session.query(SourceReviewEvent.proposal_id).filter_by(action=RECOVERY_ACTION)
-    rows = SourceProposal.query.filter(SourceProposal.state.in_(('needs_review', 'proposed')),
+    rows = SourceProposal.query.filter(SourceProposal.state.in_(('needs_review', 'proposed')), SourceProposal.origin != 'repair',
         ~SourceProposal.id.in_(marked)).order_by(SourceProposal.id).all()
     catalog = RuntimeCatalog(current_app.config.get('SOURCE_CATALOG_PATH'))
     count = 0
     from datetime import datetime, timedelta
     from backend.database.models import BackgroundTask
-    for proposal in SourceProposal.query.filter_by(state='needs_review').order_by(SourceProposal.id).limit(300):
+    for proposal in SourceProposal.query.filter_by(state='needs_review').filter(SourceProposal.origin != 'repair').order_by(SourceProposal.id).limit(300):
         failure = json.loads(proposal.validation_json).get('workflow', {})
         if failure.get('outcome') not in ('network_error', 'unavailable'):
             continue

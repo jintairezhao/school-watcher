@@ -77,14 +77,12 @@
     border-radius: 50%; box-shadow: 0 14px 18px rgb(0 0 0 / .18);
     transition: transform 450ms ease-out, opacity 450ms ease-out;
 }
-.letter-invitation { display: inline-flex; align-items: center; gap: 7px; min-height: 24px; color: var(--color-text-secondary); font-size: var(--text-meta); }
-.reader-welcome .letter-invitation svg { width: 13px; height: 13px; stroke-width: 1.5; transition: transform 180ms ease-out; }
 .reader-letter[aria-pressed="true"] .letter-envelope { transform: translate(var(--letter-x, 0px), var(--letter-y, 0px)) rotateX(var(--letter-rx, 4deg)) rotateY(var(--letter-ry, -6deg)) rotateZ(var(--letter-angle, -3deg)); }
-.reader-letter[aria-pressed="true"] .letter-flap { z-index: 1; transform: translateZ(1px) rotateX(180deg); }
+/* Fold away from the paper: a positive X rotation brings the flap through it. */
+.reader-letter[aria-pressed="true"] .letter-flap { z-index: 1; transform: translateZ(1px) rotateX(-180deg); }
 .reader-letter[aria-pressed="true"] .letter-paper { transform: translateY(-73px) translateZ(3px) rotate(-3deg); transition-delay: 80ms; }
 .reader-letter[aria-pressed="true"] .letter-seal { opacity: 0; transform: translateZ(8px) scale(.8); }
 .reader-letter[aria-pressed="true"] .letter-shadow { transform: scaleX(.85); opacity: .65; }
-.reader-letter[aria-pressed="true"] .letter-invitation svg { transform: rotate(90deg); }
 .reader-letter:active .letter-scene { scale: .96; }
 .letter-scene { transition: scale 150ms ease-out; }
 .reader-start-link {
@@ -97,18 +95,16 @@
 .reader-welcome .reader-start-link svg { width: 16px; height: 16px; stroke-width: 1.7; }
 .reader-start-link:hover { color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface)); text-decoration: none; }
 @media (hover: hover) and (pointer: fine) {
-    .reader-letter:hover .letter-invitation { color: var(--color-primary); }
-    .reader-letter[aria-pressed="false"]:hover .letter-flap { z-index: 1; transform: translateZ(1px) rotateX(155deg); }
+    .reader-letter[aria-pressed="false"]:hover .letter-flap { z-index: 1; transform: translateZ(1px) rotateX(-155deg); }
     .reader-letter[aria-pressed="false"]:hover .letter-paper { transform: translateY(-22px) translateZ(3px); transition-delay: 60ms; }
     .reader-letter:hover .letter-seal { opacity: 0; transform: translateZ(8px) scale(.8); }
 }
-.reader-letter:focus-visible .letter-invitation { color: var(--color-primary); }
 @media (max-height: 650px) {
     .reader-placeholder.reader-welcome { padding-block: 20px; }
     .reader-welcome h2 { margin-top: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .reader-welcome :is(.letter-envelope, .letter-flap, .letter-paper, .letter-seal, .letter-shadow, .letter-scene, .letter-invitation svg) { transition: none; }
+    .reader-welcome :is(.letter-envelope, .letter-flap, .letter-paper, .letter-seal, .letter-shadow, .letter-scene) { transition: none; }
     .reader-letter .letter-envelope, .reader-letter[aria-pressed="true"] .letter-envelope { transform: none; }
     .reader-letter:active .letter-scene { scale: 1; }
     .reader-letter[aria-pressed="false"]:hover .letter-flap { transform: translateZ(6px); z-index: 4; }

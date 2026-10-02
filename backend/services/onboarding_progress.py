@@ -27,7 +27,9 @@ def ai_available():
 
 def _ai_message(task, data, available):
     if not available:
-        return '开启 AI 辅助，识别学校部门与栏目'
+        return 'AI 辅助尚未开启：明确的栏目照常接入，用途不明的入口会保留待判断'
+    if data.get('ai_error_code') == 'budget_exhausted':
+        return '本轮 AI 用量已达上限；明确栏目继续接入，未完成的入口已保留'
     if data.get('ai_state') == 'running':
         return 'AI 已连接，正在分析官网'
     history = dict((task.checkpoint or {}).get('ai_navigation') or {}) if task else {}
@@ -48,7 +50,7 @@ def _ai_message(task, data, available):
                   'concurrency_limit': '正在等待 AI 空闲', 'network_result_unknown': '网络响应中断'}.get(code, '本次识别未完成')
         count = f'{succeeded} 次成功、{failed or 1} 次未完成'
         return f'AI 已配置：{count}（{reason}），继续按网页规则识别。'
-    return 'AI 辅助已完成本批识别' if succeeded else 'AI 辅助已开启'
+    return 'AI 辅助已完成本批识别' if succeeded or data.get('ai_state') == 'succeeded' else 'AI 辅助已开启'
 
 
 def status(school):
@@ -121,6 +123,10 @@ def status(school):
         if job.kind == 'source_grouping':
             continue
         result = job.result or {}
+        if job.kind == 'navigation_review' and result.get('status') == 'needs_recovery':
+            gaps.append({'name': job.payload.get('page', {}).get('label', ''),
+                'url': job.payload.get('page', {}).get('url', ''),
+                'reason': '部分入口用途尚待判断，已保留官网路径，可稍后重新查找'})
         if job.state == 'failed' or result.get('state') == 'unsupported' or result.get('issues'):
             gaps.append({'name': job.payload.get('label', ''), 'url': job.payload.get('url', ''),
                 'reason': result.get('reason') or '该页面暂未接入，稍后可重试'})
@@ -145,8 +151,13 @@ def status(school):
         'busy': busy, 'active': active, 'retry_at': retry_at,
         'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
         'failed_pages': data.get('failed_pages', 0), 'current_label': data.get('current_label', '') if busy else '',
+        'changes': data.get('changes', {}),
         'updated_at': data.get('updated_at'), 'source_count': len(columns), 'verified_source_count': count,
         'department_count': departments, 'processing_count': len(live), 'failed_count': len(gaps),
+        'unit_checked': data.get('unit_checked', 0), 'unit_pending': data.get('unit_pending', 0),
+        'unit_failed': data.get('unit_failed', 0),
+        'column_tasks': sum(t.kind == 'onboard' for t in live),
+        'assessment_tasks': 0,
         'waiting_recovery_count': 0, 'review_count': review_count, 'queued_review_count': 0,
         'background_exploration': any(t.kind == 'navigation_review' for t in live),
         'ai_available': available, 'ai_state': data.get('ai_state', 'not_started'),

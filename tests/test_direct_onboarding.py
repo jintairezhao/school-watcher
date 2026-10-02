@@ -107,13 +107,13 @@ class DirectOnboardingTests(unittest.TestCase):
         self.assertEqual(busy.generation, 1)
         self.assertEqual(Announcement.query.count(), 3)
 
-    def test_discovery_refresh_requeues_failed_column_before_homepage_read(self):
+    def test_discovery_refresh_does_not_replay_unprobed_failed_column(self):
         from backend.services import tasks
         from backend.worker import dispatch
         child = tasks.enqueue('onboard', 'failed-column', {'school_id': self.school_id, 'url': URL,
             'snapshot': {'old': 'page'}})
         child.state, child.result = 'done', {'state': 'unsupported'}; db.session.commit()
-        tasks.enqueue('discover', self.school_id, {'school_id': self.school_id, 'refresh': True})
+        tasks.enqueue('discover', self.school_id, {'school_id': self.school_id, 'refresh': True, 'trigger': 'manual_changes'})
         handle = tasks.claim(capabilities=['directory'])
         with tasks.execution_scope(handle), patch('backend.scraper.discovery.inventory_crawler.crawl_site',
                 side_effect=RuntimeError('Homepage unavailable')):
@@ -122,9 +122,9 @@ class DirectOnboardingTests(unittest.TestCase):
         db.session.rollback()
         tasks.finish(handle, error='Homepage unavailable')
         db.session.refresh(child)
-        self.assertEqual((child.state, child.generation), ('pending', 2))
-        self.assertNotIn('snapshot', child.payload)
-        self.assertEqual(tasks.claim(capabilities=['http'])['id'], child.id)
+        self.assertEqual((child.state, child.generation), ('done', 1))
+        self.assertIn('snapshot', child.payload)
+        self.assertIsNone(tasks.claim(capabilities=['http']))
 
     def test_directory_then_known_columns_precede_unit_expansion_without_dropping_units(self):
         from backend.services.source_inventory import Inventory

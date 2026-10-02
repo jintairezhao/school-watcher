@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supporting-surfaces.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/summaries.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reader.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student-information.css') }}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <!-- Shared navigation stays separate from each page's working controls. -->
@@ -103,6 +104,7 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/content.js') }}"></script>
     <script src="{{ url_for('static', filename='js/summaries.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/student-information.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

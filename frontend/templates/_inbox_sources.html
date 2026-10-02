@@ -18,18 +18,19 @@
 {% set selected_columns = selectable|map(attribute='department.id')|select('in', selected)|list %}
 <div class="source-unit" data-source-unit="{{ unit.key }}" data-source-unit-name="{{ unit.name }}">
     <div class="source-unit-row">
-        <label class="unit-select">
+        <label class="unit-select" {% if not selectable %}title="该部门还没有已接入的栏目；可在栏目订阅页先订阅部门"{% endif %}>
             <input type="checkbox" data-unit-select aria-label="选择{{ unit.name }}的全部{{ '单位' if unit.directory else '栏目' }}" {% if not selectable %}disabled{% elif selected_columns|length == selectable|length %}checked{% endif %}>
             <span class="checkbox-mark" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6"/></svg></span>
         </label>
         <button type="button" class="source-unit-toggle" aria-expanded="{{ 'true' if selected_columns else 'false' }}" aria-controls="unit-columns-{{ unit.key }}">
-            <span class="source-unit-name">{{ unit.name }}<small>{{ unit.columns|length }} 个{{ '单位' if unit.directory else '栏目' }}</small></span>
+            <span class="source-unit-name">{{ unit.name }}<small>{% if unit.children %}{{ unit.children|length }} 个单位 · {% endif %}{{ (unit.columns|length ~ ' 个栏目') if unit.columns else '栏目待接入' }}</small></span>
             <svg class="unit-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
         </button>
     </div>
     <div class="source-unit-columns" id="unit-columns-{{ unit.key }}" {% if not selected_columns %}hidden{% endif %}>
         {% for column in unit.own_columns %}{{ column_choice(column, selected, counts, sync_states) }}{% endfor %}
         {% for child in unit.children %}{{ unit_view(child, selected, counts, sync_states) }}{% endfor %}
+        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">已找到这个部门，暂时没有可筛选的栏目。可在下方“调整本校栏目订阅”中先订阅部门，后续接入的栏目会自动纳入。</p>{% endif %}
     </div>
 </div>
 {% else %}

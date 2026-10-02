@@ -34,9 +34,8 @@ def subscribe_school(school, user_id):
             subscriber_count=School.subscriber_count + 1))
     db.session.commit()
     if revived:
-        if not school.departments.count():
-            from backend.services.tasks import enqueue
-            enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': True}, expedite=True)
+        from backend.services.discovery_changes import ensure_initial
+        ensure_initial(school)
         start_background_scrape(school.id)
     return revived
 
@@ -161,7 +160,8 @@ def subscription_discovery(school_id):
         from backend.auth.rate_limit import check_rate_limit
         if not check_rate_limit(f'discovery-retry:{g.user.id}:{school.id}', 8, 3600)[0]:
             return jsonify(error='重试过于频繁，请稍后再试'), 429
-        enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': True, 'refresh': True}, expedite=True)
+        enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': True,
+                'refresh': True, 'trigger': 'manual_changes'}, expedite=True)
         from backend.database.models import BackgroundTask
         from datetime import datetime, timedelta
         now = datetime.utcnow()

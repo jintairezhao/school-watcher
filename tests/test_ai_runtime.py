@@ -76,6 +76,49 @@ class AIRuntimeTests(unittest.TestCase):
         self.assertEqual(AIExecution.query.count(),1)
         self.assertTrue(all(b.used_tokens==70 and b.reserved_tokens==0 and b.active_count==0 for b in AIBudget.query.all()))
 
+    def test_student_value_uses_directory_budget_and_reuses_evidence(self):
+        evidence = {'school_id': 1, 'candidates': [{'candidate_id': 'one', 'name': '往年通知',
+            'url': 'https://example.edu.cn/old/', 'kind': 'notice_source', 'path': '财务处'}],
+            'evidence': [{'candidate_id': 'one', 'evidence_id': 'p0', 'text': '本科生申请资助材料'}]}
+        output = {'results': [{'candidate_id': 'one', 'role': 'publishing', 'value': 'relevant',
+            'historical': 'high', 'reason': '准备材料', 'facts': [{'kind': 'history', 'text': '资助材料',
+            'quote': '本科生申请资助材料', 'evidence_id': 'p0'}]}]}
+        with patch('backend.ai.providers.complete', return_value=self.response(output)) as provider:
+            first = run_skill('student-information', 'assess', evidence, 'directory', 'value-test')
+            second = run_skill('student-information', 'assess', evidence, 'directory', 'value-test')
+        self.assertEqual(first['status'], 'succeeded')
+        self.assertEqual(first, second)
+        self.assertEqual(provider.call_count, 1)
+        self.assertEqual(AIExecution.query.one().purpose, 'directory')
+
+    def test_school_discovery_budget_is_shared_by_children_and_continuations(self):
+        from backend.ai.runtime import _reserve, _settle, AIBudgetError
+        from backend.services import tasks
+        save_limits({'school_discovery': 10})
+        tasks.enqueue('discover', 3, {'school_id': 3})
+        parent = tasks.claim(capabilities=['directory'])
+        budget_key = f"school-discovery:3:{parent['id']}:{parent['generation']}"
+        def reserve(name, amount):
+            return _reserve(name, 'directory', self.binding, 'university-source-onboarding', '1',
+                            'digest', 'material', 'column', amount)
+        with tasks.execution_scope(parent):
+            row, claimed = reserve('parent-reservation', 6)
+        self.assertTrue(claimed)
+        self.assertIn(budget_key, row.budget_keys)
+        _settle(row.execution_id, status='succeeded', usage={'known': True, 'total_tokens': 4})
+        tasks.enqueue('onboard', 'budget-child', {'school_id': 3, 'url': 'https://example.edu.cn/list/',
+            'parent_task_id': parent['id'], 'parent_generation': parent['generation']})
+        child = tasks.claim(capabilities=['http'])
+        with tasks.execution_scope(child):
+            with self.assertRaises(AIBudgetError) as error:
+                reserve('blocked-child', 7)
+            self.assertEqual(error.exception.code, 'budget_exhausted')
+            row, _ = reserve('fitting-child', 6)
+        self.assertIn(budget_key, row.budget_keys)
+        self.assertIsNone(db.session.get(AIExecution, 'blocked-child'))
+        budget = db.session.get(AIBudget, budget_key)
+        self.assertEqual((budget.used_tokens, budget.reserved_tokens), (4, 6))
+
     def test_concurrent_execution_sends_once(self):
         started, finish = threading.Event(), threading.Event()
         binding = dict(self.binding)

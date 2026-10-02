@@ -1,11 +1,7 @@
-"""内部抓取规则检查 — 质量触发的反馈闭环
+"""Check current selectors without paid exploration or silent rule replacement.
 
-设计原则（用户确认的漏洞纠正方案）：
-- 触发信号是「结构性」的，不是「0 新增」：安静但结构好的部门绝不碰。
-  * 旧选择器匹配数 < 3          → 结构坏了 → 自动重探测换选择器
-  * 旧选择器匹配但垃圾标题 > 0  → 抓错了   → 只标记人工复核，不自动换
-- 选择器变更全部留痕，供内部排查；不提供独立健康面板或网页回滚操作。
-- 重探测前先识别 WAF 挑战壳页，避免对着壳页空转。
+Quiet columns are healthy. Broken rules are reported for the user's manual
+school change check; old notices and subscriptions remain available.
 """
 
 import json
@@ -23,8 +19,6 @@ _lock = threading.Lock()
 
 # 结构损坏阈值：列表项匹配少于此数视为「选择器失效」
 BROKEN_MATCH_THRESHOLD = 3
-# 自动修复要求的最低探测置信度
-REPAIR_MIN_CONFIDENCE = 0.6
 
 
 # ------------------------------------------------------------------
@@ -131,13 +125,7 @@ def _quick_stats(html: str, department):
 
 
 def evaluate_and_repair(department, html: str) -> dict:
-    """抓取后评估部门选择器健康，返回处置结果。
-
-    - 结构坏（匹配<3）且非挑战壳页 → 自动重探测，达标即换（留痕）
-    - 结构坏但探测不达标 / 挑战壳页 → 标记人工复核
-    - 结构好但有垃圾标题 → 只标记人工复核，不自动换（防静默漂移）
-    - 健康 → 清除复核标记
-    """
+    """Return health or a request for manual checking; never enqueue paid work."""
     stats = _quick_stats(html, department)
     if stats is None:
         return {'action': 'skip'}
@@ -156,25 +144,7 @@ def evaluate_and_repair(department, html: str) -> dict:
                           f"选择器匹配 {stats['matched']} 项但含垃圾标题 {stats['junk']} 条")
         return {'action': 'needs_review', **stats}
 
-    # ---- 结构坏了：自动修复 ----
-    from backend.scraper.detectors.list_detector import detect_notice_list
-    from backend.scraper.cms_registry import load_selector_profiles
-    from backend.scraper.detectors.title_quality import is_junk_title as _is_junk
-
-    result = detect_notice_list(html, getattr(department, '_fetch_final_url', department.list_url) or '',
-                                existing_profiles=load_selector_profiles())
-    if (result and result['confidence'] >= REPAIR_MIN_CONFIDENCE
-            and result['list_selector'] != department.list_selector
-            and result.get('sample_titles')
-            and sum(1 for t in result['sample_titles'] if _is_junk(t)) == 0):
-        from backend.services.source_governance import propose_detected_source
-        from backend.services.tasks import enqueue
-        proposal = propose_detected_source(department, result, html)
-        enqueue('source_review', proposal.id, {'proposal_id': proposal.id})
-        mark_needs_review(department, '已形成栏目修复建议，等待独立网页复测与归属检查')
-        return {'action': 'needs_review', 'proposal_id': proposal.id, **stats}
-
-    mark_needs_review(department,
-                      f"结构损坏(匹配{stats['matched']})且重探测不达标"
-                      f"(conf={result['confidence'] if result else 0})")
+    # Ordinary collection only reports breakage. A manual school change check
+    # owns deeper exploration and any paid fallback for this column.
+    mark_needs_review(department, '栏目规则可能已失效，可在栏目订阅中点击“检查官网变化”')
     return {'action': 'needs_review', **stats}

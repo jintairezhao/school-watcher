@@ -20,10 +20,10 @@ class UpdateError(Exception):
 
 
 def version_tuple(value):
-    match = re.fullmatch(r'v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)', str(value))
+    match = re.fullmatch(r'v?(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\.(0|[1-9]\d*))?', str(value))
     if not match:
         raise UpdateError('版本号格式不受支持，请前往项目 Release 页面查看。')
-    return tuple(map(int, match.groups()))
+    return tuple(int(part or 0) for part in match.groups())
 
 
 def platform_key(system=None, machine=None):

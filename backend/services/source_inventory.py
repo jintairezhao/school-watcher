@@ -217,7 +217,7 @@ class Inventory:
             return [dict(r) for r in c.execute('SELECT * FROM structure WHERE site_key=? ORDER BY rowid', (key,))]
 
     def claim(self, key, focus='all'):
-        if focus not in ('all', 'student'):
+        if focus not in ('all', 'student', 'layered'):
             raise ValueError('Unknown discovery focus')
         with self.connect() as c:
             c.execute('BEGIN IMMEDIATE')
@@ -236,6 +236,10 @@ class Inventory:
             if focus == 'student':
                 condition = 'AND student_priority(kind,label,path_json) IS NOT NULL '
                 order = 'student_priority(kind,label,path_json),depth,priority,url'
+            if focus == 'layered':
+                # Breadth first: every discovered unit gets a turn, including
+                # administrative offices. No relevance or keyword exclusion.
+                order = "depth,CASE kind WHEN 'root' THEN 0 WHEN 'directory' THEN 1 WHEN 'unit' THEN 2 ELSE 3 END,url"
             while True:
                 row = c.execute("SELECT * FROM pages WHERE site_key=? AND state='pending' "
                                 + condition + 'ORDER BY ' + order + ' LIMIT 1', (key,)).fetchone()
@@ -375,7 +379,11 @@ class Inventory:
             if site is None:
                 return None
             states = dict(c.execute('SELECT state,count(*) FROM pages WHERE site_key=? GROUP BY state', (key,)))
-            return {'site': dict(site), 'states': states}
+            units = dict(c.execute("SELECT state,count(*) FROM pages WHERE site_key=? AND kind='unit' GROUP BY state", (key,)))
+            return {'site': dict(site), 'states': states,
+                    'unit_checked': units.get('fetched', 0),
+                    'unit_pending': units.get('pending', 0) + units.get('running', 0),
+                    'unit_failed': units.get('failed', 0) + units.get('blocked', 0)}
 
     def all_sites(self):
         with self.connect() as c:

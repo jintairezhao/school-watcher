@@ -36,30 +36,55 @@ def queue_columns(school_id, inventory, key):
         by_url.setdefault(address, []).append(candidate)
     jobs = []
     for page in report['pages']:
+        if page['kind'] == 'directory':
+            # Institution rosters establish ownership, not publication columns.
+            continue
         url = canonical_url(page.get('final_url') or page['url'])
         configs = by_url.get(url, [])
-        if page['state'] != 'fetched' or not (configs or page['kind'] == 'channel'):
+        previous_url = canonical_url(page['url'])
+        existing = Department.query.filter(Department.school_id == school_id,
+                    Department.list_url.in_({url, previous_url})).all()
+        if page['state'] != 'fetched' or not (configs or page['kind'] == 'channel' or any(d.list_selector for d in existing)):
             continue
         if not configs and not same_school_url(url, report['site']['root_url']):
             continue
-        existing = Department.query.filter_by(school_id=school_id, list_url=url).all()
-        if configs and all(any(d.list_selector == c['list_selector'] and d.name == c['name']
+        from backend.services.discovery_changes import baseline
+        shape = baseline(page)
+        changed = shape.get('change') == 'changed' or bool(existing and previous_url != url)
+        html = inventory.snapshot(key, page['url'])
+        from backend.scraper.selector_monitor import _quick_stats
+        failed_rule = bool(html) and any(not (stats := _quick_stats(html, d)) or not stats['matched'] or stats['junk']
+                                       for d in existing if d.list_selector)
+        changed |= failed_rule
+        if not changed and not configs and any(d.list_selector for d in existing):
+            continue
+        if not changed and configs and all(any(d.list_selector == c['list_selector'] and d.name == c['name']
                                for d in existing) for c in configs):
             continue
         identity = f'{school_id}:' + hashlib.sha256(url.encode()).hexdigest()[:24]
         old = BackgroundTask.query.filter_by(identity='onboard:' + identity).first()
         # Finished pages only reopen on an explicit refresh. Crawl slices and
         # process restarts must not repeat paid calls for the same unresolved page.
+        handle = tasks.current_execution() or {}
+        run_key = f"{handle.get('id', 0)}:{handle.get('generation', 0)}"
+        manual = handle.get('payload', {}).get('refresh') is True
         if old:
-            continue
-        html = inventory.snapshot(key, page['url'])
+            unresolved = failed_rule or (old.result or {}).get('state') != 'connected' or bool((old.result or {}).get('issues'))
+            if (old.state not in ('done', 'failed') or
+                    old.payload.get('source_shape') == shape.get('hash') and not (manual and unresolved and old.payload.get('refresh_key') != run_key) or
+                    not changed and not (manual and unresolved)):
+                continue
         snapshot = _snapshot(html, url, role='list') if html else None
         groups = {c['group_name'] for c in configs if c.get('group_name')}
         payload = {'school_id': school_id, 'url': url,
                    'group_name': next(iter(groups)) if len(groups) == 1 else '',
                    'label': page['label'], 'snapshot': snapshot,
+                   'source_shape': shape.get('hash'), 'refresh_key': run_key,
+                   'previous_url': previous_url if previous_url != url else None,
+                   'revalidate': changed or bool(manual and existing), 'parent_task_id': handle.get('id'),
+                   'parent_generation': handle.get('generation'),
                    'official_external': bool(configs and not same_school_url(url, report['site']['root_url']))}
-        job = tasks.enqueue('onboard', identity, payload, replace_finished=False)
+        job = tasks.enqueue('onboard', identity, payload, replace_finished=bool(old))
         jobs.append(job.id)
     return {'onboarding_ids': jobs, 'proposal_ids': [], 'activated_ids': [], 'remaining_candidates': 0}
 
@@ -89,34 +114,49 @@ def recognize_column(school_id, url, html):
     """One bounded, replayable model call. Its output is still an untested parser."""
     from backend.ai.configuration import get_model_binding, AIConfigError
     from backend.ai.runtime import run_skill
-    from backend.ai.skill_loader import canonical, digest
+    from backend.ai.skill_loader import digest, load_skill
     try:
         binding = get_model_binding('directory')
     except AIConfigError:
         return {'status': 'unsupported', 'columns': [], 'reason': '该页面暂未识别，可启用 AI 辅助解析'}
-    soup = BeautifulSoup(html, 'lxml')
-    # Preserve DOM positions/attributes used by selectors. Replacing large script
-    # contents (not their elements) cannot change nth-child paths in the original.
-    for node in soup.select('script,style,svg'):
-        node.clear()
-    for node in soup.find_all(True):
-        for attr in list(node.attrs):
-            if attr.startswith('on') or attr in ('style', 'srcset') or (attr == 'src' and str(node[attr]).startswith('data:')):
-                del node.attrs[attr]
-    evidence = {'school_id': school_id, 'candidates': [{'candidate_id': 'page', 'url': url}],
-                'evidence': [{'evidence_id': 'page', 'url': url, 'html': str(soup)}]}
-    if len(canonical(evidence).encode()) > 24 * 1024:
-        return {'status': 'unsupported', 'columns': [], 'reason': '页面结构超过单次识别容量，需补充适配'}
+    from backend.scraper.discovery.column_regions import materials
+    regions = materials(school_id, url, html)
+    if not regions:
+        return {'status': 'unsupported', 'columns': [], 'reason': '尚未定位到可独立读取的发布区域，入口已保留'}
     handle = tasks.current_execution() or {}
-    execution_id = f"column:{handle.get('id', school_id)}:{handle.get('generation', 1)}:{digest(evidence)[:24]}:{binding['id']}:{binding['version']}"
-    try:
-        result = run_skill('university-source-onboarding', 'column', evidence, 'directory', execution_id, binding=binding)
-    except AIConfigError as exc:
-        return {'status': 'unsupported', 'columns': [], 'reason': 'AI 辅助暂不可用，其他栏目继续接入', 'error_code': exc.code}
-    if result['status'] != 'succeeded':
-        return {'status': 'unsupported', 'columns': [], 'reason': 'AI 未返回可执行的栏目规则',
-                'error_code': result.get('error_code', '')}
-    return result['output']
+    checkpoint = dict(handle.get('checkpoint') or {})
+    material_hash = digest(regions)
+    saved = checkpoint.get('column_regions', {})
+    if saved.get('hash') != material_hash:
+        saved = {'hash': material_hash, 'cursor': 0, 'columns': [], 'unresolved': []}
+    for index in range(saved['cursor'], len(regions)):
+        evidence = regions[index]
+        execution_id = 'column-region:' + digest([load_skill('university-source-onboarding', 'column').resource_digest,
+            evidence, binding['id'], binding['version']])
+        try:
+            result = run_skill('university-source-onboarding', 'column', evidence, 'directory', execution_id, binding=binding)
+        except AIConfigError as exc:
+            if exc.code == 'concurrency_limit' and handle:
+                tasks.defer(capability='directory', delay=10, reason='等待 AI 空闲', checkpoint=checkpoint)
+            return {'status': 'unsupported', 'columns': [], 'reason':
+                    '本轮 AI 用量已达上限，未完成入口已保留' if exc.code == 'budget_exhausted' else 'AI 辅助暂不可用，其他栏目继续接入',
+                    'error_code': exc.code}
+        if result['status'] == 'pending' and handle:
+            tasks.defer(capability='directory', delay=10, reason='等待已提交的栏目识别', checkpoint=checkpoint)
+        if result['status'] == 'succeeded' and result['output']['status'] == 'ready':
+            saved['columns'].extend(result['output']['columns'])
+        elif result['status'] != 'succeeded' or result['output']['status'] == 'unsupported':
+            saved['unresolved'].append(index)
+        saved['cursor'] = index + 1
+        checkpoint['column_regions'] = saved
+        if handle:
+            tasks.checkpoint(checkpoint)
+            if index + 1 < len(regions):
+                tasks.defer(capability='directory', delay=1, reason='继续识别下一个发布区域', checkpoint=checkpoint)
+    columns = list({(c['name'], c['list_selector']): c for c in saved['columns']}.values())
+    return {'status': 'ready' if columns else 'unsupported' if saved['unresolved'] else 'not_column', 'columns': columns,
+            'reason': '部分发布区域仍待识别' if saved['unresolved'] else '',
+            'unresolved_regions': len(saved['unresolved'])}
 
 
 def _read(url, purpose):
@@ -150,7 +190,7 @@ def _sample_matches(config, records, fetcher):
     return False
 
 
-def _install(school_id, config, records):
+def _install(school_id, config, records, *, repair=False, previous_url=None):
     """Keep source/version/notices/next collection in the same commit fence."""
     from backend.services.source_governance import _hash, _json
     from backend.services.announcement_identity import upsert_listing
@@ -162,6 +202,24 @@ def _install(school_id, config, records):
     db.session.execute(db.update(School).where(School.id == school_id).values(name=School.name))
     source = Department.query.filter_by(school_id=school_id, list_url=config['list_url'],
                                         list_selector=config['list_selector']).first()
+    if source is None and repair:
+        matches = Department.query.filter_by(school_id=school_id, list_url=config['list_url'], name=config['name']).all()
+        if len(matches) == 1:
+            source = matches[0]
+        elif not matches and previous_url:
+            # Only an observed HTTP redirect proves a moved source. Similar
+            # names at unrelated new URLs do not justify moving a subscription.
+            prior = Department.query.filter_by(school_id=school_id, list_url=previous_url, name=config['name']).all()
+            if len(prior) == 1:
+                source = prior[0]
+    if source is not None and repair:
+        previous = {field: getattr(source, field) or '' for field in CONFIG_FIELDS}
+        if previous != config:
+            last = SourceConfigVersion.query.filter_by(department_id=source.id).order_by(SourceConfigVersion.version.desc()).first()
+            db.session.add(SourceConfigVersion(department_id=source.id, version=last.version + 1 if last else 1,
+                config_json=_json(config), config_hash=_hash(config), previous_json=_json(previous)))
+            for field, value in config.items():
+                setattr(source, field, value)
     if source is None:
         source = Department(school_id=school_id, **config)
         db.session.add(source); db.session.flush()
@@ -197,10 +255,14 @@ def _install(school_id, config, records):
     return source.id, new_count
 
 
-def onboard_page(payload, *, fetcher=None):
+def onboard_page(payload, *, fetcher=None, _force_ai=False):
     from backend.services.source_governance import _snapshot, read_snapshot, _column_scope
     from backend.services.discovery_control import pause_if_requested
     pause_if_requested()
+    if payload.get('parent_task_id'):
+        parent = db.session.get(BackgroundTask, payload['parent_task_id'])
+        if not parent or parent.generation != payload.get('parent_generation'):
+            return {'state': 'stale', 'department_ids': []}
     school = db.session.get(School, payload['school_id'])
     if not school or not school.enabled:
         return {'state': 'skipped', 'department_ids': []}
@@ -231,17 +293,21 @@ def onboard_page(payload, *, fetcher=None):
         url = canonical_url(reference['url'])
     if handle:
         tasks.checkpoint(dict(checkpoint, onboarding_page=reference))
-    detected = publication_lists(html, url)
+    detected = [] if _force_ai else publication_lists(html, url)
     columns = [feed for feed in detected if feed.get('name') and not feed.get('heading_ambiguous')
                and (not feed.get('column_url') or canonical_url(feed['column_url']) == url)]
     if detected and not columns and all(feed.get('column_url') and canonical_url(feed['column_url']) != url for feed in detected):
         return {'state': 'not_column', 'department_ids': [], 'reason': '继续读取该发布区域链接的完整栏目'}
+    recognition_issues = []
     if not columns:
         result = recognize_column(school_id, url, html)
         if result['status'] != 'ready':
-            return {'state': result['status'], 'department_ids': [], 'reason': result.get('reason', '')}
+            return {'state': result['status'], 'department_ids': [], 'reason': result.get('reason', ''),
+                    'error_code': result.get('error_code', '')}
         columns = result['columns']
-    ids, issues, new_count, network_error = [], [], 0, None
+        if result.get('unresolved_regions'):
+            recognition_issues.append({'name': payload.get('label', ''), 'reason': '部分发布区域仍待识别，已接入的栏目可以使用'})
+    ids, issues, new_count, network_error = [], recognition_issues, 0, None
     for column in columns:
         pause_if_requested()
         config = {field: column.get(field, '') for field in CONFIG_FIELDS}
@@ -254,7 +320,7 @@ def onboard_page(payload, *, fetcher=None):
             continue
         existing = Department.query.filter_by(school_id=school_id, list_url=url,
             list_selector=config['list_selector'], name=config['name']).first()
-        if existing:
+        if existing and not payload.get('revalidate'):
             ids.append(existing.id)
             continue
         scope = ({'container_selector': column['container_selector'], 'heading_selector': column['heading_selector']}
@@ -279,10 +345,14 @@ def onboard_page(payload, *, fetcher=None):
         if not matches:
             issues.append({'name': config['name'], 'reason': '暂未读到与列表对应的公开通知正文'})
             continue
-        source_id, added = _install(school_id, config, records)
+        source_id, added = _install(school_id, config, records, repair=payload.get('revalidate') is True,
+                                    previous_url=payload.get('previous_url'))
         ids.append(source_id); new_count += added
     if network_error:
         raise network_error
+    if not ids and issues and detected and not _force_ai:
+        # A plausible but invalid generic rule must not suppress the AI route.
+        return onboard_page(dict(payload, snapshot=reference), fetcher=fetcher, _force_ai=True)
     return {'state': 'connected' if ids else 'unsupported', 'department_ids': ids,
             'new_count': new_count, 'issues': issues,
             'reason': issues[0]['reason'] if issues else ''}

@@ -46,7 +46,6 @@
             const opened = letter.getAttribute('aria-pressed') !== 'true';
             letter.setAttribute('aria-pressed', String(opened));
             letter.setAttribute('aria-label', opened ? '收起信纸' : '拆开信封');
-            letter.querySelector('[data-letter-hint]').textContent = opened ? '再点一下，收好' : '点一下，拆封';
             return;
         }
         const start = event.target.closest('[data-reader-start]');

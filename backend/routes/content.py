@@ -9,6 +9,50 @@ from backend.services.article_images import render_article_html, image_sources, 
 bp = Blueprint('content', __name__)
 
 
+@bp.route('/api/announcements/<int:ann_id>/student-information', methods=['GET', 'POST'])
+def student_information(ann_id):
+    if not g.get('user'):
+        return jsonify(error='请登录后使用分析'), 401
+    ann = Announcement.query.filter(Announcement.id == ann_id, source_expression()).first()
+    if ann is None:
+        return jsonify(error='通知不存在或来源已下架'), 404
+    from backend.services.student_information import article_view, material, queue_assessment
+    from backend.database.models import BackgroundTask
+    insight = article_view(ann)
+    if insight:
+        from flask import render_template_string
+        html = render_template_string("{% from '_student_insight.html' import student_insight %}"
+                                      "{{ student_insight(ann, insight, user) }}", ann=ann, insight=insight, user=g.user)
+        return jsonify(state='ready', active=False, html=html)
+    prepared = material('article', ann_id)
+    if request.method == 'POST':
+        from backend.auth.rate_limit import check_rate_limit
+        if not check_rate_limit(f'student-analysis:user:{g.user.id}', 60, 3600)[0]:
+            return jsonify(error='分析请求较频繁，请稍后重试'), 429
+        if not prepared:
+            return jsonify(error='请在正文加载完成后再点击分析'), 409
+        from backend.ai.configuration import get_model_binding, AIConfigError
+        try:
+            get_model_binding('directory')
+        except AIConfigError:
+            return jsonify(error='请先在设置中配置 AI；普通阅读不受影响'), 409
+        queue_assessment('article', ann_id, requested_by=g.user.id)
+    job = BackgroundTask.query.filter(BackgroundTask.kind == 'student_assessment',
+        BackgroundTask.payload['subject_kind'].as_string() == 'article',
+        BackgroundTask.payload['subject_id'].as_integer() == ann_id,
+        BackgroundTask.payload['input_hash'].as_string() == (prepared[2] if prepared else '')
+        ).order_by(BackgroundTask.updated_at.desc()).first()
+    active = bool(job and job.state in ('pending', 'running', 'waiting') and job.payload.get('requested_by') is not None)
+    message = '正在分析正文，完成后会自动显示' if active else '尚无分析结果，可按需点击分析'
+    if job and not active:
+        message = '本次分析未完成，可稍后重试；通知正文仍可正常阅读'
+        if (job.result or {}).get('error_code') == 'budget_exhausted':
+            message = 'AI 用量已达上限，通知正文仍可正常阅读'
+        if (job.result or {}).get('state') == 'stale':
+            message = '正文已更新，可按需重新分析'
+    return jsonify(state=job.state if job else 'idle', active=active, message=message), 202 if active else 200
+
+
 @bp.route('/api/announcements/<int:ann_id>/content', methods=['GET', 'POST'])
 def article_content(ann_id):
     ann = Announcement.query.filter(Announcement.id == ann_id, source_expression()).first()

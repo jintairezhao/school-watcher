@@ -1,0 +1,15 @@
+.student-insight {
+    margin-block: 1rem 1.5rem;
+    padding-block: 1rem;
+    border-block: 1px solid var(--color-border);
+    font-size: var(--text-control, .875rem);
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+.student-insight p { margin: 0 0 .5rem; }
+.student-insight summary { cursor: pointer; padding-block: .5rem; }
+.student-insight blockquote { margin: .75rem 0; padding-left: 1rem; border-left: 2px solid var(--color-border); }
+.student-insight small, .source-value-note { color: var(--color-text-secondary); }
+.student-insight a { display: inline-block; padding-block: .5rem; }
+.source-unit-empty { padding: .75rem 1rem; color: var(--color-text-secondary); line-height: 1.8; white-space: normal; }
+.source-value-note { font-size: var(--text-meta, .8125rem); margin-block: .25rem .75rem; }

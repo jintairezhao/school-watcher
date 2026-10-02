@@ -281,7 +281,7 @@ class RuntimeCatalog:
             if kept:
                 selected[ref] = kept
         pages = [p for p in report['pages'] if p['url'] in selected or p.get('feed_json') or
-                 p['kind'] in ('root', 'directory', 'unit', 'major') or p['url'] in reviewed]
+                 p['kind'] in ('root', 'directory', 'unit', 'major', 'gateway', 'channel') or p['url'] in reviewed]
         targets = {p['url'] for p in pages} | {n['url'] for ns in selected.values() for n in ns if n['url']}
         for cfg in candidates:
             targets.update((cfg['list_url'], cfg.get('column_url', '')))

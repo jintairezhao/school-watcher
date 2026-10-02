@@ -46,7 +46,7 @@ def process_navigation(payload):
     from backend.services.discovery_control import pause_if_requested
     pause_if_requested()
     parent = db.session.get(BackgroundTask, payload['parent_task_id'])
-    if not parent or parent.generation != payload['parent_generation']:
+    if not parent or parent.generation != payload['parent_generation'] or (parent.result or {}).get('automatic_discovery_disabled'):
         return {'status': 'stale'}
     discover = BackgroundTask.query.filter_by(identity=f'discover:{payload["school_id"]}').first()
     if discover and payload.get('school_generation', payload['parent_generation']) != discover.generation:
@@ -76,14 +76,29 @@ def process_navigation(payload):
                 if not html:
                     return {'status': 'needs_recovery', 'error_code': 'material_expired'}
             parsed = extract_structure(html, page['url'], site['root_url'], page['kind'], page['label'], json.loads(page['path_json']))
+            if page.get('discovery_policy') == 'layered':
+                from .layered import route_structure
+                from .structure import publication_evidence, add_publication_structure
+                feed = publication_evidence(html, page['url'])
+                add_publication_structure(parsed, feed)
+                route_structure(parsed, page, html, site['root_url'], bool(feed))
             before = {(x['url'], x['decision']) for x in parsed['links']}
         # Model latency must not hold the shared cache writer lock and stall
         # other schools or the next crawl slice.
-        result = assist_navigation(site, page, html, parsed) or {}
+        if page.get('discovery_policy') == 'layered':
+            from .layered import assist
+            result = assist(site, page, html, parsed) or {}
+        else:
+            result = assist_navigation(site, page, html, parsed) or {}
         with FileLock(str(path) + '.worker.lock', timeout=0):
             db.session.refresh(parent)
             if parent.generation != payload['parent_generation']:
                 return {'status': 'stale'}
+            from backend.services.discovery_changes import remember_navigation
+            remember_navigation(inventory, site['site_key'], page.get('snapshot_url', page['url']), parsed,
+                                result.get('status') in ('processed', 'succeeded'))
+            from backend.services.runtime_catalog import RuntimeCatalog
+            RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH']).publish(inventory, site['site_key'], merge=True)
             added = 0
             for link in parsed['links']:
                 if link['decision'] in ('follow', 'official_external_link') and (link['url'], link['decision']) not in before:
@@ -124,7 +139,7 @@ def process_navigation(payload):
         if result.get('status') == 'pending':
             tasks.defer(capability='directory', phase='ai_resource', delay=result.get('next_delay') or 1,
                         reason='逐项识别已保存，等待处理剩余材料')
-        return {'status': result.get('status', 'processed'), 'queued_pages': added}
+        return dict(result, status=result.get('status', 'processed'), queued_pages=added)
     except Timeout:
         tasks.defer(capability='directory', delay=1, reason='等待目录缓存空闲', checkpoint=tasks.current_execution().get('checkpoint'))
 

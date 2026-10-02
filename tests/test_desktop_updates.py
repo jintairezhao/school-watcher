@@ -48,6 +48,14 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(check_update('0.2.0', 'windows-x64', opener, allow_current=True).version, '0.2.0')
         self.assertIsNone(check_update('0.3.0', 'windows-x64', opener, allow_current=True))
 
+    def test_two_component_release_version_and_assets(self):
+        self.assertEqual(version_tuple('v2.1'), (2, 1, 0))
+        self.assertEqual(version_tuple('2.1'), version_tuple('2.1.0'))
+        _, _, _, opener = self.fixture(version='2.1')
+        update = check_update('0.2.0', 'windows-x64', opener)
+        self.assertEqual(update.name, 'School-Watcher-2.1-windows-x64-setup.exe')
+        self.assertIsNone(check_update('2.1.0', 'windows-x64', opener))
+
     def test_download_uses_selected_folder(self):
         payload, _, _, opener = self.fixture()
         update = check_update('0.1.0', 'windows-x64', opener)
@@ -97,7 +105,7 @@ class UpdateTests(unittest.TestCase):
         update = check_update('0.1.0','windows-x64',opener)
         with tempfile.TemporaryDirectory() as temp, self.assertRaises(UpdateError):
             download_update(replace(update,name='../escape.exe'),temp,opener=opener)
-        for value in ('1.2.3/../../bad','v1.0.0-beta','1.2','01.2.3'):
+        for value in ('1.2.3/../../bad','v1.0.0-beta','1','1.2.','01.2.3','02.1'):
             with self.assertRaises(UpdateError):
                 version_tuple(value)
 

@@ -72,6 +72,9 @@ def queue_sources(departments, *, manual=False):
     also remains fresh when its historical task has already been removed.
     """
     departments = list({d.id: d for d in departments}.values())
+    from backend.services.student_information import collection_policy
+    value_policy = collection_policy(departments, manual=manual)
+    departments.sort(key=lambda d: (value_policy[d.id][0], d.id))
     interval = 60 if manual else collection_interval_seconds()
     cutoff = datetime.utcnow() - timedelta(seconds=interval)
     identities = [f'collect:{d.id}' for d in departments]
@@ -79,6 +82,8 @@ def queue_sources(departments, *, manual=False):
         BackgroundTask.identity.in_(identities))} if identities else {}
     jobs = []
     for dept in departments:
+        source_interval = min(interval * value_policy[dept.id][1], 86400)
+        cutoff = datetime.utcnow() - timedelta(seconds=source_interval)
         task = existing.get(f'collect:{dept.id}')
         if not manual:
             if task and task.state in ('pending', 'running', 'waiting'):
@@ -89,7 +94,7 @@ def queue_sources(departments, *, manual=False):
             if checked and max(checked) > cutoff:
                 continue
         jobs.append(enqueue('collect', dept.id, {'school_id': dept.school_id, 'department_id': dept.id},
-                            min_interval=interval, expedite=manual).id)
+                            min_interval=source_interval, expedite=manual).id)
     return jobs
 
 

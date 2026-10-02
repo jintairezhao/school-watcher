@@ -93,8 +93,9 @@ def public_settings():
                           for key, value in ENDPOINTS.items()],
             'profiles': profiles, 'bindings': bindings, 'legacy': legacy,
             'encryption_available': encryption_available(),
-            'limits': {purpose: int(AppConfig.get('ai_token_limit_' + purpose, '0') or 0)
-                       for purpose in ('total',) + PURPOSES},
+            'limits': {purpose: int(AppConfig.get('ai_token_limit_' + purpose,
+                       '200000' if purpose == 'school_discovery' else '0') or 0)
+                       for purpose in ('total', 'school_discovery') + PURPOSES},
             'max_concurrent': int(AppConfig.get('ai_max_concurrent', '2') or 2),
             'usage': [{'key': row.key, 'used_tokens': row.used_tokens,
                        'reserved_tokens': row.reserved_tokens, 'active_count': row.active_count}
@@ -199,7 +200,7 @@ def reveal_profile_key(profile_id, payload):
 
 def save_limits(payload):
     from backend.database.models import AppConfig
-    allowed = {'total', 'directory', 'summary', 'max_concurrent'}
+    allowed = {'total', 'directory', 'summary', 'school_discovery', 'max_concurrent'}
     if not isinstance(payload, dict) or set(payload) - allowed:
         raise AIConfigError('额度配置无效')
     values = {}

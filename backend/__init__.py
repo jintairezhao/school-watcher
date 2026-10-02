@@ -74,6 +74,7 @@ def create_app(test_config=None):
     # ---- 模型（确保表结构注册） ----
     from backend.database import models  # noqa: F401
     from backend.database import school_registry_models, source_governance_models  # noqa: F401
+    from backend.database import student_information_models  # noqa: F401
     from backend.ai import models as ai_models, summary_models  # noqa: F401
     from backend.services import announcement_identity  # noqa: F401
 
@@ -95,6 +96,9 @@ def create_app(test_config=None):
     app.jinja_env.filters['source_breadcrumb'] = source_breadcrumb
     from backend.services.article_images import render_article_html
     app.jinja_env.filters['article_html'] = render_article_html
+    from backend.services.student_information import article_view, source_view
+    app.jinja_env.globals['student_article_view'] = article_view
+    app.jinja_env.globals['student_source_view'] = source_view
 
     # ---- 错误处理 ----
     @app.errorhandler(404)
