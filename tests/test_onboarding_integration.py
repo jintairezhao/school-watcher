@@ -1,6 +1,7 @@
 """HTTP, task-continuation and frozen-denominator integration tests, no external calls."""
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 import sys
 import tempfile
 import unittest
@@ -9,7 +10,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from backend import create_app
 from backend.database.db import db
-from backend.database.models import School, User, Subscription, BackgroundTask, Announcement, Department
+from backend.database.models import School, User, Subscription, BackgroundTask, Announcement, Department, AppConfig
 from backend.services import tasks
 from backend.services.onboarding_acceptance import freeze_scope, acceptance_report, enqueue_scope
 from backend.services.school_registry import ensure_school
@@ -60,6 +61,37 @@ class OnboardingIntegrationTests(unittest.TestCase):
             self.assertEqual(Subscription.query.count(), 100)
             self.assertEqual(School.query.one().subscriber_count, 100)
             self.assertEqual(BackgroundTask.query.filter_by(kind='scrape', state='pending').count(), 1)
+            self.assertEqual(BackgroundTask.query.filter_by(kind='discover').count(), 1)
+            self.assertEqual(AppConfig.query.filter_by(key='discovery_started_1').count(), 1)
+
+    def test_concurrent_initial_discovery_markers_are_idempotent(self):
+        from sqlalchemy import event
+        from backend.services.discovery_changes import ensure_initial
+        with self.app.app_context():
+            school, _ = ensure_school('并发学校', 'https://parallel.edu.cn/')
+            school_id = school.id
+            tasks.enqueue('discover', school_id, {'school_id': school_id})
+            engine = db.engine
+        inserting = Barrier(2)
+
+        def synchronize_inserts(conn, cursor, statement, parameters, context, executemany):
+            if statement.startswith('INSERT INTO app_config '):
+                inserting.wait(timeout=10)
+
+        def work(_):
+            with self.app.app_context():
+                return ensure_initial(db.session.get(School, school_id)).id
+
+        event.listen(engine, 'before_cursor_execute', synchronize_inserts)
+        try:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                task_ids = list(pool.map(work, range(2)))
+        finally:
+            event.remove(engine, 'before_cursor_execute', synchronize_inserts)
+        self.assertEqual(len(set(task_ids)), 1)
+        with self.app.app_context():
+            self.assertEqual(AppConfig.query.filter_by(key=f'discovery_started_{school_id}').one().value, '1')
+            self.assertEqual(BackgroundTask.query.filter_by(kind='discover').one().generation, 1)
 
     def test_continuation_yields_same_directory_task_without_retry(self):
         with self.app.app_context():

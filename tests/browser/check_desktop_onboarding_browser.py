@@ -73,7 +73,8 @@ try:
             db.session.commit()
             page.locator('#discoveryRefresh').click()
             page.wait_for_function("() => document.getElementById('discoveryCounts').textContent.includes('已接入')")
-            assert page.locator('#discoveryAI').count() == 0
+            page.wait_for_function("() => document.getElementById('discoveryAI').textContent.includes('模型输出不完整')")
+            assert '1 次成功、2 次未完成' in page.locator('#discoveryAI').inner_text()
             assert page.locator('#discoveryReview').count() == 0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), ('progress overflow', width)
             page.screenshot(path=str(output / f'discovery-results-{width}.png'), full_page=True)
