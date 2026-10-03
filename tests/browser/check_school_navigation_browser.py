@@ -22,7 +22,7 @@ with sync_playwright() as playwright:
         fixture = SchoolNavigationTests(); fixture.setUp()
         try:
             page = browser.new_page(viewport={'width': width, 'height': 850}, reduced_motion='reduce')
-            errors, external = [], []
+            errors, external, navigation = [], [], []
             state = {'fail_fragment': False}
             page.on('pageerror', lambda error: errors.append(error.stack))
             def serve(route):
@@ -42,6 +42,9 @@ with sync_playwright() as playwright:
                             response = fixture.client.get(path)
                 else:
                     response = fixture.client.open(path, method=request.method, data=request.post_data, headers=headers)
+                if request.is_navigation_request():
+                    navigation.append({'path': path, 'status': response.status_code,
+                                       'location': response.headers.get('Location')})
                 route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.data)
             page.route('**/*', serve)
             page.add_init_script('try { localStorage.setItem("theme", ' + json.dumps(theme) + '); } catch (_) {}')
@@ -49,7 +52,12 @@ with sync_playwright() as playwright:
             page.goto(f'http://localhost/subscriptions/{school_id}')
             expect(page.get_by_role('heading', name='东南大学', exact=True)).to_be_visible()
             page.get_by_role('link', name='本校通知', exact=True).click()
-            expect(page.locator('.inbox-workspace')).to_be_visible()
+            try:
+                expect(page.locator('.inbox-workspace')).to_be_visible()
+            except AssertionError:
+                print(json.dumps({'url': page.url, 'navigation': navigation, 'errors': errors,
+                                  'body': page.locator('body').inner_text()[:4000]}, ensure_ascii=True), flush=True)
+                raise
             expect(page.get_by_role('heading', name='本校尚未收录通知')).to_be_visible()
             page.reload()
             expect(page.locator('.inbox-workspace')).to_be_visible()
