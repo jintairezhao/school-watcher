@@ -17,6 +17,31 @@ ROOT = 'https://example.edu.cn/'
 
 
 class LayeredDiscoveryTests(unittest.TestCase):
+    def test_ready_columns_get_turns_before_finishing_large_department_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Inventory(Path(tmp) / 'inventory.db')
+            key = store.ensure_site('测试大学', ROOT)
+            store.finish(key, ROOT, state='fetched')
+            for i in range(30):
+                store.enqueue(key, ROOT + f'office/{i}', '行政办公室', 'unit', 2, [], 'school_domain')
+            for i in range(6):
+                store.enqueue(key, ROOT + f'notice/{i}', '通知公告', 'channel', 3, [], 'school_domain')
+            store.enqueue(key, ROOT + 'teaching/', '教务处', 'unit', 2, [], 'school_domain')
+            seen = []
+            for _ in range(6):
+                row = store.claim(key, focus='layered')
+                seen.append(row)
+                store.finish(key, row['url'], state='fetched')
+            self.assertEqual(sum(r['kind'] == 'channel' for r in seen), 4)
+            self.assertEqual(sum(r['kind'] == 'unit' for r in seen), 2)
+            self.assertEqual(next(r['label'] for r in seen if r['kind'] == 'unit'), '教务处')
+            # Restarting resumes the rotation; even offices without a student
+            # keyword remain in the frontier and eventually get processed.
+            store = Inventory(Path(tmp) / 'inventory.db')
+            while row := store.claim(key, focus='layered'):
+                seen.append(row); store.finish(key, row['url'], state='fetched')
+            self.assertEqual(len(seen), 37)
+
     def test_all_units_including_administration_and_multilevel_rosters_are_visited(self):
         pages = {
             ROOT: '<nav><a href="/org/">组织机构</a></nav>',
@@ -41,6 +66,32 @@ class LayeredDiscoveryTests(unittest.TestCase):
                 result = crawl_site(inventory, key, max_pages=50, workers=1, focus='layered', fetcher=fetch)
             self.assertEqual(set(reads), set(pages))
             self.assertEqual(result['states'].get('pending', 0), 0)
+
+    def test_language_and_student_gateways_follow_observed_links_without_ai(self):
+        college = 'https://college.example.edu.cn/'
+        pages = {
+            ROOT: '<nav><a href="/colleges/">院系设置</a></nav>',
+            ROOT + 'colleges/': '<main><h1>院系设置</h1><a href="' + college + '">工程学院</a></main>',
+            college: '<title>工程学院</title><div><a href="/cn/">中文网</a><a href="https://elsewhere.invalid/">中文网站</a></div>',
+            college + 'cn/': '<title>工程学院</title><nav><a href="/students/">学生工作</a></nav>',
+            college + 'students/': '<h1>学生工作</h1><a href="/notices/">通知公告</a>',
+            college + 'notices/': '<h1>通知公告</h1>',
+        }
+        seen = []
+        def fetch(url):
+            seen.append(url)
+            return {'html': pages[url], 'url':url, 'status':200}
+        with tempfile.TemporaryDirectory() as tmp:
+            inv = Inventory(Path(tmp) / 'inventory.db')
+            key = inv.ensure_site('测试大学', ROOT)
+            with patch('backend.scraper.discovery.ai_navigation.queue_navigation') as ai:
+                crawl_site(inv,key,max_pages=20,workers=1,focus='layered',fetcher=fetch)
+            self.assertEqual(set(seen), set(pages))
+            ai.assert_not_called()
+            from backend.services.source_relationships import SourceRelationships
+            relationships = SourceRelationships(inv.report(key), inv.structure(key))
+            self.assertEqual(relationships.publication_owners(college + 'notices/',
+                relationships.paths_for(college + 'notices/')), {'工程学院'})
 
     def test_ambiguous_gateway_is_reviewed_even_when_known_routes_exist(self):
         html = '<nav><a href="/org/">组织机构</a><a href="/grow/">成长空间</a></nav>'
@@ -186,14 +237,22 @@ class StudentPipelineTests(unittest.TestCase):
 
     def test_value_controls_polling_but_explicit_choice_and_history_win(self):
         from backend.database.db import db
-        from backend.database.models import Department, Subscription
+        from backend.database.models import Announcement, Department, Subscription
         from backend.database.student_information_models import StudentAssessment
-        from backend.services.student_information import collection_policy
+        from backend.services.student_information import collection_policy, material
         sources = [Department(school_id=self.fixture.school_id, name=str(i), list_url=ROOT, list_selector='li') for i in range(3)]
         db.session.add_all(sources); db.session.flush()
+        binding = {'id': 1, 'version': 1}
+        configured = patch('backend.ai.configuration.get_model_binding', return_value=binding)
+        configured.start(); self.addCleanup(configured.stop)
+        for source in sources:
+            db.session.add(Announcement(school_id=source.school_id, department_id=source.id,
+                title='已验证的官网样本', url=ROOT + str(source.id)))
+        db.session.flush()
         for source, value, history in zip(sources, ['low', 'low', 'mixed'], ['low', 'high', 'unknown']):
             db.session.add(StudentAssessment(subject_key='source:' + str(source.id), school_id=source.school_id,
-                department_id=source.id, input_hash='x', state='ready', result={'value': value, 'historical': history}))
+                department_id=source.id, input_hash=material('source', source.id)[2], state='ready',
+                result={'value': value, 'historical': history, '_binding': binding}))
         db.session.commit()
         policy = collection_policy(sources)
         self.assertEqual([policy[s.id][1] for s in sources], [4, 1, 1])

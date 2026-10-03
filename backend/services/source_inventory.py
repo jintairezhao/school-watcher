@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import gzip
 import hashlib
 import json
+import re
 from pathlib import Path
 import sqlite3
 from urllib.parse import urljoin, urlsplit, urlunsplit, parse_qsl, urlencode
@@ -47,6 +48,16 @@ def canonical_url(url):
     # encoding and parameter order; ordinary document anchors still collapse.
     fragment = p.fragment if has_fragment_route(url) else ''
     return urlunsplit((p.scheme.lower(), host, p.path or '/', urlencode(sorted(query)), fragment))
+
+
+def website_scope_path(path):
+    """Scope an evidenced website entrance, including its default document.
+
+    This does not establish ownership or make two URLs aliases. Callers must
+    already have an official route from the unit website to the source.
+    """
+    return re.sub(r'/(?:index|main|default)\.(?:s?html?|aspx?|php)$', '/', path,
+                  flags=re.I).rstrip('/')
 
 
 def site_key(url):
@@ -217,12 +228,12 @@ class Inventory:
             return [dict(r) for r in c.execute('SELECT * FROM structure WHERE site_key=? ORDER BY rowid', (key,))]
 
     def claim(self, key, focus='all'):
-        if focus not in ('all', 'student', 'layered'):
+        if focus not in ('all', 'student', 'layered', 'valuable'):
             raise ValueError('Unknown discovery focus')
         with self.connect() as c:
             c.execute('BEGIN IMMEDIATE')
             condition, order = '', 'depth+priority,depth,priority,url'
-            from .student_sources import student_priority
+            from .student_sources import student_priority, college_priority
             school = c.execute('SELECT name FROM sites WHERE site_key=?', (key,)).fetchone()
             school_name = school['name'] if school else ''
             c.create_function('student_priority', 3, lambda kind, label, path:
@@ -236,10 +247,32 @@ class Inventory:
             if focus == 'student':
                 condition = 'AND student_priority(kind,label,path_json) IS NOT NULL '
                 order = 'student_priority(kind,label,path_json),depth,priority,url'
+            if focus == 'valuable':
+                # Deliver readable information before building a full university
+                # chart. All pending leads remain durable for later rounds.
+                order = ("CASE WHEN kind='root' THEN 0 WHEN kind='channel' THEN 1 "
+                         "WHEN kind='gateway' THEN 2 WHEN student_priority(kind,label,path_json) IN (2,3,4) THEN 3 "
+                         "WHEN kind='directory' THEN 4 ELSE 5 END,"
+                         'coalesce(student_priority(kind,label,path_json),20),depth,priority,url')
             if focus == 'layered':
-                # Breadth first: every discovered unit gets a turn, including
-                # administrative offices. No relevance or keyword exclusion.
-                order = "depth,CASE kind WHEN 'root' THEN 0 WHEN 'directory' THEN 1 WHEN 'unit' THEN 2 ELSE 3 END,url"
+                c.create_function('college_priority', 3, college_priority)
+                # A large roster must not block already observed publication
+                # routes. Give columns two turns and further skeleton discovery
+                # one turn. The persisted attempt count survives worker slices
+                # and restarts; BEGIN IMMEDIATE serializes concurrent claimers.
+                turns = c.execute('SELECT coalesce(sum(attempts),0) FROM pages WHERE site_key=?', (key,)).fetchone()[0]
+                column_rank, skeleton_rank = (2, 3) if turns % 3 != 2 else (3, 2)
+                # First make college notices usable. Teacher directories and
+                # general teaching/admissions pages cannot consume those turns.
+                # Keep the same rotation within this lane and retain all other
+                # pages for the regular rotation once these routes are checked.
+                college = 'college_priority(kind,label,path_json)'
+                order = ("CASE WHEN kind='root' THEN 0 "
+                         f"WHEN {college}=0 THEN 1 WHEN {college}=2 THEN {column_rank} "
+                         f"WHEN {college}=1 THEN {skeleton_rank} "
+                         "WHEN kind='directory' AND depth<=1 THEN 4 "
+                         f"WHEN kind='channel' THEN {column_rank + 3} ELSE {skeleton_rank + 3} END,"
+                         f'coalesce({college},20),coalesce(student_priority(kind,label,path_json),20),depth,priority,url')
             while True:
                 row = c.execute("SELECT * FROM pages WHERE site_key=? AND state='pending' "
                                 + condition + 'ORDER BY ' + order + ' LIMIT 1', (key,)).fetchone()
@@ -310,9 +343,16 @@ class Inventory:
             c.execute(f'UPDATE pages SET {fields} WHERE site_key=? AND url=?',
                       [*values.values(), key, url])
             if html:
-                c.execute("INSERT OR REPLACE INTO snapshots VALUES(?,?,?,?,?)",
-                          (key, url, values['content_hash'], gzip.compress(html.encode()), values['checked_at']))
+                self._write_snapshot(c, (key, url, values['content_hash'], gzip.compress(html.encode()), values['checked_at']))
             c.execute('UPDATE sites SET updated_at=? WHERE site_key=?', (now(), key))
+
+    def _write_snapshot(self, connection, row):
+        # Maintenance scripts can open an upgraded discovery store as Inventory.
+        if Path(str(self.path) + '.snapshots.sqlite3').exists():
+            from backend.services.discovery_snapshots import DiscoverySnapshots
+            DiscoverySnapshots(self.path).put(row)
+        else:
+            connection.execute('INSERT OR REPLACE INTO snapshots VALUES(?,?,?,?,?)', row)
 
     def settle(self, key):
         with self.connect() as c:
@@ -325,7 +365,13 @@ class Inventory:
     def snapshot(self, key, url):
         with self.connect() as c:
             row = c.execute('SELECT body_gzip FROM snapshots WHERE site_key=? AND url=?', (key, url)).fetchone()
-            return gzip.decompress(row[0]).decode() if row else None
+        if row:
+            return gzip.decompress(row[0]).decode()
+        if Path(str(self.path) + '.snapshots.sqlite3').exists():
+            from backend.services.discovery_snapshots import DiscoverySnapshots
+            page = self.get_page(key, url)
+            return DiscoverySnapshots(self.path).get(key, url, page.get('content_hash')) if page else None
+        return None
 
     def get_page(self, key, url):
         with self.connect() as c:

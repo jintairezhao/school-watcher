@@ -130,12 +130,14 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
     if request.purpose != 'article' and any(_EMPTY.fullmatch(str(text).strip()) and _visible(text.parent)
             for text in soup.find_all(string=True)):
         empty_evidence = empty_evidence or ('explicit_empty_message',)
+    from backend.scraper.article_resources import has_public_body_resource
     if request.readiness_selector:
         try:
             ready = soup.select(request.readiness_selector)
         except Exception:
             return _decision(raw, 'needs_adapter', 'invalid_readiness_selector', '来源的内容识别规则需要核对')
-        if any(_visible(node) and (node.get_text(' ', strip=True) or node.select_one('img[src], a[href]')) for node in ready):
+        if any(_visible(node) and (node.get_text(' ', strip=True) or node.select_one('img[src], a[href]')
+                or request.purpose == 'article' and has_public_body_resource([node], raw.final_url)) for node in ready):
             return _decision(raw, 'usable', evidence=('readiness_selector',))
         if empty_evidence:
             return _decision(raw, 'empty', evidence=empty_evidence)
@@ -147,7 +149,7 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
         return _decision(raw, 'needs_adapter', 'readiness_missing', '未找到配置要求的目标内容，需要核对来源规则')
     if request.purpose == 'article':
         if any(len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
-               for node in soup.select(_ARTICLE)):
+               or has_public_body_resource([node], raw.final_url) for node in soup.select(_ARTICLE)):
             return _decision(raw, 'usable', evidence=('article_region',))
     elif request.purpose == 'directory':
         anchors = [a for a in soup.select('a[href]') if a.get_text(' ', strip=True)

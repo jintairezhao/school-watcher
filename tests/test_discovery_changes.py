@@ -91,7 +91,7 @@ class DeltaPipelineTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.tearDown()
 
-    def test_first_subscription_runs_once_and_scheduler_does_not_reopen(self):
+    def test_first_subscription_is_idempotent_but_empty_results_retry_automatically(self):
         from backend.routes.subscriptions import subscribe_school
         from backend.worker import _schedule_due
         school = db.session.get(School, self.fixture.school_id)
@@ -103,11 +103,12 @@ class DeltaPipelineTests(unittest.TestCase):
         task.state = 'done'; task.finished_at = datetime.utcnow() - timedelta(days=90); db.session.commit()
         task_id = task.id
         _schedule_due()
-        self.assertEqual(db.session.get(BackgroundTask, task_id).generation, 1)
+        self.assertEqual(db.session.get(BackgroundTask, task_id).generation, 2)
+        self.assertEqual(db.session.get(BackgroundTask, task_id).payload['trigger'], 'background_discovery')
         school = db.session.get(School, self.fixture.school_id)
         Subscription.query.delete(); school.subscriber_count = 0; db.session.commit()
         subscribe_school(school, user_id)
-        self.assertEqual(db.session.get(BackgroundTask, task_id).generation, 1)
+        self.assertEqual(db.session.get(BackgroundTask, task_id).generation, 2)
 
     def test_normal_read_has_no_ai_and_legacy_automatic_job_is_skipped(self):
         from backend.services.source_onboarding import onboard_page

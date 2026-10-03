@@ -24,7 +24,7 @@ class DiscoveryCacheCleanupTests(unittest.TestCase):
             with cache.connect() as connection:
                 self.assertEqual(connection.execute('SELECT parent_url FROM edges').fetchone()[0], root)
 
-    def test_capacity_eviction_removes_evidence_owned_by_evicted_page(self):
+    def test_capacity_cleanup_preserves_current_evidence_and_visited_pages(self):
         with tempfile.TemporaryDirectory() as folder:
             cache = DiscoveryCache(Path(folder) / 'cache.db')
             root = 'https://example.edu.cn/'
@@ -37,10 +37,10 @@ class DiscoveryCacheCleanupTests(unittest.TestCase):
                 for i in range(100)], 'old')
             cache.max_bytes = 256 * 1024
             cache.trim()
-            self.assertIsNone(cache.get_page(key, root))
+            self.assertEqual(cache.get_page(key, root)['state'], 'fetched')
             self.assertEqual(cache.get_page(key, root + 'college/')['state'], 'pending')
-            self.assertEqual(cache.report(key)['edge_count'], 0)
-            self.assertLessEqual(cache.path.stat().st_size, cache.max_bytes)
+            self.assertEqual(cache.report(key)['edge_count'], 100)
+            self.assertLessEqual(cache.snapshots.path.stat().st_size, cache.max_bytes)
 
 
 if __name__ == '__main__':

@@ -300,15 +300,8 @@ def scrape_department(department: Department, school_base_url: str,
             items = soup.select(list_sel) if list_sel else []
 
             if not items:
-                probed = _probe_selectors(html, department)
-                profile = probed[0] if probed else None
-                if profile:
-                    from backend.services.source_governance import propose_detected_source
-                    from backend.services.tasks import enqueue
-                    proposal = propose_detected_source(department, profile, html)
-                    enqueue('source_review', proposal.id, {'proposal_id': proposal.id})
-                from backend.scraper.fetch_errors import SourceAccessError
-                raise SourceAccessError('官网栏目规则需要重新核实；已保留已有通知，候选通过检查后才会启用')
+                from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
+                raise ParserRepairPending(queue_parser_repair(department, html))
 
             # 🆕 第1页选择器生效时，保存元素签名（用于未来自愈）
             elif items and department.school_id and list_sel and list_sel != 'a[href]':

@@ -157,6 +157,7 @@
             let group = '日志及其他文件';
             if (name.includes('backup') || name.includes('.bak') || name.startsWith('rollback/')) group = '备份与回退资料';
             else if (name.startsWith('fetch-evidence/') || name.startsWith('fetch_evidence/')) group = '网页抓取缓存';
+            else if (file.kind === 'discovery_progress') group = '接入进度';
             else if (name.startsWith('discovery_cache.')) group = '调查缓存';
             else if (name.startsWith('school_watcher.db') || name.startsWith('source_catalog.sqlite3') || name.startsWith('catalog-generations/')) group = '运行目录与通知';
             groups[group] = (groups[group] || 0) + file.bytes;

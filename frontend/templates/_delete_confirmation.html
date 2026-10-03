@@ -1,0 +1,13 @@
+<dialog class="delete-dialog" id="deleteDialog" aria-labelledby="deleteDialogTitle" aria-describedby="deleteDialogTarget deleteDialogDescription deleteDialogWarning">
+    <h2 id="deleteDialogTitle">删除学校？</h2>
+    <p class="delete-dialog-target" id="deleteDialogTarget"></p>
+    <p class="delete-dialog-description" id="deleteDialogDescription"></p>
+    <p class="delete-dialog-warning" id="deleteDialogWarning">此操作无法撤销。</p>
+    <p class="delete-dialog-error" id="deleteDialogError" role="alert" tabindex="-1" hidden></p>
+    <p class="sr-only" id="deleteDialogStatus" role="status"></p>
+    <div class="delete-dialog-actions">
+        <button type="button" class="btn btn-outline" id="deleteDialogCancel" autofocus>取消</button>
+        <button type="button" class="btn btn-danger-outline" id="deleteDialogConfirm">删除学校</button>
+    </div>
+</dialog>
+<script src="{{ url_for('static', filename='js/delete-confirmation.js') }}"></script>

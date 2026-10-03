@@ -260,7 +260,7 @@ def apply_changes(values, *, source=None, progress=None):
         if origin.is_relative_to(old['data']) and paths[key] != paths['data'] / origin.relative_to(old['data']):
             exclude.add(origin.relative_to(old['data']))
     if old['cache'] == old['data'] and paths['cache'] != paths['data']:
-        exclude.update((Path('discovery_cache.sqlite3'), Path('fetch-evidence')))
+        exclude.update((Path('discovery_cache.sqlite3'), Path('discovery_cache.sqlite3.snapshots.sqlite3'), Path('fetch-evidence')))
     new_data = migrate_data(old['data'], paths['data'], program_dir=program_dir(), exclude=exclude, progress=progress)
     for key in ('cache', 'backups', 'downloads'):
         origin, target = old[key], paths[key]
@@ -271,7 +271,7 @@ def apply_changes(values, *, source=None, progress=None):
         if key == 'cache':
             # The legacy cache directory also contains personal data: only copy cache files.
             target.mkdir(parents=True, exist_ok=True)
-            for name in ('discovery_cache.sqlite3', 'fetch-evidence'):
+            for name in ('discovery_cache.sqlite3', 'discovery_cache.sqlite3.snapshots.sqlite3', 'fetch-evidence'):
                 item = origin / name
                 if item.is_file():
                     if progress: progress('copying', name)
@@ -327,7 +327,8 @@ def remove_personal_data():
                 erase(data / name, data)
             cache = paths['cache']
             for name in ('discovery_cache.sqlite3', 'discovery_cache.sqlite3-wal', 'discovery_cache.sqlite3-shm',
-                         'discovery_cache.sqlite3.worker.lock', 'fetch-evidence', 'fetch-evidence.lock'):
+                         'discovery_cache.sqlite3.worker.lock', 'discovery_cache.sqlite3.snapshots.sqlite3',
+                         'discovery_cache.sqlite3.snapshots.sqlite3-journal', 'fetch-evidence', 'fetch-evidence.lock'):
                 erase(cache / name, cache)
             backup = paths['backups']
             for file in backup.glob('watcher-*.zip'):

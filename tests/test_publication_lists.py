@@ -23,6 +23,22 @@ def section(name, start, count=4, self_anchors=False):
 
 
 class PublicationListTests(unittest.TestCase):
+    def test_table_rows_ignore_empty_decoration_links_before_actual_titles(self):
+        html = '<html><head><title>教务通知</title></head><body><div id="notices"><table class="main">' + ''.join(
+            f'<tr><td><img src="bullet.gif"></td><td class="main"><a href="/2026/0901/a{i}/page.htm"></a>'
+            f'<a href="/2026/0901/a{i}/page.htm" title="关于学生选课安排的通知{i}"><font>关于学生选课安排的通知{i}</font></a></td>'
+            '<td class="main"><div align="right">2026-09-01</div></td></tr>' for i in range(4)) + '</table></div></body></html>'
+        feeds = publication_lists(html, URL + 'teaching/list.htm')
+        self.assertEqual(len(feeds), 1)
+        self.assertEqual(feeds[0]['name'], '教务通知')
+        self.assertEqual(feeds[0]['item_count'], 4)
+        self.assertTrue(all(s['date'] == '2026-09-01' for s in feeds[0]['samples']))
+        # The published selector must work in the collector too, not just in
+        # the detector's temporary sample records.
+        soup = BeautifulSoup(html, 'lxml')
+        for item in soup.select(feeds[0]['list_selector']):
+            self.assertTrue(item.select_one(feeds[0]['title_selector']).get('title'))
+
     def test_current_page_breadcrumb_names_only_its_adjacent_article_list(self):
         u = URL + 'notices/'
         def listing(crumb):

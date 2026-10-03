@@ -460,7 +460,8 @@ class SourceRelationshipTests(unittest.TestCase):
             self.assertEqual(len(soup.select('.source-path')), 2)
             self.assertIn('科学学院', response.text)
             self.assertIn('工程学院', response.text)
-            self.assertIn('单位与栏目关系待核实', response.text)
+            self.assertIn('其他信息来源', response.text)
+            self.assertNotIn('单位与栏目关系待核实', response.text)
             self.assertEqual(subscription.department_ids, [source.id])
             self.assertEqual((source.name, source.group_name), ('原有栏目名称', '原有分组'))
             # Existing selection actions continue to use the unchanged column ID.

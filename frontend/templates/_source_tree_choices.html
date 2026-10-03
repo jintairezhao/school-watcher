@@ -14,7 +14,7 @@
             <ul class="source-path-references" aria-label="路径出处">{% for reference in path.references %}<li><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=reference.url) }}">查看{{ reference.title }}的结构</a> · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer">官网出处</a><span>检查于 {{ reference.checked_at[:10] }}</span></li>{% endfor %}</ul>
         </div>{% endfor %}
     </details>
-    {% else %}<p class="source-path-pending">单位与栏目关系待核实，当前栏目可以单独订阅。</p>{% endif %}
+    {% endif %}
 </div>
 {% endmacro %}
 {% macro unit_choice(unit, depth=0) %}
@@ -27,7 +27,7 @@
     <div class="source-unit-contents">
         {% for column in unit.own_columns %}{{ column_choice(column) }}{% endfor %}
         {% for child in unit.children %}{{ unit_choice(child, depth + 1) }}{% endfor %}
-        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">{% if not unit.url %}官网未提供网站链接{% else %}暂未找到可接入栏目{% endif %}。可以先订阅这个部门。</p>{% endif %}
+        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">{% if not unit.url %}官网未提供公开网站链接{% else %}暂未找到可用的信息来源{% endif %}。后续找到的信息会按接收范围自动加入。</p>{% endif %}
     </div>
 </details>
 {% else %}
@@ -38,4 +38,4 @@
 <fieldset class="source-group"><legend>{{ group_name }}</legend>
     {% for unit in units %}{{ unit_choice(unit) }}{% endfor %}
 </fieldset>
-{% else %}<p class="source-sync">官网中的部门和栏目会出现在这里。</p>{% endfor %}
+{% else %}<p class="source-sync">自动找到的信息来源会出现在这里，无需先做选择。</p>{% endfor %}

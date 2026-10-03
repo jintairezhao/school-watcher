@@ -81,7 +81,7 @@ def remember_navigation(inventory, key, url, parsed, complete):
         return
     saved['navigation_complete'] = complete
     saved['routes'] = [{k: l[k] for k in ('url', 'label', 'kind', 'decision')}
-                       for l in parsed['links'] if l['decision'] in ('follow', 'official_external_link')]
+                       for l in parsed['links'] if l['decision'] in ('follow', 'official_external_link', 'route_reference')]
     with inventory.connect() as c:
         c.execute('UPDATE pages SET notes_json=? WHERE site_key=? AND url=?',
                   (json.dumps(put(json.loads(page['notes_json']), saved), ensure_ascii=False), key, url))

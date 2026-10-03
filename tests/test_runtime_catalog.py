@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from backend.services.source_inventory import Inventory
@@ -39,6 +40,24 @@ class CatalogueTests(unittest.TestCase):
         self.assertEqual(self.catalog.candidates(self.key), expected)
         self.assertIsNotNone(self.catalog.report(self.key))
         self.assertEqual(len(self.catalog.all_sites()), 1)
+
+    def test_page_metadata_only_reads_requested_pages_without_html_or_full_report(self):
+        self.inspect('<title>例校</title><a href="/news/">通知公告</a>')
+        self.catalog.publish(self.inv, self.key)
+        root = 'https://example.edu.cn/'
+        with self.catalog.connect(write=True) as connection:
+            ident = connection.execute('SELECT id FROM catalog_sites WHERE site_key=?', (self.key,)).fetchone()[0]
+            # An unrelated corrupt page would fail if a full scan inflated it.
+            connection.execute('INSERT INTO catalog_pages(site_id,url,page_gzip,nodes_gzip,evidence_gzip) VALUES(?,?,?,?,?)',
+                (ident, root + 'unrelated/', b'invalid metadata', b'invalid nodes', b'invalid HTML'))
+            connection.execute('UPDATE catalog_pages SET nodes_gzip=?,evidence_gzip=? WHERE url=?',
+                (b'invalid nodes', b'invalid HTML', root))
+        with patch.object(self.catalog, 'report', side_effect=AssertionError('No report')), \
+             patch.object(self.catalog, 'snapshot', side_effect=AssertionError('No HTML')):
+            info = self.catalog.page_metadata(self.key, [root, root, root + 'missing/'])
+        self.assertEqual(set(info), {root})
+        self.assertEqual(info[root]['title'], '例校')
+        self.assertNotIn('feed_json', info[root])
 
     def test_changed_reference_invalidates_prior_check_on_merge(self):
         self.inspect('<title>例校</title><h2>院系设置</h2><a href="https://cs.example.edu.cn/">计算机学院</a>')

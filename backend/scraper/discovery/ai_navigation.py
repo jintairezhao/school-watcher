@@ -18,6 +18,16 @@ def queue_navigation(site, page):
         get_model_binding('directory')
     except AIConfigError:
         return
+    if page.get('discovery_policy') == 'valuable':
+        from flask import current_app
+        checkpoint = dict(handle.get('checkpoint') or {})
+        seen = checkpoint.get('student_navigation_pages', [])
+        if page['url'] not in seen:
+            limit = max(1, int(current_app.config.get('DISCOVERY_AI_PAGE_BUDGET', 8)))
+            if len(seen) >= limit:
+                tasks.checkpoint(dict(checkpoint, navigation_budget_limited=True))
+                return
+            tasks.checkpoint(dict(checkpoint, student_navigation_pages=[*seen, page['url']]))
     parent = handle['id']
     school_id = handle.get('payload', {}).get('school_id')
     if not school_id:
@@ -76,16 +86,26 @@ def process_navigation(payload):
                 if not html:
                     return {'status': 'needs_recovery', 'error_code': 'material_expired'}
             parsed = extract_structure(html, page['url'], site['root_url'], page['kind'], page['label'], json.loads(page['path_json']))
-            if page.get('discovery_policy') == 'layered':
+            if page.get('discovery_policy') in ('layered', 'valuable'):
                 from .layered import route_structure
                 from .structure import publication_evidence, add_publication_structure
                 feed = publication_evidence(html, page['url'])
                 add_publication_structure(parsed, feed)
-                route_structure(parsed, page, html, site['root_url'], bool(feed))
+                route_structure(parsed, page, html, site['root_url'], bool(feed), policy=page['discovery_policy'])
+                if page['discovery_policy'] == 'valuable':
+                    # A later bounded round resumes undecided links instead of
+                    # buying the same first 16 classifications again. Freeze
+                    # prior decisions in this job: its own next batch must not
+                    # change the material hash and reset the per-page budget.
+                    previous = {(row['url'], row['label']): row for row in page.get('navigation_routes', [])}
+                    for link in parsed['links']:
+                        saved = previous.get((link['url'], link['label']))
+                        if saved:
+                            link.update(kind=saved['kind'], decision=saved['decision'])
             before = {(x['url'], x['decision']) for x in parsed['links']}
         # Model latency must not hold the shared cache writer lock and stall
         # other schools or the next crawl slice.
-        if page.get('discovery_policy') == 'layered':
+        if page.get('discovery_policy') in ('layered', 'valuable'):
             from .layered import assist
             result = assist(site, page, html, parsed) or {}
         else:
@@ -96,7 +116,9 @@ def process_navigation(payload):
                 return {'status': 'stale'}
             from backend.services.discovery_changes import remember_navigation
             remember_navigation(inventory, site['site_key'], page.get('snapshot_url', page['url']), parsed,
-                                result.get('status') in ('processed', 'succeeded'))
+                                result.get('status') in ('processed', 'succeeded') and not result.get('deferred_routes'))
+            inventory.record_edges(site['site_key'], page.get('snapshot_url', page['url']),
+                                   parsed['links'], hashlib.sha256(html.encode()).hexdigest())
             from backend.services.runtime_catalog import RuntimeCatalog
             RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH']).publish(inventory, site['site_key'], merge=True)
             added = 0
@@ -114,13 +136,15 @@ def process_navigation(payload):
                                       link['path'], 'school_domain' if same_school_url(link['url'], site['root_url']) else 'official_backlink')
                     added += 1
             if added:
-                # Preserve full provenance alongside the pre-existing parser edges.
-                inventory.record_edges(site['site_key'], page['url'], parsed['links'], hashlib.sha256(html.encode()).hexdigest())
                 from datetime import datetime
                 # Continue the same generation and budget. A fresh enqueue would
                 # erase its journal and give every automatic continuation a new allowance.
+                scan_limited = (page.get('discovery_policy') == 'valuable' and
+                    (parent.checkpoint or {}).get('student_scan_pages', 0) >=
+                    max(1, int(current_app.config.get('DISCOVERY_PAGE_BUDGET', 40))))
                 db.session.execute(db.update(BackgroundTask).where(BackgroundTask.id == parent.id,
                     BackgroundTask.generation == payload['parent_generation'], BackgroundTask.state == 'done',
+                    not scan_limited,
                     BackgroundTask.phase != 'user_paused', BackgroundTask.deadline_at > datetime.utcnow()).values(state='pending', phase='directory_slice',
                     finished_at=None, available_at=datetime.utcnow(), token=None, worker_id=None, lease_until=None))
                 # A last-page crawl can be paused while this independent call
@@ -129,17 +153,32 @@ def process_navigation(payload):
                 if requested(parent) and parent.phase == 'user_paused':
                     saved = dict(parent.payload)
                     resume = dict(saved.get(RESUME_KEY) or {})
-                    if resume.get('state') == 'done':
+                    if resume.get('state') == 'done' and not scan_limited:
                         saved[RESUME_KEY] = dict(resume, state='pending', phase='directory_slice')
                         db.session.execute(db.update(BackgroundTask).where(BackgroundTask.id == parent.id,
                             BackgroundTask.generation == payload['parent_generation'],
                             BackgroundTask.state == 'waiting', BackgroundTask.phase == 'user_paused').values(
                                 payload=saved, finished_at=None))
                 db.session.commit()
+            deferred_pages = 0
+            if page.get('discovery_policy') == 'valuable':
+                # A final child can find new pages after the parent's HTTP
+                # budget is spent, even when every navigation candidate was
+                # decided. Keep that frontier visible to the next small round.
+                deferred_pages = inventory.progress_snapshot(site['site_key'])['states'].get('pending', 0)
+                db.session.refresh(parent)
+                if deferred_pages or result.get('deferred_routes'):
+                    saved_result = dict(parent.result or {}, exploration_limited=True,
+                        deferred_pages=deferred_pages,
+                        deferred_routes=max((parent.result or {}).get('deferred_routes', 0), result.get('deferred_routes', 0)))
+                    db.session.execute(db.update(BackgroundTask).where(BackgroundTask.id == parent.id,
+                        BackgroundTask.generation == payload['parent_generation'], BackgroundTask.state == 'done')
+                        .values(result=saved_result).execution_options(synchronize_session=False))
+                    db.session.commit()
         if result.get('status') == 'pending':
             tasks.defer(capability='directory', phase='ai_resource', delay=result.get('next_delay') or 1,
                         reason='逐项识别已保存，等待处理剩余材料')
-        return dict(result, status=result.get('status', 'processed'), queued_pages=added)
+        return dict(result, status=result.get('status', 'processed'), queued_pages=added, deferred_pages=deferred_pages)
     except Timeout:
         tasks.defer(capability='directory', delay=1, reason='等待目录缓存空闲', checkpoint=tasks.current_execution().get('checkpoint'))
 

@@ -382,7 +382,7 @@ def publication_lists(html, url):
             selector += ''.join('.' + soupsieve.escape(c) for c in candidate['item_class'].split())
         configs.append({'list_selector': selector, 'title_selector': 'a', 'link_selector': 'a',
                         'date_selector': 'time, span, em, i, .date, .time',
-                        'content_selector': 'div.v_news_content, div.article-content, article',
+                        'content_selector': 'div.v_news_content, div.wp_articlecontent, div.article-content, article',
                         'method': 'dom_analysis', 'confidence': 0.8})
 
     found = []
@@ -424,7 +424,7 @@ def publication_lists(html, url):
                 effective = dict(config, date_selector=infer_publication_date_selector(selected))
             samples, latest, article_links = samples_for(selected, effective, url)
             if config['method'] == 'dom_analysis' and len(samples) < len(selected) * 0.6:
-                title_link = 'a[title], .name a, h3 a, h2 a, a:not(:has(img))'
+                title_link = 'a[title], .name a, h3 a, h2 a, a:not(:has(img)):not(:empty)'
                 alternative = dict(effective, title_selector=title_link, link_selector=title_link)
                 other_samples, other_latest, other_links = samples_for(selected, alternative, url)
                 if len(other_samples) > len(samples):

@@ -55,6 +55,7 @@ try:
             page.screenshot(path=str(output / f'admin-{width}.png'), full_page=True)
             page.goto(f'http://localhost/subscriptions/{fixture.school.id}')
             page.locator('#discoveryMessage').wait_for()
+            page.locator('.discovery-details > summary').click()
             assert page.locator('#discoverySetup').count() == 0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), ('sources overflow', width)
             assert page.locator('[data-window-action="close"]').count() == 1
@@ -82,6 +83,7 @@ try:
                 department = Department(school_id=fixture.school.id, name='测试学院', list_url='https://www.shu.edu.cn/test/')
                 db.session.add(department); db.session.commit()
                 page.locator('#discoveryRefresh').click()
+                page.locator('#sourcePreferences > summary').click()
                 page.locator('[name="department"]').wait_for()
                 page.locator('[name="mode"][value="selected"]').check()
                 page.locator('[name="department"]').uncheck()

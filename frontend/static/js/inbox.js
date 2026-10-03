@@ -307,10 +307,11 @@
         if (event.target.closest('#noticeActionsMenu') && (button || link)) setNoticePopover('', {returnFocus: true});
         if (!event.target.closest('#inboxRefreshDetails') && find('#inboxRefreshDetails')) find('#inboxRefreshDetails').open = false;
         if (link && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0 &&
-            link.matches('[data-notice-link], .reader-back, .pagination-bar a, .mailbox-views a, .clear-filters, .notice-empty a')) {
+            link.matches('[data-notice-link], [data-channel-link], .reader-back, .pagination-bar a, .mailbox-views a, .clear-filters, .notice-empty a')) {
             let url = new URL(link.href);
             if (link.matches('.mailbox-views a')) url = withConditions(url, noticeConditions(desiredURL));
-            if (readingView.mode(appliedURL) === 'focus' && !link.matches('.reader-back')) url = readingView.withMode(url, true);
+            if (readingView.mode(appliedURL) === 'focus' && !link.matches('.reader-back, [data-channel-link]')) url = readingView.withMode(url, true);
+            if (link.matches('[data-channel-link]')) url = readingView.withMode(url, false);
             if (link.matches('.reader-back')) url = readingView.withMode(url, false);
             if (url.origin === location.origin && url.pathname === '/' && !link.target) {
                 event.preventDefault();

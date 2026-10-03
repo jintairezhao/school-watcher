@@ -82,6 +82,15 @@ class QueueFairnessTests(unittest.TestCase):
         self.assertEqual(tasks.queue_ahead(ready)[0], 0)
         self.assertEqual(tasks.claim()['id'], ready.id)
 
+    def test_new_column_can_connect_before_old_history_jobs_finish(self):
+        older = [tasks.enqueue('collect', i, {'school_id': self.school.id, 'department_id': i})
+                 for i in range(10, 30)]
+        self.backdate(older, 8)
+        ready = tasks.enqueue('onboard', 'new-column', {'school_id': self.school.id,
+                              'url': 'https://example.edu.cn/notices/'})
+        self.assertEqual(tasks.queue_ahead(ready)[0], 0)
+        self.assertEqual(tasks.claim(capabilities=['http'])['id'], ready.id)
+
     def test_a_paused_task_keeps_its_place_in_line(self):
         """继续 carries on with the interrupted work instead of waiting behind
         every task that has never run. The pause path says so explicitly."""

@@ -41,9 +41,33 @@ def _schedule_due(lease=None):
         if school.subscriber_count > 0:
             due('scrape', school.id, {'school_id': school.id}, interval)
             due('health', school.id, {'school_id': school.id}, 86400)
-            from backend.services.source_grouping import missing_groups
-            if missing_groups(school.id):
-                due('source_grouping', school.id, {'school_id':school.id, 'ai_assist':False}, 7 * 86400)
+            # Finding readable information is independent of a complete campus
+            # organisation chart. Resume saved leads with a small periodic
+            # budget instead of asking the reader to repair department groups.
+            previous = BackgroundTask.query.filter_by(identity=f'discover:{school.id}').first()
+            result = previous.result or {} if previous else {}
+            assistance = (previous.payload or {}).get('ai_assist', True) if previous else True
+            # A navigation result can arrive after the parent saved its last
+            # page. Its own durable result covers that final handoff window.
+            late_leads = []
+            if previous and previous.state in ('done', 'failed'):
+                late_leads = BackgroundTask.query.filter_by(kind='navigation_review', state='done').filter(
+                    BackgroundTask.payload['parent_task_id'].as_integer() == previous.id,
+                    BackgroundTask.payload['parent_generation'].as_integer() == previous.generation).all()
+            late_pages = any((child.result or {}).get('deferred_pages') for child in late_leads)
+            late_routes = any((child.result or {}).get('deferred_routes') for child in late_leads)
+            unresolved_navigation = False
+            if assistance and (result.get('deferred_routes') or late_routes):
+                from backend.services.onboarding_progress import ai_available
+                unresolved_navigation = ai_available()
+            from backend.services.source_onboarding import pending_onboarding_recovery
+            retry_columns = pending_onboarding_recovery(school.id)
+            if (not previous or previous.state == 'failed' or result.get('exploration_limited')
+                    or result.get('deferred_pages') or late_pages or unresolved_navigation or retry_columns
+                    or not any(d.list_selector for d in school.departments)):
+                due('discover', school.id, {'school_id': school.id,
+                    'ai_assist': assistance,
+                    'trigger': 'background_discovery'}, 6 * 3600)
     due('maintenance', 'daily', {}, 86400)
     due('backup', 'daily', {}, 86400)
     AppConfig.set('worker_heartbeat', now.isoformat())
@@ -199,6 +223,16 @@ def dispatch(kind, payload):
                 tasks.defer(capability='directory', phase='entry_retry', checkpoint=checkpoint, delay=30,
                             reason='官网首页暂未读取成功，程序将自动重试')
             return result
+        handle = tasks.current_execution() or {}
+        checkpoint = dict(handle.get('checkpoint') or {})
+        if (payload.get('trigger') == 'background_discovery' and handle
+                and not checkpoint.get('onboarding_recovery_started')):
+            from backend.services.source_onboarding import retry_unconnected_columns
+            recovered = retry_unconnected_columns(school.id, f"{handle['id']}:{handle['generation']}",
+                                                   automatic=True, commit=False)
+            # Child generations and the once-per-round marker commit together.
+            tasks.checkpoint(dict(checkpoint, onboarding_recovery_started=True))
+            result['onboarding_ids'] = list(dict.fromkeys(result.get('onboarding_ids', []) + recovered))
         school = db.session.get(School, payload['school_id'])
         if school:
             from backend.services.directory_options import sync_directory_options

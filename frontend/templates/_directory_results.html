@@ -12,7 +12,7 @@
             <div class="directory-actions">
                 {% if current_user %}
                     {% if school and school.id in my_subs %}
-                    <a class="btn btn-outline" href="{{ url_for('subscriptions.manage_sources', school_id=school.id) }}">已订阅 · 选择栏目</a>
+                    <a class="btn btn-outline" href="{{ url_for('pages.index', school=school.id) }}">查看通知</a>
                     <button class="text-button" data-unsubscribe="{{ school.id }}" aria-label="取消订阅{{ entry.name }}">退订</button>
                     {% else %}
                     <button class="btn btn-primary" data-subscribe-name="{{ entry.name }}" {% if school %}data-school-id="{{ school.id }}"{% endif %} aria-label="订阅{{ entry.name }}">订阅学校</button>

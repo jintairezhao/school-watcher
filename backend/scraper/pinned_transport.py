@@ -63,7 +63,14 @@ class PinnedAdapter(HTTPAdapter):
         return url
 
     def add_headers(self, request, **kwargs):
-        request.headers['Host'] = urlsplit(request.url).netloc
+        parsed = urlsplit(request.url)
+        host = '[' + parsed.hostname + ']' if ':' in parsed.hostname else parsed.hostname
+        # Match normal browser/urllib3 Host headers. Some campus frontends route
+        # an explicit default port to a different (404) virtual host after HTTPS
+        # redirects. Non-default ports remain part of the origin identity.
+        if parsed.port and parsed.port != (443 if parsed.scheme == 'https' else 80):
+            host += ':' + str(parsed.port)
+        request.headers['Host'] = host
 
 
 def pinned_request(method, url, *, addresses=None, trust_env=True, **kwargs):

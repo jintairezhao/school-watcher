@@ -67,9 +67,9 @@ try:
             page.screenshot(path=str(output / f'explicit-analysis-{width}.png'), full_page=True)
             BackgroundTask.query.delete(); db.session.commit()
             page.goto(f'http://localhost/subscriptions/{school_id}')
-            expect(page.get_by_role('button', name='检查官网变化', exact=True)).to_be_visible()
-            expect(page.locator('.discovery-status')).to_contain_text('首次订阅自动查找')
-            page.get_by_role('button', name='检查官网变化', exact=True).click()
+            expect(page.get_by_role('button', name='再找一次', exact=True)).to_be_visible()
+            expect(page.locator('.discovery-status')).to_contain_text('无需逐个确认部门或栏目')
+            page.get_by_role('button', name='再找一次', exact=True).click()
             expect(page.locator('#discoveryRetry')).to_be_hidden()
             job = BackgroundTask.query.filter_by(kind='discover').one()
             assert job.payload['trigger'] == 'manual_changes' and job.payload['refresh']

@@ -99,7 +99,7 @@ def check(capture=True):
                 go()
                 mode('closed')
                 expect(page.locator('#sourcePanel')).to_be_hidden()
-                expect(page.locator('.mailbox-views a')).to_have_count(3)
+                expect(page.locator('.mailbox-views a')).to_have_count(2)
                 expect(page.locator('#groupFilter')).to_have_count(0)
                 page.locator('#openFilters').click()
                 mode('overlay')

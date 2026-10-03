@@ -36,7 +36,7 @@
                 {% from '_inbox_sources.html' import source_tree_view %}
                 {{ source_tree_view(source_tree, selected_dept_ids, dept_counts, current_group, source_sync_states) }}
                 <p class="filter-helper" id="sourceSearchEmpty" role="status" hidden>没有找到匹配的部门或栏目。试试更短的名称。</p>
-            {% else %}<p class="filter-helper">这所学校还没有可用的发布部门。</p>{% endif %}
+            {% else %}<p class="filter-helper">这所学校暂未收录公开信息来源，可查看自动查找进度。</p>{% endif %}
         {% else %}<p class="filter-helper">选择一所学校后，可继续按该校部门筛选。</p>{% endif %}
     </div>
     <footer class="source-panel-footer">
@@ -45,7 +45,8 @@
             <button class="text-button" type="button" data-retry-source hidden>重试筛选</button>
         </div>
         <div class="source-management-links">
-            {% if current_school_id in subscribed_school_ids %}<a class="source-manage" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">调整本校栏目订阅</a>{% endif %}
+            <a class="source-manage" href="{{ url_for('pages.channels', school=current_school_id, view=view) }}">按发布渠道浏览</a>
+            {% if current_school_id in subscribed_school_ids %}<a class="source-manage" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">自动找通知与来源设置</a>{% endif %}
             <a class="source-manage" href="{{ url_for('pages.explore') }}">管理订阅学校</a>
         </div>
         <button class="btn btn-primary source-done" type="button" data-close-sources>完成</button>

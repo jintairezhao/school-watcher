@@ -80,6 +80,9 @@ def queue_sources(departments, *, manual=False):
     identities = [f'collect:{d.id}' for d in departments]
     existing = {t.identity: t for t in BackgroundTask.query.filter(
         BackgroundTask.identity.in_(identities))} if identities else {}
+    discovery_preferences = {t.payload.get('school_id'): t.payload.get('ai_assist', True)
+        for t in BackgroundTask.query.filter(BackgroundTask.kind == 'discover',
+            BackgroundTask.payload['school_id'].as_integer().in_({d.school_id for d in departments}))}
     jobs = []
     for dept in departments:
         source_interval = min(interval * value_policy[dept.id][1], 86400)
@@ -93,7 +96,8 @@ def queue_sources(departments, *, manual=False):
                        (task.finished_at or task.checked_at or task.updated_at) if task else None) if stamp]
             if checked and max(checked) > cutoff:
                 continue
-        jobs.append(enqueue('collect', dept.id, {'school_id': dept.school_id, 'department_id': dept.id},
+        jobs.append(enqueue('collect', dept.id, {'school_id': dept.school_id, 'department_id': dept.id,
+                            'ai_assist': discovery_preferences.get(dept.school_id, True)},
                             min_interval=source_interval, expedite=manual).id)
     return jobs
 

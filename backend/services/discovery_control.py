@@ -8,7 +8,11 @@ from backend.database.models import BackgroundTask, RuntimeLease, VerificationSe
 
 PAUSE_KEY = 'discovery_pause_requested'
 RESUME_KEY = 'discovery_resume'
-CHILD_KINDS = ('onboard', 'navigation_review')
+CHILD_KINDS = ('onboard', 'navigation_review', 'student_assessment')
+
+
+def _automatic_assessment(payload):
+    return payload.get('automatic_source') is True or payload.get('automatic_listing') is True
 
 
 def requested(task):
@@ -17,6 +21,9 @@ def requested(task):
 
 def children(school_id):
     return BackgroundTask.query.filter(BackgroundTask.kind.in_(CHILD_KINDS),
+        or_(BackgroundTask.kind != 'student_assessment',
+            BackgroundTask.payload['automatic_source'].as_boolean().is_(True),
+            BackgroundTask.payload['automatic_listing'].as_boolean().is_(True)),
         BackgroundTask.payload['school_id'].as_integer() == school_id,
         BackgroundTask.state.in_(('pending', 'running', 'waiting')))
 
@@ -32,6 +39,8 @@ def _read_payload(statement):
 
 def should_pause(kind, payload):
     if kind not in ('discover', *CHILD_KINDS):
+        return False
+    if kind == 'student_assessment' and not _automatic_assessment(payload):
         return False
     if payload.get(PAUSE_KEY):
         return True

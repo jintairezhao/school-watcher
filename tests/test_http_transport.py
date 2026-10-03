@@ -173,6 +173,24 @@ class PinnedTransportSecurityTests(unittest.TestCase):
         finally:
             adapter.close()
 
+    def test_host_header_omits_default_ports_but_keeps_custom_ports(self):
+        from backend.scraper.pinned_transport import PinnedAdapter
+        for url, expected in (
+            ('https://www.example.edu.cn:443/', 'www.example.edu.cn'),
+            ('http://www.example.edu.cn:80/', 'www.example.edu.cn'),
+            ('https://www.example.edu.cn:8443/', 'www.example.edu.cn:8443'),
+            ('http://www.example.edu.cn:8080/', 'www.example.edu.cn:8080'),
+            ('https://[2606:4700:4700::1111]:443/', '[2606:4700:4700::1111]'),
+        ):
+            with self.subTest(url=url):
+                adapter = PinnedAdapter(url, '93.184.216.34')
+                try:
+                    request = requests.Request('GET', url).prepare()
+                    adapter.add_headers(request)
+                    self.assertEqual(request.headers['Host'], expected)
+                finally:
+                    adapter.close()
+
     def test_http_proxy_uses_numeric_absolute_uri(self):
         from backend.scraper.pinned_transport import PinnedAdapter
         adapter = PinnedAdapter('http://www.example.edu.cn/','93.184.216.34')

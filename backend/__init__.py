@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import timedelta
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 
 from backend.core import ROOT_DIR, DATA_DIR, ensure_secret_key, load_config_yaml, get_database_uri
 from backend.core import db, migrate
@@ -94,6 +94,9 @@ def create_app(test_config=None):
 
     from backend.services.source_labels import source_breadcrumb
     app.jinja_env.filters['source_breadcrumb'] = source_breadcrumb
+    from backend.services.channel_views import channel_breadcrumb, publication_links
+    app.jinja_env.filters['channel_breadcrumb'] = channel_breadcrumb
+    app.jinja_env.globals['publication_links'] = publication_links
     from backend.services.article_images import render_article_html
     app.jinja_env.filters['article_html'] = render_article_html
     from backend.services.student_information import article_view, source_view
@@ -103,11 +106,16 @@ def create_app(test_config=None):
     # ---- 错误处理 ----
     @app.errorhandler(404)
     def not_found(e):
-        return render_template('base.html', content='<div class="empty-state"><h2>404</h2><p>页面未找到</p></div>'), 404
+        if request.path.startswith('/api/'):
+            return jsonify(error='请求的内容不存在。'), 404
+        return render_template('error.html', error_code=404), 404
 
     @app.errorhandler(500)
     def server_error(e):
-        return render_template('base.html', content='<div class="empty-state"><h2>500</h2><p>服务器内部错误</p></div>'), 500
+        db.session.rollback()
+        if request.path.startswith('/api/'):
+            return jsonify(error='操作未完成，请稍后重试。'), 500
+        return render_template('error.html', error_code=500), 500
 
     # ---- 从 YAML 导入学校配置（表不存在时静默跳过，迁移生成阶段会触发） ----
     if not app.config.get('TESTING') and os.environ.get('WATCHER_SEED_ON_START', '1') == '1':

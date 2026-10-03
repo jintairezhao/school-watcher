@@ -1,16 +1,13 @@
-"""Check current selectors without paid exploration or silent rule replacement.
-
-Quiet columns are healthy. Broken rules are reported for the user's manual
-school change check; old notices and subscriptions remain available.
-"""
+"""Check source health and queue bounded, validated repair for changed pages."""
 
 import json
 import logging
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from backend.core import DATA_DIR
+from backend.scraper.fetch_errors import SourceAccessError
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +16,14 @@ _lock = threading.Lock()
 
 # 结构损坏阈值：列表项匹配少于此数视为「选择器失效」
 BROKEN_MATCH_THRESHOLD = 3
+REPAIR_INTERVAL = 6 * 60 * 60
+
+
+class ParserRepairPending(SourceAccessError):
+    """An observed rule failure handed off to the existing onboarding pipeline."""
+    def __init__(self, job):
+        self.job = job
+        super().__init__('官网页面已变化，系统正在自动恢复读取；已有消息仍保留')
 
 
 # ------------------------------------------------------------------
@@ -59,7 +64,7 @@ def record_selector_change(department, old: dict, new: dict, source: str, reason
 
 
 def mark_needs_review(department, reason: str):
-    """标记部门待人工复核（不自动换选择器）。"""
+    """保留异常诊断，不把解析和修复责任交给读者。"""
     data = _load_audit()
     data['review'][str(department.id)] = {
         'dept_name': department.name,
@@ -68,7 +73,7 @@ def mark_needs_review(department, reason: str):
         'marked_at': datetime.now(timezone.utc).isoformat(),
     }
     _save_audit(data)
-    logger.warning(f"[选择器监督] {department.name} 标记待人工复核: {reason}")
+    logger.warning(f"[选择器监督] {department.name}: {reason}")
 
 
 def clear_review(department):
@@ -84,10 +89,71 @@ def clear_review(department):
 
 def is_challenge_shell(html: str) -> bool:
     """Only content evidence can identify a shell; short valid lists are valid."""
-    from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
-    result = classify_result(FetchRequest('https://example.edu.cn/', purpose='list'),
-                             FetchResult('https://example.edu.cn/', status=200, html=html))
+    result = _classify_page(html)
     return result.outcome in ('requires_render', 'needs_manual', 'denied') or not html.strip()
+
+
+def _classify_page(html, url='https://example.edu.cn/'):
+    from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
+    raw = getattr(html, 'result', None)
+    return classify_result(FetchRequest(url, purpose='list'), FetchResult(url, status=200,
+        html=str(html), transport=getattr(raw, 'transport', 'http')))
+
+
+def queue_parser_repair(department, html=None):
+    """Revalidate this known page, at most once per six hours after a repair.
+
+    No selectors are installed here. The onboarding worker must execute the
+    proposed extraction and verify an actual article before changing the source.
+    """
+    import hashlib
+    from backend.database.models import BackgroundTask, Subscription
+    from backend.services import tasks
+    from backend.services.inbox_refresh import subscribed_sources
+    from backend.services.source_governance import _snapshot
+    from backend.services.source_inventory import canonical_url
+    from backend.scraper.http_client import same_school_url, validate_public_url
+    school = department.school
+    if not school or not school.is_effectively_active() or not department.list_url:
+        return None
+    scopes = Subscription.query.filter_by(school_id=school.id).all()
+    if not any(department.id in {d.id for d in subscribed_sources(school, sub.department_ids)} for sub in scopes):
+        return None
+    if html is not None:
+        outcome = _classify_page(html, getattr(html, 'final_url', department.list_url)).outcome
+        if outcome in ('empty', 'requires_render', 'needs_manual', 'denied') or not str(html).strip():
+            return None
+    previous = canonical_url(department.list_url)
+    url = canonical_url(getattr(html, 'final_url', previous))
+    try:
+        validate_public_url(url, resolve=False)
+    except ValueError:
+        return None
+    external = not same_school_url(previous, school.url)
+    if not same_school_url(url, school.url) and not (external and same_school_url(url, previous)):
+        return None
+    key = str(school.id) + ':' + hashlib.sha256(url.encode()).hexdigest()[:24]
+    old = BackgroundTask.query.filter_by(identity='onboard:' + key).first()
+    if old and old.state not in ('done', 'failed'):
+        return old
+    if old and old.payload.get('automatic_repair'):
+        finished = old.finished_at or old.checked_at or old.updated_at
+        if finished and finished > datetime.utcnow() - timedelta(seconds=REPAIR_INTERVAL):
+            return old
+    current = tasks.current_execution() or {}
+    assistance = current.get('payload', {}).get('ai_assist') is not False
+    discovery = BackgroundTask.query.filter_by(identity=f'discover:{school.id}').first()
+    if discovery and discovery.payload.get('ai_assist') is False:
+        assistance = False
+    payload = {'school_id': school.id, 'url': url, 'label': department.name,
+        'group_name': department.group_name or '', 'revalidate': True,
+        'automatic_repair': True, 'repair_department_id': department.id,
+        'previous_url': previous if previous != url else None,
+        'ai_assist': assistance, 'official_external': not same_school_url(url, school.url)}
+    if html is not None:
+        payload['snapshot'] = _snapshot(html, url, role='list')
+    return tasks.enqueue('onboard', key, payload, replace_finished=True,
+        min_interval=REPAIR_INTERVAL if old and old.payload.get('automatic_repair') else 0)
 
 
 def _quick_stats(html: str, department):
@@ -125,26 +191,23 @@ def _quick_stats(html: str, department):
 
 
 def evaluate_and_repair(department, html: str) -> dict:
-    """Return health or a request for manual checking; never enqueue paid work."""
-    stats = _quick_stats(html, department)
-    if stats is None:
-        return {'action': 'skip'}
-
-    if stats['matched'] >= 1 and stats['junk'] == 0:
+    """Healthy/empty pages stay quiet; actual rule breakage repairs one page."""
+    outcome = _classify_page(html, department.list_url).outcome
+    if outcome in ('requires_render', 'needs_manual', 'denied') or not html.strip():
+        mark_needs_review(department, '官网暂时限制自动访问，等待访问恢复；已有消息仍保留')
+        return {'action': 'browser_needed'}
+    if outcome == 'empty':
+        clear_review(department)
+        return {'action': 'healthy', 'matched': 0, 'junk': 0}
+    try:
+        stats = _quick_stats(html, department)
+    except Exception:
+        stats = None  # Invalid saved selectors use the same validated repair.
+    if stats and stats['matched'] >= 1 and stats['junk'] == 0:
         clear_review(department)
         return {'action': 'healthy', **stats}
-
-    if is_challenge_shell(html):
-        mark_needs_review(department, '抓到 WAF 挑战壳页，需浏览器环境或人工处理')
-        return {'action': 'browser_needed', **stats}
-
-    if stats['matched'] >= BROKEN_MATCH_THRESHOLD and stats['junk'] > 0:
-        # 结构在但抓错：不自动换（防漂移到别的栏目），交给人
-        mark_needs_review(department,
-                          f"选择器匹配 {stats['matched']} 项但含垃圾标题 {stats['junk']} 条")
-        return {'action': 'needs_review', **stats}
-
-    # Ordinary collection only reports breakage. A manual school change check
-    # owns deeper exploration and any paid fallback for this column.
-    mark_needs_review(department, '栏目规则可能已失效，可在栏目订阅中点击“检查官网变化”')
-    return {'action': 'needs_review', **stats}
+    job = queue_parser_repair(department, html)
+    department._parser_repair_job = job
+    mark_needs_review(department, '官网读取规则已变化，系统将自动重新识别并验证；已有通知继续保留')
+    return {'action': 'repairing' if job and job.state in ('pending', 'running', 'waiting') else 'deferred',
+            'repair_task_id': job.id if job else None, **(stats or {})}

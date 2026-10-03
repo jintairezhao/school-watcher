@@ -124,7 +124,12 @@ def index():
                             Announcement.created_at.desc())
                   .paginate(page=page, per_page=per_page, error_out=False))
     announcements = pagination.items
+    from backend.services.student_information import listing_views
+    announcement_values = {ident: dict(info, label=info['value_label'])
+                           for ident, info in listing_views(announcements).items()}
     announcement_sources = sources_for([a.id for a in announcements])
+    from backend.services.channel_views import prime_publications
+    prime_publications([a.id for a in announcements])
     selected_ids = set(selected_dept_ids)
     allowed_subscriptions = {s.school_id: s.department_ids for s in subscriptions}
     def source_priority(source):
@@ -252,6 +257,8 @@ def index():
         available_years=available_years,
         grouped=grouped,
         announcements=announcements,
+        announcement_values=announcement_values,
+        student_priority_applied=False,
         announcement_sources=announcement_sources,
         display_sources=display_sources,
         selected_announcement=selected_announcement,
@@ -268,6 +275,20 @@ def index():
         next_url=next_url,
     ))
     response.vary.add('X-Inbox-Fragment')
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@bp.route('/channels')
+def channels():
+    """Browse actual publishing channels within this reader's message scope."""
+    if g.get('user') is None:
+        return redirect(url_for('pages.explore'))
+    from backend.services.channel_views import channel_overview
+    from backend.services.inbox import inbox_mailbox
+    context = channel_overview(g.user.id, school_id=request.args.get('school', type=int),
+                               q=request.args.get('q', '').strip()[:120], view=inbox_mailbox(request.args))
+    response = make_response(render_template('channels.html', **context))
     response.headers['Cache-Control'] = 'no-store'
     return response
 
@@ -365,6 +386,8 @@ def school_detail(school_id):
             Announcement.published_at.desc().nullslast(), Announcement.created_at.desc()
         ).paginate(page=max(1, request.args.get('page', 1, type=int)), per_page=30, error_out=False)
     sources = sources_for([a.id for a in pagination.items])
+    from backend.services.channel_views import prime_publications
+    prime_publications([a.id for a in pagination.items])
     display_sources = {a.id: preferred_source(a, sources.get(a.id, []), school.id, dept_id)
                        for a in pagination.items}
     return render_template('school.html', school=school, groups=source_groups(departments),
@@ -389,6 +412,8 @@ def announcement_detail(ann_id):
     # 返回地址：优先用列表页带来的 ?from=（保留部门/年份/分页等筛选状态），
     # 仅接受站内相对路径防开放重定向；缺省时回落到该通知所属部门列表
     sources = sources_for([ann.id]).get(ann.id, [])
+    from backend.services.channel_views import prime_publications
+    prime_publications([ann.id])
     display_source = preferred_source(ann, sources, department_id=request.args.get('source', type=int))
     back_url = request.args.get('from', '')
     if not (back_url.startswith('/') and not back_url.startswith('//')):

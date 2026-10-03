@@ -109,6 +109,8 @@ def storage():
             known.add(path.resolve())
     for file in files:
         actual = (root / file['name']).resolve()
+        if actual.name == discovery.name or actual.name in (discovery.name + '-wal', discovery.name + '-shm'):
+            file['kind'] = 'discovery_progress'
         if actual.is_relative_to(backup_root): file['name'] = 'backups/' + actual.name
         elif actual.is_relative_to(fetch_root): file['name'] = 'fetch-evidence/' + actual.name
         elif actual.parent == discovery.parent and actual.name.startswith(discovery.name): file['name'] = 'discovery_cache.' + actual.name
@@ -136,7 +138,7 @@ def storage():
 @admin_required
 def storage_page():
     data = storage().get_json()
-    groups = {'运行目录与通知': data.get('database_bytes') or 0, '调查缓存': 0,
+    groups = {'运行目录与通知': data.get('database_bytes') or 0, '调查缓存': 0, '接入进度': 0,
               '网页抓取缓存': 0, '栏目核实证据': data.get('source_governance_evidence_bytes') or 0,
               '备份与回退资料': 0, '日志及其他文件': 0}
     for file in data['files']:
@@ -147,6 +149,8 @@ def storage_page():
             group = '备份与回退资料'
         elif name.startswith(('fetch-evidence/', 'fetch_evidence/')):
             group = '网页抓取缓存'
+        elif file.get('kind') == 'discovery_progress':
+            group = '接入进度'
         elif name.startswith('discovery_cache.'):
             group = '调查缓存'
         elif name.startswith(('school_watcher.db', 'source_catalog.sqlite3', 'catalog-generations/')):

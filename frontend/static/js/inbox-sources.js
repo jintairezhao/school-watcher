@@ -123,6 +123,17 @@
             trigger?.focus({preventScroll: true});
             returnTarget = null;
         }
+        function disableOutside(element) {
+            // Native window controls belong to the desktop shell, not the modal content.
+            const chrome = '#desktopChrome, .desktop-drag, #desktopResize';
+            if (element.inert || element.id === 'filterScrim' || element.matches('script,style,link,' + chrome)) return;
+            if (element.querySelector(chrome)) {
+                [...element.children].forEach(disableOutside);
+            } else {
+                element.inert = true;
+                outsideElements.push(element);
+            }
+        }
         function render() {
             const currentMode = mode(), overlay = currentMode === 'overlay', panel = find('#sourcePanel');
             // Release only the inert attributes we introduced, including detached fragments.
@@ -142,10 +153,7 @@
                 let node = panel;
                 while (node.parentElement && node !== document.body) {
                     [...node.parentElement.children].forEach(sibling => {
-                        if (sibling !== node && sibling.id !== 'filterScrim' && !sibling.matches('script,style,link') && !sibling.inert) {
-                            sibling.inert = true;
-                            outsideElements.push(sibling);
-                        }
+                        if (sibling !== node) disableOutside(sibling);
                     });
                     node = node.parentElement;
                 }
@@ -194,6 +202,12 @@
         });
         document.addEventListener('keydown', event => {
             if (mode() !== 'overlay') return;
+            if (event.target.closest('#desktopChrome')) {
+                if (event.key === 'Tab') {
+                    event.preventDefault(); find('#closeFilters').focus({preventScroll: true});
+                }
+                return;
+            }
             if (event.key === 'Escape') { event.preventDefault(); close(); }
             if (event.key === 'Tab') {
                 const controls = [...find('#sourcePanel').querySelectorAll('a,button,select,input')].filter(item => !item.disabled && item.getClientRects().length);

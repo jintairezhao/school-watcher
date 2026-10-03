@@ -53,6 +53,9 @@
 .mailbox-unread { font-size: var(--text-meta); font-weight: 400; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
 .notice-toolbar { position: relative; z-index: 3; padding: 8px 20px 12px; }
 .toolbar-topline { display: block; min-width: 0; padding-top: 4px; }
+.source-context-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0 12px; }
+.source-context-row .source-scope-context { flex:1; min-width:0; }
+.source-settings-link { display:inline-flex; align-items:center; min-height:44px; font-size:var(--text-meta); white-space:nowrap; }
 .source-scope-trigger { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--color-text); font: inherit; font-size: var(--text-control); cursor: pointer; text-align: left; }
 .source-scope-trigger:hover .source-scope-school { text-decoration: underline; text-underline-offset: 4px; }
 .source-scope-prefix { color: var(--color-text-secondary); font-size: var(--text-meta); flex-shrink: 0; }
@@ -166,7 +169,12 @@
 .notice-meta { display: flex; gap: 8px; min-width: 0; margin-top: 8px; font-size: var(--text-meta); color: var(--color-text-secondary); }
 .notice-source-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .notice-summary { margin-top: 6px; font-size: var(--text-control); -webkit-line-clamp: 1; color: var(--color-text-secondary); }
+.notice-value { display:block; margin-top:6px; font-size:var(--text-meta); line-height:1.6; color:var(--color-text); overflow-wrap:anywhere; }
+.notice-value > span { color:var(--color-text-secondary); }
 .notice-row time { flex-shrink: 0; padding: 0; font-size: var(--text-meta); color: var(--color-text-secondary); }
+.notice-channel-link { display:inline-flex; align-items:center; min-height:36px; margin:0 12px 8px 24px; color:var(--color-text-secondary); font-size:var(--text-meta); }
+.notice-channel-link:hover { color:var(--color-primary); }
+.notice-item:has(.notice-channel-link) .notice-row { padding-bottom:4px; }
 .reader-toolbar { min-height: 60px; gap: 12px; padding: 8px 24px; }
 .reader-toolbar .text-button { min-height: 44px; }
 .reader-panel > .reader-document { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }

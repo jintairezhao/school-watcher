@@ -98,6 +98,29 @@ class RuntimeCatalog:
                             'WHERE s.site_key=? AND p.url=?', (key, url)).fetchone()
             return unpack(row[0]) if row else None
 
+    def page_metadata(self, key, urls):
+        """Batch only requested publication identities, without HTML or a full report."""
+        addresses = tuple(dict.fromkeys(canonical_url(url) for url in urls if url))
+        if not addresses:
+            return {}
+        published = self._published(key)
+        if published:
+            return published.page_metadata(key, addresses)
+        if not self.path.exists():
+            return {}
+        fields = ('url', 'final_url', 'state', 'kind', 'health', 'title', 'content_hash', 'notes_json')
+        result = {}
+        with self.connect() as c:
+            for offset in range(0, len(addresses), 200):
+                batch = addresses[offset:offset + 200]
+                rows = c.execute('SELECT p.url,p.page_gzip FROM catalog_pages p '
+                    'JOIN catalog_sites s ON s.id=p.site_id WHERE s.site_key=? AND p.url IN (' +
+                    ','.join('?' for _ in batch) + ')', (key, *batch))
+                for row in rows:
+                    page = unpack(row['page_gzip'])
+                    result[row['url']] = {field: page.get(field) for field in fields}
+        return result
+
     def directory_entries(self, key, urls):
         """Read only requested roster pages, without inflating the entire investigation."""
         published = self._published(key)

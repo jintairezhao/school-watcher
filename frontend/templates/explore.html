@@ -3,7 +3,7 @@
 {% block content %}
 <div class="directory-page">
     <header class="surface-heading directory-heading">
-        <div><h1>学校目录</h1><p>订阅官网信息，再按学校原有栏目选择关注范围。</p></div>
+        <div><h1>学校目录</h1><p>选择目标学校，自动寻找对你有用的官网信息。</p></div>
         {% if current_user %}<a class="btn btn-outline" href="{{ url_for('pages.index') }}">返回收件箱</a>{% endif %}
     </header>
     <form class="directory-filters" id="directoryFilters" method="get" action="{{ url_for('pages.explore') }}" role="search">
@@ -16,7 +16,7 @@
     {% include "_directory_results.html" %}
     <details class="directory-note"><summary>目录范围与接入说明</summary>
         <p>双一流标记依据<a href="https://www.moe.gov.cn/srcsite/A22/s7065/202202/t20220211_598710.html" target="_blank" rel="noopener noreferrer">教育部 2022 年第二轮名单</a>（147 所）。其他本科高校为补充目录，不代表完整的一本院校名单。“一本”属于各省招生批次，请以相应省份、年份的招生信息为准。</p>
-        <p>目录列出官网入口，不代表每所学校都已完成信息接入。订阅后才开始同步；可在“选择栏目”查看同步状态。校内登录页面和无法公开访问的内容不会展示。</p>
+        <p>订阅后自动查找并同步公开信息，可在“自动找通知”查看处理进度和调整接收范围。校内登录页面和无法公开访问的内容不会展示。</p>
     </details>
     {% if current_user %}
     <details class="directory-note" id="addSchool"><summary>没找到学校？补充官网入口</summary>

@@ -27,6 +27,8 @@ def search_suggestions():
                 .order_by(Announcement.published_at.desc().nullslast(), Announcement.created_at.desc())
                 .limit(9).all())
         sources = sources_for([row.id for row in rows[:8]])
+        from backend.services.source_channels import channels_for
+        channels = channels_for({source.id: source for entries in sources.values() for source in entries}.values())
         args = normalize_inbox_args(request.args)
         params = {key: args.getlist(key) for key in
                   ('school', 'dept', 'group', 'period', 'year', 'month', 'view', 'mailbox', 'read')
@@ -51,9 +53,11 @@ def search_suggestions():
             # saved notifications from schools the reader has unsubscribed from.
             choices = sources.get(row.id, [])
             school_id = request.args.get('school', type=int)
-            source = next((item for item in choices if item.school_id == school_id), choices[0] if choices else None)
+            selected_ids = request.args.getlist('dept', type=int)
+            source = min(choices, key=lambda item: (item.id not in selected_ids,
+                item.school_id != school_id, item.id)) if choices else None
             items.append({'id': row.id, 'title': row.title,
-                          'source': f'{source.school.name} · {source.name}' if source else '',
+                          'source': channels[source.id]['breadcrumb'] if source else '',
                           'date': row.published_at.strftime('%Y-%m-%d') if row.published_at else '',
                           'snippet': excerpt(row.summary, row.content_text),
                           'url': url_for('pages.index', **params, selected=row.id)})

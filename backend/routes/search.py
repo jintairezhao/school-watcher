@@ -108,6 +108,8 @@ def search():
         results = pagination.items
         total = pagination.total
         announcement_sources = sources_for([a.id for a in results])
+        from backend.services.source_channels import channels_for
+        channels_for({source.id: source for rows in announcement_sources.values() for source in rows}.values())
         display_sources = {a.id: preferred_source(a, announcement_sources.get(a.id, []), school_id)
                            for a in results}
 

@@ -520,6 +520,25 @@ def run_window(runtime, smoke_test=False):
                             if not work.Contains(bounds):
                                 raise RuntimeError('Maximized window covered the taskbar.')
                             window.restore()
+                            import ctypes
+                            from ctypes import wintypes
+                            user32 = ctypes.WinDLL('user32', use_last_error=True)
+                            user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
+                            user32.GetWindowLongW.restype = wintypes.LONG
+                            user32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+                            user32.IsIconic.argtypes = [wintypes.HWND]
+                            handle = window.native.Handle.ToInt64()
+                            style = user32.GetWindowLongW(handle, -16)
+                            if not style & 0x20000 or style & 0xC00000:
+                                raise RuntimeError('Frameless shell minimize capability was lost.')
+                            # Exercise native system commands, not just the custom JS buttons.
+                            for command, minimized in ((0xF020, True), (0xF120, False)):
+                                user32.PostMessageW(handle, 0x112, command, 0)
+                                until = time.monotonic() + 5
+                                while time.monotonic() < until and bool(user32.IsIconic(handle)) != minimized:
+                                    time.sleep(.05)
+                                if bool(user32.IsIconic(handle)) != minimized:
+                                    raise RuntimeError('Native minimize/restore command did not take effect.')
                             window.run_js('window.pywebview.api.location_state().then(v => {window.__locationsChecked=!!v.data && !!v.cache && !!v.backups && !!v.downloads;})')
                             until = time.monotonic() + 10
                             while time.monotonic() < until and not window.run_js('window.__locationsChecked === true'):

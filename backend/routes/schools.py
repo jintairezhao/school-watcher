@@ -1,5 +1,6 @@
 """学校与部门管理 API"""
 import logging
+from sqlalchemy.exc import SQLAlchemyError
 
 from flask import Blueprint, request, jsonify, g, url_for
 
@@ -157,10 +158,14 @@ def api_delete_school(school_id):
         return jsonify({'error': '学校不存在'}), 404
 
     name = school.name
-    from backend.services.announcement_sources import preserve_shared_articles
-    preserve_shared_articles([d.id for d in school.departments])
-    db.session.delete(school)
-    db.session.commit()
+    from backend.services.source_deletion import remove_school
+    try:
+        remove_school(school)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        logger.exception('删除学校失败: %s', school_id)
+        return jsonify(error='学校未删除，原有数据已保留。请稍后重试。'), 500
     logger.info(f"已删除学校: {name}")
     return jsonify({'message': f'已删除: {name}'}), 200
 
@@ -221,11 +226,16 @@ def api_delete_department(dept_id):
     if not dept:
         return jsonify({'error': '部门不存在'}), 404
 
-    from backend.services.announcement_sources import preserve_shared_articles
-    preserve_shared_articles([dept.id])
-    db.session.delete(dept)
-    db.session.commit()
-    return jsonify({'message': f'已删除: {dept.name}'}), 200
+    from backend.services.source_deletion import remove_department
+    name = dept.name
+    try:
+        remove_department(dept)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        logger.exception('删除部门失败: %s', dept_id)
+        return jsonify(error='部门未删除，原有数据已保留。请稍后重试。'), 500
+    return jsonify({'message': f'已删除: {name}'}), 200
 
 
 @bp.route('/api/departments/test-selectors', methods=['POST'])

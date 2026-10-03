@@ -1,7 +1,7 @@
 """Observed publication memberships, independent of an article's first-seen column."""
 from datetime import datetime, timezone
 
-from sqlalchemy import or_, func, case
+from sqlalchemy import and_, or_, func, case
 from backend.database.dialect import insert
 from sqlalchemy.orm import joinedload
 
@@ -67,6 +67,61 @@ def sources_for(announcement_ids):
     result = {}
     for announcement_id, department in rows:
         result.setdefault(announcement_id, []).append(department)
+    return result
+
+
+def _publication_url(value):
+    """Only expose stored public HTTP(S) addresses, without network resolution."""
+    if not isinstance(value, str) or not value or any(ord(char) < 32 or ord(char) == 127 for char in value):
+        return ''
+    from backend.scraper.http_client import validate_public_url
+    try:
+        return validate_public_url(value, resolve=False)
+    except (ValueError, UnicodeError):
+        return ''
+
+
+def publication_links_for(announcement_ids):
+    """Bulk publication evidence for already-authorized article IDs.
+
+    This has the same membership and enabled-school scope as ``sources_for``;
+    it neither authorizes new articles nor changes a reader's subscription.
+    A publication appearance is not an assertion of original authorship.
+    Invalid addresses remain unlinked instead of borrowing another channel's
+    address. Legacy first-source records remain available without inventing an
+    observed publication edge.
+    """
+    ids = tuple(dict.fromkeys(announcement_ids or ()))
+    if not ids:
+        return {}
+    refs = memberships(ids)
+    rows = (db.session.query(refs.c.announcement_id, Department,
+                Announcement.department_id, Announcement.url,
+                AnnouncementSource.announcement_id, AnnouncementSource.list_url, AnnouncementSource.article_url)
+            .select_from(refs)
+            .join(Department, Department.id == refs.c.department_id)
+            .join(School, School.id == Department.school_id)
+            .join(Announcement, Announcement.id == refs.c.announcement_id)
+            .outerjoin(AnnouncementSource, and_(
+                AnnouncementSource.announcement_id == refs.c.announcement_id,
+                AnnouncementSource.department_id == refs.c.department_id))
+            .filter(School.enabled.is_(True))
+            .options(joinedload(Department.school))
+            .order_by(School.name, Department.id).all())
+    result = {}
+    for ident, source, first_source_id, first_url, observed_id, list_url, article_url in rows:
+        observed = observed_id is not None
+        if not observed:
+            list_url, article_url = source.list_url, first_url
+        else:
+            # Empty fields in older edge records can use their own source's
+            # known address, never a different source's publication URL.
+            list_url = list_url or source.list_url
+            if not article_url and source.id == first_source_id:
+                article_url = first_url
+        result.setdefault(ident, []).append({'source': source,
+            'list_url': _publication_url(list_url), 'article_url': _publication_url(article_url),
+            'observed': observed})
     return result
 
 

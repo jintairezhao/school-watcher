@@ -1,0 +1,32 @@
+.delete-dialog {
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 28px;
+    overflow: auto;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+}
+.delete-dialog::backdrop { background: rgb(0 0 0 / 52%); }
+.delete-dialog h2 { margin: 0; font-size: var(--text-section-title); line-height: 1.35; }
+.delete-dialog-target {
+    margin: 22px 0 10px;
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    overflow-wrap: anywhere;
+}
+.delete-dialog-description,
+.delete-dialog-warning { color: var(--color-text-secondary); line-height: 1.65; }
+.delete-dialog-warning { margin-top: 12px; }
+.delete-dialog-error { margin-top: 18px; color: var(--color-danger); line-height: 1.6; }
+.delete-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 28px; }
+.delete-dialog-actions .btn { min-height: 44px; min-width: 88px; }
+.delete-dialog-actions .btn:disabled { opacity: .55; cursor: wait; }
+html:has(.delete-dialog[open]) { overflow: hidden; }
+@media (max-width: 480px) {
+    .delete-dialog { padding: 24px; }
+    .delete-dialog-actions .btn { flex: 1; }
+}

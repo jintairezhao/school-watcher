@@ -186,7 +186,8 @@ def _priority(now):
     # list refreshes. queued_at is retained on every resource/browser handoff.
     # A large page has many bounded fragments. Its next fragment must rotate
     # with other directory work rather than outrank every untouched school.
-    return case((and_(BackgroundTask.kind == 'collect', BackgroundTask.phase == 'onboarding_collection'), -2),
+    return case((or_(and_(BackgroundTask.kind == 'collect', BackgroundTask.phase == 'onboarding_collection'),
+                     and_(BackgroundTask.kind == 'onboard', BackgroundTask.claim_count == 0)), -2),
                 (BackgroundTask.queued_at <= now - timedelta(minutes=5), -1),
                 (BackgroundTask.kind == 'content', 0), (BackgroundTask.kind.in_(('collect', 'onboard')), 1), else_=2)
 
@@ -240,7 +241,8 @@ def queue_ahead(task, capability=None):
     row = db.session.execute(select(BackgroundTask.queued_at, BackgroundTask.claim_count,
                                     BackgroundTask.available_at, BackgroundTask.id, BackgroundTask.kind, BackgroundTask.phase)
                              .where(BackgroundTask.id == task.id)).one()
-    if row.kind == 'collect' and row.phase == 'onboarding_collection':
+    if (row.kind == 'collect' and row.phase == 'onboarding_collection'
+            or row.kind == 'onboard' and row.claim_count == 0):
         task_priority = -2
     elif row.queued_at <= now - timedelta(minutes=5):
         task_priority = -1

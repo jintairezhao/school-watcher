@@ -112,11 +112,11 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
                     parsed['links'].append({'url': target, 'label': column['name'], 'kind': 'channel',
                                             'path': json.loads(page['path_json']) + [page['label']],
                                             'locator': column['column_link_locator'], 'decision': decision, 'publication_route': True})
-        if focus == 'layered':
+        if focus in ('layered', 'valuable'):
             from .layered import route_structure
-            route_structure(parsed, page, html, site['root_url'], bool(feed))
+            route_structure(parsed, page, html, site['root_url'], bool(feed), policy=focus)
         from backend.services.discovery_changes import compare, put
-        change = compare(page, parsed, feed, html, final) if focus == 'layered' else None
+        change = compare(page, parsed, feed, html, final) if focus in ('layered', 'valuable') else None
         assert_current_parser()
         inventory.record_edges(key, url, parsed['links'], content_hash)
         inventory.record_structure(key, url, parsed['nodes'], content_hash)
@@ -162,11 +162,12 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
         # structural route; column extraction has its own narrow page contract.
         routes = [link for link in parsed['links'] if link['decision'] in ('follow', 'official_external_link')]
         needed = ({'directory', 'unit'} if page['kind'] in ('root', 'directory') else {'channel'})
-        uncertain_routes = focus == 'layered' and any(l['decision'] == 'navigation_pending' for l in parsed['links'])
-        legacy_missing = focus != 'layered' and page['kind'] in ('root', 'directory', 'unit') and not any(link['kind'] in needed for link in routes) and not (page['kind'] == 'unit' and feed)
+        uncertain_routes = focus in ('layered', 'valuable') and any(l['decision'] == 'navigation_pending' for l in parsed['links'])
+        legacy_missing = focus not in ('layered', 'valuable') and page['kind'] in ('root', 'directory', 'unit') and not any(link['kind'] in needed for link in routes) and not (page['kind'] == 'unit' and feed)
         if (uncertain_routes and not (change and change['navigation_complete'])) or legacy_missing:
             from .ai_navigation import queue_navigation
-            queue_navigation(site, dict(page, url=final, snapshot_url=url, snapshot_ref=snapshot_ref, discovery_policy=focus))
+            queue_navigation(site, dict(page, url=final, snapshot_url=url, snapshot_ref=snapshot_ref,
+                discovery_policy=focus, navigation_routes=(change or {}).get('routes', [])))
     except ParserRevisionChanged:
         raise
     except ValueError as exc:

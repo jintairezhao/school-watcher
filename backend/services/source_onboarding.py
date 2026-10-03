@@ -13,6 +13,7 @@ from backend.database.db import db
 from backend.database.models import BackgroundTask, Department, DepartmentDirectoryEntry, School, Subscription
 from backend.database.source_governance_models import SourceConfigVersion
 from backend.scraper.discovery.publication_lists import publication_lists
+from backend.scraper.article_resources import has_public_body_resource as _public_body_resource
 from backend.scraper.http_client import same_school_url, validate_public_url
 from backend.services import tasks
 from backend.services.source_inventory import canonical_url
@@ -83,30 +84,62 @@ def queue_columns(school_id, inventory, key):
                    'previous_url': previous_url if previous_url != url else None,
                    'revalidate': changed or bool(manual and existing), 'parent_task_id': handle.get('id'),
                    'parent_generation': handle.get('generation'),
+                   'ai_assist': handle.get('payload', {}).get('ai_assist', True),
                    'official_external': bool(configs and not same_school_url(url, report['site']['root_url']))}
         job = tasks.enqueue('onboard', identity, payload, replace_finished=bool(old))
         jobs.append(job.id)
     return {'onboarding_ids': jobs, 'proposal_ids': [], 'activated_ids': [], 'remaining_candidates': 0}
 
 
-def retry_unconnected_columns(school_id, refresh_key):
-    """An explicit new run refreshes failed pages, never replays their old DOM."""
-    rows = BackgroundTask.query.filter(BackgroundTask.kind == 'onboard',
+def _unconnected_columns(school_id, *, automatic=False):
+    """Share eligibility between scheduling and bounded execution."""
+    from datetime import timedelta
+    from backend.services.discovery_control import requested
+    checked = db.func.coalesce(BackgroundTask.finished_at, BackgroundTask.checked_at, BackgroundTask.updated_at)
+    query = BackgroundTask.query.filter(BackgroundTask.kind == 'onboard',
         BackgroundTask.payload['school_id'].as_integer() == school_id,
-        BackgroundTask.state.in_(('done', 'failed'))).all()
-    ids = []
-    for row in rows:
-        payload, result = dict(row.payload or {}), row.result or {}
-        if payload.get('refresh_key') == refresh_key:
+        BackgroundTask.state.in_(('done', 'failed')))
+    if automatic:
+        query = query.filter(checked <= datetime.utcnow() - timedelta(hours=6))
+    for row in query.order_by(checked, BackgroundTask.id):
+        result = row.result or {}
+        if requested(row):
+            continue
+        if automatic and not (row.state == 'failed' or result.get('state') == 'unsupported'
+                              or result.get('state') == 'connected' and result.get('issues')):
+            continue
+        if automatic and result.get('state') in ('not_column', 'skipped', 'rejected'):
             continue
         configured = result.get('department_ids', [])
         if result.get('state') == 'connected' and not result.get('issues') and configured and all(
                 (source := db.session.get(Department, ident)) and source.list_selector for ident in configured):
             continue
+        yield row
+
+
+def pending_onboarding_recovery(school_id):
+    """An unreadable source remains recoverable even if its neighbours work."""
+    return next(_unconnected_columns(school_id, automatic=True), None) is not None
+
+
+def retry_unconnected_columns(school_id, refresh_key, *, automatic=False, limit=4, commit=True):
+    """Refresh stale failures once per run, with a small automatic retry budget."""
+    handle = tasks.current_execution() or {}
+    ids = []
+    for row in _unconnected_columns(school_id, automatic=automatic):
+        payload = dict(row.payload or {})
+        if payload.get('refresh_key') == refresh_key:
+            continue
         payload.pop('snapshot', None)
-        payload['refresh_key'] = refresh_key
-        job = tasks.enqueue('onboard', row.identity.split(':', 1)[1], payload, replace_finished=True)
+        payload.update(refresh_key=refresh_key, revalidate=True)
+        if handle.get('payload', {}).get('school_id') == school_id:
+            payload.update(parent_task_id=handle['id'], parent_generation=handle['generation'],
+                           ai_assist=handle['payload'].get('ai_assist', True))
+        job = tasks.enqueue('onboard', row.identity.split(':', 1)[1], payload,
+                            replace_finished=True, commit=commit)
         ids.append(job.id)
+        if automatic and len(ids) >= max(1, limit):
+            break
     return ids
 
 
@@ -138,8 +171,10 @@ def recognize_column(school_id, url, html):
         except AIConfigError as exc:
             if exc.code == 'concurrency_limit' and handle:
                 tasks.defer(capability='directory', delay=10, reason='等待 AI 空闲', checkpoint=checkpoint)
-            return {'status': 'unsupported', 'columns': [], 'reason':
+            columns = list({(c['name'], c['list_selector']): c for c in saved['columns']}.values())
+            return {'status': 'ready' if columns else 'unsupported', 'columns': columns, 'reason':
                     '本轮 AI 用量已达上限，未完成入口已保留' if exc.code == 'budget_exhausted' else 'AI 辅助暂不可用，其他栏目继续接入',
+                    'unresolved_regions': len(saved['unresolved']) + len(regions) - index,
                     'error_code': exc.code}
         if result['status'] == 'pending' and handle:
             tasks.defer(capability='directory', delay=10, reason='等待已提交的栏目识别', checkpoint=checkpoint)
@@ -168,7 +203,9 @@ def _sample_matches(config, records, fetcher):
     from backend.services.source_governance import _normal
     from backend.scraper.acquisition import FetchFailure
     last_error = None
-    for record in records[:2]:
+    # Pinned items may have expired or require login. A small bounded fallback
+    # sample must not reject an otherwise public list based on only those items.
+    for record in records[:5]:
         db.session.commit()
         validate_public_url(record['url'], resolve=False)
         try:
@@ -183,14 +220,15 @@ def _sample_matches(config, records, fetcher):
         title = _normal(record['title'])
         body = soup.select(config['content_selector']) if config.get('content_selector') else [soup]
         body_text = _normal(' '.join(node.get_text(' ', strip=True) for node in body))
-        if title and title[:20] in visible and len(body_text) >= 15 and len(visible) >= len(title) + 15:
+        resources = len(body_text) < 15 and bool(config.get('content_selector')) and _public_body_resource(body, record['url'])
+        if title and title[:20] in visible and (len(body_text) >= 15 or resources) and len(visible) >= len(title) + 15:
             return True
     if last_error and last_error.outcome in ('network_error', 'unavailable'):
         raise last_error  # The existing queue owns bounded network retries.
     return False
 
 
-def _install(school_id, config, records, *, repair=False, previous_url=None):
+def _install(school_id, config, records, *, repair=False, previous_url=None, ai_assist=True, repair_department_id=None):
     """Keep source/version/notices/next collection in the same commit fence."""
     from backend.services.source_governance import _hash, _json
     from backend.services.announcement_identity import upsert_listing
@@ -200,8 +238,13 @@ def _install(school_id, config, records, *, repair=False, previous_url=None):
     from backend.services.inbox_refresh import subscribed_sources
     tasks.assert_owned()
     db.session.execute(db.update(School).where(School.id == school_id).values(name=School.name))
-    source = Department.query.filter_by(school_id=school_id, list_url=config['list_url'],
-                                        list_selector=config['list_selector']).first()
+    source = db.session.get(Department, repair_department_id) if repair_department_id else None
+    if source is not None and (source.school_id != school_id or canonical_url(source.list_url) not in {
+            canonical_url(config['list_url']), canonical_url(previous_url or '')}):
+        raise ValueError('修复目标与已读取的官网页面不一致')
+    if source is None:
+        source = Department.query.filter_by(school_id=school_id, list_url=config['list_url'],
+                                            list_selector=config['list_selector']).first()
     if source is None and repair:
         matches = Department.query.filter_by(school_id=school_id, list_url=config['list_url'], name=config['name']).all()
         if len(matches) == 1:
@@ -246,13 +289,27 @@ def _install(school_id, config, records, *, repair=False, previous_url=None):
     sync_official_structure(source.school, RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH']), commit=False)
     subscriptions = Subscription.query.filter_by(school_id=school_id).all()
     if any(source.id in {d.id for d in subscribed_sources(source.school, sub.department_ids)} for sub in subscriptions):
-        job = tasks.enqueue('collect', source.id, {'school_id': school_id, 'department_id': source.id},
+        job = tasks.enqueue('collect', source.id, {'school_id': school_id, 'department_id': source.id,
+                            'ai_assist': ai_assist},
                             replace_finished=False, commit=False)
         if job.state == 'pending' and job.claim_count == 0:
             job.phase = 'onboarding_collection'
     tasks.assert_owned()
     db.session.commit()
     return source.id, new_count
+
+
+def _automatic_repair_source(payload, school):
+    """Recheck subscription scope when a queued single-page repair executes."""
+    source = db.session.get(Department, payload.get('repair_department_id'))
+    if (not source or source.school_id != school.id or not source.list_selector or not source.list_url or not school.is_effectively_active()
+            or canonical_url(source.list_url) not in {
+                canonical_url(payload.get('url', '')), canonical_url(payload.get('previous_url') or '')}):
+        return None
+    from backend.services.directory_options import directory_entries_for, expand_directory_ids
+    entries = directory_entries_for(school.id)
+    scopes = Subscription.query.with_entities(Subscription.department_ids).filter_by(school_id=school.id)
+    return source if any(ids is None or source.id in expand_directory_ids(school.id, ids, entries) for ids, in scopes) else None
 
 
 def onboard_page(payload, *, fetcher=None, _force_ai=False):
@@ -266,6 +323,14 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
     school = db.session.get(School, payload['school_id'])
     if not school or not school.enabled:
         return {'state': 'skipped', 'department_ids': []}
+    repair_source = None
+    if payload.get('automatic_repair'):
+        repair_source = _automatic_repair_source(payload, school)
+        if not repair_source:
+            return {'state': 'skipped', 'department_ids': [], 'reason': '该信息来源已不在订阅范围内'}
+        discovery = BackgroundTask.query.filter_by(identity=f'discover:{school.id}').first()
+        if discovery and (discovery.payload or {}).get('ai_assist') is False:
+            payload = dict(payload, ai_assist=False)
     school_id, root_url = school.id, school.url
     url = canonical_url(payload['url'])
     validate_public_url(url, resolve=False)
@@ -300,6 +365,12 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
         return {'state': 'not_column', 'department_ids': [], 'reason': '继续读取该发布区域链接的完整栏目'}
     recognition_issues = []
     if not columns:
+        # Explicitly disabled assistance also applies to inherited child jobs.
+        # Rules still run normally; an unresolved page cannot start a paid call.
+        parent_ai = parent.payload.get('ai_assist') if payload.get('parent_task_id') else None
+        if payload.get('ai_assist') is False or parent_ai is False:
+            return {'state': 'unsupported', 'department_ids': [],
+                    'reason': '该页面暂未识别，其他栏目继续接入', 'error_code': 'rules_unresolved'}
         result = recognize_column(school_id, url, html)
         if result['status'] != 'ready':
             return {'state': result['status'], 'department_ids': [], 'reason': result.get('reason', ''),
@@ -307,6 +378,9 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
         columns = result['columns']
         if result.get('unresolved_regions'):
             recognition_issues.append({'name': payload.get('label', ''), 'reason': '部分发布区域仍待识别，已接入的栏目可以使用'})
+    assistance = payload.get('ai_assist') is not False
+    if payload.get('parent_task_id') and parent.payload.get('ai_assist') is False:
+        assistance = False
     ids, issues, new_count, network_error = [], recognition_issues, 0, None
     for column in columns:
         pause_if_requested()
@@ -345,9 +419,18 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
         if not matches:
             issues.append({'name': config['name'], 'reason': '暂未读到与列表对应的公开通知正文'})
             continue
+        if repair_source and not _automatic_repair_source(payload, school):
+            return {'state': 'skipped', 'department_ids': [], 'reason': '该信息来源已不在订阅范围内'}
         source_id, added = _install(school_id, config, records, repair=payload.get('revalidate') is True,
-                                    previous_url=payload.get('previous_url'))
+                                    previous_url=payload.get('previous_url'), ai_assist=assistance,
+                                    repair_department_id=repair_source.id if repair_source and len(columns) == 1 else None)
         ids.append(source_id); new_count += added
+        # Assess the evidence we just read, independently of website grouping.
+        # Queueing is cheap, consent follows enabled directory assistance, and
+        # the shared AI runtime owns budgets and deduplication.
+        from backend.services.student_information import queue_source_assessment, queue_listing_assessment
+        queue_source_assessment(source_id, ai_assist=assistance)
+        queue_listing_assessment(source_id, ai_assist=assistance)
     if network_error:
         raise network_error
     if not ids and issues and detected and not _force_ai:
@@ -359,10 +442,27 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
 
 
 def resume_rule_discovery():
-    """Upgrade only jobs parked for missing AI; explicit user pauses stay intact."""
+    """Resume obsolete internal blockers without resetting progress or user pauses."""
     from datetime import timedelta
     from backend.services.discovery_control import requested
     now = datetime.utcnow()
+    # The old mixed cache limit could exhaust all retries before the next page.
+    # Preserve generation/checkpoints so existing column children remain valid.
+    for task in BackgroundTask.query.filter(
+            BackgroundTask.kind.in_(('discover', 'directory')),
+            BackgroundTask.state.in_(('failed', 'pending')),
+            BackgroundTask.error.contains('调查缓存已达到容量上限')).all():
+        if requested(task):
+            continue
+        from sqlalchemy import update
+        db.session.execute(update(BackgroundTask).where(
+            BackgroundTask.id == task.id, BackgroundTask.state == task.state,
+            BackgroundTask.error == task.error,
+            BackgroundTask.payload['discovery_pause_requested'].as_boolean().is_not(True)
+        ).values(state='pending', phase='fetch', capability='directory',
+                 available_at=now, updated_at=now, deadline_at=now + timedelta(hours=2),
+                 attempts=0, finished_at=None, token=None, worker_id=None, lease_until=None,
+                 error='', error_code=''), execution_options={'synchronize_session': False})
     for task in BackgroundTask.query.filter_by(kind='discover', state='waiting', phase='ai_setup'):
         if not requested(task):
             task.state, task.phase = 'pending', 'fetch'

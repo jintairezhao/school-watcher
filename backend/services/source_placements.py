@@ -11,7 +11,7 @@ from flask import current_app, g, has_app_context, has_request_context, request
 
 from backend.database.models import Department, School
 from backend.services.runtime_catalog import RuntimeCatalog
-from backend.services.source_inventory import canonical_url, site_key
+from backend.services.source_inventory import canonical_url, site_key, website_scope_path
 
 
 def _address(url):
@@ -38,7 +38,7 @@ def _within_unit(source_url, unit_url, school_url):
     # Query- and fragment-routed identities cannot supply an inferred URL scope.
     if unit.query or unit.fragment:
         return _same_page(source_url, unit_url)
-    path = unit.path.rstrip('/')
+    path = website_scope_path(unit.path)
     return source.path == path or source.path.startswith(path + '/')
 
 

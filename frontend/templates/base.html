@@ -35,18 +35,19 @@
     <!-- 顶部导航栏 -->
     <nav class="navbar">
         <div class="nav-inner">
-            <a href="{{ url_for('pages.index') }}" class="nav-brand">
+            <div class="nav-brand" aria-label="学校通知应用">
                 <span class="brand-mark">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
                 </span>
                 <span class="brand-text">学校通知</span>
-            </a>
+            </div>
             <div class="nav-links" id="navLinks">
                 {% if current_user %}
                 <a href="{{ url_for('pages.index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    通知
+                    收件箱
                 </a>
+                <a href="{{ url_for('pages.channels') }}" class="nav-link {% if request.path == '/channels' %}active{% endif %}">按发布渠道</a>
                 {% endif %}
                 <a href="{{ url_for('pages.explore') }}" class="nav-link {% if request.path == '/explore' %}active{% endif %}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>

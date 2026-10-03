@@ -9,7 +9,7 @@ import re
 from urllib.parse import urlsplit
 
 from backend.scraper.http_client import same_school_url
-from backend.services.source_inventory import canonical_url
+from backend.services.source_inventory import canonical_url, website_scope_path
 from backend.services.source_ownership import PREFIX, BRANDING_PREFIX, domain_evidence, normalized_name, website_identity_forms
 from backend.services.student_sources import TEACHING
 
@@ -18,7 +18,7 @@ ROSTER_RELATIONS = {'directory_entry', 'directory_entry_no_link', 'nested_direct
                     'same_directory_row', 'directory_companion_entry'}
 PATH_RELATIONS = ROSTER_RELATIONS | {'shared_table_row', 'menu_group', 'page_identity', 'campus_group',
                                    'academic_group', 'shared_directory_row', 'shared_directory_label', 'directory_group',
-                                   'publication_group'}
+                                   'publication_group', 'website_entrance'}
 
 
 def _page_address(url):
@@ -154,12 +154,12 @@ class SourceRelationships:
                 # A column extracted from a unit's own homepage shares that entrance.
                 self._add(reference, owner, reference, [], '')
                 for node in nodes:
-                    if (node['url'] and (node['kind'] == 'channel' or teaching_entrance(node) or node['url'] in publication_pages
+                    if (node['url'] and (node['kind'] == 'channel' or teaching_entrance(node) or node['relation'] == 'website_entrance' or node['url'] in publication_pages
                                         or node['url'] in major_directory_pages) and
-                            (node['relation'] in ('unit_channel', 'navigation_entry', 'publication_column') or
+                            (node['relation'] in ('unit_channel', 'navigation_entry', 'publication_column', 'website_entrance') or
                              node['relation'] == 'linked_navigation_unverified' and teaching_entrance(node))):
                         for chain in self._roster_paths(node, by_key,
-                                PATH_RELATIONS | {'unit_channel', 'navigation_entry', 'publication_column', 'linked_navigation_unverified'}):
+                                PATH_RELATIONS | {'unit_channel', 'navigation_entry', 'publication_column', 'linked_navigation_unverified', 'website_entrance'}):
                             ancestors = [n for n in chain[:-1] if n['relation'] != 'page_identity']
                             self._add(node['url'], owner, reference, [n['locator'] for n in chain],
                                       node['name'], [self._node(n) for n in ancestors])
@@ -203,8 +203,8 @@ class SourceRelationships:
                         navigation = urlsplit(target)
                         if any(navigation.netloc == (scope := urlsplit(u)).netloc
                             and not scope.query and not scope.fragment
-                            and (navigation.path == scope.path.rstrip('/') or
-                                 navigation.path.startswith(scope.path.rstrip('/') + '/'))
+                            and (navigation.path == website_scope_path(scope.path) or
+                                 navigation.path.startswith(website_scope_path(scope.path) + '/'))
                             for u in self._addresses(unit['url'])):
                             candidates.append(owner)
                     for owner in candidates:
@@ -216,7 +216,7 @@ class SourceRelationships:
                         articles = {canonical_url(s['url']) for s in feed.get('samples', [])}
                         scoped = [url for url in articles if any(
                             (p := urlsplit(url)).netloc == scope.netloc and not scope.query and not scope.fragment
-                            and (p.path == scope.path.rstrip('/') or p.path.startswith(scope.path.rstrip('/') + '/'))
+                            and (p.path == website_scope_path(scope.path) or p.path.startswith(website_scope_path(scope.path) + '/'))
                             for scope in scopes)]
                         if len(scoped) < 2 or len(scoped) != len(articles):
                             continue
@@ -236,7 +236,7 @@ class SourceRelationships:
             changed = False
             for reference, nodes in by_reference.items():
                 page = self.pages[reference]
-                if (page['kind'] not in ('channel', 'navigation', 'directory', 'unit') or
+                if (page['kind'] not in ('channel', 'navigation', 'directory', 'unit', 'gateway') or
                         ARTICLE.search(reference) or 'unit_profile_page:' in (page.get('notes_json') or '')):
                     continue
                 inbound = list(self.entries.get(canonical_url(reference), []))
@@ -251,18 +251,18 @@ class SourceRelationships:
                     target = urlsplit(page.get('final_url') or reference)
                     scopes = [urlsplit(address) for address in self._addresses(unit['url'])] if unit else []
                     if not any(target.netloc == scope.netloc and not scope.query and not scope.fragment and
-                               (target.path == scope.path.rstrip('/') or target.path.startswith(scope.path.rstrip('/') + '/'))
+                               (target.path == website_scope_path(scope.path) or target.path.startswith(website_scope_path(scope.path) + '/'))
                                for scope in scopes):
                         continue
                     propagated.add(identity)
                     for node in nodes:
-                        if (not node['url'] or not (node['kind'] == 'channel' or teaching_entrance(node)) or
-                                not (node['relation'] in ('unit_channel', 'navigation_entry', 'publication_column') or
+                        if (not node['url'] or not (node['kind'] == 'channel' or teaching_entrance(node) or node['relation'] == 'website_entrance') or
+                                not (node['relation'] in ('unit_channel', 'navigation_entry', 'publication_column', 'website_entrance') or
                                      node['relation'] == 'linked_navigation_unverified' and teaching_entrance(node)) or
                                 ARTICLE.search(node['url'])):
                             continue
                         for chain in self._roster_paths(node, by_key,
-                                PATH_RELATIONS | {'unit_channel', 'navigation_entry', 'publication_column', 'linked_navigation_unverified'}):
+                                PATH_RELATIONS | {'unit_channel', 'navigation_entry', 'publication_column', 'linked_navigation_unverified', 'website_entrance'}):
                             ancestors = list(owner.get('entry_nodes', []))
                             entry_name = owner.get('entry_name', '')
                             if TEACHING.search(entry_name) and len(entry_name) <= 18:
@@ -407,7 +407,7 @@ class SourceRelationships:
                 if any(target.netloc == scope.netloc and
                        ((target.path, target.query, target.fragment) == (scope.path, scope.query, scope.fragment)
                         if scope.query or scope.fragment else
-                        target.path == scope.path.rstrip('/') or target.path.startswith(scope.path.rstrip('/') + '/'))
+                        target.path == website_scope_path(scope.path) or target.path.startswith(website_scope_path(scope.path) + '/'))
                        for target in targets):
                     names.add(path['unit_name'])
                     break

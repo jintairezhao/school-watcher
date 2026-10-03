@@ -13,6 +13,23 @@ def dept(ident, name, group='组织机构', school=1):
 
 
 class SourceHierarchyTests(unittest.TestCase):
+    def test_columns_directly_under_group_remain_selectable_without_fake_department(self):
+        from backend.services.inbox import source_hierarchy
+        root = dept(10, '招生就业', '招生就业')
+        root.kind, root.list_url = 'group', 'https://school.example/admissions/'
+        first, second = dept(11, '招生通知', '招生就业'), dept(12, '就业通知', '招生就业')
+        for row in (first, second):
+            row.kind, row.list_url = 'column', f'https://school.example/{row.id}/'
+        entries = [SimpleNamespace(parent_id=root.id, department_id=row.id, position=i)
+                   for i, row in enumerate((first, second))]
+        tree = source_hierarchy([first, second], [root, first, second], entries)
+        leaves = tree['招生就业']
+        self.assertEqual({c['department'].id for u in leaves for c in u['columns']}, {11, 12})
+        self.assertTrue(all(not u['expandable'] and not u['children'] for u in leaves))
+        self.assertEqual({u['name'] for u in leaves}, {'招生通知', '就业通知'})
+        restricted = source_hierarchy([second], [root, first, second], entries)
+        self.assertEqual([c['department'].id for u in restricted['招生就业'] for c in u['columns']], [12])
+
     def test_related_columns_share_one_unit_despite_missing_group(self):
         from backend.services.inbox import source_hierarchy
         rows = [dept(1, '学生工作与安全保卫部'), dept(2, '学生工作与安全保卫部-学生管理'),
@@ -58,7 +75,7 @@ class SourceHierarchyTests(unittest.TestCase):
         self.assertNotIn('地球科学与工程学院', tree)
         self.assertEqual(len(tree['院系设置']), 1)
         self.assertEqual([c['department'].id for c in tree['院系设置'][0]['columns']], [21, 299])
-        self.assertEqual(tree['归属待核实'][0]['columns'][0]['department'].id, 300)
+        self.assertEqual(tree['其他信息来源'][0]['columns'][0]['department'].id, 300)
         self.assertEqual([d.id for d in source_groups(rows)['院系设置']], [21, 299])
         self.assertEqual(rows[0].group_name, '地球科学与工程学院')
 

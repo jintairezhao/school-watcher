@@ -39,6 +39,7 @@ def main():
             for theme, width in (('dark', 1280), ('light', 390)):
                 page.set_viewport_size({'width':width, 'height':850})
                 page.goto(base + f'/subscriptions/{fixture.school_id}')
+                page.locator('.discovery-details > summary').click()
                 page.evaluate('(theme) => {localStorage.setItem("theme",theme);document.documentElement.dataset.theme=theme;}', theme)
                 expect(page.locator('#discoveryPause')).to_have_text('暂停')
                 page.locator('#discoveryPause').click()
@@ -47,6 +48,7 @@ def main():
                 expect(page.locator('#discoveryProgress')).to_be_hidden()
                 expect(page.locator('#discoveryCounts')).to_contain_text('已接入')
                 page.reload()
+                page.locator('.discovery-details > summary').click()
                 expect(page.locator('#discoveryPause')).to_have_text('继续')
                 page.locator('#discoveryStatus').screenshot(path=str(folder / f'paused-{theme}-{width}.png'))
                 page.locator('#discoveryPause').click()
@@ -55,6 +57,7 @@ def main():
                 expect(page.locator('#discoveryActivity')).to_have_text('排队中')
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             handle = tasks.claim(capabilities=['directory'])
+            page.locator('#sourcePreferences > summary').click()
             page.locator('[name="mode"][value="selected"]').check()
             page.locator('[name="department"]').first.uncheck()
             page.locator('#discoveryPause').click()

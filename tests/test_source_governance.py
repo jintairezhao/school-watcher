@@ -626,7 +626,7 @@ class SourceGovernanceTests(unittest.TestCase):
                 'states': {'fetched': 20, 'pending': 7}, 'pages': [], 'reference_checks': []}) as crawl:
             result = adapt_site(self.school.name, self.school.url)
         self.assertEqual(crawl.call_args.kwargs['max_pages'], 3)
-        self.assertEqual(crawl.call_args.kwargs['focus'], 'layered')
+        self.assertEqual(crawl.call_args.kwargs['focus'], 'valuable')
         self.assertTrue(result['continuation_required'])
         self.assertFalse(result['coverage_verified'])
         self.assertEqual(governance.school_governance_status(self.school.id)['pending_pages'], 7)

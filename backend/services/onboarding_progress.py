@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 
 from backend.database.db import db
-from backend.database.models import BackgroundTask, Department, WorkerHeartbeat
+from backend.database.models import Announcement, BackgroundTask, Department, WorkerHeartbeat
 
 
 def record_progress(**values):
@@ -27,7 +27,7 @@ def ai_available():
 
 def _ai_message(task, data, available):
     if not available:
-        return 'AI 辅助尚未开启：明确的栏目照常接入，用途不明的入口会保留待判断'
+        return 'AI 尚未开启，仍会自动查找和更新公开通知'
     if data.get('ai_error_code') == 'budget_exhausted':
         return '本轮 AI 用量已达上限；明确栏目继续接入，未完成的入口已保留'
     if data.get('ai_state') == 'running':
@@ -54,7 +54,7 @@ def _ai_message(task, data, available):
 
 
 def status(school):
-    """Report actual work and usable columns; coverage audits are not onboarding."""
+    """Report useful output; website organisation is never a reader's task."""
     from backend.database.source_governance_models import SourceProposal, SchoolOnboarding
     from backend.services.discovery_control import requested
     task = BackgroundTask.query.filter_by(identity=f'discover:{school.id}').first()
@@ -62,7 +62,15 @@ def status(school):
     columns = Department.query.filter_by(school_id=school.id).all()
     count = sum(bool(d.list_selector) for d in columns)
     jobs = [t for t in BackgroundTask.query.filter(BackgroundTask.kind.in_(
-        ('onboard', 'navigation_review', 'source_grouping'))).all() if t.payload.get('school_id') == school.id]
+        ('onboard', 'navigation_review', 'student_assessment'))).all() if t.payload.get('school_id') == school.id
+        and (t.kind != 'student_assessment' or t.payload.get('automatic_source') or t.payload.get('automatic_listing'))]
+    from backend.services.announcement_sources import source_expression
+    article_count = Announcement.query.filter(source_expression(school_ids=[school.id])).count()
+    from backend.database.student_information_models import StudentAssessment
+    assessments = StudentAssessment.query.filter_by(school_id=school.id, state='ready').all()
+    source_assessments = [r for r in assessments if r.subject_key.startswith('source:')]
+    useful_source_count = sum(r.result.get('value') in ('relevant', 'potential', 'mixed') or
+                              r.result.get('historical') == 'high' for r in source_assessments)
     now = datetime.utcnow()
     live = [t for t in jobs if t.state in ('pending', 'running', 'waiting')]
     running = [t for t in live if t.state == 'running' and (not t.lease_until or t.lease_until > now)]
@@ -70,28 +78,28 @@ def status(school):
     pause = requested(task)
     busy = bool(parent_running or running) and not pause
     state = task.state if task else 'idle'
-    message = '尚未开始查找栏目'
+    message = '正在准备查找学生信息'
     active = bool(live or task and task.state in ('pending', 'running'))
     retry_at = None
     if pause:
         state = 'paused' if task.state == 'waiting' and task.phase == 'user_paused' and not any(
-            t.kind in ('onboard', 'navigation_review') for t in running) else 'pausing'
+            t.kind in ('onboard', 'navigation_review', 'student_assessment') for t in running) else 'pausing'
         message = '已暂停，进度已保存' if state == 'paused' else '正在暂停，等待当前处理完成'
         active = state == 'pausing'
     elif busy:
         state = 'running'
-        message = '正在接入通知栏目' if any(t.kind == 'onboard' for t in running) else '正在查找官网栏目'
-        if not parent_running and running and all(t.kind == 'source_grouping' for t in running):
-            message = '正在核对部门与栏目归属'
-        if count:
-            message += '，已接入的栏目可以使用'
+        message = '正在读取官网通知' if any(t.kind == 'onboard' for t in running) else '正在查找对学生有用的信息'
+        if not parent_running and running and all(t.kind == 'student_assessment' for t in running):
+            message = '正在判断通知对学生的价值'
+        if article_count:
+            message += f'，已找到 {article_count} 条，可以先阅读'
     elif active:
         pending = [t for t in live if t.state == 'pending']
         if task and task.state == 'pending':
             pending.append(task)
         ready = [t for t in pending if t.available_at <= now]
         if ready:
-            state, message = 'queued', '等待继续查找栏目' if data else '等待查找官网栏目'
+            state, message = 'queued', '等待继续查找学生信息' if data else '已关注，正在安排查找信息'
             if task in ready:
                 from backend.services.tasks import queue_ahead
                 from flask import current_app
@@ -117,10 +125,10 @@ def status(school):
     elif state == 'failed':
         message = '本轮查找未完成，可以重试；已接入的栏目仍可使用' if count else '本轮查找未完成，可以重试'
     elif state == 'done' or count:
-        message = f'已接入 {count} 个栏目' if count else '本轮暂未找到可接入的栏目'
+        message = f'已找到 {article_count} 条通知，后续自动更新' if article_count else '本轮暂未读到公开通知，学校已保留'
     gaps = []
     for job in jobs:
-        if job.kind == 'source_grouping':
+        if job.kind == 'student_assessment':
             continue
         result = job.result or {}
         if job.kind == 'navigation_review' and result.get('status') == 'needs_recovery':
@@ -130,15 +138,12 @@ def status(school):
         if job.state == 'failed' or result.get('state') == 'unsupported' or result.get('issues'):
             gaps.append({'name': job.payload.get('label', ''), 'url': job.payload.get('url', ''),
                 'reason': result.get('reason') or '该页面暂未接入，稍后可重试'})
-    from backend.services.source_grouping import placement_gaps
-    grouping_gaps = placement_gaps(school.id)
-    gaps.extend(grouping_gaps)
     if data.get('entry_failure'):
         gaps.insert(0, {'name': school.name, 'url': school.url, 'reason': data['entry_failure']['reason']})
     if data.get('failed_pages'):
         gaps.append({'reason': f"有 {data['failed_pages']} 个官网入口暂未读取成功"})
-    if not active and not pause and count and gaps:
-        message = f'已接入 {count} 个栏目，部分页面暂未接入'
+    if not active and not pause and article_count and gaps:
+        message = f'已找到 {article_count} 条通知，部分官网页面暂不可读'
     onboarding = db.session.get(SchoolOnboarding, school.id)
     import json
     departments = len(json.loads(onboarding.scope_json or '[]')) if onboarding else len({d.group_name for d in columns if d.group_name})
@@ -153,20 +158,22 @@ def status(school):
         'failed_pages': data.get('failed_pages', 0), 'current_label': data.get('current_label', '') if busy else '',
         'changes': data.get('changes', {}),
         'updated_at': data.get('updated_at'), 'source_count': len(columns), 'verified_source_count': count,
+        'article_count': article_count, 'assessed_source_count': len(source_assessments),
+        'useful_source_count': useful_source_count,
         'department_count': departments, 'processing_count': len(live), 'failed_count': len(gaps),
         'unit_checked': data.get('unit_checked', 0), 'unit_pending': data.get('unit_pending', 0),
         'unit_failed': data.get('unit_failed', 0),
         'column_tasks': sum(t.kind == 'onboard' for t in live),
-        'assessment_tasks': 0,
+        'assessment_tasks': sum(t.kind == 'student_assessment' for t in live),
         'waiting_recovery_count': 0, 'review_count': review_count, 'queued_review_count': 0,
         'background_exploration': any(t.kind == 'navigation_review' for t in live),
         'ai_available': available, 'ai_state': data.get('ai_state', 'not_started'),
         'ai_message': _ai_message(task, data, available),
-        'coverage': {'complete': False, 'gaps': gaps, 'placement_gap_count':len(grouping_gaps)},
+        'coverage': {'complete': False, 'gaps': gaps, 'placement_gap_count': 0},
         'incomplete_reasons': [g['reason'] for g in gaps],
         'needs_verification': any(t.state == 'waiting' and t.phase == 'verification' for t in ([task] if task else []) + live),
         'can_pause': bool(task and not pause and (task.state in ('pending', 'running', 'waiting') or any(
-            t.kind in ('onboard', 'navigation_review') for t in live))),
+            t.kind in ('onboard', 'navigation_review', 'student_assessment') for t in live))),
         'can_resume': state == 'paused',
         'can_retry': not active and state != 'paused' and (state != 'waiting' or task.phase == 'ai_setup'),
         'task_id': task.id if task else None}

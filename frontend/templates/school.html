@@ -4,7 +4,7 @@
 <div class="directory-page">
     {% from '_school_header.html' import school_header with context %}
     {% call school_header(school, 'preview', '查看已接入的官网通知，订阅后可管理阅读状态。') %}
-        {% if current_user %}<button class="btn btn-primary" data-subscribe-name="{{ school.name }}" data-school-id="{{ school.id }}">订阅并选择栏目</button>
+        {% if current_user %}<button class="btn btn-primary" data-subscribe-name="{{ school.name }}" data-school-id="{{ school.id }}">订阅并自动找通知</button>
         {% else %}<span>请从桌面应用打开</span>{% endif %}
     {% endcall %}
     <form class="preview-filters" method="get" role="search">
@@ -20,7 +20,7 @@
         {% set source = display_sources.get(ann.id) %}
         <article class="preview-notice">
             <h2><a href="{{ url_for('pages.announcement_detail', ann_id=ann.id, source=source.id if source else None, **{'from': request.full_path}) }}">{{ ann.title }}</a></h2>
-            <p>{% if source %}{{ source|source_breadcrumb }} · {% endif %}{{ ann.published_at.strftime('%Y-%m-%d') if ann.published_at else '发布时间未注明' }}{% if announcement_sources.get(ann.id, [])|length > 1 %} · {{ announcement_sources[ann.id]|length }} 个官网栏目{% endif %}</p>
+            <p>{% if source %}{{ source|channel_breadcrumb }} · {% endif %}{{ ann.published_at.strftime('%Y-%m-%d') if ann.published_at else '发布时间未注明' }}{% if announcement_sources.get(ann.id, [])|length > 1 %} · {{ announcement_sources[ann.id]|length }} 个官网栏目{% endif %}</p>
         </article>
         {% else %}<div class="notice-empty"><h2>暂无匹配的通知</h2><p>调整筛选条件，或订阅学校后等待官网信息同步。</p></div>{% endfor %}
     </div>

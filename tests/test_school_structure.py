@@ -54,6 +54,26 @@ class SchoolStructureTests(unittest.TestCase):
         from backend.services.directory_options import directory_entries_for
         return source_hierarchy(self.school.departments.all(), directory_entries=directory_entries_for(self.school.id))
 
+    def test_college_homepage_filename_keeps_notices_under_the_college(self):
+        home = CS + 'main.htm'
+        self.pages[ROOT + 'colleges/'] = self.pages[ROOT + 'colleges/'].replace(CS + '"', home + '"')
+        self.pages[home] = self.pages[CS]
+        for url, kind, label in [(ROOT, 'root', '测试大学'), (ROOT + 'colleges/', 'directory', '院系设置'),
+                (home, 'unit', '计算机学院'), (CS + 'notices/', 'channel', '通知公告')]:
+            self.inventory.enqueue(self.key, url, label, kind, 1, [], 'school_domain')
+            inspect_page(self.inventory, self.inventory.report(self.key)['site'], self.inventory.get_page(self.key, url),
+                fetcher=lambda address: {'url': address, 'status': 200, 'html': self.pages[address]})
+        self.catalog.publish(self.inventory, self.key)
+        sync_official_structure(self.school, self.catalog)
+        result = self.connect(CS + 'notices/')
+        unit = Department.query.filter_by(name='计算机学院', kind='unit').one()
+        self.assertIsNotNone(DepartmentDirectoryEntry.query.filter_by(
+            parent_id=unit.id, department_id=result['department_ids'][0]).first())
+        from backend.services.source_placements import _within_unit
+        self.assertFalse(_within_unit(LANG + 'notices/', home, ROOT))
+        self.assertFalse(_within_unit(CS + 'notices/', CS + 'intro.htm', ROOT))
+        self.assertFalse(_within_unit(CS + 'notices/', home + '?unit=other', ROOT))
+
     def test_first_school_builds_selectable_units_before_any_column_is_ready(self):
         self.publish()
         from backend.services.inbox_refresh import subscribed_sources

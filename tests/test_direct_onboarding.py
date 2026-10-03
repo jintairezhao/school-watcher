@@ -57,6 +57,40 @@ class DirectOnboardingTests(unittest.TestCase):
         self.assertEqual(self.reads.count((URL, 'directory')), 1)
         self.assertEqual([t.kind for t in BackgroundTask.query.all()], ['collect'])
 
+    def test_attachment_only_notices_can_validate_a_column_without_paid_ai(self):
+        from backend.services.source_onboarding import onboard_page
+        def fetch(url, purpose):
+            if url == URL:
+                return HTML
+            title = TITLES[int(url.rsplit('/', 1)[-1].split('.')[0])]
+            return (f'<html><h1>{title}</h1><p>发布时间：2026-10-01 发布单位：测试大学</p>'
+                    '<article><span pdfsrc="/files/notice.pdf"></span></article></html>')
+        with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Attachment notices need no AI')):
+            result = onboard_page({'school_id': self.school_id, 'url': URL}, fetcher=fetch)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(Announcement.query.count(), 3)
+
+    def test_unreadable_pinned_items_do_not_block_valid_later_sample(self):
+        from backend.services.source_onboarding import onboard_page
+        def fetch(url, purpose):
+            if url in (URL.replace('/notices/', '/info/0.htm'), URL.replace('/notices/', '/info/1.htm')):
+                return '<p>该内容暂不可见</p>'
+            return self.fetch(url, purpose)
+        with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Later public sample is sufficient')):
+            result = onboard_page({'school_id': self.school_id, 'url': URL}, fetcher=fetch)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(Announcement.query.count(), 3)
+
+    def test_navigation_images_and_private_attachment_urls_cannot_validate_empty_body(self):
+        from backend.services.source_onboarding import _sample_matches
+        config = {'content_selector': 'article'}
+        record = {'url': URL + '1.htm', 'title': TITLES[0]}
+        for resource in ('<span pdfsrc="http://127.0.0.1/file.pdf"></span>',
+                         '<img src="/pixel.png" width="1" height="1">', ''):
+            html = (f'<html><h1>{TITLES[0]}</h1><nav><img src="/logo.png"></nav>'
+                    '<p>发布时间：2026-10-01 发布单位：测试大学</p><article>' + resource + '</article></html>')
+            self.assertFalse(_sample_matches(config, [record], lambda *_: html))
+
     def test_replay_preserves_ids_and_does_not_duplicate_notices_or_versions(self):
         from backend.services.source_onboarding import onboard_page
         payload = {'school_id': self.school_id, 'url': URL}
@@ -179,6 +213,20 @@ class DirectOnboardingTests(unittest.TestCase):
         self.assertEqual(result['state'], 'connected')
         self.assertEqual({a.title for a in Announcement.query.all()}, set(TITLES))
         self.assertEqual(SourceProposal.query.count(), 0)
+
+    def test_ai_budget_exhaustion_keeps_already_recognized_columns(self):
+        from backend.services.source_onboarding import recognize_column
+        from backend.ai.configuration import AIConfigError
+        column = {'name':'通知公告','list_selector':'#notices li'}
+        with patch('backend.ai.configuration.get_model_binding',return_value={'id':1,'version':1}), \
+             patch('backend.scraper.discovery.column_regions.materials',return_value=[{'id':1},{'id':2}]), \
+             patch('backend.ai.runtime.run_skill',side_effect=[
+                 {'status':'succeeded','output':{'status':'ready','columns':[column]}},
+                 AIConfigError('budget exhausted','budget_exhausted')]):
+            result = recognize_column(self.school_id, URL, HTML)
+        self.assertEqual(result['status'],'ready')
+        self.assertEqual(result['columns'],[column])
+        self.assertEqual(result['unresolved_regions'],1)
 
     def test_unrelated_article_is_not_accepted(self):
         from backend.services.source_onboarding import onboard_page
@@ -316,6 +364,35 @@ class DirectOnboardingTests(unittest.TestCase):
         row.payload = dict(row.payload, discovery_pause_requested=True); db.session.commit()
         resume_rule_discovery(); db.session.refresh(row)
         self.assertEqual((row.state, row.phase), ('waiting', 'user_paused'))
+
+    def test_capacity_upgrade_resumes_only_matching_unpaused_jobs(self):
+        from backend.services import tasks
+        from backend.services.source_onboarding import resume_rule_discovery
+        jobs = []
+        for key, error, paused in [('capacity', '调查缓存已达到容量上限，已保存进度，请先清理后继续', False),
+                                   ('network', 'HTTP 503', False),
+                                   ('paused', '调查缓存已达到容量上限，已保存进度，请先清理后继续', True)]:
+            row = tasks.enqueue('discover', key, {'school_id': self.school_id, 'discovery_pause_requested': paused})
+            row.state, row.error, row.attempts = 'failed', error, 3
+            row.checkpoint = {'pending_pages': 17}
+            jobs.append(row)
+        db.session.commit()
+        resume_rule_discovery()
+        for row in jobs: db.session.refresh(row)
+        self.assertEqual([r.state for r in jobs], ['pending', 'failed', 'failed'])
+        self.assertEqual(jobs[0].attempts, 0)
+        self.assertEqual(jobs[0].checkpoint, {'pending_pages': 17})
+        self.assertEqual(jobs[0].generation, 1)
+
+    def test_disabled_ai_never_blocks_or_calls_paid_fallback(self):
+        from backend.services.source_onboarding import onboard_page
+        with patch('backend.services.source_onboarding.recognize_column', side_effect=AssertionError('AI disabled')):
+            result = onboard_page({'school_id': self.school_id, 'url': URL, 'ai_assist': False},
+                                  fetcher=lambda url, purpose: '<html><title>暂未识别</title></html>')
+        self.assertEqual(result['state'], 'unsupported')
+        with patch('backend.services.source_onboarding.recognize_column', side_effect=AssertionError('Rules need no AI')):
+            result = onboard_page({'school_id': self.school_id, 'url': URL, 'ai_assist': False}, fetcher=self.fetch)
+        self.assertEqual(result['state'], 'connected')
 
     def test_new_column_inherits_existing_unit_subscription(self):
         from backend.services.source_onboarding import onboard_page

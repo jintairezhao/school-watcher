@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}按发布渠道 — 学校通知{% endblock %}
+{% block content %}
+<div class="directory-page channels-page">
+    <header class="surface-heading">
+        <div><h1>按发布渠道</h1><p>按学校、发布单位或官网站点，集中查看各栏目的通知。</p></div>
+        <a class="btn btn-outline" href="{{ url_for('pages.index', view=view) }}">返回{{ '我的收藏' if view == 'saved' else '收件箱' }}</a>
+    </header>
+    <nav class="surface-tabs" aria-label="通知浏览方式">
+        <a href="{{ url_for('pages.index') }}">收件箱</a>
+        <a href="{{ url_for('pages.channels', view=view, school=current_school_id) }}" aria-current="page">按发布渠道</a>
+        <a href="{{ url_for('pages.index', view='saved', period='all') }}">我的收藏</a>
+    </nav>
+    <form class="channel-filters" action="{{ url_for('pages.channels') }}" method="get" role="search">
+        {% if view == 'saved' %}<input type="hidden" name="view" value="saved">{% endif %}
+        <div><label for="channelSchool">学校</label><select class="form-input" id="channelSchool" name="school"><option value="">全部学校</option>{% for school in schools %}<option value="{{ school.id }}"{% if current_school_id == school.id %} selected{% endif %}>{{ school.name }}</option>{% endfor %}</select></div>
+        <div><label for="channelQuery">发布单位、站点或栏目</label><input class="form-input" type="search" id="channelQuery" name="q" value="{{ q|default('') }}" maxlength="100" placeholder="例如：教务处、研究生招生"></div>
+        <button class="btn btn-outline" type="submit">查找渠道</button>
+    </form>
+    <p class="channel-summary">{{ total_channels }} 个发布栏目 · {{ total_notices }} 条{{ '已收藏' if view == 'saved' else '已收录' }}通知{% if view == 'saved' %} · <a href="{{ url_for('pages.channels', school=current_school_id) }}">查看订阅渠道</a>{% else %} · <a href="{{ url_for('pages.channels', view='saved', school=current_school_id) }}">只看收藏中的渠道</a>{% endif %}</p>
+    {% for entry in channel_schools %}
+    <section class="channel-school" aria-labelledby="channelSchool{{ entry.school.id }}">
+        <h2 id="channelSchool{{ entry.school.id }}">{{ entry.school.name }}</h2>
+        {% for publisher in entry.publishers %}
+        <section class="channel-publisher" aria-label="{{ publisher.label }}">
+            <h3>{{ publisher.label }}</h3>
+            <ul class="channel-list">
+            {% for channel in publisher.channels %}
+                <li data-channel-id="{{ channel.source_id }}">
+                    <a class="channel-row" href="{{ channel.filter_url }}" aria-label="查看{{ channel.breadcrumb }}的通知">
+                        <span class="channel-name"><strong>{{ channel.column_label }}</strong><span>{{ channel.breadcrumb }}</span></span>
+                        <span class="channel-count">{{ channel.count }} 条{% if channel.unread_count %}<span>{{ channel.unread_count }} 条未读</span>{% endif %}</span>
+                        <span class="channel-latest">{% if channel.latest_at %}<span>最近发布</span><time datetime="{{ channel.latest_at.isoformat() }}">{{ channel.latest_at.strftime('%Y-%m-%d') }}</time>{% elif channel.count %}发布日期未注明{% else %}暂未收录通知{% endif %}</span>
+                    </a>
+                    {% if channel.official_url %}<a class="channel-official" href="{{ channel.official_url }}" target="_blank" rel="noopener noreferrer" aria-label="打开{{ channel.breadcrumb }}的官网栏目">官网栏目</a>{% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        </section>
+        {% endfor %}
+    </section>
+    {% else %}
+    <section class="notice-empty"><h2>{{ '没有匹配的发布渠道' if q|default('') or current_school_id else '暂时没有可查看的发布渠道' }}</h2><p>{% if q|default('') or current_school_id %}试试更短的名称，或查看全部学校。{% elif view == 'saved' %}收藏通知后，可以在这里按发布渠道查找。{% else %}订阅学校后，自动找到的信息来源会归纳到这里。{% endif %}</p><a href="{{ url_for('pages.channels', view=view) if q|default('') or current_school_id else url_for('pages.explore') }}">{{ '查看全部渠道' if q|default('') or current_school_id else '选择学校' }}</a></section>
+    {% endfor %}
+</div>
+{% endblock %}

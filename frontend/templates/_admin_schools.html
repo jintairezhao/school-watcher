@@ -33,7 +33,7 @@
             <a href="{{ url_for('pages.school_detail', school_id=school.id) }}" class="btn btn-sm btn-outline">
                 查看
             </a>
-            <button class="btn btn-sm btn-danger-outline" onclick="deleteSchool({{ school.id }})">
+            <button class="btn btn-sm btn-danger-outline" data-school-name="{{ school.name }}" onclick="deleteSchool({{ school.id }}, this.dataset.schoolName)">
                 删除
             </button>
         </div>
@@ -121,6 +121,7 @@
     </div>
 </div>
 
+{% include '_delete_confirmation.html' %}
 <script>
 // ============================================================
 // 全局状态
@@ -228,19 +229,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-async function deleteSchool(id) {
-    if (!confirm('确定删除该学校及其所有通知数据吗？此操作不可恢复。')) return;
-    try {
-        const resp = await fetch('/api/schools/' + id, { method: 'DELETE' });
-        if (resp.ok) {
-            showToast('success', '学校已删除');
-            setTimeout(() => location.reload(), 500);
-        } else {
-            const data = await resp.json();
-            showToast('error', data.error || '删除失败');
-        }
-    } catch(e) {
-        showToast('error', '请求失败');
+async function deleteSchool(id, name) {
+    if (await confirmDeletion({kind: '学校', name, url: '/api/schools/' + id})) {
+        showToast('success', '学校已删除');
+        setTimeout(() => location.reload(), 500);
     }
 }
 
@@ -313,7 +305,7 @@ async function loadDepts(schoolId) {
             card.querySelector('[data-dept-action="edit"]').addEventListener('click', () =>
                 editDept(d.id, d.name, d.group_name || '', d.list_url || '', d.list_selector || '',
                     d.title_selector || '', d.link_selector || '', d.date_selector || '', d.content_selector || ''));
-            card.querySelector('[data-dept-action="delete"]').addEventListener('click', () => deleteDept(d.id));
+            card.querySelector('[data-dept-action="delete"]').addEventListener('click', () => deleteDept(d.id, d.name));
         });
     } catch(e) {
         showToast('error', '加载部门列表失败');
@@ -339,19 +331,10 @@ function editDept(id, name, group_name, list_url, list_sel, title_sel, link_sel,
     document.getElementById('testSelectorsResult').textContent = '';
 }
 
-async function deleteDept(id) {
-    if (!confirm('确定删除该部门及其所有通知数据吗？此操作不可恢复。')) return;
-    try {
-        const resp = await fetch('/api/departments/' + id, { method: 'DELETE' });
-        if (resp.ok) {
-            showToast('success', '部门已删除');
-            loadDepts(currentDeptSchoolId);
-        } else {
-            const data = await resp.json();
-            showToast('error', data.error || '删除失败');
-        }
-    } catch(e) {
-        showToast('error', '请求失败');
+async function deleteDept(id, name) {
+    if (await confirmDeletion({kind: '部门', name, url: '/api/departments/' + id})) {
+        showToast('success', '部门已删除');
+        loadDepts(currentDeptSchoolId);
     }
 }
 

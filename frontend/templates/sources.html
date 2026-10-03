@@ -1,43 +1,49 @@
 {% extends "base.html" %}
-{% block title %}{{ school.name }} · 栏目订阅{% endblock %}
+{% block title %}{{ school.name }} · 自动找通知{% endblock %}
 {% block content %}
 <div class="sources-page">
     {% from '_school_header.html' import school_header with context %}
-    {{ school_header(school, 'sources', '') }}
-    <section class="discovery-status" id="discoveryStatus" data-school-id="{{ school.id }}" aria-label="栏目发现进度">
+    {{ school_header(school, 'sources', '自动从官网寻找与你的学习、申请和校园生活有关的信息。') }}
+    <section class="discovery-status" id="discoveryStatus" data-school-id="{{ school.id }}" aria-label="自动找通知进度">
         <div class="discovery-status-heading"><h2 id="discoveryMessage" role="status">{{ discovery.message }}</h2><span id="discoveryActivity"></span></div>
-        <progress id="discoveryProgress" aria-label="栏目发现进度" {% if not discovery.busy %}hidden{% endif %}></progress>
-        <p id="discoveryCounts">已列出 {{ discovery.department_count }} 个部门 · 已检查 {{ discovery.unit_checked }} 个部门主页 · 已接入 {{ discovery.verified_source_count }} 个栏目</p>
-        <p id="discoveryStages" class="text-muted">待检查入口 {{ discovery.pending_pages }} 个 · 待接入栏目任务 {{ discovery.column_tasks }} 个</p>
+        <progress id="discoveryProgress" aria-label="自动找通知进度" {% if not discovery.busy %}hidden{% endif %}></progress>
+        <p id="discoveryCounts">已收录 {{ discovery.article_count|default(0) }} 条通知 · 已接入 {{ discovery.verified_source_count }} 个信息来源</p>
+        <p id="discoveryValue" class="text-muted">{{ discovery.value_summary|default('优先寻找升学、奖助、实习就业、竞赛和校园办事信息。', true) }}</p>
+        <p class="source-path-help text-muted">找到可用的信息后会自动收录，无需逐个确认部门或栏目。收录结果可以直接阅读。</p>
+        <div class="discovery-actions">
+            <a class="btn btn-primary" id="discoveryNotices" href="{{ url_for('pages.index', school=school.id, period='all') }}">查看通知</a>
+            <button type="button" class="btn btn-outline" id="discoveryRetry" {% if not discovery.can_retry %}hidden{% endif %}>再找一次</button>
+        </div>
+        <p id="discoveryError" role="alert" hidden></p>
+        <details class="discovery-details"><summary>查看自动处理进度</summary>
+        <p id="discoveryStages" class="text-muted">正在处理 {{ discovery.processing_count }} 个后台任务</p>
         <p id="discoveryChanges" class="text-muted"></p>
         <p id="discoveryAI" class="text-muted">{{ discovery.ai_message }}</p>
-        <p class="source-path-help text-muted">按官网目录逐个检查所有部门，再沿发布入口查找栏目。已结束的通知也会保留，可用于准备材料和参考往年安排。</p>
-        <p class="source-path-help text-muted">首次订阅自动查找。遇到官网改版或栏目缺失，可手动检查官网变化：先核对已知入口，再深入处理新增、变化或失效的部分。平时只同步通知。</p>
-        <a href="{{ url_for('pages.index', school=school.id, period='all') }}">查看已收录的历年通知</a>
-        <details id="discoveryGaps"{% if not discovery.incomplete_reasons %} hidden{% endif %}><summary>查看暂未接入的页面</summary><ul id="discoveryGapList">{% for reason in discovery.incomplete_reasons %}<li>{{ reason }}</li>{% endfor %}</ul></details>
+        <details id="discoveryGaps"{% if not discovery.incomplete_reasons %} hidden{% endif %}><summary>暂未读取的页面</summary><ul id="discoveryGapList">{% for reason in discovery.incomplete_reasons %}<li>{{ reason }}</li>{% endfor %}</ul></details>
         <p id="discoveryCurrent" class="text-muted"></p>
         <div class="discovery-actions">
             {% if current_user.is_admin %}<button type="button" class="btn btn-outline" id="discoveryPause" data-action="{{ 'resume' if discovery.can_resume else 'pause' }}" {% if not discovery.can_pause and not discovery.can_resume and discovery.state != 'pausing' %}hidden{% endif %} {% if discovery.state == 'pausing' %}disabled{% endif %}>{{ '继续' if discovery.can_resume else '正在暂停…' if discovery.state == 'pausing' else '暂停' }}</button>{% endif %}
-            <button type="button" class="btn btn-outline" id="discoveryRetry" {% if not discovery.can_retry %}hidden{% endif %}>检查官网变化</button>
             {% if current_user.is_admin %}<a id="discoveryVerify" class="btn btn-outline" href="{{ url_for('browser_sessions.page') }}" hidden>完成访问验证</a>{% endif %}
             <button type="button" class="btn btn-ghost" id="discoveryRefresh">刷新进度</button>
         </div>
-        <p id="discoveryError" role="alert" hidden></p>
+        </details>
     </section>
+    <details class="source-preferences" id="sourcePreferences" {% if subscription.department_ids is not none %}open{% endif %}>
+    <summary>调整接收范围<span>{{ '已自定义' if subscription.department_ids is not none else '默认接收自动找到的信息' }}</span></summary>
     <form method="post" class="sources-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <fieldset class="source-mode" {% if not groups %}hidden{% endif %}><legend>接收范围</legend>
-            <label><input type="radio" name="mode" value="all" {% if subscription.department_ids is none %}checked{% endif %}> 全部栏目</label>
-            <label><input type="radio" name="mode" value="selected" {% if subscription.department_ids is not none %}checked{% endif %}> 选择部门与栏目</label>
+            <label><input type="radio" name="mode" value="all" {% if subscription.department_ids is none %}checked{% endif %}> 自动接收本校信息，包含后续新来源</label>
+            <label><input type="radio" name="mode" value="selected" {% if subscription.department_ids is not none %}checked{% endif %}> 只接收指定来源</label>
             <button type="button" class="btn btn-ghost" id="sourceClearSelection" {% if subscription.department_ids is none %}hidden{% endif %}>清空选择</button>
         </fieldset>
         {% if groups %}<p class="source-path-help text-muted">选择整个部门，会自动接收它下面现有和后续新增栏目的通知。</p>{% endif %}
         <div id="sourceChoices">
         {% include '_source_tree_choices.html' %}
         </div>
-        <div class="source-save" {% if not groups %}hidden{% endif %}><button class="btn btn-primary" type="submit">保存栏目订阅</button><a href="{{ url_for('pages.index', school=school.id) }}">查看通知</a></div>
+        <div class="source-save" {% if not groups %}hidden{% endif %}><button class="btn btn-primary" type="submit">保存接收范围</button></div>
     </form>
-    <details class="directory-note"><summary>官网还有其他栏目？补充栏目地址</summary>
+    <details class="directory-note"><summary>补充已知信息来源（选填）</summary>
         <p>复制学校官网上该栏目的名称与列表页链接。分组请沿用官网的名称；没有分组可留空。</p>
         <form method="post" action="{{ url_for('subscriptions.add_official_source', school_id=school.id) }}" class="source-add-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -46,6 +52,7 @@
             <div><label for="sourceGroup">官网分组（选填）</label><input class="form-input" name="group" id="sourceGroup" maxlength="200" placeholder="例如：招生就业"></div>
             <button class="btn btn-primary" type="submit">添加并订阅栏目</button>
         </form>
+    </details>
     </details>
 </div>
 {% endblock %}

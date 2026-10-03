@@ -25,6 +25,26 @@ jobs:
         run: python tests/browser/check_desktop_onboarding_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify school deletion and themed confirmation
+        run: python tests/browser/check_school_deletion_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify school navigation and error recovery
+        run: python tests/browser/check_school_navigation_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify automatic student information discovery
+        run: python tests/browser/check_student_discovery_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify publication channels and source navigation
+        run: python tests/browser/check_publication_channels_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify native window controls with the source drawer open
+        run: python tests/browser/check_desktop_drawer_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify desktop storage and file location controls
         run: python tests/browser/check_desktop_storage_browser.py
         env:

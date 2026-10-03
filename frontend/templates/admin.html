@@ -1,6 +1,9 @@
 {% extends "admin_base.html" %}
 {% block title %}系统管理 — 学校通知{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-logs.css') }}">{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-logs.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/delete-confirmation.css') }}">
+{% endblock %}
 
 
 
@@ -15,7 +18,7 @@
     <section class="admin-attention" aria-labelledby="attentionTitle">
         <h2 id="attentionTitle">需要关注</h2>
         <div class="attention-list">
-            <a href="{{ url_for('source_governance.review_page') }}"><span><strong>核实部门与栏目</strong><small>核对官网依据，让待确认的来源继续接入。</small></span><span aria-hidden="true">→</span></a>
+            <a href="{{ url_for('source_governance.review_page') }}"><span><strong>来源诊断与历史提案</strong><small>按需查看官网依据与历史提案，已收录通知可直接阅读。</small></span><span aria-hidden="true">→</span></a>
             <a href="{{ url_for('browser_sessions.page') }}"><span><strong>处理访问验证</strong><small>查看需要人工验证的官网，完成后继续同步。</small></span><span aria-hidden="true">→</span></a>
             <a href="#logs"><span><strong>检查抓取异常</strong><small id="attentionLogStatus">查看未完成的任务与具体原因。</small></span><span aria-hidden="true">→</span></a>
         </div>
@@ -40,7 +43,7 @@
             <button class="btn btn-primary" onclick="showAddSchool()">添加学校</button>
         </div>
     </div>
-    <p><a href="{{ url_for('source_governance.review_page') }}">核实待确认的部门与栏目</a></p>
+    <p><a href="{{ url_for('source_governance.review_page') }}">来源诊断与历史提案（可选）</a></p>
     {% include '_admin_schools.html' %}
 </section>
 

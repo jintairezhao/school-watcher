@@ -80,17 +80,18 @@ class GroupingRecoveryTests(unittest.TestCase):
         self.assertTrue(any(g.get('source_id') == self.source.id for g in result['gaps']))
         self.assertTrue(any(g['reason'] == 'official_directory_unavailable' for g in result['gaps']))
 
-    def test_scheduler_places_recovery_in_directory_lane_without_model_assistance(self):
+    def test_scheduler_prioritizes_information_instead_of_department_grouping(self):
         from backend.worker import _schedule_due
         from backend.database.models import BackgroundTask
         school_id = self.school.id
         with patch('backend.services.directory_recovery.recover_legacy'):
             _schedule_due()
-        task = BackgroundTask.query.filter_by(identity=f'source_grouping:{school_id}').one()
+        self.assertIsNone(BackgroundTask.query.filter_by(identity=f'source_grouping:{school_id}').first())
+        task = BackgroundTask.query.filter_by(identity=f'discover:{school_id}').one()
         self.assertEqual(task.capability, 'directory')
-        self.assertFalse(task.payload['ai_assist'])
+        self.assertEqual(task.payload['trigger'], 'background_discovery')
 
-    def test_progress_keeps_finished_placement_gaps_visible_without_active_processing(self):
+    def test_placement_gaps_do_not_become_reader_tasks_or_onboarding_failures(self):
         from backend.database.models import BackgroundTask
         from backend.services.onboarding_progress import status
         db.session.add(BackgroundTask(identity=f'source_grouping:{self.school.id}', kind='source_grouping',
@@ -100,8 +101,9 @@ class GroupingRecoveryTests(unittest.TestCase):
         result = status(self.school)
         self.assertFalse(result['active'])
         self.assertEqual(result['processing_count'], 0)
-        self.assertEqual(result['coverage']['placement_gap_count'], 1)
-        self.assertIn('该旧入口归属仍待核实', result['incomplete_reasons'])
+        self.assertEqual(result['coverage']['placement_gap_count'], 0)
+        self.assertEqual(result['failed_count'], 0)
+        self.assertNotIn('该旧入口归属仍待核实', result['incomplete_reasons'])
 
     def test_concurrent_manual_group_change_cannot_be_overwritten_by_late_recovery(self):
         source_id = self.source.id

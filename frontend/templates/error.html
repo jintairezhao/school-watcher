@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ '页面不存在' if error_code == 404 else '页面暂时无法打开' }} · 学校通知{% endblock %}
+{% block content %}
+<section class="page-recovery" aria-labelledby="recoveryTitle">
+    <p class="page-recovery-code">{{ error_code }}</p>
+    <h1 id="recoveryTitle">{{ '页面不存在' if error_code == 404 else '页面暂时无法打开' }}</h1>
+    <p>{{ '链接可能已失效，或对应内容已被删除。可以从学校目录重新进入。' if error_code == 404 else '加载页面时遇到问题。可以稍后重新打开，或先从学校目录进入其他学校。' }}</p>
+    <div class="surface-heading-actions">
+        <a class="btn btn-primary" href="{{ url_for('pages.explore') }}">返回学校目录</a>
+        {% if current_user %}<a class="btn btn-outline" href="{{ url_for('pages.index') }}">返回收件箱</a>{% endif %}
+    </div>
+</section>
+{% endblock %}

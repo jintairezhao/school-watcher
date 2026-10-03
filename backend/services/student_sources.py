@@ -65,3 +65,27 @@ def student_priority(kind, label, path_json='[]', school_name=''):
     if ACADEMIC.search(trail) or TEACHING.search(trail):
         return 5
     return None
+
+
+COLLEGE = re.compile(r'(?:学院|学部|书院|学系|系)(?:[（(].{1,25}[）)])?$')
+COLLEGE_DIRECTORY = re.compile(r'院系|学院设置|教学单位|教学机构|学部设置|二级学院|教学科研单位')
+PROFILE_DIRECTORY = re.compile(r'导师|师资|教师名录|师资力量|人物')
+
+
+def college_priority(kind, label, path_json='[]'):
+    """Order the college -> notices route; never infer a source's owner."""
+    label = label or ''
+    try:
+        path = json.loads(path_json or '[]')
+    except (TypeError, ValueError):
+        path = []
+    path = [part for part in path if isinstance(part, str)] if isinstance(path, list) else []
+    if kind == 'directory' and COLLEGE_DIRECTORY.search(label):
+        return 0
+    if kind == 'unit' and COLLEGE.search(label) and not any(PROFILE_DIRECTORY.search(p) for p in path):
+        return 1
+    if kind == 'gateway' and any(COLLEGE.search(p) for p in path):
+        return 1
+    if kind == 'channel' and re.search(r'通知|公告|公示', label) and any(COLLEGE.search(p) for p in path):
+        return 2
+    return None

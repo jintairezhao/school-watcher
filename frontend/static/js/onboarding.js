@@ -45,8 +45,9 @@
             pause.dataset.action = data.can_resume ? 'resume' : 'pause';
             pause.textContent = data.can_resume ? '继续' : data.state === 'pausing' ? '正在暂停…' : '暂停';
         }
-        field('discoveryCounts').textContent = '已列出 ' + (data.department_count ?? 0) + ' 个部门 · 已检查 ' + (data.unit_checked ?? 0) + ' 个部门主页 · 已接入 ' + (data.verified_source_count ?? 0) + ' 个栏目';
-        if (field('discoveryStages')) field('discoveryStages').textContent = '待检查入口 ' + (data.pending_pages ?? 0) + ' 个 · 待接入栏目任务 ' + (data.column_tasks ?? 0) + ' 个';
+        field('discoveryCounts').textContent = '已收录 ' + (data.article_count ?? 0) + ' 条通知 · 已接入 ' + (data.verified_source_count ?? 0) + ' 个信息来源';
+        if (field('discoveryValue')) field('discoveryValue').textContent = data.value_summary || '优先寻找升学、奖助、实习就业、竞赛和校园办事信息。';
+        if (field('discoveryStages')) field('discoveryStages').textContent = (data.processing_count ?? 0) > 0 ? '正在处理 ' + data.processing_count + ' 个后台任务' : '本轮后台处理已结束';
         if (field('discoveryChanges')) field('discoveryChanges').textContent = data.changes && Object.keys(data.changes).length
             ? '本轮检查：结构未变 ' + (data.changes.unchanged ?? 0) + ' 个 · 有变化 ' + (data.changes.changed ?? 0) + ' 个 · 新入口 ' + (data.changes.new ?? 0) + ' 个' : '';
         if (field('discoveryAI')) field('discoveryAI').textContent = data.ai_message || '';

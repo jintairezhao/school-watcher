@@ -17,6 +17,7 @@
             <h1 class="sr-only">{{ '我的收藏' if view == 'saved' else '通知收件箱' }}</h1>
             <nav class="mailbox-views" aria-label="信息管理">
                 <a href="{{ url_for('pages.index', view='focus') if focused_reading else url_for('pages.index') }}" {% if view == 'inbox' %}aria-current="page"{% endif %}>收件箱{% if view == 'inbox' and scope_unread %}<span class="mailbox-unread" aria-label="当前范围 {{ scope_unread }} 条未读">{{ scope_unread }}</span>{% endif %}</a>
+                <a href="{{ url_for('pages.channels', school=current_school_id, view=view) }}">按发布渠道</a>
                 <a href="{{ url_for('pages.index', view='focus', mailbox='saved', period='all') if focused_reading else url_for('pages.index', view='saved', period='all') }}" {% if view == 'saved' %}aria-current="page"{% endif %}>我的收藏</a>
             </nav>
             <div class="toolbar-topline">
@@ -25,7 +26,10 @@
                     <span class="source-scope-school">{{ source_school }}</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
-                <p class="source-scope-context"><span class="source-scope-selection" title="{{ source_scope }}">{{ source_scope }}</span><span> · {{ pagination.total }} 条<span id="activeFilterSummary"> · {% if period == 'archive' and current_year %}{{ current_year }} 年{% if current_month %} {{ current_month }} 月{% endif %}{% elif period == 'all' %}全部时间{% else %}近一周{% endif %}{% if read_filter == 'unread' %} · 未读{% elif read_filter == 'read' %} · 已读{% endif %}</span></span></p>
+                <div class="source-context-row">
+                    <p class="source-scope-context"><span class="source-scope-selection" title="{{ source_scope }}">{{ source_scope }}</span><span> · {{ pagination.total }} 条<span id="activeFilterSummary"> · {% if period == 'archive' and current_year %}{{ current_year }} 年{% if current_month %} {{ current_month }} 月{% endif %}{% elif period == 'all' %}全部时间{% else %}近一周{% endif %}{% if read_filter == 'unread' %} · 未读{% elif read_filter == 'read' %} · 已读{% endif %}</span></span></p>
+                    {% if current_school_id in subscribed_school_ids %}<a class="source-settings-link" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}" aria-label="查看{{ current_school.name }}的自动查找进度与来源设置">自动找通知</a>{% endif %}
+                </div>
             </div>
             <div class="notice-tools">
             <form class="inbox-search" method="get" role="search">
@@ -128,10 +132,13 @@
                             <span class="notice-copy">
                                 <strong>{{ ann.title }}</strong>
                                 {% set row_source = display_sources.get(ann.id, ann.department) %}
-                                <span class="notice-meta"><span class="notice-source-label">{{ row_source.school.name }} · {{ row_source|source_breadcrumb }}{% if announcement_sources.get(ann.id, [])|length > 1 %} · {{ announcement_sources[ann.id]|length }} 个官网栏目{% endif %}</span><time datetime="{{ ann.published_at.isoformat() if ann.published_at else '' }}">{{ ann.published_at.strftime('%Y-%m-%d') if ann.published_at else '时间未知' }}</time></span>
+                                <span class="notice-meta"><span class="notice-source-label" title="{{ row_source|channel_breadcrumb }}">{{ row_source|channel_breadcrumb }}{% if announcement_sources.get(ann.id, [])|length > 1 %} · {{ announcement_sources[ann.id]|length }} 个官网栏目{% endif %}</span><time datetime="{{ ann.published_at.isoformat() if ann.published_at else '' }}">{{ ann.published_at.strftime('%Y-%m-%d') if ann.published_at else '时间未知' }}</time></span>
+                                {% set row_value = (announcement_values|default({})).get(ann.id) %}
+                                {% if row_value %}<span class="notice-value"{% if row_value.reason %} title="{{ row_value.reason }}"{% endif %}>{% if row_value.basis == 'title' %}<span>按标题判断 · </span>{% endif %}{{ row_value.label }}{% if row_value.reason %}<span> · {{ row_value.reason }}</span>{% endif %}</span>{% endif %}
                                 <span class="notice-summary">{{ (summary_texts.get(ann.id) or excerpts.get(ann.id) or '打开官网原文查看详情')|striptags|truncate(110) }}</span>
                             </span>
                         </a>
+                        <a class="notice-channel-link" data-channel-link href="{{ url_for('pages.index', school=row_source.school_id, dept=row_source.id, period='all', view=view) }}" aria-label="查看{{ row_source|channel_breadcrumb }}的全部通知">查看该渠道</a>
                         {% set row_state = states.get(ann.id) %}
                         <div class="notice-row-actions" aria-label="{{ ann.title }}的操作">
                             <button type="button" class="icon-button" id="rowStar{{ ann.id }}" data-row-state data-state-field="starred" data-state-value="{{ 'false' if row_state and row_state.starred else 'true' }}" data-id="{{ ann.id }}" aria-pressed="{{ 'true' if row_state and row_state.starred else 'false' }}" aria-label="{{ '取消收藏' if row_state and row_state.starred else '收藏' }}" title="{{ '取消收藏' if row_state and row_state.starred else '收藏' }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
@@ -152,11 +159,12 @@
             {% else %}
             <div class="notice-empty">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg>
-                <h3>没有符合条件的通知</h3>
-                <p>{% if view == 'saved' %}阅读通知时点击“收藏”，即可在这里集中查看。{% else %}可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。{% endif %}</p>
+                {% set school_empty = view == 'inbox' and current_school and (dept_counts.values()|sum) == 0 %}
+                <h3>{{ '本校尚未收录通知' if school_empty else '没有符合条件的通知' }}</h3>
+                <p>{% if view == 'saved' %}阅读通知时点击“收藏”，即可在这里集中查看。{% elif school_empty %}找到的公开信息会自动出现在这里。你可以查看处理进度，或先阅读其他学校的通知。{% else %}可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。{% endif %}</p>
                 {% if view == 'inbox' and period != 'all' %}<button class="text-button" type="button" data-period="all">查看全部时间的通知</button>{% endif %}
-                {% if current_school_id in subscribed_school_ids %}<a href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">查看栏目与同步状态</a>{% endif %}
-                <a href="{{ url_for('pages.index') }}">清除筛选</a>
+                {% if current_school_id in subscribed_school_ids %}<a href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">查看自动查找进度</a>{% endif %}
+                <a href="{{ url_for('pages.index') }}">{{ '查看所有已订阅学校' if school_empty else '清除筛选' }}</a>
             </div>
             {% endif %}
         </div>

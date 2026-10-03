@@ -18,10 +18,7 @@
             <p class="ann-snippet">{{ snip }}</p>
             {% endif %}
             <div class="ann-meta">
-                {% if show_school %}
-                <span class="ann-school">{{ source.school.name if source else '' }}</span>
-                {% endif %}
-                <span class="ann-dept">{{ source.name if source else '未分类' }}</span>
+                <span class="ann-dept">{{ source|channel_breadcrumb if source else '未分类' }}</span>
                 {% if announcement_sources.get(ann.id, [])|length > 1 %}<span>{{ announcement_sources[ann.id]|length }} 个官网栏目</span>{% endif %}
                 {% if ann.published_at %}
                 <span class="ann-date">{{ ann.published_at.strftime('%Y-%m-%d') }}</span>

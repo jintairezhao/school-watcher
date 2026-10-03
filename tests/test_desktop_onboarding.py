@@ -77,7 +77,7 @@ class FirstSubscriptionTests(unittest.TestCase):
         self.assertTrue(result.json['can_retry'])
         page = self.client.get(f'/subscriptions/{self.school.id}')
         self.assertNotIn('配置 AI 并继续', page.text)
-        self.assertIn('检查官网变化', page.text)
+        self.assertIn('再找一次', page.text)
         self.assertNotIn('正在等待首次同步', page.text)
 
     def test_configured_ai_resumes_waiting_job_without_duplicate_work(self):

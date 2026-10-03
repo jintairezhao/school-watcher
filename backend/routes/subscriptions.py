@@ -110,12 +110,12 @@ def manage_sources(school_id):
         ids = request.form.getlist('department', type=int)
         valid = {d.id for d in departments if d.name.upper() != 'DAILY NEWS'}
         if mode not in ('all', 'selected') or (mode == 'selected' and (not ids or set(ids) - valid)):
-            flash('至少选择一个本校部门或栏目，或选择全部栏目', 'error')
+            flash('至少选择一个信息来源，或选择自动接收全部来源', 'error')
         else:
             sub.department_ids = None if mode == 'all' else sorted(set(ids))
             db.session.commit()
             start_background_scrape(school.id)
-            flash('栏目订阅已保存', 'success')
+            flash('关注范围已保存', 'success')
             return redirect(url_for('pages.index', school=school.id))
     latest = ScrapeLog.query.filter_by(school_id=school.id).order_by(ScrapeLog.id.desc()).first()
     from backend.services.source_inventory import Inventory, DEFAULT_PATH, site_key
@@ -208,7 +208,7 @@ def add_official_source(school_id):
         result = queue_source_review(school.id, {'name': name, 'list_url': url, 'group_name': group},
                                      requested_by=g.user.id, subscribe=True)
         flash(result['message'] if result['state'] == 'activated' else
-              '栏目已提交核实，通过检查后会自动加入你的订阅', 'success')
+              '已开始自动读取这个来源，可用通知会加入收件箱', 'success')
     except ValueError as exc:
         flash(str(exc), 'error')
     return redirect(url_for('subscriptions.manage_sources', school_id=school.id))

@@ -45,7 +45,7 @@ def infer_publication_date_selector(items):
     candidates = Counter()
     for item in items:
         dated = []
-        for node in item.find_all(['time', 'span', 'em', 'i', 'div', 'p']):
+        for node in item.find_all(['time', 'span', 'em', 'i', 'div', 'p', 'td']):
             ancestors = []
             for ancestor in node.parents:
                 if ancestor is item:
@@ -63,12 +63,21 @@ def infer_publication_date_selector(items):
             # A bare span/em immediately beside an article link is also explicit
             # layout evidence. Dates nested in summaries or headings are not.
             adjacent = node.parent is item and node.name in ('span', 'em', 'i')
-            if not explicit and not adjacent:
+            # Table-based lists often use an unlabelled date-only cell beside
+            # the title. Bind its column position, not a generic div shared by
+            # the title and date. A date embedded in prose is not this layout.
+            cell = node if node.name == 'td' else node.find_parent('td')
+            table_date = (item.name == 'tr' and cell is not None and cell.parent is item
+                          and not cell.find('a') and COMPLETE_DATE.fullmatch(publication_date_text(cell)))
+            if not explicit and not adjacent and not table_date:
                 continue
             selector = node.name + ''.join('.' + soupsieve.escape(c) for c in classes)
             if not classes:
                 position = 1 + len(node.find_previous_siblings(node.name))
                 selector += f':nth-of-type({position})'
+            if table_date:
+                cell_selector = f'td:nth-of-type({1 + len(cell.find_previous_siblings("td"))})'
+                selector = cell_selector if node is cell else cell_selector + ' ' + selector
             dated.append((selector, text))
         # Multiple distinct dates may be event start/end times. Leave unresolved.
         if len({text for _, text in dated}) != 1:

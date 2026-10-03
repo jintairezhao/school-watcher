@@ -8,10 +8,10 @@
 <header class="reading-header">
     <h1 class="reading-title">{{ ann.title }}</h1>
     <div class="reading-meta">
-        <span class="reader-source">{{ source.school.name }} · {{ source|source_breadcrumb }}</span>
+        <span class="reader-source">{{ source|channel_breadcrumb }}</span>
         <time datetime="{{ ann.published_at.isoformat() if ann.published_at else '' }}">{{ ann.published_at.strftime('%Y年%m月%d日 %H:%M') if ann.published_at else '发布时间未知' }}</time>
     </div>
-    {{ source_links(sources) }}
+    {{ source_links(ann, sources, user) }}
     {{ article_signature(provenance) }}
 </header>
 {% set insight = student_article_view(ann) %}

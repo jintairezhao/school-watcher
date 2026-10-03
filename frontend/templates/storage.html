@@ -22,7 +22,7 @@
     <tr><th scope="row">已结束的抓取记录</th><td></td><td><button class="btn btn-outline btn-sm" type="button" data-cleanup="logs">清理</button></td></tr>
     </tbody>
 </table>
-<p class="storage-help">清理保留通知目录与收藏正文；正在使用的缓存和证据会跳过。</p>
+<p class="storage-help">清理保留接入进度、通知目录与收藏正文；正在使用的证据会跳过。</p>
 <div class="storage-actions"><button class="btn btn-outline" type="button" data-cleanup="expired">按保留规则清理</button><button class="btn btn-outline" type="button" data-cleanup="all_cache">清空可清理缓存</button></div>
 <p id="cleanupStatus" class="storage-status" role="status" aria-live="polite"></p>
 {% if config.DESKTOP_MODE %}
@@ -46,7 +46,7 @@
     <form id="storagePolicyForm">
         <p class="storage-help">0 表示不限制。保存后用于定期清理。</p>
         <div class="storage-fields">
-        {% for key, label, unit in [('body_cache_days','未收藏正文保留','天'),('body_cache_mb','正文缓存上限','MB'),('discovery_cache_days','网页缓存保留','天'),('discovery_cache_mb','调查缓存上限','MB'),('fetch_cache_mb','抓取缓存上限','MB'),('scrape_log_retention_days','抓取记录保留','天'),('backup_keep_count','自动备份保留','份')] %}
+        {% for key, label, unit in [('body_cache_days','未收藏正文保留','天'),('body_cache_mb','正文缓存上限','MB'),('discovery_cache_days','网页缓存保留','天'),('discovery_cache_mb','调查网页缓存上限','MB'),('fetch_cache_mb','抓取缓存上限','MB'),('scrape_log_retention_days','抓取记录保留','天'),('backup_keep_count','自动备份保留','份')] %}
             <div class="storage-field"><label for="policy-{{ key }}">{{ label }}</label>
                 <div class="storage-number"><input class="form-input" id="policy-{{ key }}" name="{{ key }}" type="number" min="0" step="1" required value="{{ storage.policy[key] }}"><span>{{ unit }}</span></div>
             </div>
