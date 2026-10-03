@@ -155,7 +155,8 @@ def check(capture=True):
             expect(page.locator('#rowStar3')).to_have_count(0)
             expect(page.locator('.reading-title')).to_contain_text('北京学术交流')
             assert 'selected=1' in page.url
-            expect(page.locator('.mailbox-views a')).to_have_count(2)
+            expect(page.locator('.mailbox-views a')).to_have_count(3)
+            expect(page.locator('.mailbox-views').get_by_role('link', name='按发布渠道', exact=True)).to_be_visible()
             checks.append('favorites synchronize and unfavoriting another row preserves the current article')
 
             for width, theme in ([(1440, 'light'), (1440, 'dark'), (1200, 'light'), (1200, 'dark'), (1024, 'light'), (1024, 'dark'), (390, 'light'), (390, 'dark')] if capture else [(1024, 'light'), (390, 'light')]):
