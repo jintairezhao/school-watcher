@@ -85,6 +85,7 @@ try:
         page.route('**/*', serve_discovery)
         page.goto(f'http://localhost/subscriptions/{fixture.school.id}')
         page.wait_for_function('(s) => document.getElementById("discoveryMessage").textContent === s', arg=message)
+        page.locator('.discovery-details > summary').click()
         assert page.locator('#discoveryCurrent').inner_text() == message
         page.locator('#discoveryGaps summary').click()
         assert message in page.locator('#discoveryGapList').inner_text()
