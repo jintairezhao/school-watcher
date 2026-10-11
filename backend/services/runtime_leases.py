@@ -70,12 +70,22 @@ def origin_key(url):
     return (urlsplit(url).hostname or '').lower().rstrip('.')
 
 
-def reserve_origin(url, owner_id, ttl=120, token=None, interval=1, concurrency=1):
+def reserve_origin(url, owner_id, ttl=120, token=None, interval=None, concurrency=None,
+                   transport='http', global_token=None):
+    from backend.services.discovery_policy import get_policy
+    policy = get_policy()
+    interval = policy['fetch_host_interval_seconds'] if interval is None else interval
+    concurrency = policy['fetch_host_concurrency'] if concurrency is None else concurrency
     key, now = origin_key(url), datetime.utcnow()
     if not key:
         raise ValueError('An official host is required')
     token = token or uuid4().hex
+    global_token = global_token or token
     with runtime_session() as session:
+        # Every process and transport takes this short database lock. Browser
+        # redirects share their execution's global slot while retaining host permits.
+        insert_if_missing(session, OriginBudget, dict(origin='__fetch_global__', next_start_at=now), 'origin')
+        session.execute(update(OriginBudget).where(OriginBudget.origin == '__fetch_global__').values(next_start_at=now))
         insert_if_missing(session, OriginBudget, dict(origin=key, next_start_at=now), 'origin')
         # UPDATE also serializes SQLite writers; PostgreSQL takes a row lock.
         session.execute(update(OriginBudget).where(OriginBudget.origin == key).values(origin=key))
@@ -84,6 +94,8 @@ def reserve_origin(url, owner_id, ttl=120, token=None, interval=1, concurrency=1
         prior = session.get(OriginPermit, token)
         if prior and prior.origin == key:
             prior.expires_at = now + timedelta(seconds=ttl)
+            session.execute(update(RuntimeLease).where(RuntimeLease.token == global_token,
+                RuntimeLease.key.like('fetch:%')).values(expires_at=now + timedelta(seconds=ttl), updated_at=now))
             return {'token': token, 'origin': key}, 0
         due = max(stamp for stamp in (budget.next_start_at, budget.cooldown_until, now) if stamp)
         active = session.scalar(select(func.count()).select_from(OriginPermit).where(OriginPermit.origin == key))
@@ -92,6 +104,16 @@ def reserve_origin(url, owner_id, ttl=120, token=None, interval=1, concurrency=1
             return None, max(1, min(5, (earliest - now).total_seconds()))
         if due > now:
             return None, max(.05, (due - now).total_seconds())
+        for category, maximum in [('global', policy['fetch_global_concurrency'])] + (
+                [('browser', policy['browser_concurrency'])] if transport == 'browser' else []):
+            existing = session.get(RuntimeLease, f'fetch:{category}:{global_token}')
+            active_count = session.scalar(select(func.count()).select_from(RuntimeLease).where(
+                RuntimeLease.key.like(f'fetch:{category}:%'), RuntimeLease.expires_at > now))
+            if not (existing and existing.expires_at > now) and active_count >= max(1, int(maximum)):
+                return None, 1
+        for category in ['global', 'permit'] + (['browser'] if transport == 'browser' else []):
+            lease_key = f'fetch:{category}:{token if category == "permit" else global_token}'
+            acquire_in_transaction(session, lease_key, global_token, global_token, ttl, now)
         session.add(OriginPermit(token=token, origin=key, owner_id=owner_id,
                                  expires_at=now + timedelta(seconds=ttl)))
         budget.next_start_at = now + timedelta(seconds=interval)
@@ -100,19 +122,35 @@ def reserve_origin(url, owner_id, ttl=120, token=None, interval=1, concurrency=1
 
 def release_origin(token):
     with runtime_session() as session:
+        session.execute(update(OriginBudget).where(OriginBudget.origin == '__fetch_global__').values(next_start_at=datetime.utcnow()))
+        mapping = session.get(RuntimeLease, f'fetch:permit:{token}')
+        global_token = mapping.token if mapping else token
         session.execute(delete(OriginPermit).where(OriginPermit.token == token))
+        session.execute(delete(RuntimeLease).where(RuntimeLease.key == f'fetch:permit:{token}'))
+        remaining = session.scalar(select(func.count()).select_from(RuntimeLease).where(
+            RuntimeLease.key.like('fetch:permit:%'), RuntimeLease.token == global_token,
+            RuntimeLease.expires_at > datetime.utcnow()))
+        if not remaining:
+            session.execute(delete(RuntimeLease).where(RuntimeLease.token == global_token,
+                RuntimeLease.key.in_([f'fetch:global:{global_token}', f'fetch:browser:{global_token}'])))
 
 
 def renew_origin(token, ttl=120):
     now = datetime.utcnow()
     with runtime_session() as session:
-        return bool(session.execute(update(OriginPermit).where(OriginPermit.token == token,
+        renewed = bool(session.execute(update(OriginPermit).where(OriginPermit.token == token,
             OriginPermit.expires_at > now).values(expires_at=now + timedelta(seconds=ttl))).rowcount)
+        mapping = session.get(RuntimeLease, f'fetch:permit:{token}')
+        if renewed and mapping:
+            session.execute(update(RuntimeLease).where(RuntimeLease.token == mapping.token,
+                RuntimeLease.key.like('fetch:%'), RuntimeLease.expires_at > now).values(
+                    expires_at=now + timedelta(seconds=ttl), updated_at=now))
+        return renewed
 
 
 def cool_origin(url, seconds):
     key, now = origin_key(url), datetime.utcnow()
-    until = now + timedelta(seconds=max(1, min(86400, seconds)))
+    until = now + timedelta(seconds=max(1, seconds))
     with runtime_session() as session:
         insert_if_missing(session, OriginBudget, dict(origin=key, next_start_at=now), 'origin')
         session.execute(update(OriginBudget).where(OriginBudget.origin == key,

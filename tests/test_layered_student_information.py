@@ -107,16 +107,21 @@ class LayeredDiscoveryTests(unittest.TestCase):
             self.assertIsNotNone(inventory.get_page(key, ROOT + 'org/'))
 
     def test_large_page_is_split_with_selectors_valid_in_original_dom(self):
-        html = '<html><body><nav>' + ''.join(f'<a href="/x{i}">其他入口{i}</a>' for i in range(2500)) + '</nav>'
+        html = '<html><body><div>' + ''.join(f'<a href="/x{i}">其他入口{i}</a>' for i in range(2500)) + '</div>'
         html += '<section><h2>申请材料</h2><ul><li><a href="/a">学生申请条件</a></li><li><a href="/b">往年材料清单</a></li></ul></section></body></html>'
         parts = materials(1, ROOT, html)
         self.assertTrue(parts)
         original = BeautifulSoup(html, 'lxml')
         for part in parts:
             self.assertLessEqual(len(canonical(part).encode()), 24 * 1024)
-            root = part['evidence'][0]['original_root_selector']
-            self.assertEqual(len(original.select(root)), 1)
-            self.assertEqual(len(original.select(root + ' li')), 2)
+            for item in part['evidence']:
+                root = item['original_root_selector']
+                self.assertEqual(len(original.select(root)), 1)
+        links = {a['href'] for part in parts for item in part['evidence']
+                 for a in BeautifulSoup(item['html'], 'lxml').select('a[href]')}
+        self.assertEqual(links, {a['href'] for a in original.select('a[href]')})
+        self.assertTrue(any('申请材料' in item['html'] and len(BeautifulSoup(item['html'], 'lxml').select('li')) == 2
+                            for part in parts for item in part['evidence']))
 
     def test_navigation_resume_replays_admitted_links_before_remaining_batch(self):
         from backend.scraper.discovery.structure import extract_structure

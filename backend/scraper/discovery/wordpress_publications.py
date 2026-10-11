@@ -14,6 +14,8 @@ def page_kind(soup):
     classes = soup.body.get('class', []) if soup.body else []
     if 'single-post' in classes and soup.select_one('article.type-post[id^="post-"]'):
         return 'article'
+    if 'single-attachment' in classes and soup.select_one('article.type-attachment[id^="post-"]'):
+        return 'attachment'
     if 'search' in classes:
         return 'search'
     return ''
@@ -30,7 +32,7 @@ def article_positions(soup, url):
             if target and (any(re.search(r'/' + ident + r'\.html?(?:$|[?#])', target) for ident in ids)
                            or link.find_parent(class_='entry-title')):
                 result.add(locator(link))
-    if page_kind(soup) == 'article':
+    if page_kind(soup) in ('article', 'attachment'):
         for link in soup.select('h1 a[href]'):
             if resolve_page_link(url, link['href']) == canonical_url(url):
                 result.add(locator(link))
@@ -40,7 +42,7 @@ def article_positions(soup, url):
 def column_links(soup, url):
     from .structure import clean, locator
     result = []
-    if page_kind(soup) == 'article':
+    if page_kind(soup) in ('article', 'attachment'):
         links = soup.select('.meta-categories a[rel~="tag"], a[rel~="category"]')
         if not links:
             links = soup.select('.breadcrumbs a.taxonomy.category[href]')[-1:]

@@ -281,14 +281,21 @@ def index():
 
 @bp.route('/channels')
 def channels():
-    """Browse actual publishing channels within this reader's message scope."""
+    """Keep old channel bookmarks pointing to the inbox's source sidebar."""
     if g.get('user') is None:
-        return redirect(url_for('pages.explore'))
-    from backend.services.channel_views import channel_overview
-    from backend.services.inbox import inbox_mailbox
-    context = channel_overview(g.user.id, school_id=request.args.get('school', type=int),
-                               q=request.args.get('q', '').strip()[:120], view=inbox_mailbox(request.args))
-    response = make_response(render_template('channels.html', **context))
+        response = redirect(url_for('pages.explore'))
+    else:
+        from backend.services.inbox import inbox_mailbox
+        params = {'period': 'all'}
+        school_id = request.args.get('school', type=int)
+        if school_id and school_id > 0:
+            params['school'] = school_id
+        if inbox_mailbox(request.args) == 'saved':
+            params['view'] = 'saved'
+        q = request.args.get('q', '').strip()[:200]
+        if q:
+            params['q'] = q
+        response = redirect(url_for('pages.index', _anchor='sources', **params))
     response.headers['Cache-Control'] = 'no-store'
     return response
 

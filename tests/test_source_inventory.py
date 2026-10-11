@@ -2,6 +2,7 @@
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -477,6 +478,11 @@ class FrontierTests(unittest.TestCase):
             self.assertEqual(result['pages'][0]['health'], 'unreachable')
             self.assertFalse(result['accepted'])
             store.retry(key)
+            # Failed work remains saved, but an immediate restart must respect
+            # the stored recovery deadline rather than send another request.
+            self.assertEqual(store.report(key)['states'], {'failed': 1})
+            with patch('backend.services.source_inventory.now', return_value=result['pages'][0]['retry_at']):
+                store.retry(key)
             self.assertEqual(store.report(key)['states'], {'pending': 1})
 
 

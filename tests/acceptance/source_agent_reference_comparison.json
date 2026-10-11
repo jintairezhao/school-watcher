@@ -1,0 +1,2274 @@
+[
+  {
+    "implementation": "v2.5",
+    "site": {
+      "id": "cupk",
+      "name": "中国石油大学（北京）克拉玛依校区",
+      "url": "https://www.cupk.edu.cn/",
+      "split": "development"
+    },
+    "measurement_windows": [],
+    "started_at": "2026-10-03T20:08:32.741667Z",
+    "ended_at": "2026-10-03T20:18:39.616872Z",
+    "elapsed_seconds": 606.864,
+    "actual_model_dispatches": 7,
+    "actual_provider_tokens": 31913,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 0,
+    "saved_notice_rows": 0,
+    "logical_http_reads": 29,
+    "http_transport_attempts": 0,
+    "task_evidence_cache_hits": 1,
+    "discovery_snapshot_lookups": 0,
+    "budget_stopped": false,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "pending": 1,
+      "done": 14
+    },
+    "task_error_counts": {},
+    "known_sources": [
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "教务部",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/jwb/tzgg/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "教务部",
+          "教学运行",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/jwb/jxyx/tzgg/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "教务部",
+          "国际教育",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/jwb/gjjy/tzgg/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "教务部",
+          "教学研究",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/jwb/jxyj/tzgg/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "研究生部",
+          "通知公告",
+          "培养"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/yjsb/tzgg/py/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "研究生部",
+          "通知公告",
+          "学位"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/yjsb/tzgg/xw/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "研究生部",
+          "通知公告",
+          "继续教育"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/yjsb/tzgg/jxjy/",
+        "matching_sources": [],
+        "reason": "not_installed; see_task_result",
+        "read_outcomes": [
+          {
+            "url": "https://www.cupk.edu.cn/yjsb/tzgg/jxjy/",
+            "outcome": "needs_adapter",
+            "error_code": ""
+          },
+          {
+            "url": "https://www.cupk.edu.cn/yjsb/tzgg/jxjy/",
+            "outcome": "needs_adapter",
+            "error_code": ""
+          }
+        ],
+        "tasks": [
+          {
+            "kind": "onboard",
+            "state": "done",
+            "phase": "complete",
+            "error_code": "",
+            "result": {
+              "state": "unsupported",
+              "department_ids": [],
+              "new_count": 0,
+              "issues": [
+                {
+                  "name": "继续教育",
+                  "reason": "提取规则未能正确读取该栏目",
+                  "codes": [
+                    "column_identity_or_scope_unconfirmed"
+                  ]
+                }
+              ],
+              "reason": "提取规则未能正确读取该栏目"
+            }
+          }
+        ]
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "学生工作与安全保卫部",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/xgybw/tzgg/tzgg/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "研究生部",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/yjsb/tzgg/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国石油大学（北京）克拉玛依校区",
+          "创新创业学院",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cupk.edu.cn/cxcy/tzgg/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "v2.5",
+    "site": {
+      "id": "hust",
+      "name": "华中科技大学",
+      "url": "https://www.hust.edu.cn/",
+      "split": "development"
+    },
+    "measurement_windows": [],
+    "started_at": "2026-10-03T20:19:09.661099Z",
+    "ended_at": "2026-10-03T20:29:31.211871Z",
+    "elapsed_seconds": 621.54,
+    "actual_model_dispatches": 15,
+    "actual_provider_tokens": 61526,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 11,
+    "saved_notice_rows": 93,
+    "logical_http_reads": 46,
+    "http_transport_attempts": 0,
+    "task_evidence_cache_hits": 0,
+    "discovery_snapshot_lookups": 0,
+    "budget_stopped": false,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "pending": 3,
+      "done": 11
+    },
+    "task_error_counts": {},
+    "known_sources": [
+      {
+        "channel_path": [
+          "华中科技大学",
+          "生命科学与技术学院",
+          "通知公告"
+        ],
+        "reference_url": "http://life.hust.edu.cn/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "机械科学与工程学院",
+          "通知公告"
+        ],
+        "reference_url": "http://mse.hust.edu.cn/sylm/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "中欧清洁与可再生能源学院",
+          "News"
+        ],
+        "reference_url": "http://icare.hust.edu.cn/English/News.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "电气与电子工程学院",
+          "通知公告"
+        ],
+        "reference_url": "http://seee.hust.edu.cn/llxx/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "工程科学学院",
+          "学院通知"
+        ],
+        "reference_url": "http://ses.hust.edu.cn/xwzx/xytz.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "计算机科学与技术学院",
+          "行政"
+        ],
+        "reference_url": "http://www.cs.hust.edu.cn/sylm/tzgg/xz.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "建筑与城市规划学院",
+          "通知公告"
+        ],
+        "reference_url": "http://aup.hust.edu.cn/index/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "土木与水利工程学院",
+          "通知公告"
+        ],
+        "reference_url": "http://civil.hust.edu.cn/index/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "党委统战部",
+          "通知公告"
+        ],
+        "reference_url": "http://tzb.hust.edu.cn/index/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "创新研究院",
+          "通知公告"
+        ],
+        "reference_url": "http://ii.hust.edu.cn/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v1",
+    "site": {
+      "id": "hust",
+      "name": "华中科技大学",
+      "url": "https://www.hust.edu.cn/",
+      "split": "development"
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-03T20:54:15.440689Z",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-03T21:05:03.545499Z",
+        "last_http_index": 96,
+        "last_task_cache_hits": 71,
+        "last_discovery_cache_hits": 1192
+      }
+    ],
+    "started_at": "2026-10-03T20:54:15.440662Z",
+    "ended_at": "2026-10-03T21:05:03.545499Z",
+    "elapsed_seconds": 648.008,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 121522,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 10,
+    "saved_notice_rows": 98,
+    "logical_http_reads": 96,
+    "http_transport_attempts": 96,
+    "task_evidence_cache_hits": 71,
+    "discovery_snapshot_lookups": 1192,
+    "budget_stopped": true,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "pending": 1,
+      "waiting": 27,
+      "done": 12
+    },
+    "task_error_counts": {
+      "budget_exhausted": 27
+    },
+    "known_sources": [
+      {
+        "channel_path": [
+          "华中科技大学",
+          "生命科学与技术学院",
+          "通知公告"
+        ],
+        "reference_url": "http://life.hust.edu.cn/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "机械科学与工程学院",
+          "通知公告"
+        ],
+        "reference_url": "http://mse.hust.edu.cn/sylm/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "中欧清洁与可再生能源学院",
+          "News"
+        ],
+        "reference_url": "http://icare.hust.edu.cn/English/News.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "电气与电子工程学院",
+          "通知公告"
+        ],
+        "reference_url": "http://seee.hust.edu.cn/llxx/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "工程科学学院",
+          "学院通知"
+        ],
+        "reference_url": "http://ses.hust.edu.cn/xwzx/xytz.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "计算机科学与技术学院",
+          "行政"
+        ],
+        "reference_url": "http://www.cs.hust.edu.cn/sylm/tzgg/xz.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "建筑与城市规划学院",
+          "通知公告"
+        ],
+        "reference_url": "http://aup.hust.edu.cn/index/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "土木与水利工程学院",
+          "通知公告"
+        ],
+        "reference_url": "http://civil.hust.edu.cn/index/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "党委统战部",
+          "通知公告"
+        ],
+        "reference_url": "http://tzb.hust.edu.cn/index/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "华中科技大学",
+          "创新研究院",
+          "通知公告"
+        ],
+        "reference_url": "http://ii.hust.edu.cn/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "v2.5",
+    "site": {
+      "id": "sjtu",
+      "name": "上海交通大学",
+      "url": "https://www.sjtu.edu.cn/",
+      "split": "development"
+    },
+    "measurement_windows": [],
+    "started_at": "2026-10-03T20:29:05.797758Z",
+    "ended_at": "2026-10-03T20:39:06.100046Z",
+    "elapsed_seconds": 600.291,
+    "actual_model_dispatches": 28,
+    "actual_provider_tokens": 117206,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 0,
+    "saved_notice_rows": 0,
+    "logical_http_reads": 267,
+    "http_transport_attempts": 0,
+    "task_evidence_cache_hits": 94,
+    "discovery_snapshot_lookups": 0,
+    "budget_stopped": false,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 27,
+      "pending": 4
+    },
+    "task_error_counts": {
+      "origin_busy": 4
+    },
+    "known_sources": [
+      {
+        "channel_path": [
+          "上海交通大学",
+          "药学院",
+          "招生工作"
+        ],
+        "reference_url": "https://pharm.sjtu.edu.cn/zsgz.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "设计学院",
+          "招生资讯"
+        ],
+        "reference_url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "研究生招生网",
+          "博士招生"
+        ],
+        "reference_url": "https://yzb.sjtu.edu.cn/zkxx/bszs",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "心理学院",
+          "招生信息"
+        ],
+        "reference_url": "https://psychology.sjtu.edu.cn/zsxx.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "研究生招生网",
+          "港澳台招生"
+        ],
+        "reference_url": "https://yzb.sjtu.edu.cn/zkxx/gatzs",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "心理学院",
+          "学生培养"
+        ],
+        "reference_url": "https://psychology.sjtu.edu.cn/pyfa.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "船舶海洋与建筑工程学院",
+          "答辩公告"
+        ],
+        "reference_url": "https://naoce.sjtu.edu.cn/dabiangonggao.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "教务处",
+          "面向学生的通知"
+        ],
+        "reference_url": "https://www.jwc.sjtu.edu.cn/index/mxxsdtz.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "电气工程学院",
+          "通知公告"
+        ],
+        "reference_url": "https://see.sjtu.edu.cn/bks_tzgg.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "教务处",
+          "新闻通告"
+        ],
+        "reference_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v1",
+    "site": {
+      "id": "sjtu",
+      "name": "上海交通大学",
+      "url": "https://www.sjtu.edu.cn/",
+      "split": "development"
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-03T20:54:15.440413Z",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-03T21:04:15.616726Z",
+        "last_http_index": 182,
+        "last_task_cache_hits": 189,
+        "last_discovery_cache_hits": 509
+      }
+    ],
+    "started_at": "2026-10-03T20:54:15.440386Z",
+    "ended_at": "2026-10-03T21:04:15.616726Z",
+    "elapsed_seconds": 600.081,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 183843,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 0,
+    "saved_notice_rows": 0,
+    "logical_http_reads": 269,
+    "http_transport_attempts": 182,
+    "task_evidence_cache_hits": 189,
+    "discovery_snapshot_lookups": 509,
+    "budget_stopped": true,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 14,
+      "waiting": 16,
+      "pending": 4
+    },
+    "task_error_counts": {
+      "budget_exhausted": 16,
+      "origin_busy": 4
+    },
+    "known_sources": [
+      {
+        "channel_path": [
+          "上海交通大学",
+          "药学院",
+          "招生工作"
+        ],
+        "reference_url": "https://pharm.sjtu.edu.cn/zsgz.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "设计学院",
+          "招生资讯"
+        ],
+        "reference_url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "研究生招生网",
+          "博士招生"
+        ],
+        "reference_url": "https://yzb.sjtu.edu.cn/zkxx/bszs",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "心理学院",
+          "招生信息"
+        ],
+        "reference_url": "https://psychology.sjtu.edu.cn/zsxx.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "研究生招生网",
+          "港澳台招生"
+        ],
+        "reference_url": "https://yzb.sjtu.edu.cn/zkxx/gatzs",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "心理学院",
+          "学生培养"
+        ],
+        "reference_url": "https://psychology.sjtu.edu.cn/pyfa.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "船舶海洋与建筑工程学院",
+          "答辩公告"
+        ],
+        "reference_url": "https://naoce.sjtu.edu.cn/dabiangonggao.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "教务处",
+          "面向学生的通知"
+        ],
+        "reference_url": "https://www.jwc.sjtu.edu.cn/index/mxxsdtz.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "电气工程学院",
+          "通知公告"
+        ],
+        "reference_url": "https://see.sjtu.edu.cn/bks_tzgg.html",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "上海交通大学",
+          "教务处",
+          "新闻通告"
+        ],
+        "reference_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "baseline-v2.5",
+    "site": {
+      "id": "zju",
+      "name": "浙江大学",
+      "url": "https://www.zju.edu.cn/",
+      "split": "held_out"
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T02:28:00.207033Z",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T02:29:20.507949Z",
+        "last_http_index": 6,
+        "last_task_cache_hits": 0,
+        "last_discovery_cache_hits": 0
+      }
+    ],
+    "started_at": "2026-10-11T02:28:00.207007Z",
+    "ended_at": "2026-10-11T02:29:20.507949Z",
+    "elapsed_seconds": 80.067,
+    "actual_model_dispatches": 0,
+    "actual_provider_tokens": 0,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 0,
+    "saved_notice_rows": 0,
+    "logical_http_reads": 6,
+    "http_transport_attempts": 6,
+    "task_evidence_cache_hits": 0,
+    "discovery_snapshot_lookups": 0,
+    "budget_stopped": false,
+    "known_source_count": 0,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 1
+    },
+    "task_error_counts": {},
+    "known_sources": [],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v2-zju",
+    "site": {
+      "id": "zju",
+      "name": "浙江大学",
+      "url": "https://www.zju.edu.cn/",
+      "split": "held_out"
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T02:33:57.952793Z",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T02:35:02.296377Z",
+        "last_http_index": 2,
+        "last_task_cache_hits": 2,
+        "last_discovery_cache_hits": 0
+      }
+    ],
+    "started_at": "2026-10-11T02:33:57.952762Z",
+    "ended_at": "2026-10-11T02:35:02.296377Z",
+    "elapsed_seconds": 64.255,
+    "actual_model_dispatches": 0,
+    "actual_provider_tokens": 0,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 0,
+    "saved_notice_rows": 0,
+    "logical_http_reads": 2,
+    "http_transport_attempts": 2,
+    "task_evidence_cache_hits": 2,
+    "discovery_snapshot_lookups": 0,
+    "budget_stopped": false,
+    "known_source_count": 0,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 1
+    },
+    "task_error_counts": {},
+    "known_sources": [],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "baseline-v2.5",
+    "site": {
+      "id": "ustc",
+      "name": "中国科学技术大学",
+      "url": "https://www.ustc.edu.cn/",
+      "split": "held_out"
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T02:35:31.978616Z",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T02:43:10.210758Z",
+        "last_http_index": 265,
+        "last_task_cache_hits": 2,
+        "last_discovery_cache_hits": 750
+      }
+    ],
+    "started_at": "2026-10-11T02:35:31.978590Z",
+    "ended_at": "2026-10-11T02:43:10.210758Z",
+    "elapsed_seconds": 458.143,
+    "actual_model_dispatches": 38,
+    "actual_provider_tokens": 158512,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 6,
+    "saved_notice_rows": 76,
+    "logical_http_reads": 299,
+    "http_transport_attempts": 265,
+    "task_evidence_cache_hits": 2,
+    "discovery_snapshot_lookups": 750,
+    "budget_stopped": false,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 37
+    },
+    "task_error_counts": {},
+    "known_sources": [
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "少年班学院",
+          "公告"
+        ],
+        "reference_url": "https://sgy.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "数学科学学院",
+          "学院新闻"
+        ],
+        "reference_url": "https://math.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "数学科学学院",
+          "通知公告"
+        ],
+        "reference_url": "https://math.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "数学科学学院",
+          "学术交流"
+        ],
+        "reference_url": "https://math.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "计算机科学与技术学院",
+          "新闻"
+        ],
+        "reference_url": "https://cs.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "计算机科学与技术学院",
+          "公告通知"
+        ],
+        "reference_url": "https://cs.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "计算机科学与技术学院",
+          "学术活动"
+        ],
+        "reference_url": "https://cs.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "计算机科学与技术学院",
+          "学生工作"
+        ],
+        "reference_url": "https://cs.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "物理学院",
+          "新闻中心",
+          "学院要闻"
+        ],
+        "reference_url": "https://physics.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "物理学院",
+          "新闻中心",
+          "通知公告"
+        ],
+        "reference_url": "https://physics.ustc.edu.cn/3584/list.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v4-ustc",
+    "site": {
+      "id": "ustc",
+      "name": "中国科学技术大学",
+      "url": "https://www.ustc.edu.cn/",
+      "split": "held_out"
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T02:56:42.425908Z",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T03:06:43.160136Z",
+        "last_http_index": 174,
+        "last_task_cache_hits": 3,
+        "last_discovery_cache_hits": 4786
+      }
+    ],
+    "started_at": "2026-10-11T02:56:42.425883Z",
+    "ended_at": "2026-10-11T03:06:43.160136Z",
+    "elapsed_seconds": 600.593,
+    "actual_model_dispatches": 37,
+    "actual_provider_tokens": 188578,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 17,
+    "saved_notice_rows": 10,
+    "logical_http_reads": 174,
+    "http_transport_attempts": 174,
+    "task_evidence_cache_hits": 3,
+    "discovery_snapshot_lookups": 4786,
+    "budget_stopped": true,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "pending": 16,
+      "done": 27,
+      "waiting": 96
+    },
+    "task_error_counts": {
+      "budget_exhausted": 96
+    },
+    "known_sources": [
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "少年班学院",
+          "公告"
+        ],
+        "reference_url": "https://sgy.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "数学科学学院",
+          "学院新闻"
+        ],
+        "reference_url": "https://math.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "数学科学学院",
+          "通知公告"
+        ],
+        "reference_url": "https://math.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "数学科学学院",
+          "学术交流"
+        ],
+        "reference_url": "https://math.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "计算机科学与技术学院",
+          "新闻"
+        ],
+        "reference_url": "https://cs.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "计算机科学与技术学院",
+          "公告通知"
+        ],
+        "reference_url": "https://cs.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "计算机科学与技术学院",
+          "学术活动"
+        ],
+        "reference_url": "https://cs.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "计算机科学与技术学院",
+          "学生工作"
+        ],
+        "reference_url": "https://cs.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "物理学院",
+          "新闻中心",
+          "学院要闻"
+        ],
+        "reference_url": "https://physics.ustc.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "中国科学技术大学",
+          "物理学院",
+          "新闻中心",
+          "通知公告"
+        ],
+        "reference_url": "https://physics.ustc.edu.cn/3584/list.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "baseline-v2.5",
+    "site": {
+      "id": "pku",
+      "name": "北京大学",
+      "url": "https://www.pku.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v3 freeze to retain two independent schools after the ZJU regression fix."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T03:03:39.609127Z",
+        "snapshot_sha256": null,
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T03:10:33.072354Z",
+        "last_http_index": 154,
+        "last_task_cache_hits": 4,
+        "last_discovery_cache_hits": 885
+      }
+    ],
+    "started_at": "2026-10-11T03:03:39.609101Z",
+    "ended_at": "2026-10-11T03:10:33.072354Z",
+    "elapsed_seconds": 413.377,
+    "actual_model_dispatches": 38,
+    "actual_provider_tokens": 179280,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 3,
+    "saved_notice_rows": 46,
+    "logical_http_reads": 140,
+    "http_transport_attempts": 154,
+    "task_evidence_cache_hits": 4,
+    "discovery_snapshot_lookups": 885,
+    "budget_stopped": false,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 43
+    },
+    "task_error_counts": {},
+    "known_sources": [
+      {
+        "channel_path": [
+          "北京大学",
+          "城市与环境学院",
+          "学院新闻"
+        ],
+        "reference_url": "https://ues.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "城市与环境学院",
+          "通知公告"
+        ],
+        "reference_url": "https://ues.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "城市与环境学院",
+          "学术讲座"
+        ],
+        "reference_url": "https://ues.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "信息科学技术学院",
+          "新闻动态"
+        ],
+        "reference_url": "https://eecs.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "信息科学技术学院",
+          "通知公告"
+        ],
+        "reference_url": "https://eecs.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "信息科学技术学院",
+          "学工动态"
+        ],
+        "reference_url": "https://eecs.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "信息科学技术学院",
+          "讲座信息"
+        ],
+        "reference_url": "https://eecs.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "外国语学院",
+          "学院 新闻 / NEWS"
+        ],
+        "reference_url": "https://sfl.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "外国语学院",
+          "通知 公告 / ANNOUNCEMENT"
+        ],
+        "reference_url": "https://sfl.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "中国语言文学系",
+          "新闻动态"
+        ],
+        "reference_url": "https://chinese.pku.edu.cn/xwgg/xwdt/index.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v5-pku",
+    "site": {
+      "id": "pku",
+      "name": "北京大学",
+      "url": "https://www.pku.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v3 freeze to retain two independent schools after the ZJU regression fix."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T03:14:53.505310Z",
+        "snapshot_sha256": "2902c10a96a73c4eb89f94e5f50fd2e87b576819f94f0dc9520974e3926f4432",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T03:24:53.624945Z",
+        "last_http_index": 196,
+        "last_task_cache_hits": 74,
+        "last_discovery_cache_hits": 2685
+      }
+    ],
+    "started_at": "2026-10-11T03:14:53.505286Z",
+    "ended_at": "2026-10-11T03:24:53.624945Z",
+    "elapsed_seconds": 600.027,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 176728,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 0,
+    "saved_notice_rows": 0,
+    "logical_http_reads": 208,
+    "http_transport_attempts": 196,
+    "task_evidence_cache_hits": 74,
+    "discovery_snapshot_lookups": 2685,
+    "budget_stopped": true,
+    "known_source_count": 10,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "pending": 1,
+      "done": 17,
+      "waiting": 65
+    },
+    "task_error_counts": {
+      "budget_exhausted": 65
+    },
+    "known_sources": [
+      {
+        "channel_path": [
+          "北京大学",
+          "城市与环境学院",
+          "学院新闻"
+        ],
+        "reference_url": "https://ues.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "城市与环境学院",
+          "通知公告"
+        ],
+        "reference_url": "https://ues.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "城市与环境学院",
+          "学术讲座"
+        ],
+        "reference_url": "https://ues.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "信息科学技术学院",
+          "新闻动态"
+        ],
+        "reference_url": "https://eecs.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "信息科学技术学院",
+          "通知公告"
+        ],
+        "reference_url": "https://eecs.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "信息科学技术学院",
+          "学工动态"
+        ],
+        "reference_url": "https://eecs.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "信息科学技术学院",
+          "讲座信息"
+        ],
+        "reference_url": "https://eecs.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "外国语学院",
+          "学院 新闻 / NEWS"
+        ],
+        "reference_url": "https://sfl.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "外国语学院",
+          "通知 公告 / ANNOUNCEMENT"
+        ],
+        "reference_url": "https://sfl.pku.edu.cn/",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "北京大学",
+          "中国语言文学系",
+          "新闻动态"
+        ],
+        "reference_url": "https://chinese.pku.edu.cn/xwgg/xwdt/index.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "baseline-nju",
+    "site": {
+      "id": "nju",
+      "name": "南京大学",
+      "url": "https://www.nju.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v6 freeze; must not guide changes during the final measurement."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T03:29:23.885365Z",
+        "snapshot_sha256": null,
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T03:37:14.522809Z",
+        "last_http_index": 44,
+        "last_task_cache_hits": 13,
+        "last_discovery_cache_hits": 1048
+      }
+    ],
+    "started_at": "2026-10-11T03:29:23.885351Z",
+    "ended_at": "2026-10-11T03:37:14.522809Z",
+    "elapsed_seconds": 470.546,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 182938,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 2,
+    "saved_notice_rows": 16,
+    "logical_http_reads": 43,
+    "http_transport_attempts": 44,
+    "task_evidence_cache_hits": 13,
+    "discovery_snapshot_lookups": 1048,
+    "budget_stopped": true,
+    "known_source_count": 2,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 46
+    },
+    "task_error_counts": {},
+    "known_sources": [
+      {
+        "channel_path": [
+          "南京大学",
+          "南京大学法学院",
+          "本科教育"
+        ],
+        "reference_url": "https://law.nju.edu.cn/rcpy/bkjy.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "南京大学",
+          "南京大学法学院",
+          "学术活动"
+        ],
+        "reference_url": "https://law.nju.edu.cn/xsyj/xshd.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v7-nju",
+    "site": {
+      "id": "nju",
+      "name": "南京大学",
+      "url": "https://www.nju.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v6 freeze; must not guide changes during the final measurement."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T03:38:02.972102Z",
+        "snapshot_sha256": "c7b059adec511d86d751d5d75afb875f51acd0b4b30da3d66b064ad919e498f7",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T03:48:05.918972Z",
+        "last_http_index": 30,
+        "last_task_cache_hits": 14,
+        "last_discovery_cache_hits": 516
+      }
+    ],
+    "started_at": "2026-10-11T03:38:02.972092Z",
+    "ended_at": "2026-10-11T03:48:05.918972Z",
+    "elapsed_seconds": 602.85,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 178936,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 1,
+    "saved_notice_rows": 14,
+    "logical_http_reads": 75,
+    "http_transport_attempts": 30,
+    "task_evidence_cache_hits": 14,
+    "discovery_snapshot_lookups": 516,
+    "budget_stopped": true,
+    "known_source_count": 2,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "pending": 1,
+      "waiting": 5,
+      "done": 7
+    },
+    "task_error_counts": {
+      "budget_exhausted": 5
+    },
+    "known_sources": [
+      {
+        "channel_path": [
+          "南京大学",
+          "南京大学法学院",
+          "本科教育"
+        ],
+        "reference_url": "https://law.nju.edu.cn/rcpy/bkjy.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "南京大学",
+          "南京大学法学院",
+          "学术活动"
+        ],
+        "reference_url": "https://law.nju.edu.cn/xsyj/xshd.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "baseline-v2.5",
+    "site": {
+      "id": "whu",
+      "name": "武汉大学",
+      "url": "https://www.whu.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v6 freeze; must not guide changes during the final measurement."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T06:01:56.121371Z",
+        "snapshot_sha256": null,
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T06:07:44.873770Z",
+        "last_http_index": 110,
+        "last_task_cache_hits": 3,
+        "last_discovery_cache_hits": 977
+      }
+    ],
+    "started_at": "2026-10-11T06:01:56.121346Z",
+    "ended_at": "2026-10-11T06:07:44.873770Z",
+    "elapsed_seconds": 348.66,
+    "actual_model_dispatches": 37,
+    "actual_provider_tokens": 152387,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 18,
+    "saved_notice_rows": 126,
+    "logical_http_reads": 68,
+    "http_transport_attempts": 110,
+    "task_evidence_cache_hits": 3,
+    "discovery_snapshot_lookups": 977,
+    "budget_stopped": false,
+    "known_source_count": 2,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 44
+    },
+    "task_error_counts": {},
+    "known_sources": [
+      {
+        "channel_path": [
+          "武汉大学",
+          "武汉大学计算机学院",
+          "学院新闻"
+        ],
+        "reference_url": "https://cs.whu.edu.cn/xwdt/xyxw.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "武汉大学",
+          "武汉大学计算机学院",
+          "通知公告"
+        ],
+        "reference_url": "https://cs.whu.edu.cn/xwdt/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v8-whu",
+    "site": {
+      "id": "whu",
+      "name": "武汉大学",
+      "url": "https://www.whu.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v6 freeze; must not guide changes during the final measurement."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T06:08:49.706307Z",
+        "snapshot_sha256": "c818d04cee373880ca2a62b13ced7ac5d73b3b25bcef2d3e26b446923674ccb1",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T06:19:11.501217Z",
+        "last_http_index": 284,
+        "last_task_cache_hits": 697,
+        "last_discovery_cache_hits": 926
+      },
+      {
+        "started_at": "2026-10-11T06:38:01.508854Z",
+        "snapshot_sha256": "f66365e1d0eeeb6f7ed6312149dbb76789264124fddbcf1ed5d05c06a663e96f",
+        "first_http_index": 284,
+        "first_task_cache_hits": 697,
+        "first_discovery_cache_hits": 926,
+        "ended_at": "2026-10-11T06:43:06.195964Z",
+        "last_http_index": 377,
+        "last_task_cache_hits": 770,
+        "last_discovery_cache_hits": 4483
+      }
+    ],
+    "started_at": "2026-10-11T06:08:49.706285Z",
+    "ended_at": "2026-10-11T06:43:06.195964Z",
+    "elapsed_seconds": 926.288,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 169084,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 9,
+    "saved_notice_rows": 68,
+    "logical_http_reads": 532,
+    "http_transport_attempts": 377,
+    "task_evidence_cache_hits": 770,
+    "discovery_snapshot_lookups": 4483,
+    "budget_stopped": true,
+    "known_source_count": 2,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "pending": 41,
+      "done": 12,
+      "waiting": 72,
+      "failed": 1
+    },
+    "task_error_counts": {
+      "origin_busy": 2,
+      "budget_exhausted": 72,
+      "http_connect_timeout": 1
+    },
+    "known_sources": [
+      {
+        "channel_path": [
+          "武汉大学",
+          "武汉大学计算机学院",
+          "学院新闻"
+        ],
+        "reference_url": "https://cs.whu.edu.cn/xwdt/xyxw.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      },
+      {
+        "channel_path": [
+          "武汉大学",
+          "武汉大学计算机学院",
+          "通知公告"
+        ],
+        "reference_url": "https://cs.whu.edu.cn/xwdt/tzgg.htm",
+        "matching_sources": [],
+        "reason": "not_read_within_observation_window; frontier_and_budget_remain_saved",
+        "read_outcomes": [],
+        "tasks": []
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "baseline-v2.5",
+    "site": {
+      "id": "xjtu",
+      "name": "西安交通大学",
+      "url": "https://www.xjtu.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v9 freeze, after the WHU article-context bug was reproduced. Must not guide parameter or implementation changes during final measurement."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T06:26:39.780560Z",
+        "snapshot_sha256": null,
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T06:35:42.800401Z",
+        "last_http_index": 212,
+        "last_task_cache_hits": 0,
+        "last_discovery_cache_hits": 735
+      }
+    ],
+    "started_at": "2026-10-11T06:26:39.780534Z",
+    "ended_at": "2026-10-11T06:35:42.800401Z",
+    "elapsed_seconds": 542.922,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 129342,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 11,
+    "saved_notice_rows": 79,
+    "logical_http_reads": 97,
+    "http_transport_attempts": 212,
+    "task_evidence_cache_hits": 0,
+    "discovery_snapshot_lookups": 735,
+    "budget_stopped": true,
+    "known_source_count": 0,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "done": 33
+    },
+    "task_error_counts": {},
+    "known_sources": [],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v11-xjtu",
+    "site": {
+      "id": "xjtu",
+      "name": "西安交通大学",
+      "url": "https://www.xjtu.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v9 freeze, after the WHU article-context bug was reproduced. Must not guide parameter or implementation changes during final measurement."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T06:51:36.279545Z",
+        "snapshot_sha256": "c4360a7be9638df1262c69043b49c1134957a720294d9390a1916884a27cf241",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T07:01:36.895074Z",
+        "last_http_index": 141,
+        "last_task_cache_hits": 26,
+        "last_discovery_cache_hits": 1145
+      }
+    ],
+    "started_at": "2026-10-11T06:51:36.279520Z",
+    "ended_at": "2026-10-11T07:01:36.895074Z",
+    "elapsed_seconds": 600.515,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 147090,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 0,
+    "saved_notice_rows": 0,
+    "logical_http_reads": 149,
+    "http_transport_attempts": 141,
+    "task_evidence_cache_hits": 26,
+    "discovery_snapshot_lookups": 1145,
+    "budget_stopped": true,
+    "known_source_count": 0,
+    "sources_with_two_reviewed_article_memberships": 0,
+    "task_state_counts": {
+      "pending": 2,
+      "waiting": 68,
+      "done": 10
+    },
+    "task_error_counts": {
+      "budget_exhausted": 68
+    },
+    "known_sources": [],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "baseline-cqu",
+    "site": {
+      "id": "cqu",
+      "name": "重庆大学",
+      "url": "https://www.cqu.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v9 freeze. Independent from the schools that exposed validation defects; existing 40-request/200000-token limits apply."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T07:12:08.251479Z",
+        "snapshot_sha256": null,
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T07:18:04.509800Z",
+        "last_http_index": 121,
+        "last_task_cache_hits": 8,
+        "last_discovery_cache_hits": 862
+      }
+    ],
+    "started_at": "2026-10-11T07:12:08.251448Z",
+    "ended_at": "2026-10-11T07:18:04.509800Z",
+    "elapsed_seconds": 356.152,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 121604,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 1,
+    "saved_notice_rows": 15,
+    "logical_http_reads": 104,
+    "http_transport_attempts": 121,
+    "task_evidence_cache_hits": 8,
+    "discovery_snapshot_lookups": 862,
+    "budget_stopped": true,
+    "known_source_count": 1,
+    "sources_with_two_reviewed_article_memberships": 1,
+    "task_state_counts": {
+      "done": 42
+    },
+    "task_error_counts": {},
+    "known_sources": [
+      {
+        "channel_path": [
+          "重庆大学",
+          "重庆大学",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cqu.edu.cn/tzgg.htm",
+        "matching_sources": [
+          {
+            "source_id": 1,
+            "installed_name": "通知公告",
+            "installed_list_url": "https://www.cqu.edu.cn/tzgg.htm",
+            "matching_reviewed_article_urls": [
+              "https://www.cqu.edu.cn/info/1631/68761.htm",
+              "https://www.cqu.edu.cn/info/1631/68771.htm",
+              "https://www.cqu.edu.cn/info/1631/69201.htm"
+            ],
+            "literal_column_name_matches": true,
+            "publisher_name_matches": true
+          }
+        ],
+        "reason": "matched_reviewed_article_membership; attribution flags require separate inspection",
+        "read_outcomes": [
+          {
+            "url": "https://www.cqu.edu.cn/tzgg.htm",
+            "outcome": "needs_adapter",
+            "error_code": ""
+          },
+          {
+            "url": "https://www.cqu.edu.cn/tzgg.htm",
+            "outcome": "needs_adapter",
+            "error_code": ""
+          }
+        ],
+        "tasks": [
+          {
+            "kind": "onboard",
+            "state": "done",
+            "phase": "complete",
+            "error_code": "",
+            "result": {
+              "state": "connected",
+              "department_ids": [
+                1
+              ],
+              "new_count": 15,
+              "issues": [],
+              "reason": ""
+            }
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  },
+  {
+    "implementation": "candidate-v11-cqu",
+    "site": {
+      "id": "cqu",
+      "name": "重庆大学",
+      "url": "https://www.cqu.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v9 freeze. Independent from the schools that exposed validation defects; existing 40-request/200000-token limits apply."
+    },
+    "measurement_windows": [
+      {
+        "started_at": "2026-10-11T07:18:55.740697Z",
+        "snapshot_sha256": "c4360a7be9638df1262c69043b49c1134957a720294d9390a1916884a27cf241",
+        "first_http_index": 0,
+        "first_task_cache_hits": 0,
+        "first_discovery_cache_hits": 0,
+        "ended_at": "2026-10-11T07:28:55.647650Z",
+        "last_http_index": 138,
+        "last_task_cache_hits": 74,
+        "last_discovery_cache_hits": 4625
+      }
+    ],
+    "started_at": "2026-10-11T07:18:55.740674Z",
+    "ended_at": "2026-10-11T07:28:55.647650Z",
+    "elapsed_seconds": 599.819,
+    "actual_model_dispatches": 40,
+    "actual_provider_tokens": 128927,
+    "unknown_usage_requests": 0,
+    "installed_column_rows": 7,
+    "saved_notice_rows": 90,
+    "logical_http_reads": 137,
+    "http_transport_attempts": 138,
+    "task_evidence_cache_hits": 74,
+    "discovery_snapshot_lookups": 4625,
+    "budget_stopped": true,
+    "known_source_count": 1,
+    "sources_with_two_reviewed_article_memberships": 1,
+    "task_state_counts": {
+      "pending": 1,
+      "waiting": 113,
+      "done": 15
+    },
+    "task_error_counts": {
+      "budget_exhausted": 113
+    },
+    "known_sources": [
+      {
+        "channel_path": [
+          "重庆大学",
+          "重庆大学",
+          "通知公告"
+        ],
+        "reference_url": "https://www.cqu.edu.cn/tzgg.htm",
+        "matching_sources": [
+          {
+            "source_id": 3,
+            "installed_name": "通知公告",
+            "installed_list_url": "https://www.cqu.edu.cn/tzgg.htm",
+            "matching_reviewed_article_urls": [
+              "https://www.cqu.edu.cn/info/1631/68761.htm",
+              "https://www.cqu.edu.cn/info/1631/68771.htm",
+              "https://www.cqu.edu.cn/info/1631/69201.htm"
+            ],
+            "literal_column_name_matches": true,
+            "publisher_name_matches": true
+          }
+        ],
+        "reason": "matched_reviewed_article_membership; attribution flags require separate inspection",
+        "read_outcomes": [
+          {
+            "url": "https://www.cqu.edu.cn/tzgg.htm",
+            "outcome": "needs_adapter",
+            "error_code": ""
+          },
+          {
+            "url": "https://www.cqu.edu.cn/tzgg.htm",
+            "outcome": "needs_adapter",
+            "error_code": ""
+          }
+        ],
+        "tasks": [
+          {
+            "kind": "onboard",
+            "state": "done",
+            "phase": "complete",
+            "error_code": "",
+            "result": {
+              "state": "connected",
+              "department_ids": [
+                3
+              ],
+              "new_count": 15,
+              "issues": [],
+              "reason": "",
+              "empty_columns": [],
+              "empty_rules": []
+            }
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "Membership overlap does not independently prove publisher or column attribution.",
+      "No overlap with these sampled articles is an observed miss, not proof a source can never be connected.",
+      "Runs on different dates/windows can see different site contents. Cache counters have version-specific definitions; they are not avoided-read percentages.",
+      "HTTP dispatch attempts do not prove server receipt. Browser subresource requests are not included."
+    ]
+  }
+]

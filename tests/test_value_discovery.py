@@ -24,7 +24,7 @@ class ValueRouteTests(unittest.TestCase):
             store.finish(key, first['url'], state='fetched')
             self.assertEqual(store.claim(key, focus='valuable')['url'], ROOT + 'colleges/')
 
-    def test_ai_follows_unusual_student_route_and_keeps_low_value_as_evidence(self):
+    def test_ai_follows_unusual_student_route_and_keeps_low_value_readable(self):
         html = '<div class="main-menu"><a href="/grow/">成长空间</a><a href="/staff/">职工专栏</a><a href="/other/">探索入口</a></div>'
         page = {'url': ROOT, 'label': '测试大学', 'kind': 'root', 'path_json': '[]',
                 'depth': 0, 'discovery_policy': 'valuable'}
@@ -46,10 +46,11 @@ class ValueRouteTests(unittest.TestCase):
         routes = {row['label']: row for row in parsed['links']}
         self.assertEqual(routes['成长空间']['decision'], 'follow')
         self.assertEqual(routes['探索入口']['decision'], 'follow')
-        self.assertEqual(routes['职工专栏']['decision'], 'route_reference')
+        self.assertEqual(routes['职工专栏']['decision'], 'follow')
+        self.assertEqual(routes['职工专栏']['ai_value'], 'low')
         self.assertEqual(result['status'], 'processed')
 
-    def test_navigation_has_a_small_per_page_budget_and_preserves_other_links(self):
+    def test_navigation_batches_all_candidates_without_a_per_page_cutoff(self):
         html = '<nav>' + ''.join(f'<a href="/space/{i}">成长空间{i}</a>' for i in range(35)) + '</nav>'
         page = {'url': ROOT, 'label': '测试大学', 'kind': 'root', 'path_json': '[]',
                 'depth': 0, 'discovery_policy': 'valuable'}
@@ -64,12 +65,14 @@ class ValueRouteTests(unittest.TestCase):
              patch('backend.services.tasks.checkpoint', side_effect=lambda data: handle.update(checkpoint=data)), \
              patch('backend.ai.configuration.get_model_binding', return_value={'id': 1, 'version': 1}), \
              patch('backend.ai.runtime.run_skill', side_effect=reply) as model:
-            self.assertEqual(assist({'root_url': ROOT}, page, html, parse())['status'], 'pending')
-            parsed = parse()
-            result = assist({'root_url': ROOT}, page, html, parsed)
-        self.assertEqual(model.call_count, 2)
+            for index in range(5):
+                parsed = parse()
+                result = assist({'root_url': ROOT}, page, html, parsed)
+                self.assertEqual(result['status'], 'pending' if index < 4 else 'processed')
+        self.assertEqual(model.call_count, 5)
         self.assertEqual(result['status'], 'processed')
-        self.assertEqual(result['deferred_routes'], 19)
+        self.assertEqual(result['deferred_routes'], 0)
+        self.assertEqual(result['reviewed_routes'], 35)
         self.assertEqual(len({row['url'] for row in parsed['links']}), 35)
 
 
@@ -81,11 +84,12 @@ class DiscoveryBudgetTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.tearDown()
 
-    def test_slices_share_budget_and_refresh_continues_unread_pages(self):
+    def test_slices_continue_immediately_without_a_school_page_cutoff(self):
         from backend.services.discovery_cache import DiscoveryCache, adapt_site
         from backend.services import tasks
         from backend.scraper.discovery.inventory_crawler import crawl_site
         self.fixture.app.config['DISCOVERY_PAGE_BUDGET'] = 4
+        self.fixture.app.config['DISCOVERY_POLICY'] = {'discovery_slice_pages': 3}
         pages = {ROOT: '<nav>' + ''.join(f'<a href="/notices/{i}">通知公告{i}</a>' for i in range(6)) + '</nav>'}
         pages.update({ROOT + f'notices/{i}': '<main>尚未发布通知</main>' for i in range(6)})
         read = []
@@ -102,22 +106,17 @@ class DiscoveryBudgetTests(unittest.TestCase):
                 first = adapt_site('测试大学', ROOT)
                 self.assertTrue(first['continuation_required'])
                 second = adapt_site('测试大学', ROOT)
-            tasks.finish(handle, second)
-            self.assertEqual(len(read), 4)
-            self.assertFalse(second['continuation_required'])
-            self.assertTrue(second['exploration_limited'])
-            self.assertEqual(second['deferred_pages'], 3)
-            saved = list(read)
-            tasks.enqueue('discover', self.fixture.school_id, payload, replace_finished=True)
-            handle = tasks.claim(capabilities=['directory'])
-            with tasks.execution_scope(handle):
-                result = adapt_site('测试大学', ROOT, monthly=True)
+                self.assertEqual(len(read), 6)
+                self.assertTrue(second['continuation_required'])
+                self.assertFalse(second['exploration_limited'])
+                self.assertEqual(second['deferred_pages'], 1)
+                result = adapt_site('测试大学', ROOT)
+            tasks.finish(handle, result)
             self.assertEqual(len(read), 7)
-            self.assertEqual(read[:4], saved)
             self.assertEqual(len(set(read)), 7)
             self.assertFalse(result['continuation_required'])
 
-    def test_navigation_children_resume_at_seventeenth_link_without_reopening_spent_scan(self):
+    def test_navigation_child_resumes_all_batches_and_reopens_remaining_crawl(self):
         from datetime import datetime
         from backend.database.db import db
         from backend.database.models import BackgroundTask
@@ -133,7 +132,8 @@ class DiscoveryBudgetTests(unittest.TestCase):
             crawl_site(store, key, max_pages=1, workers=1, focus='valuable',
                 fetcher=lambda url: {'url': url, 'html': html, 'status': 200})
         parent = tasks.enqueue('discover', self.fixture.school_id, {'school_id': self.fixture.school_id})
-        parent.state = 'done'; parent.checkpoint = {'student_scan_pages': 40}; db.session.commit()
+        parent.state = 'done'; parent.capability = 'http'
+        parent.checkpoint = {'student_scan_pages': 40}; db.session.commit()
         analyzed = []
         def reply(*args, **kwargs):
             analyzed.extend(c['url'] for c in args[2]['candidates'])
@@ -162,27 +162,18 @@ class DiscoveryBudgetTests(unittest.TestCase):
         with patch('backend.ai.configuration.get_model_binding', return_value={'id': 1, 'version': 1}), \
              patch('backend.ai.runtime.run_skill', side_effect=reply) as model:
             first = round(1)
-            self.assertEqual(model.call_count, 2)
-            self.assertEqual(first['deferred_routes'], 19)
-            self.assertEqual(len(analyzed), 16)
-            self.assertEqual(db.session.get(BackgroundTask, parent.id).state, 'done')
+            self.assertEqual(model.call_count, 5)
+            self.assertEqual(first['deferred_routes'], 0)
+            self.assertEqual(first['reviewed_routes'], 35)
+            self.assertEqual(len(analyzed), 35)
+            self.assertEqual(db.session.get(BackgroundTask, parent.id).state, 'pending')
             self.assertEqual(parent.checkpoint['student_scan_pages'], 40)
-            second = round(2)
-            self.assertEqual(model.call_count, 4)
-            self.assertEqual(second['deferred_routes'], 3)
-            # All routes can be decided while their target pages still await
-            # the next bounded crawl. Do not lose those late-arriving leads.
-            third = round(3)
-            self.assertEqual(third['deferred_routes'], 0)
-            self.assertEqual(third['deferred_pages'], 35)
-            db.session.refresh(parent)
-            self.assertEqual(parent.state, 'done')
-            self.assertEqual(parent.result['deferred_pages'], 35)
+            self.assertEqual(first['deferred_pages'], 35)
         self.assertEqual(len(analyzed), 35)
         self.assertEqual(len(set(analyzed)), 35)
         self.assertIn(ROOT + 'space/16', analyzed)
 
-    def test_navigation_page_budget_survives_multiple_crawl_slices(self):
+    def test_navigation_queue_deduplicates_without_a_fixed_page_limit(self):
         from backend.database.models import BackgroundTask
         from backend.services import tasks
         from backend.scraper.discovery.ai_navigation import queue_navigation
@@ -194,8 +185,10 @@ class DiscoveryBudgetTests(unittest.TestCase):
             for index in range(3):
                 queue_navigation({'root_url': ROOT}, {'url': ROOT + str(index), 'kind': 'gateway',
                     'discovery_policy': 'valuable'})
-        self.assertEqual(BackgroundTask.query.filter_by(kind='navigation_review').count(), 2)
-        self.assertTrue(handle['checkpoint']['navigation_budget_limited'])
+            queue_navigation({'root_url': ROOT}, {'url': ROOT + '0', 'kind': 'gateway',
+                'discovery_policy': 'valuable'})
+        self.assertEqual(BackgroundTask.query.filter_by(kind='navigation_review').count(), 3)
+        self.assertNotIn('navigation_budget_limited', handle['checkpoint'])
 
 
 if __name__ == '__main__':

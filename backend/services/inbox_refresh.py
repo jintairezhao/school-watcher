@@ -58,10 +58,20 @@ def resolve_scope(user_id, payload):
 
 def collection_interval_seconds():
     """Use the same persisted interval in web admission and background scheduling."""
+    from backend.services.discovery_policy import get_policy
+    default = get_policy()['collection_interval_seconds']
     try:
-        return max(5, min(720, int(AppConfig.get('scrape_interval', '30')))) * 60
+        configured = AppConfig.get('scrape_interval', '')
+        return max(5, min(720, int(configured))) * 60 if configured else default
     except (ValueError, TypeError):
-        return 1800
+        return default
+
+
+def next_collection_interval_seconds():
+    from random import uniform
+    from backend.services.discovery_policy import get_policy
+    jitter = get_policy()['collection_jitter']
+    return collection_interval_seconds() * uniform(1 - jitter, 1 + jitter)
 
 
 def queue_sources(departments, *, manual=False):
@@ -92,6 +102,17 @@ def queue_sources(departments, *, manual=False):
             if task and task.state in ('pending', 'running', 'waiting'):
                 jobs.append(task.id)
                 continue
+            if task and task.next_run_at:
+                if task.state == 'failed':
+                    if task.next_run_at > datetime.utcnow():
+                        continue
+                    source_interval = max(0, (task.next_run_at - task.checked_at).total_seconds()) if task.checked_at else interval
+                    cutoff = datetime.utcnow() - timedelta(seconds=source_interval)
+                # A newly changed user interval overrides an older schedule.
+                # Persisted jitter is reused, never rerolled on every UI visit.
+                elif (task.result or {}).get('_collection_interval_seconds') == interval and task.checked_at:
+                    source_interval = min(86400, max(0, (task.next_run_at - task.checked_at).total_seconds()) * value_policy[dept.id][1])
+                    cutoff = datetime.utcnow() - timedelta(seconds=source_interval)
             checked = [stamp for stamp in (dept.last_scraped_at,
                        (task.finished_at or task.checked_at or task.updated_at) if task else None) if stamp]
             if checked and max(checked) > cutoff:

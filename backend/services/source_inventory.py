@@ -1,6 +1,6 @@
 """Persistent evidence and crawl frontier, separate from the reading database."""
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import gzip
 import hashlib
 import json
@@ -134,6 +134,10 @@ class Inventory:
             columns = {r['name'] for r in c.execute('PRAGMA table_info(pages)')}
             if 'parser_revision' not in columns:
                 c.execute('ALTER TABLE pages ADD COLUMN parser_revision TEXT')
+            if 'retry_at' not in columns:
+                c.execute('ALTER TABLE pages ADD COLUMN retry_at TEXT')
+            if 'network_failures' not in columns:
+                c.execute('ALTER TABLE pages ADD COLUMN network_failures INTEGER NOT NULL DEFAULT 0')
 
     @contextmanager
     def connect(self):
@@ -253,7 +257,7 @@ class Inventory:
                 order = ("CASE WHEN kind='root' THEN 0 WHEN kind='channel' THEN 1 "
                          "WHEN kind='gateway' THEN 2 WHEN student_priority(kind,label,path_json) IN (2,3,4) THEN 3 "
                          "WHEN kind='directory' THEN 4 ELSE 5 END,"
-                         'coalesce(student_priority(kind,label,path_json),20),depth,priority,url')
+                         'priority,coalesce(student_priority(kind,label,path_json),20),depth,url')
             if focus == 'layered':
                 c.create_function('college_priority', 3, college_priority)
                 # A large roster must not block already observed publication
@@ -275,7 +279,8 @@ class Inventory:
                          f'coalesce({college},20),coalesce(student_priority(kind,label,path_json),20),depth,priority,url')
             while True:
                 row = c.execute("SELECT * FROM pages WHERE site_key=? AND state='pending' "
-                                + condition + 'ORDER BY ' + order + ' LIMIT 1', (key,)).fetchone()
+                                "AND (retry_at IS NULL OR retry_at<=?) "
+                                + condition + 'ORDER BY ' + order + ' LIMIT 1', (key, now())).fetchone()
                 if row is None:
                     return None
                 decisions = {r[0] for r in c.execute(
@@ -328,7 +333,43 @@ class Inventory:
 
     def retry(self, key):
         with self.connect() as c:
-            c.execute("UPDATE pages SET state='pending' WHERE site_key=? AND state IN ('failed','blocked')", (key,))
+            c.execute("UPDATE pages SET state='pending',network_failures=0,retry_at=NULL "
+                      "WHERE site_key=? AND state IN ('failed','blocked') "
+                      "AND (retry_at IS NULL OR retry_at<=?)", (key, now()))
+
+    def next_pending_delay(self, key):
+        """Return when saved pending work can run; untouched pages are ready now."""
+        with self.connect() as c:
+            rows = c.execute("SELECT retry_at FROM pages WHERE site_key=? AND state='pending'", (key,)).fetchall()
+        if not rows:
+            return None
+        current = datetime.fromisoformat(now())
+        return min(max(0, (datetime.fromisoformat(row['retry_at']) - current).total_seconds())
+                   if row['retry_at'] else 0 for row in rows)
+
+    def fail_read(self, key, url, *, retryable=False, retry_after=None, **values):
+        """Count actual failed reads, independently of claims and task handoffs."""
+        from random import uniform
+        from .discovery_policy import get_policy
+        policy = get_policy()
+        with self.connect() as c:
+            c.execute('BEGIN IMMEDIATE')
+            row = c.execute('SELECT network_failures FROM pages WHERE site_key=? AND url=?', (key, url)).fetchone()
+            if row is None:
+                return
+            failures = row['network_failures'] + 1
+            retry = retryable and failures < policy['network_attempts']
+            delay = (policy['network_retry_seconds'][min(failures - 1, len(policy['network_retry_seconds']) - 1)]
+                     * uniform(1 - policy['network_retry_jitter'], 1 + policy['network_retry_jitter'])
+                     if retry else policy['recovery_seconds'])
+            if retry_after is not None:
+                delay = max(delay, retry_after)
+            current = now()
+            values.update(state='pending' if retry else 'failed', network_failures=failures,
+                          checked_at=current, retry_at=(datetime.fromisoformat(current) + timedelta(seconds=delay)).isoformat(timespec='seconds'))
+            fields = ','.join(k + '=?' for k in values)
+            c.execute(f'UPDATE pages SET {fields} WHERE site_key=? AND url=?', [*values.values(), key, url])
+            c.execute('UPDATE sites SET updated_at=? WHERE site_key=?', (current, key))
 
     def finish(self, key, url, html='', fetched_at=None, **values):
         allowed = {'state', 'status_code', 'final_url', 'title', 'error', 'health',
@@ -336,6 +377,8 @@ class Inventory:
         if set(values) - allowed:
             raise ValueError('Unknown page fields')
         values['checked_at'] = fetched_at or now()
+        if values.get('state') == 'fetched':
+            values.update(network_failures=0, retry_at=None)
         if html:
             values['content_hash'] = hashlib.sha256(html.encode()).hexdigest()
         with self.connect() as c:

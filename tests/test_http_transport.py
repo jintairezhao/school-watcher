@@ -30,16 +30,30 @@ class TransportTests(unittest.TestCase):
             response.headers['Location'] = location
         return response
 
+    def proxy_connect_failure(self):
+        from urllib3.exceptions import ProxyError, NewConnectionError, MaxRetryError
+        return requests.exceptions.ProxyError(MaxRetryError(None, '/',
+            ProxyError('proxy unavailable', NewConnectionError(None, 'connection refused'))))
+
     def test_proxy_fallback_reuses_validated_addresses(self):
         with patch('requests.utils.get_environ_proxies', return_value={'https':'http://127.0.0.1:8086'}), \
-             patch(TRANSPORT, side_effect=[requests.ReadTimeout('proxy'), self.response()]) as transport:
+             patch(TRANSPORT, side_effect=[self.proxy_connect_failure(), self.response()]) as transport:
             result = PublicHTTPClient().get('https://www.example.edu.cn/', timeout=(6,16))
         self.assertEqual(result.status_code, 200)
         first, second = transport.call_args_list
         self.assertEqual(first.kwargs['addresses'], ['8.8.8.8'])
         self.assertEqual(second.kwargs['addresses'], first.kwargs['addresses'])
         self.assertFalse(second.kwargs['trust_env'])
-        self.assertEqual(result._watcher_transport, ['direct_after_proxy_error:ReadTimeout'])
+        self.assertEqual(result._watcher_transport, ['direct_after_proxy_error:ProxyError'])
+
+    def test_proxy_timeout_and_disconnect_never_trigger_same_attempt_direct_resend(self):
+        for error in (requests.ReadTimeout('after send'), requests.ConnectionError('after send'),
+                      requests.exceptions.ProxyError('ambiguous proxy error')):
+            with patch('requests.utils.get_environ_proxies', return_value={'https': 'http://proxy.example'}), \
+                 patch(TRANSPORT, side_effect=error) as transport:
+                with self.assertRaises(type(error)):
+                    PublicHTTPClient().get('https://www.example.edu.cn/')
+                self.assertEqual(transport.call_count, 1)
 
     def test_explicit_proxy_and_writes_do_not_silently_switch_transport(self):
         for method, kwargs in [('POST', {}), ('GET', {'proxies':{'https':'http://proxy.example'}})]:
@@ -51,7 +65,7 @@ class TransportTests(unittest.TestCase):
 
     def test_retry_redirect_cannot_reach_private_address(self):
         with patch('requests.utils.get_environ_proxies', return_value={'https':'http://127.0.0.1:8086'}), \
-             patch(TRANSPORT, side_effect=[requests.exceptions.ProxyError('offline'), self.response(302,'http://127.0.0.1/secret')]) as transport:
+             patch(TRANSPORT, side_effect=[self.proxy_connect_failure(), self.response(302,'http://127.0.0.1/secret')]) as transport:
             with self.assertRaises(ValueError):
                 PublicHTTPClient().get('https://www.example.edu.cn/')
             self.assertEqual(transport.call_count, 2)
@@ -144,6 +158,14 @@ class TransportTests(unittest.TestCase):
 
 
 class PinnedTransportSecurityTests(unittest.TestCase):
+    def test_read_timeout_does_not_resend_to_another_validated_ip(self):
+        from backend.scraper.pinned_transport import pinned_request
+        with patch('requests.Session.request', side_effect=requests.ReadTimeout('after send')) as send, \
+             patch('backend.scraper.http_client._pace_host'):
+            with self.assertRaises(requests.ReadTimeout):
+                pinned_request('GET', 'https://www.example.edu.cn/', addresses=['8.8.8.8', '1.1.1.1'], trust_env=False)
+        self.assertEqual(send.call_count, 1)
+
     def test_rebinding_cannot_change_actual_tcp_destination(self):
         from backend.scraper.pinned_transport import pinned_request
         answers = [(2,1,6,'',('93.184.216.34',80))]

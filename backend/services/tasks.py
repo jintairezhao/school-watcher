@@ -349,6 +349,8 @@ def checkpoint(data):
     values = {'checkpoint': dict(data)}
     old = handle.get('checkpoint') or {}
     forward = (data.get('directory_work_saved', 0) > old.get('directory_work_saved', 0) or
+        data.get('route_cursor', 0) > old.get('route_cursor', 0) or
+        data.get('discovery_effective_progress', 0) > old.get('discovery_effective_progress', 0) or
         (data.get('discovery_progress') or {}).get('checked_pages', 0) >
         (old.get('discovery_progress') or {}).get('checked_pages', 0))
     if handle.get('kind') in ('discover', 'directory', 'navigation_review', 'source_review') and forward:
@@ -417,21 +419,38 @@ def finish(handle, result=None, error=None, *, retryable=True):
             db.session.rollback()
             return False
         failures = task.attempts + (1 if error else 0)
-        retry = bool(error) and retryable and failures < 3 and (not task.deadline_at or task.deadline_at > now)
-        from backend.services.inbox_refresh import collection_interval_seconds
-        interval = collection_interval_seconds()
+        from backend.services.discovery_policy import get_policy
+        from backend.services.inbox_refresh import next_collection_interval_seconds, collection_interval_seconds
+        from random import uniform
+        policy = get_policy()
+        retry = bool(error) and retryable and failures < policy['network_attempts'] and (not task.deadline_at or task.deadline_at > now)
+        interval = policy['recovery_seconds'] if error else next_collection_interval_seconds()
+        delays = policy['network_retry_seconds']
+        retry_delay = delays[min(max(0, failures - 1), len(delays) - 1)] * uniform(
+            1 - policy['network_retry_jitter'], 1 + policy['network_retry_jitter'])
+        retry_after = getattr(getattr(error, 'result', None), 'retry_after', None)
+        if retry_after is not None:
+            retry_delay = max(retry_delay, retry_after)
+            interval = max(interval, retry_after)
         error_code = getattr(error, 'error_code', '') or getattr(getattr(error, 'result', None), 'error_code', '')
+        stored_result = dict(result or {})
+        if task.kind in ('collect', 'scrape') and not error:
+            stored_result['_collection_interval_seconds'] = collection_interval_seconds()
         values = dict(state='pending' if retry else 'failed' if error else 'done', attempts=failures,
-            phase='retry' if retry else 'complete', result=result or {}, error=str(error or '')[:500],
+            phase='retry' if retry else 'complete', result=stored_result, error=str(error or '')[:500],
             error_code=error_code, lease_until=None, token=None, worker_id=None, updated_at=now,
             checked_at=now, next_run_at=now + timedelta(seconds=interval), finished_at=None if retry else now,
-            available_at=now + timedelta(seconds=min(900, 30 * 2 ** failures)))
+            available_at=now + timedelta(seconds=retry_delay if retry else interval))
         from backend.services.discovery_control import honor_pause
         values = honor_pause(handle, values)
         changed = db.session.execute(update(BackgroundTask).where(*_owner_where(handle, now)).values(**values))
         if changed.rowcount:
             _release_source(handle)
         db.session.commit()
+        if changed.rowcount and not error:
+            from backend.ai.school_budget import payload_school_id
+            from backend.services.discovery_round_lifecycle import mark_completed
+            mark_completed(payload_school_id(handle.get('payload') or {}))
     return bool(changed.rowcount)
 
 

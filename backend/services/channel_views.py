@@ -16,7 +16,8 @@ def channel_url(source, view=None):
     if not g.get('user'):
         return url_for('pages.school_detail', school_id=source.school_id, dept=source.id)
     return url_for('pages.index', school=source.school_id, dept=source.id,
-                   period='all', **({'view': 'saved'} if (view or inbox_mailbox(request.args)) == 'saved' else {}))
+                   period='all', _anchor='sources',
+                   **({'view': 'saved'} if (view or inbox_mailbox(request.args)) == 'saved' else {}))
 
 
 def channel_breadcrumb(source):

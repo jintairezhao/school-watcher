@@ -44,6 +44,7 @@ class FetchResult:
     status: int = 0
     html: str = ''
     json_data: Any = None
+    attachment: dict = field(default_factory=dict)
     transport: str = 'http'
     outcome: str = 'needs_adapter'
     error_code: str = ''
@@ -56,6 +57,14 @@ class FetchResult:
     @property
     def ok(self):
         return self.outcome in ('usable', 'empty')
+
+    @property
+    def replayable(self):
+        # These are completed observations, not successful sources. Retaining
+        # them inside the same task prevents each queue handoff from rereading
+        # the same denied or unrecognized sample before reaching later samples.
+        return self.ok or bool(self.status and self.html and self.outcome in (
+            'needs_adapter', 'denied', 'needs_manual'))
 
     def to_dict(self):
         return asdict(self)

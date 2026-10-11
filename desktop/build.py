@@ -14,6 +14,44 @@ sys.path.insert(0, str(ROOT))
 from desktop import VERSION
 
 
+WINDOWS_SETUP_SIZE_TARGET = 100_000_000  # About 100 MB; a review reminder, not a release gate.
+
+
+def artifact_size_report(release, version):
+    artifacts = []
+    for artifact in sorted(Path(release).iterdir()):
+        if not (artifact.is_file() and artifact.name.startswith(f'School-Watcher-{version}-')
+                and artifact.suffix in ('.exe', '.zip', '.dmg')):
+            continue
+        size = artifact.stat().st_size
+        record = {'name': artifact.name, 'bytes': size,
+                  'mb': round(size / 1_000_000, 2), 'mib': round(size / 1024 ** 2, 2)}
+        if artifact.name == f'School-Watcher-{version}-windows-x64-setup.exe':
+            record.update(soft_target_bytes=WINDOWS_SETUP_SIZE_TARGET,
+                          above_soft_target=size > WINDOWS_SETUP_SIZE_TARGET)
+        artifacts.append(record)
+    return {'version': version, 'artifacts': artifacts}
+
+
+def write_size_report(release, version):
+    report = artifact_size_report(release, version)
+    (Path(release) / 'ASSET_SIZES.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+    summary = ['### Desktop package sizes', '', '| Artifact | MB | MiB |', '| --- | ---: | ---: |']
+    for artifact in report['artifacts']:
+        print(json.dumps({'artifact_size': artifact}), flush=True)
+        summary.append(f"| {artifact['name']} | {artifact['mb']:.2f} | {artifact['mib']:.2f} |")
+        if artifact.get('above_soft_target'):
+            message = (f"Windows installer is {artifact['mb']:.2f} MB, above the approximate "
+                       '100 MB target. Review the size increase; this does not block the build.')
+            print(('::warning::' if os.environ.get('GITHUB_ACTIONS') == 'true' else '') + message, flush=True)
+    summary.extend(['', 'Only the Windows setup has an approximate 100 MB soft target. '
+                    'Portable ZIP and macOS DMGs are reported without this target.', ''])
+    if os.environ.get('GITHUB_STEP_SUMMARY'):
+        with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a', encoding='utf-8') as output:
+            output.write('\n'.join(summary))
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--installer', action='store_true')
@@ -75,6 +113,7 @@ def main():
             with artifact.open('rb') as source:
                 entries.append(f'{hashlib.file_digest(source, "sha256").hexdigest()}  {artifact.name}')
     (release / 'SHA256SUMS.txt').write_text('\n'.join(entries) + '\n', encoding='utf-8')
+    write_size_report(release, VERSION)
     print(json.dumps({'version': VERSION, 'release': str(release), 'assets': len(entries)}), flush=True)
 
 

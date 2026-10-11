@@ -86,6 +86,8 @@ def credential_for(binding, *, allow_untested=False):
 
 def public_settings():
     from backend.database.models import AppConfig
+    from backend.services.discovery_policy import get_policy
+    policy = get_policy()
     bindings = {row.purpose: row.profile_id for row in AIBinding.query.all()}
     profiles = [_metadata(p) for p in AIProfile.query.filter_by(deleted_at=None).order_by(AIProfile.id).all()]
     legacy = _legacy_binding() if not AIProfile.query.first() else None
@@ -94,11 +96,15 @@ def public_settings():
             'profiles': profiles, 'bindings': bindings, 'legacy': legacy,
             'encryption_available': encryption_available(),
             'limits': {purpose: int(AppConfig.get('ai_token_limit_' + purpose,
-                       '200000' if purpose == 'school_discovery' else '0') or 0)
+                       str(policy['ai_school_token_limit']) if purpose == 'school_discovery' else '0') or 0)
                        for purpose in ('total', 'school_discovery') + PURPOSES},
-            'max_concurrent': int(AppConfig.get('ai_max_concurrent', '2') or 2),
+            'school_request_limit': int(AppConfig.get('ai_request_limit_school_discovery',
+                str(policy['ai_school_request_limit'])) or 0),
+            'max_concurrent': int(AppConfig.get('ai_max_concurrent', str(policy['ai_global_concurrency'])) or policy['ai_global_concurrency']),
+            'discovery_policy': policy,
             'usage': [{'key': row.key, 'used_tokens': row.used_tokens,
-                       'reserved_tokens': row.reserved_tokens, 'active_count': row.active_count}
+                       'reserved_tokens': row.reserved_tokens, 'active_count': row.active_count,
+                       'used_requests': row.used_requests, 'reserved_requests': row.reserved_requests}
                       for row in AIBudget.query.order_by(AIBudget.key.desc()).limit(6)]}
 
 
@@ -200,7 +206,7 @@ def reveal_profile_key(profile_id, payload):
 
 def save_limits(payload):
     from backend.database.models import AppConfig
-    allowed = {'total', 'directory', 'summary', 'school_discovery', 'max_concurrent'}
+    allowed = {'total', 'directory', 'summary', 'school_discovery', 'school_requests', 'max_concurrent'}
     if not isinstance(payload, dict) or set(payload) - allowed:
         raise AIConfigError('额度配置无效')
     values = {}
@@ -209,7 +215,9 @@ def save_limits(payload):
             raise AIConfigError('额度必须为非负整数；0 表示不设消费上限')
         if key == 'max_concurrent' and not 1 <= value <= 16:
             raise AIConfigError('同时执行数应为 1–16')
-        values['ai_max_concurrent' if key == 'max_concurrent' else 'ai_token_limit_' + key] = str(value)
+        setting = {'max_concurrent': 'ai_max_concurrent', 'school_requests': 'ai_request_limit_school_discovery'}.get(key,
+            'ai_token_limit_' + key)
+        values[setting] = str(value)
     for key, value in values.items():
         row = AppConfig.query.filter_by(key=key).first()
         if row:
@@ -217,6 +225,8 @@ def save_limits(payload):
         else:
             db.session.add(AppConfig(key=key, value=value))
     db.session.commit()
+    from backend.ai.school_budget import resume_budget_tasks
+    resume_budget_tasks()
     return public_settings()
 
 

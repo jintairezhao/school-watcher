@@ -17,7 +17,6 @@
             <h1 class="sr-only">{{ '我的收藏' if view == 'saved' else '通知收件箱' }}</h1>
             <nav class="mailbox-views" aria-label="信息管理">
                 <a href="{{ url_for('pages.index', view='focus') if focused_reading else url_for('pages.index') }}" {% if view == 'inbox' %}aria-current="page"{% endif %}>收件箱{% if view == 'inbox' and scope_unread %}<span class="mailbox-unread" aria-label="当前范围 {{ scope_unread }} 条未读">{{ scope_unread }}</span>{% endif %}</a>
-                <a href="{{ url_for('pages.channels', school=current_school_id, view=view) }}">按发布渠道</a>
                 <a href="{{ url_for('pages.index', view='focus', mailbox='saved', period='all') if focused_reading else url_for('pages.index', view='saved', period='all') }}" {% if view == 'saved' %}aria-current="page"{% endif %}>我的收藏</a>
             </nav>
             <div class="toolbar-topline">
@@ -138,7 +137,7 @@
                                 <span class="notice-summary">{{ (summary_texts.get(ann.id) or excerpts.get(ann.id) or '打开官网原文查看详情')|striptags|truncate(110) }}</span>
                             </span>
                         </a>
-                        <a class="notice-channel-link" data-channel-link href="{{ url_for('pages.index', school=row_source.school_id, dept=row_source.id, period='all', view=view) }}" aria-label="查看{{ row_source|channel_breadcrumb }}的全部通知">查看该渠道</a>
+                        <a class="notice-channel-link" data-channel-link href="{{ url_for('pages.index', school=row_source.school_id, dept=row_source.id, period='all', view=view, _anchor='sources') }}" aria-label="在来源栏查看{{ row_source|channel_breadcrumb }}的全部通知">查看来源</a>
                         {% set row_state = states.get(ann.id) %}
                         <div class="notice-row-actions" aria-label="{{ ann.title }}的操作">
                             <button type="button" class="icon-button" id="rowStar{{ ann.id }}" data-row-state data-state-field="starred" data-state-value="{{ 'false' if row_state and row_state.starred else 'true' }}" data-id="{{ ann.id }}" aria-pressed="{{ 'true' if row_state and row_state.starred else 'false' }}" aria-label="{{ '取消收藏' if row_state and row_state.starred else '收藏' }}" title="{{ '取消收藏' if row_state and row_state.starred else '收藏' }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>

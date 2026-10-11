@@ -206,7 +206,7 @@ class SourceGovernanceRecoveryTests(unittest.TestCase):
         self.assertEqual(self.dept.group_name, '示例学院')
         self.assertEqual(SourceConfigVersion.query.count(), 0)
 
-    def test_failed_model_revisions_have_a_durable_two_call_limit(self):
+    def test_identical_failed_model_plan_stops_durably_without_user_review(self):
         config = governance.source_config(self.dept)
         config['list_selector'] = '#missing li'
         evidence = governance.capture_source_evidence(self.school.id, config,
@@ -222,7 +222,7 @@ class SourceGovernanceRecoveryTests(unittest.TestCase):
             governance.run_source_skill_for_proposal(proposal_id)
             db.session.remove()
             result = governance.run_source_skill_for_proposal(proposal_id)
-        self.assertEqual(result['status'], 'review_required')
+        self.assertEqual(result['status'], 'branch_stopped')
         self.assertEqual(skill.call_count, 2)
         from backend.services.source_exploration import STEP_ACTION
         events = SourceReviewEvent.query.filter_by(proposal_id=proposal_id, action=STEP_ACTION).all()

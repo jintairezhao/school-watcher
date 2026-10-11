@@ -299,6 +299,21 @@ def scrape_department(department: Department, school_base_url: str,
         if page == 1:
             items = soup.select(list_sel) if list_sel else []
 
+            # Older configurations could name a list after the neighboring
+            # featured article. Stop before writing new memberships, keep the
+            # channel/user history, and repair only this affected source.
+            from backend.scraper.discovery.publication_lists import publication_lists
+            from backend.services.source_governance import _normal, _column_label
+            selected_ids = {id(node) for node in items}
+            source_name = _normal(_column_label(department.name, department.group_name))
+            if any(feed.get('heading_article_reference') and selected_ids
+                   and any(_normal(heading.get_text(' ', strip=True)) == source_name
+                           for heading in soup.select(feed['heading_locator']))
+                   and selected_ids == {id(node) for node in soup.select(feed['list_selector'])}
+                   for feed in publication_lists(html, page_url)):
+                from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
+                raise ParserRepairPending(queue_parser_repair(department, html))
+
             if not items:
                 from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
                 raise ParserRepairPending(queue_parser_repair(department, html))

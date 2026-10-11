@@ -39,7 +39,8 @@ def fingerprint(parsed, feed, html, final_url):
     fields = ('name', 'list_selector', 'title_selector', 'link_selector', 'date_selector',
               'column_url', 'container_locator', 'heading_locator')
     columns = [{k: col.get(k) for k in fields} for col in (feed.get('lists', [feed]) if feed else [])]
-    value = [VERSION, final_url, links, sorted(shapes), sorted(columns, key=lambda c: str(c))]
+    value = [VERSION, final_url, links, sorted(shapes), sorted(columns, key=lambda c: str(c)),
+             parsed.get('navigation_policy', '')]
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
@@ -59,7 +60,8 @@ def compare(page, parsed, feed, html, final_url):
         for link in parsed['links']:
             saved = next((r for r in value['routes'] if r['url'] == link['url'] and r['label'] == link['label']), None)
             if saved:
-                link.update(kind=saved['kind'], decision=saved['decision'])
+                from backend.scraper.discovery.layered import apply_route
+                apply_route(parsed, link, saved)
     return value
 
 
@@ -80,7 +82,7 @@ def remember_navigation(inventory, key, url, parsed, complete):
     if not saved:
         return
     saved['navigation_complete'] = complete
-    saved['routes'] = [{k: l[k] for k in ('url', 'label', 'kind', 'decision')}
+    saved['routes'] = [{k: l[k] for k in ('url', 'label', 'kind', 'decision', 'ai_reviewed', 'ai_value') if k in l}
                        for l in parsed['links'] if l['decision'] in ('follow', 'official_external_link', 'route_reference')]
     with inventory.connect() as c:
         c.execute('UPDATE pages SET notes_json=? WHERE site_key=? AND url=?',

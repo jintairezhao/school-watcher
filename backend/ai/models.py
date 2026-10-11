@@ -33,7 +33,19 @@ class AIBudget(db.Model):
     used_tokens = db.Column(db.BigInteger, nullable=False, default=0)
     reserved_tokens = db.Column(db.BigInteger, nullable=False, default=0)
     active_count = db.Column(db.Integer, nullable=False, default=0)
+    used_requests = db.Column(db.Integer, nullable=False, default=0)
+    reserved_requests = db.Column(db.Integer, nullable=False, default=0)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+
+class AISchoolRound(db.Model):
+    """An exploration budget survives task generations, slices and restarts."""
+    __tablename__ = 'ai_school_rounds'
+    school_id = db.Column(db.Integer, primary_key=True)
+    budget_key = db.Column(db.String(48), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+    completed_structure = db.Column(db.JSON, nullable=False, default=dict)
 
 
 class AIExecution(db.Model):
@@ -58,6 +70,7 @@ class AIExecution(db.Model):
     reserved_tokens = db.Column(db.BigInteger, nullable=False, default=0)
     budget_keys = db.Column(db.JSON, nullable=False, default=list)
     active_released = db.Column(db.Boolean, nullable=False, default=False)
+    request_sent = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     finished_at = db.Column(db.DateTime)
     heartbeat_at = db.Column(db.DateTime)

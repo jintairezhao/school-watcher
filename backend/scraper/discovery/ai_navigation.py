@@ -12,22 +12,16 @@ def queue_navigation(site, page):
     from backend.database.models import BackgroundTask, School
     from backend.ai.configuration import get_model_binding, AIConfigError
     handle = tasks.current_execution()
-    if not handle or page.get('kind') == 'article' or handle.get('payload', {}).get('ai_assist') is False:
-        return
+    if not handle or page.get('kind') == 'article':
+        return {'status': 'skipped', 'error_code': 'no_navigation_task'}
+    if handle.get('payload', {}).get('ai_assist') is False:
+        return {'status': 'skipped', 'error_code': 'ai_disabled'}
     try:
         get_model_binding('directory')
-    except AIConfigError:
-        return
-    if page.get('discovery_policy') == 'valuable':
-        from flask import current_app
-        checkpoint = dict(handle.get('checkpoint') or {})
-        seen = checkpoint.get('student_navigation_pages', [])
-        if page['url'] not in seen:
-            limit = max(1, int(current_app.config.get('DISCOVERY_AI_PAGE_BUDGET', 8)))
-            if len(seen) >= limit:
-                tasks.checkpoint(dict(checkpoint, navigation_budget_limited=True))
-                return
-            tasks.checkpoint(dict(checkpoint, student_navigation_pages=[*seen, page['url']]))
+    except AIConfigError as exc:
+        from backend.services.onboarding_progress import record_progress
+        record_progress(ai_state='unavailable', ai_error_code=exc.code)
+        return {'status': 'skipped', 'error_code': exc.code}
     parent = handle['id']
     school_id = handle.get('payload', {}).get('school_id')
     if not school_id:
@@ -38,11 +32,42 @@ def queue_navigation(site, page):
         school_id = school.id
     discover = BackgroundTask.query.filter_by(identity=f'discover:{school_id}').first()
     school_generation = discover.generation if discover else handle.get('generation', 1)
-    page_key = hashlib.sha256(page['url'].encode()).hexdigest()[:20]
-    tasks.enqueue('navigation_review', f'{parent}:{handle.get("generation", 1)}:{page_key}',
+    material_hash = page.get('snapshot_hash') or (page.get('snapshot_ref') or {}).get('hash') or page.get('content_hash') or ''
+    page_key = hashlib.sha256((page['url'] + '\0' + material_hash).encode()).hexdigest()[:20]
+    job = tasks.enqueue('navigation_review', f'{parent}:{handle.get("generation", 1)}:{page_key}',
         {'parent_task_id': parent, 'parent_generation': handle.get('generation', 1),
-         'school_id': school_id, 'school_generation': school_generation, 'site': dict(site), 'page': dict(page)},
+         'school_id': school_id, 'school_generation': school_generation,
+         'ai_assist': handle.get('payload', {}).get('ai_assist', True), 'site': dict(site), 'page': dict(page)},
         capability='directory', replace_finished=False)
+    return {'status': 'queued', 'task_id': job.id}
+
+
+def navigation_progress(inventory, site_key, school_id, branch_url):
+    """Only executed reads and installed information count as branch progress."""
+    from backend.database.models import Announcement, Department
+    from backend.services.source_inventory import canonical_url
+    with inventory.connect() as connection:
+        pages = connection.execute("SELECT url,content_hash FROM pages WHERE site_key=? "
+                                   "AND state='fetched' AND content_hash IS NOT NULL", (site_key,)).fetchall()
+        edges = connection.execute('SELECT parent_url,target_url FROM edges WHERE site_key=?', (site_key,)).fetchall()
+    children = {}
+    for edge in edges:
+        children.setdefault(canonical_url(edge['parent_url']), set()).add(canonical_url(edge['target_url']))
+    branch, pending = set(), [canonical_url(branch_url)]
+    while pending:
+        current = pending.pop()
+        if not current or current in branch:
+            continue
+        branch.add(current)
+        pending.extend(children.get(current, set()) - branch)
+    result = {'page:' + hashlib.sha256((row['url'] + ':' + row['content_hash']).encode()).hexdigest()
+              for row in pages if canonical_url(row['url']) in branch}
+    sources = [source.id for source in Department.query.filter_by(school_id=school_id).all()
+               if source.list_selector and canonical_url(source.list_url) in branch]
+    result.update('source:' + str(ident) for ident in sources)
+    result.update('notice:' + str(ident) for (ident,) in Announcement.query.with_entities(Announcement.id)
+                  .filter(Announcement.department_id.in_(sources)))
+    return result
 
 
 def process_navigation(payload):
@@ -58,6 +83,8 @@ def process_navigation(payload):
     parent = db.session.get(BackgroundTask, payload['parent_task_id'])
     if not parent or parent.generation != payload['parent_generation'] or (parent.result or {}).get('automatic_discovery_disabled'):
         return {'status': 'stale'}
+    if payload.get('ai_assist') is False or (parent.payload or {}).get('ai_assist') is False:
+        return {'status': 'skipped', 'error_code': 'ai_disabled', 'reviewed_routes': 0, 'cached_routes': 0}
     discover = BackgroundTask.query.filter_by(identity=f'discover:{payload["school_id"]}').first()
     if discover and payload.get('school_generation', payload['parent_generation']) != discover.generation:
         return {'status': 'stale'}
@@ -66,7 +93,21 @@ def process_navigation(payload):
         with FileLock(str(path) + '.worker.lock', timeout=0):
             inventory = DiscoveryCache(path)
             site, page = payload['site'], payload['page']
-            html = inventory.snapshot(site['site_key'], page.get('snapshot_url', page['url']))
+            snapshot_url = page.get('snapshot_url', page['url'])
+            stored = inventory.get_page(site['site_key'], snapshot_url) or {}
+            ref = page.get('snapshot_ref')
+            expected_hash = page.get('snapshot_hash') or (ref or {}).get('hash') or page.get('content_hash')
+            if expected_hash and stored.get('content_hash') and stored['content_hash'] != expected_hash:
+                return {'status': 'stale', 'error_code': 'material_changed'}
+            html = None
+            if ref:
+                from backend.services.source_governance import read_snapshot
+                try:
+                    html = read_snapshot(ref)
+                except (OSError, ValueError):
+                    pass
+            if not html:
+                html = inventory.snapshot(site['site_key'], snapshot_url)
             if not html:
                 ref = page.get('snapshot_ref')
                 if not ref:
@@ -85,9 +126,12 @@ def process_navigation(payload):
                         site['site_key'], page.get('snapshot_url', page['url']))
                 if not html:
                     return {'status': 'needs_recovery', 'error_code': 'material_expired'}
+            observed_hash = hashlib.sha256(html.encode()).hexdigest()
+            if expected_hash and observed_hash != expected_hash:
+                return {'status': 'stale', 'error_code': 'material_changed'}
             parsed = extract_structure(html, page['url'], site['root_url'], page['kind'], page['label'], json.loads(page['path_json']))
             if page.get('discovery_policy') in ('layered', 'valuable'):
-                from .layered import route_structure
+                from .layered import route_structure, apply_route
                 from .structure import publication_evidence, add_publication_structure
                 feed = publication_evidence(html, page['url'])
                 add_publication_structure(parsed, feed)
@@ -101,8 +145,13 @@ def process_navigation(payload):
                     for link in parsed['links']:
                         saved = previous.get((link['url'], link['label']))
                         if saved:
-                            link.update(kind=saved['kind'], decision=saved['decision'])
-            before = {(x['url'], x['decision']) for x in parsed['links']}
+                            apply_route(parsed, link, saved)
+            before = {(x['url'], x['kind'], x['decision']) for x in parsed['links']}
+            handle = tasks.current_execution() or {}
+            if handle and not handle.get('checkpoint', {}).get('navigation_progress'):
+                from backend.services.discovery_policy import progress_state
+                tasks.checkpoint(dict(handle.get('checkpoint') or {}, navigation_progress=progress_state(
+                    navigation_progress(inventory, site['site_key'], payload['school_id'], page['url']))))
         # Model latency must not hold the shared cache writer lock and stall
         # other schools or the next crawl slice.
         if page.get('discovery_policy') in ('layered', 'valuable'):
@@ -114,16 +163,35 @@ def process_navigation(payload):
             db.session.refresh(parent)
             if parent.generation != payload['parent_generation']:
                 return {'status': 'stale'}
-            from backend.services.discovery_changes import remember_navigation
-            remember_navigation(inventory, site['site_key'], page.get('snapshot_url', page['url']), parsed,
-                                result.get('status') in ('processed', 'succeeded') and not result.get('deferred_routes'))
+            if (parent.payload or {}).get('ai_assist') is False:
+                return {'status': 'skipped', 'error_code': 'ai_disabled', 'reviewed_routes': 0, 'cached_routes': 0}
+            current = inventory.get_page(site['site_key'], snapshot_url) or {}
+            if current.get('content_hash') and current['content_hash'] != observed_hash:
+                return {'status': 'stale', 'error_code': 'material_changed'}
+            from backend.database.models import Department
+            from backend.services.source_inventory import canonical_url
+            installed_urls = {canonical_url(source.list_url) for source in Department.query.filter_by(
+                school_id=payload['school_id']).all() if source.list_selector and source.list_url}
+            for link in parsed['links']:
+                if not link.get('ai_reviewed'):
+                    continue
+                observed_page = inventory.get_page(site['site_key'], link['url'])
+                verified = bool(observed_page and observed_page.get('feed_json'))
+                installed = canonical_url(link['url']) in installed_urls
+                if verified or installed:
+                    # Keep a target's already verified publication evidence over
+                    # a model's earlier navigation-only role interpretation.
+                    from .layered import apply_route
+                    kind = observed_page['kind'] if observed_page and observed_page['kind'] in ('unit', 'channel') else 'channel'
+                    apply_route(parsed, link, dict(link, kind=kind))
             inventory.record_edges(site['site_key'], page.get('snapshot_url', page['url']),
                                    parsed['links'], hashlib.sha256(html.encode()).hexdigest())
-            from backend.services.runtime_catalog import RuntimeCatalog
-            RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH']).publish(inventory, site['site_key'], merge=True)
-            added = 0
+            inventory.record_structure(site['site_key'], page.get('snapshot_url', page['url']),
+                                       parsed['nodes'], hashlib.sha256(html.encode()).hexdigest())
+            added, corrections = 0, 0
             for link in parsed['links']:
-                if link['decision'] in ('follow', 'official_external_link') and (link['url'], link['decision']) not in before:
+                changed = (link['url'], link['kind'], link['decision']) not in before
+                if link['decision'] in ('follow', 'official_external_link') and (changed or link.get('ai_reviewed')):
                     from .structure import document_reference
                     if document_reference(link['url'], link['label']):
                         continue
@@ -132,19 +200,43 @@ def process_navigation(payload):
                         from backend.services.source_ownership import saved_domain_evidence
                         if not saved_domain_evidence(inventory, site['site_key'], page['url']):
                             continue
+                    previous_page = inventory.get_page(site['site_key'], link['url'])
                     inventory.enqueue(site['site_key'], link['url'], link['label'], link['kind'], page['depth'] + 1,
-                                      link['path'], 'school_domain' if same_school_url(link['url'], site['root_url']) else 'official_backlink')
-                    added += 1
+                                      link['path'] + ([page['label']] if page['kind'] == 'unit' else []),
+                                      'school_domain' if same_school_url(link['url'], site['root_url']) else 'official_backlink')
+                    if link.get('ai_reviewed') and link['url'] != site['root_url']:
+                        from .layered import route_priority
+                        priority = route_priority(link)
+                        corrected = bool(previous_page and previous_page['kind'] != link['kind'])
+                        with inventory.connect() as connection:
+                            connection.execute("UPDATE pages SET kind=?,priority=?,state=CASE "
+                                "WHEN ? AND state='fetched' THEN 'pending' ELSE state END "
+                                "WHERE site_key=? AND url=? AND kind<>'root'",
+                                (link['kind'], priority, corrected, site['site_key'], link['url']))
+                        corrections += int(corrected)
+                    if changed or not previous_page:
+                        added += 1
+            handle = tasks.current_execution() or {}
+            if handle and result.get('decision_id'):
+                from backend.services.discovery_policy import advance_progress
+                checkpoint = dict(handle.get('checkpoint') or {})
+                state = advance_progress(checkpoint.get('navigation_progress'), result['decision_id'],
+                                         navigation_progress(inventory, site['site_key'], payload['school_id'], page['url']))
+                tasks.checkpoint(dict(checkpoint, navigation_progress=state))
+                if state['stopped'] and result.get('remaining_routes'):
+                    result.update(status='branch_stopped', error_code='no_discovery_progress',
+                                  deferred_routes=result['remaining_routes'])
+            from backend.services.discovery_changes import remember_navigation
+            remember_navigation(inventory, site['site_key'], page.get('snapshot_url', page['url']), parsed,
+                                result.get('status') in ('processed', 'succeeded', 'branch_stopped'))
+            from backend.services.runtime_catalog import RuntimeCatalog
+            RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH']).publish(inventory, site['site_key'], merge=True)
             if added:
                 from datetime import datetime
-                # Continue the same generation and budget. A fresh enqueue would
-                # erase its journal and give every automatic continuation a new allowance.
-                scan_limited = (page.get('discovery_policy') == 'valuable' and
-                    (parent.checkpoint or {}).get('student_scan_pages', 0) >=
-                    max(1, int(current_app.config.get('DISCOVERY_PAGE_BUDGET', 40))))
+                # Continue the same generation and shared billing round. Page
+                # slices release the worker fairly; they never discard leads.
                 db.session.execute(db.update(BackgroundTask).where(BackgroundTask.id == parent.id,
                     BackgroundTask.generation == payload['parent_generation'], BackgroundTask.state == 'done',
-                    not scan_limited,
                     BackgroundTask.phase != 'user_paused', BackgroundTask.deadline_at > datetime.utcnow()).values(state='pending', phase='directory_slice',
                     finished_at=None, available_at=datetime.utcnow(), token=None, worker_id=None, lease_until=None))
                 # A last-page crawl can be paused while this independent call
@@ -153,7 +245,7 @@ def process_navigation(payload):
                 if requested(parent) and parent.phase == 'user_paused':
                     saved = dict(parent.payload)
                     resume = dict(saved.get(RESUME_KEY) or {})
-                    if resume.get('state') == 'done' and not scan_limited:
+                    if resume.get('state') == 'done':
                         saved[RESUME_KEY] = dict(resume, state='pending', phase='directory_slice')
                         db.session.execute(db.update(BackgroundTask).where(BackgroundTask.id == parent.id,
                             BackgroundTask.generation == payload['parent_generation'],
@@ -168,17 +260,22 @@ def process_navigation(payload):
                 deferred_pages = inventory.progress_snapshot(site['site_key'])['states'].get('pending', 0)
                 db.session.refresh(parent)
                 if deferred_pages or result.get('deferred_routes'):
-                    saved_result = dict(parent.result or {}, exploration_limited=True,
+                    saved_result = dict(parent.result or {}, exploration_limited=result.get('status') == 'branch_stopped',
                         deferred_pages=deferred_pages,
                         deferred_routes=max((parent.result or {}).get('deferred_routes', 0), result.get('deferred_routes', 0)))
                     db.session.execute(db.update(BackgroundTask).where(BackgroundTask.id == parent.id,
                         BackgroundTask.generation == payload['parent_generation'], BackgroundTask.state == 'done')
                         .values(result=saved_result).execution_options(synchronize_session=False))
                     db.session.commit()
+        if result.get('error_code') == 'budget_exhausted':
+            tasks.defer(capability='directory', phase='ai_budget', state='waiting', error_code='budget_exhausted',
+                        checkpoint=tasks.current_execution().get('checkpoint'), reason='本轮 AI 额度已用完，进度已保存')
         if result.get('status') == 'pending':
             tasks.defer(capability='directory', phase='ai_resource', delay=result.get('next_delay') or 1,
                         reason='逐项识别已保存，等待处理剩余材料')
-        return dict(result, status=result.get('status', 'processed'), queued_pages=added, deferred_pages=deferred_pages)
+        return dict(result, status=result.get('status', 'processed'), queued_pages=added, deferred_pages=deferred_pages,
+                    role_corrections=corrections, reviewed_routes=result.get('reviewed_routes', 0),
+                    cached_routes=result.get('cached_routes', 0))
     except Timeout:
         tasks.defer(capability='directory', delay=1, reason='等待目录缓存空闲', checkpoint=tasks.current_execution().get('checkpoint'))
 

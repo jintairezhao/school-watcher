@@ -15,7 +15,7 @@ def execution(key, at, *, tokens=100, status='succeeded', purpose='directory',
     return AIExecution(execution_id=key, created_at=at, finished_at=at + timedelta(seconds=2),
                        purpose=purpose, provider=provider, model=model, config_version='1',
                        skill_id=skill_id, skill_version='1', skill_digest='digest', input_digest='input',
-                       mode='test', status=status, output={'private': 'never-return-this-output'},
+                       mode='test', status=status, request_sent=status != 'reserved', output={'private': 'never-return-this-output'},
                        usage=usage if usage is not None else {'known': True, 'total_tokens': tokens,
                            'input_tokens': tokens * 3 // 4, 'output_tokens': tokens - tokens * 3 // 4})
 
@@ -28,6 +28,14 @@ class AIUsageTests(unittest.TestCase):
 
     def tearDown(self):
         self.fixture.tearDown()
+
+    def test_failure_before_dispatch_is_not_counted_as_a_paid_request(self):
+        row = execution('credential-unavailable', self.now, tokens=0, status='failed')
+        row.request_sent = False
+        db.session.add(row); db.session.commit()
+        result = usage_dashboard(now=self.now)
+        self.assertEqual(result['summary']['calls'], 0)
+        self.assertEqual(result['summary']['tokens'], 0)
 
     def test_totals_include_billed_failures_and_tests_without_double_counting(self):
         db.session.add_all([

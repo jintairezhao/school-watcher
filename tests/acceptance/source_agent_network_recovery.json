@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "school": "西安交通大学",
+  "scope": "single_observed_official_entry_recovery",
+  "model_requests": 0,
+  "whole_school_acceptance_passed": false,
+  "parameter_values_changed": false,
+  "first_read": {
+    "stage": "start",
+    "process_restart": false,
+    "task_attempts": 0,
+    "page_network_failures_before": 0,
+    "page_network_failures_after": 1,
+    "page_state": "pending",
+    "wait_seconds": 34.974978,
+    "elapsed_seconds": 1.035,
+    "model_requests": 0,
+    "reads": [
+      {
+        "url": "http://yz.xjtu.edu.cn/",
+        "final_url": "http://yz.xjtu.edu.cn/",
+        "status": 0,
+        "error_code": "http_serverdisconnectederror",
+        "outcome": "network_error",
+        "evidence": [],
+        "sha256": "",
+        "timings": {
+          "http_ms": 933
+        }
+      }
+    ]
+  },
+  "new_process_retry": {
+    "stage": "resume",
+    "process_restart": true,
+    "task_attempts": 0,
+    "page_network_failures_before": 1,
+    "page_network_failures_after": 0,
+    "page_state": "fetched",
+    "wait_seconds": null,
+    "elapsed_seconds": 0.737,
+    "model_requests": 0,
+    "reads": [
+      {
+        "url": "http://yz.xjtu.edu.cn/",
+        "final_url": "http://yz.xjtu.edu.cn/",
+        "status": 200,
+        "error_code": "",
+        "outcome": "usable",
+        "evidence": [
+          "direct_on_durable_retry",
+          "public_dns_ipv4:202.117.13.147",
+          "visible_directory_content"
+        ],
+        "sha256": "5daca875ae5ad229bedef3cb1efd776bad7958960e404a06be558fc829066316",
+        "timings": {
+          "http_ms": 218,
+          "admission_wait_ms": 0
+        }
+      }
+    ]
+  },
+  "regression_tests": {
+    "passed": 43,
+    "failed": 0
+  }
+}

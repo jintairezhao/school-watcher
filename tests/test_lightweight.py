@@ -66,8 +66,12 @@ class LightweightTests(unittest.TestCase):
         self.assertEqual(anon.status_code, 302)
 
     def test_display_group_includes_explicit_child_without_rewriting_official_metadata(self):
+        from backend.database.models import DepartmentDirectoryEntry
         child = Department(school_id=self.school.id, name='本科教育-选课安排', list_url=self.school.url)
         db.session.add(child); db.session.flush()
+        # The shared university homepage and a name prefix cannot establish a
+        # parent. This case describes a membership actually observed on site.
+        db.session.add(DepartmentDirectoryEntry(parent_id=self.teaching.id, department_id=child.id))
         db.session.add(Announcement(school_id=self.school.id, department_id=child.id, title='选课子栏目的通知',
                                    published_at=datetime.utcnow()))
         db.session.commit()
@@ -240,8 +244,8 @@ class LightweightTests(unittest.TestCase):
             self.assertIn('选课通知', soup.select_one('#noticeList').get_text())
             self.assertIn('历史资料通知', soup.select_one('#noticeList').get_text())
             self.assertFalse(soup.select('[data-state-field="archived"]'))
-            self.assertEqual(len(soup.select('.mailbox-views a')), 3)
-            self.assertIsNotNone(soup.select_one('.mailbox-views a[href^="/channels"]'))
+            self.assertEqual(len(soup.select('.mailbox-views a')), 2)
+            self.assertIsNone(soup.select_one('a[href^="/channels"]'))
         self.assertEqual((self.notice.content_text, UserRead.query.one().read_at), original)
         self.assertEqual(UserRead.query.count(), 1)
         self.assertTrue(db.session.get(UserAnnouncementState, (self.user.id, self.notice.id)).starred)

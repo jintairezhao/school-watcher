@@ -305,6 +305,58 @@ class ExplorationTests(unittest.TestCase):
         self.assertGreaterEqual(len(calls), 2)
         self.assertLessEqual(len(calls), 4)
 
+    def test_new_observed_material_can_continue_past_four_model_decisions(self):
+        bundle = json.loads(self.p.evidence_json)
+        html = LIST.replace('</main>', ''.join(
+            f'<a href="/notice/{index}.html">补充材料{index}</a>' for index in (4, 5)) + '</main>')
+        bundle['list'] = g._snapshot(html, ROOT)
+        self.p.evidence_json = g._json(bundle); self.p.evidence_hash = g._hash(bundle); db.session.commit()
+        calls = []
+        def model(*args, **kwargs):
+            calls.append(args[2])
+            if len(calls) <= 5:
+                return self.output('explore', actions=[dict(type='read_page',
+                    url=ROOT + f'notice/{len(calls)}.html', purpose='article', reason='读取已观察到的通知')])
+            return self.output()
+        with patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+             patch('backend.ai.runtime.run_skill', side_effect=model), \
+             patch('backend.scraper.acquisition.fetch_or_raise', side_effect=self.transport):
+            result = g.run_source_skill_for_proposal(self.p.id)
+        self.assertEqual(len(calls), 6, (result, json.loads(self.p.validation_json).get('workflow')))
+        self.assertEqual(result['status'], 'validated')
+        progress = json.loads(self.p.validation_json)['workflow']['progress']
+        self.assertEqual(progress['decisions'], 6)
+        self.assertFalse(progress['stopped'])
+
+    def test_each_decision_reads_at_most_three_observed_addresses(self):
+        bundle = json.loads(self.p.evidence_json)
+        bundle['list'] = g._snapshot(LIST.replace('</main>', '<a href="/notice/4.html">补充材料</a></main>'), ROOT)
+        self.p.evidence_json = g._json(bundle); self.p.evidence_hash = g._hash(bundle); db.session.commit()
+        calls = []
+        def model(*args, **kwargs):
+            calls.append(args[2])
+            return self.output('explore', actions=[dict(type='read_page', url=ROOT + f'notice/{index}.html',
+                    purpose='article', reason='读取已观察材料') for index in range(1, 5)]) if len(calls) == 1 else self.output('not_column')
+        with patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+             patch('backend.ai.runtime.run_skill', side_effect=model), \
+             patch('backend.scraper.acquisition.fetch_or_raise', side_effect=self.transport) as wire:
+            g.run_source_skill_for_proposal(self.p.id)
+        self.assertEqual(wire.call_count, 3)
+        self.assertEqual(len(calls), 2)
+
+    def test_failed_read_is_cached_without_fabricating_new_material(self):
+        from backend.services.source_exploration import acquire
+        url = ROOT + 'notice/1.html'
+        action = {'type': 'read_page', 'url': url, 'purpose': 'article'}
+        failure = FetchFailure(FetchResult(url, outcome='denied', error_code='source_login_required'))
+        with patch('backend.scraper.acquisition.fetch_or_raise', side_effect=failure) as wire:
+            first = acquire(self.p, action, {url})
+            second = acquire(self.p, action, {url})
+        self.assertEqual(first['status'], 'login_required')
+        self.assertEqual(second['status'], 'cached_failure')
+        self.assertEqual(wire.call_count, 1)
+        self.assertEqual(len(json.loads(self.p.evidence_json)['operation_results']), 1)
+
     def test_configured_quota_pauses_without_repeated_calls(self):
         from backend.ai.configuration import AIConfigError
         from backend.database.source_governance_models import DiscoveryWorkItem

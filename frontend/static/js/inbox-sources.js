@@ -171,6 +171,25 @@
             restore();
             find('#closeFilters').focus({preventScroll: true});
         }
+        function revealSelection() {
+            open();
+            // A saved search or collapsed branch must not hide the source just chosen.
+            if (find('#sourceQuery')) find('#sourceQuery').value = '';
+            search();
+            const selected = [...find('#sourcePanel').querySelectorAll('[data-department]:checked:not(:disabled)')];
+            selected.forEach(input => {
+                let unit = input.closest('[data-source-unit]');
+                while (unit) {
+                    setExpanded(unit, true);
+                    unit = unit.parentElement.closest('[data-source-unit]');
+                }
+                const group = input.closest('[data-source-group]');
+                if (group) setGroupExpanded(group, true);
+            });
+            selected[0]?.closest('.department-option').scrollIntoView({block: 'nearest'});
+            selected[0]?.focus({preventScroll: true});
+            save();
+        }
         function close() {
             save();
             if (mode() === 'pinned') rememberPin(false);
@@ -228,6 +247,6 @@
                 save(); pinSuspended = value; temporaryOpen = false; render(); restore();
             } else render();
         }
-        return {save, restore, render, syncCounts, setGroupExpanded, suspendPin, isOverlay: () => mode() === 'overlay'};
+        return {save, restore, render, syncCounts, setGroupExpanded, suspendPin, revealSelection, isOverlay: () => mode() === 'overlay'};
     };
 })();

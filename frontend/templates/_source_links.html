@@ -6,7 +6,7 @@
     <ul>{% for publication in publications %}<li>
         <span class="publication-name">{{ publication.breadcrumb }}</span>
         <span class="publication-actions">
-            <a data-channel-link href="{{ publication.filter_url }}">查看该渠道的通知</a>
+            <a data-channel-link href="{{ publication.filter_url }}">在来源栏查看通知</a>
             {% if publication.article_url %}<a href="{{ publication.article_url }}" target="_blank" rel="noopener noreferrer">此处刊载原文</a>{% endif %}
             {% if publication.list_url %}<a href="{{ publication.list_url }}" target="_blank" rel="noopener noreferrer">官网栏目</a>{% endif %}
         </span>

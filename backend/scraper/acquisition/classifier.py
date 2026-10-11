@@ -1,7 +1,7 @@
 """Judge page content before parsing; transport success is not content success."""
 from dataclasses import replace
 import re
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urljoin
 
 from bs4 import BeautifulSoup
 
@@ -27,7 +27,9 @@ _IDENTITY_OPENING = 200
 _EMPTY = re.compile(r'^(?:暂无(?:通知|公告|新闻|内容|信息|数据|记录)|没有(?:相关)?(?:通知|公告|记录|数据)|'
                     r'no (?:results|records|notices|data)(?: found)?)[。.!！\s]*$', re.I)
 _DATE = re.compile(r'(?:20\d{2}[-年./]\d{1,2}[-月./]\d{1,2}|\d{1,2}[-/]\d{1,2})')
-_ARTICLE = 'article, .v_news_content, #vsb_content, #vsb_content_2, .wp_articlecontent, .article-content, .article_content, .TRS_Editor'
+_ARTICLE = ', '.join(['article'] + [f'[class~="{name}" i]' for name in (
+    'v_news_content', 'wp_articlecontent', 'article-content', 'article_content', 'TRS_Editor')]
+    + [f'[id="{name}" i]' for name in ('vsb_content', 'vsb_content_2')])
 
 
 def _decision(raw, outcome, code='', message='', evidence=()):
@@ -43,6 +45,19 @@ def _visible(node):
         if current.has_attr('hidden') or current.get('aria-hidden') == 'true' or 'display:none' in style or 'visibility:hidden' in style:
             return False
     return True
+
+
+def _missing_script_navigation(html, soup, page_url):
+    """A real local navigation loader is evidence the news-only HTML is incomplete."""
+    from backend.scraper.http_client import same_school_url
+    original = BeautifulSoup(html, 'lxml')
+    loaders = [urljoin(page_url, script['src']) for script in original.select('script[src]')
+               if re.search(r'/(?:header|navigation|navbar|menu)[\w.-]*\.js$',
+                            urlsplit(script['src']).path, re.I)]
+    if not any(same_school_url(url, page_url) for url in loaders):
+        return False
+    regions = soup.select('nav,header,[role="navigation"],[class~="nav"],[class~="navbar"],[id="nav"],[id="header"]')
+    return not any(len(region.select('a[href]')) >= 2 for region in regions)
 
 
 def _login_wall(raw, soup, visible, title):
@@ -98,12 +113,17 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
                          'access_challenge', '官网当前返回访问校验页面，需要浏览器或管理员验证',
                          ('automatic_challenge',))
     if raw.status >= 400:
+        if raw.status in (403, 407) and 'proxy_route_retry_available' in raw.evidence:
+            return _decision(raw, 'network_error', 'http_proxy_access_denied',
+                             '官网代理路径拒绝访问，系统保存进度后延后尝试其他网络路径')
         from backend.scraper.fetch_errors import http_failure
         failure = http_failure(raw.status)
         return _decision(raw, 'network_error' if failure.retryable else 'denied',
                          'http_' + str(raw.status), str(failure))
     if raw.outcome in ('unavailable', 'busy', 'network_error', 'denied') and raw.error_code:
         return raw
+    if request.purpose == 'article' and raw.attachment.get('verified'):
+        return _decision(raw, 'usable', evidence=('verified_public_attachment',))
     if not html.strip():
         return _decision(raw, 'needs_adapter', 'empty_response',
                          '官网未返回可读取的网页内容；已有通知仍保留')
@@ -114,6 +134,12 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
     # the user to fix parsers for a page that is simply not public.
     if _login_wall(raw, soup, visible, title):
         return _decision(raw, 'denied', 'source_login_required', LOGIN_REQUIRED_MESSAGE)
+    if (title in ('系统提示', '访问提示', '提示信息') and len(visible) < 1200
+            and re.search(r'暂无权限|无权访问|没有访问权限|仅限校内访问', visible)
+            and not any(len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
+                        for node in soup.select(_ARTICLE))):
+        return _decision(raw, 'denied', 'source_access_restricted',
+                         '官网明确限制本条内容的访问，其他公开通知继续采集', ('site_permission_prompt',))
     fragment = urlsplit(request.url).fragment
     if raw.transport != 'browser' and fragment.startswith(('/', '!/')):
         return _decision(raw, 'requires_render', 'fragment_route',
@@ -152,6 +178,9 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
                or has_public_body_resource([node], raw.final_url) for node in soup.select(_ARTICLE)):
             return _decision(raw, 'usable', evidence=('article_region',))
     elif request.purpose == 'directory':
+        if raw.transport != 'browser' and _missing_script_navigation(html, soup, raw.final_url or request.url):
+            return _decision(raw, 'requires_render', 'navigation_not_loaded',
+                             '官网导航由脚本加载，需要补充渲染后的真实入口', ('observed_navigation_loader',))
         anchors = [a for a in soup.select('a[href]') if a.get_text(' ', strip=True)
                    and not a.get('href', '').lower().startswith(('javascript:', 'mailto:', 'tel:'))]
         if not empty_evidence and (anchors or len(visible) >= 60):

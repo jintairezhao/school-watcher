@@ -131,6 +131,8 @@
     }
     async function navigate(url, options = {}) {
         url = new URL(url, location.origin);
+        const revealSource = options.revealSource || url.hash === '#sources';
+        if (url.hash === '#sources') url.hash = '';
         const keepList = options.preserveList && !options.refreshList && listKey(url) === listKey(appliedURL);
         if (url.searchParams.get('school') !== appliedURL.searchParams.get('school') || readingView.mailbox(url) !== readingView.mailbox(appliedURL)) setNoticePopover();
         desiredURL = url;
@@ -227,6 +229,7 @@
             sources.render();
             if (!sameSources) sources.restore();
             readingView.render(url, {restore: options.preserveList && sameArticle});
+            if (revealSource) sources.revealSelection();
             if (!keepList) setFeedback('已更新', 'success');
             const restoreFocus = focusId ? document.getElementById(focusId) : focusChoice ?
                 document.querySelector(`[${focusChoice[0]}="${focusChoice[1]}"]`) : null;
@@ -315,7 +318,8 @@
             if (link.matches('.reader-back')) url = readingView.withMode(url, false);
             if (url.origin === location.origin && url.pathname === '/' && !link.target) {
                 event.preventDefault();
-                navigate(url, {preserveList: link.matches('[data-notice-link], .reader-back')});
+                navigate(url, {preserveList: link.matches('[data-notice-link], .reader-back'),
+                    revealSource: link.matches('[data-channel-link]')});
                 return;
             }
         }
@@ -414,7 +418,15 @@
     window.refreshInboxView = () => appliedURL.href === desiredURL.href && !inboxSearch.isComposing()
         ? navigate(appliedURL, {history: 'none', preserveList: true, refreshList: true}) : Promise.resolve();
     syncUnits();
+    const revealInitialSource = appliedURL.hash === '#sources';
+    if (revealInitialSource) {
+        appliedURL.hash = ''; desiredURL.hash = '';
+        history.replaceState(null, '', appliedURL.pathname + appliedURL.search);
+    }
     const initialURL = initialConditionsURL();
-    if (initialURL.href !== appliedURL.href) navigate(initialURL, {history: 'replace'});
-    else if (conditionKeys.some(key => appliedURL.searchParams.has(key))) rememberConditions(appliedURL);
+    if (initialURL.href !== appliedURL.href) navigate(initialURL, {history: 'replace', revealSource: revealInitialSource});
+    else {
+        if (conditionKeys.some(key => appliedURL.searchParams.has(key))) rememberConditions(appliedURL);
+        if (revealInitialSource) sources.revealSelection();
+    }
 })();

@@ -92,12 +92,175 @@ class OnboardingRecoveryTests(unittest.TestCase):
         self.failed_page('another-source')
         self.assertTrue(pending_onboarding_recovery(self.fixture.school_id))
 
+    def test_access_recovery_respects_longer_site_wait_and_reuses_observed_rules(self):
+        from backend.services.source_onboarding import onboard_page, retry_unconnected_columns
+        from backend.scraper.acquisition import FetchFailure, FetchResult
+        from tests.test_direct_onboarding import URL, HTML, ai_column
+        job = tasks.enqueue('onboard', 'restricted', {'school_id': self.fixture.school_id, 'url': URL})
+        handle = tasks.claim(capabilities=['http'])
+        def restricted(address, purpose):
+            if address == URL:
+                return HTML
+            raise FetchFailure(FetchResult(address, status=403, outcome='denied', error_code='http_403', retry_after=30000))
+        with tasks.execution_scope(handle), patch('backend.services.source_onboarding.recognize_column',
+                side_effect=AssertionError('An access failure must not buy rule repair')):
+            result = onboard_page(handle['payload'], fetcher=restricted)
+        tasks.finish(handle, result)
+        db.session.refresh(job)
+        job.finished_at = datetime.utcnow() - timedelta(hours=7)
+        db.session.commit()
+        self.assertEqual(retry_unconnected_columns(self.fixture.school_id, 'background:1', automatic=True), [])
+        self.assertEqual(retry_unconnected_columns(self.fixture.school_id, 'manual:1', automatic=False), [])
+        job.result = dict(job.result, recovery_not_before=(datetime.utcnow() - timedelta(seconds=1)).isoformat(),
+                          website_not_before=(datetime.utcnow() - timedelta(seconds=1)).isoformat())
+        db.session.commit()
+        self.assertEqual(retry_unconnected_columns(self.fixture.school_id, 'background:2', automatic=True), [job.id])
+        db.session.refresh(job)
+        self.assertEqual(job.payload['observed_columns'], result['recovery_rules'])
+        handle = tasks.claim(capabilities=['http'])
+        with tasks.execution_scope(handle), patch('backend.services.source_onboarding.publication_lists', return_value=[]), \
+                patch('backend.services.source_onboarding.recognize_column', side_effect=AssertionError('Known rules recover with no new model request')):
+            recovered = onboard_page(handle['payload'], fetcher=self.fixture.fetch)
+        self.assertEqual(recovered['state'], 'connected')
+        self.assertEqual(Department.query.count(), 1)
+
+    def test_network_resume_executes_paid_columns_before_any_new_model_request(self):
+        from backend.services.source_onboarding import onboard_page
+        from backend.scraper.acquisition import FetchFailure, FetchResult
+        from tests.test_direct_onboarding import URL, HTML, ai_column
+        job = tasks.enqueue('onboard', 'paid-trial', {'school_id': self.fixture.school_id, 'url': URL})
+        handle = tasks.claim(capabilities=['http'])
+        def unavailable(address, purpose):
+            if address == URL:
+                return HTML
+            raise FetchFailure(FetchResult(address, outcome='network_error', error_code='http_timeout'))
+        with tasks.execution_scope(handle), patch('backend.services.source_onboarding.publication_lists', return_value=[]), \
+                patch('backend.services.source_onboarding.recognize_column', return_value={
+                    'status': 'ready', 'columns': [ai_column(content_selector='')], 'decision_ids': ['actual-paid-decision']}) as model:
+            with self.assertRaises(FetchFailure) as raised:
+                onboard_page(handle['payload'], fetcher=unavailable)
+        self.assertEqual(model.call_count, 1)
+        tasks.finish(handle, error=raised.exception)
+        db.session.refresh(job)
+        self.assertEqual(job.checkpoint['column_validation']['stage'], 'trial')
+        self.assertEqual(job.checkpoint['column_validation']['trial_columns'][0]['content_selector'], '')
+        self.assertEqual(job.checkpoint['column_validation']['trial_decision_ids'], ['actual-paid-decision'])
+        job.available_at = datetime.utcnow(); db.session.commit()
+        handle = tasks.claim(capabilities=['http'])
+        with tasks.execution_scope(handle), patch('backend.services.source_onboarding.publication_lists',
+                side_effect=AssertionError('An existing trial must not be replaced by another profile')), \
+                patch('backend.services.source_onboarding.recognize_column', side_effect=AssertionError('Already paid for these rules')):
+            result = onboard_page(handle['payload'], fetcher=self.fixture.fetch)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(Department.query.count(), 1)
+
+    def test_upgrade_executes_legacy_model_columns_instead_of_failing_rule_profile(self):
+        import hashlib
+        from backend.services.source_onboarding import onboard_page
+        from backend.services.source_validation import VALIDATION_VERSION
+        from tests.test_direct_onboarding import URL, HTML, ai_column
+        job = tasks.enqueue('onboard', 'legacy-paid-trial', {'school_id': self.fixture.school_id, 'url': URL})
+        job.checkpoint = {'column_regions': {'columns': [ai_column(content_selector='')],
+            'decision_ids': ['old-paid-observation'], 'cursor': 1}, 'column_validation': {
+            'page_hash': hashlib.sha256((URL + '\\0' + HTML).encode()).hexdigest(),
+            'validation_version': VALIDATION_VERSION - 1, 'stage': 'done', 'completed': [],
+            'department_ids': [], 'new_count': 0,
+            'failures': [{'issue': {'codes': ['article_sample_mismatch']}}],
+            'result': {'state': 'unsupported'}, 'progress': {'stopped': True}}}
+        db.session.commit()
+        handle = tasks.claim(capabilities=['http'])
+        with tasks.execution_scope(handle), patch('backend.services.source_onboarding.publication_lists',
+                side_effect=AssertionError('The old model observation is already available')), \
+                patch('backend.services.source_onboarding.recognize_column', side_effect=AssertionError('A program fix must not repeat a paid request')):
+            result = onboard_page(handle['payload'], fetcher=self.fixture.fetch)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(Department.query.one().content_selector, '')
+
+    def test_legacy_partial_material_resumes_unread_region_on_second_claim(self):
+        self._assert_partial_material_resumes()
+
+    def test_existing_rules_handoff_retains_partial_material_on_second_claim(self):
+        self._assert_partial_material_resumes(already_handed_off=True)
+
+    def _assert_partial_material_resumes(self, *, already_handed_off=False):
+        import hashlib
+        from bs4 import BeautifulSoup
+        from backend.ai.skill_loader import digest, load_skill
+        from backend.services.source_onboarding import onboard_page
+        from backend.services.source_validation import VALIDATION_VERSION
+        from backend.services.discovery_policy import progress_state
+        from tests.test_direct_onboarding import URL, HTML, TITLES, ai_column
+        other = '<section id="other"><h2>学术活动</h2><ul>' + ''.join(
+            f'<li><a href="/other/{i}.htm">{title}</a><span>2026-10-01</span></li>'
+            for i, title in enumerate(TITLES)) + '</ul></section>'
+        html = HTML.replace('</body>', other + '</body>')
+        document = BeautifulSoup(html, 'lxml')
+        regions = [{'school_id': self.fixture.school_id,
+            'candidates': [{'candidate_id': 'page', 'url': URL}],
+            'evidence': [{'evidence_id': 'region-' + str(i), 'url': URL,
+                'html': str(document.select_one(selector))}]}
+            for i, selector in enumerate(('#notices', '#other'))]
+        binding = {'id': 77, 'version': 1}
+        skill = load_skill('university-source-onboarding', 'column')
+        paid_id = 'column-region:' + digest([skill.resource_digest, regions[0], binding['id'], binding['version']])
+        first = ai_column(content_selector='')
+        second = ai_column(name='学术活动', content_selector='', list_selector='#other li',
+                           container_selector='#other', heading_selector='#other h2')
+        job = tasks.enqueue('onboard', 'legacy-partial-material', {'school_id': self.fixture.school_id, 'url': URL})
+        job.checkpoint = {'column_regions': {'hash': digest(regions), 'columns': [first],
+            'decision_ids': [paid_id], 'cursor': 1, 'unresolved': []}, 'column_validation': {
+            'page_hash': hashlib.sha256((URL + '\\0' + html).encode()).hexdigest(),
+            'validation_version': VALIDATION_VERSION if already_handed_off else VALIDATION_VERSION - 1,
+            'stage': 'rules' if already_handed_off else 'done', 'completed': [],
+            'department_ids': [], 'new_count': 0, 'material_pending': True, 'material_feedback': [],
+            'failures': [{'issue': {'codes': ['article_sample_mismatch']}}],
+            'result': {'state': 'unsupported'}, 'progress': progress_state() if already_handed_off else {'stopped': True}}}
+        if already_handed_off:
+            checkpoint = job.checkpoint
+            checkpoint['column_validation'].update(trial_columns=[first], trial_origin_stage='rules',
+                trial_decision_ids=[paid_id], trial_request_key='', failures=[])
+            job.checkpoint = checkpoint
+        db.session.commit()
+        def fetch(address, purpose):
+            return html if address == URL else self.fixture.fetch(address, purpose)
+        def decide(skill_name, mode, evidence, slot, execution_id, **kwargs):
+            self.assertEqual(evidence, regions[1])
+            self.assertNotEqual(execution_id, paid_id)
+            self.assertEqual(tasks.current_execution()['checkpoint']['column_regions']['cursor'], 1)
+            return {'status': 'succeeded', 'output': {'status': 'ready', 'columns': [second]}}
+        with patch('backend.ai.configuration.get_model_binding', return_value=binding), \
+                patch('backend.scraper.discovery.column_regions.materials', return_value=regions), \
+                patch('backend.ai.runtime.run_skill', side_effect=decide) as model:
+            handle = tasks.claim(capabilities=['http'])
+            with tasks.execution_scope(handle), self.assertRaises(tasks.TaskDeferred) as deferred:
+                onboard_page(handle['payload'], fetcher=fetch)
+            tasks.handoff(handle, deferred.exception)
+            self.assertEqual(Department.query.count(), 1)
+            self.assertEqual(Department.query.one().name, '通知公告')
+            self.assertEqual(model.call_count, 0)
+            db.session.refresh(job)
+            self.assertEqual(job.checkpoint['column_regions']['cursor'], 1)
+            self.assertEqual(job.generation, 1)
+            handle = tasks.claim(capabilities=['directory'])
+            self.assertEqual(handle['id'], job.id)
+            with tasks.execution_scope(handle):
+                result = onboard_page(handle['payload'], fetcher=fetch)
+            tasks.finish(handle, result)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual({source.name for source in Department.query.all()}, {'通知公告', '学术活动'})
+        self.assertEqual(model.call_count, 1)
+        db.session.refresh(job)
+        self.assertEqual(job.generation, 1)
+        self.assertEqual(job.checkpoint['column_regions']['cursor'], 2)
+        self.assertIn(paid_id, job.checkpoint['column_regions']['decision_ids'])
+
     def test_single_page_repair_preserves_source_id_and_latest_ai_opt_out(self):
         from backend.services.source_onboarding import onboard_page
         from tests.test_direct_onboarding import URL, HTML
-        source = Department(school_id=self.fixture.school_id, name='旧栏目名', list_url=URL,
-            list_selector='#old li', title_selector='a', link_selector='a', date_selector='span')
-        db.session.add(source); db.session.commit()
+        initial = onboard_page({'school_id': self.fixture.school_id, 'url': URL, 'ai_assist': False}, fetcher=self.fixture.fetch)
+        source = db.session.get(Department, initial['department_ids'][0])
+        source.name, source.list_selector = '旧栏目名', '#old li'
+        db.session.commit()
         tasks.enqueue('discover', self.fixture.school_id, {'school_id': self.fixture.school_id, 'ai_assist': False})
         with patch('backend.services.source_onboarding.recognize_column', side_effect=AssertionError('AI disabled')), \
              patch('backend.services.student_information.queue_source_assessment') as source_ai, \

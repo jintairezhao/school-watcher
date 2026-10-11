@@ -23,11 +23,13 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
     """Project official directory paths without changing source IDs or subscriptions.
 
     Explicit directory memberships take precedence. Published website paths then
-    supply missing ancestors; legacy unit-column metadata is the fallback. Each
+    supply missing ancestors; legacy unit-column metadata and observed website
+    publisher identities supply the fallback. Each
     node exposes distinct descendant columns for filtering and its own columns
     for rendering, so an attached unit can remain a collapsible child.
     """
-    from backend.services.source_placements import official_source_placements
+    from backend.services.source_placements import official_source_placements, _within_unit
+    from backend.services.source_channels import channels_for
     departments = list(departments)
     known = sorted(known_departments if known_departments is not None else departments,
                    key=lambda d: len(d.name), reverse=True)
@@ -41,6 +43,7 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
             parents.setdefault(child.id, []).append((parent, entry.position))
             directory_ids.add(parent.id)
     groups = {}
+    publishers = None
 
     def put(group, nodes, column, *, official=False, directory=False):
         # A column can sit directly in a navigation group, with no department
@@ -105,8 +108,14 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
                     put(group, chain, {'department': dept, 'label': label, 'position': position,
                         'unavailable': not bool(dept.list_url)}, directory=True)
             continue
-        owner = next((item for item in known if item.school_id == dept.school_id and
-                      any(dept.name.startswith(item.name + separator) for separator in ('-', '－', '—'))), dept)
+        candidates = [item for item in known if item.school_id == dept.school_id
+                      and any(dept.name.startswith(item.name + separator) for separator in ('-', '－', '—'))
+                      and _within_unit(getattr(dept, 'list_url', ''), getattr(item, 'list_url', ''),
+                                       getattr(getattr(dept, 'school', None), 'url', ''))]
+        if candidates:
+            longest = max(len(item.name) for item in candidates)
+            candidates = [item for item in candidates if len(item.name) == longest]
+        owner = candidates[0] if len(candidates) == 1 else dept
         is_child = owner.id != dept.id
         label = dept.name[len(owner.name) + 1:].strip() if is_child else dept.name
         paths = placements.get(dept.id) or (placements.get(owner.id) if is_child else None)
@@ -115,6 +124,20 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
                 put(path['group'], path['nodes'], {'department': dept,
                     'label': path['label'] if dept.id in placements else label}, official=True)
         else:
+            # Agent-installed columns need not have a separate unit row. Reuse
+            # saved website identity (or its actual address) for the publisher
+            # layer; never infer a department from the column or group name.
+            # Keep reliable legacy unit-column relationships ahead of this.
+            if not is_child:
+                if publishers is None:
+                    publishers = channels_for(departments)
+                publisher = publishers.get(dept.id)
+                if publisher:
+                    unit = put((dept.group_name or '').strip() or '其他信息来源',
+                        [{'key': publisher['publisher_key'], 'name': publisher['publisher_label']}],
+                        {'department': dept, 'label': label})
+                    unit['expandable'] = True
+                    continue
             unit = put((owner.group_name or '').strip() or '其他信息来源',
                        [{'key': owner.id, 'name': owner.name}], {'department': dept, 'label': label})
             unit['expandable'] |= is_child

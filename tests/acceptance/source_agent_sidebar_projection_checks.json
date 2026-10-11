@@ -1,0 +1,728 @@
+{
+  "date": "2026-10-11",
+  "purpose": "Actual existing left-sidebar projection before/after from the two completed holdout run databases and their published official evidence catalogs.",
+  "method": "Run actual channels_for and inbox.source_hierarchy and render the existing _inbox_sources.html source_tree_view macro. SQLite connections use mode=ro. Provider/model and HTTP/discovery dispatch are guarded. The original v14 holdout acquisition/API results are not rerun.",
+  "frozen_after_code_version": "v15",
+  "frozen_after_snapshot_sha256": "24df88c7b868a9d8bd1d11602430d7ae14a4697ddf175b711f026fb6c3c5b738",
+  "additional_api_requests": 0,
+  "additional_official_requests": 0,
+  "installed_sources_reviewed": 10,
+  "stored_memberships_previously_checked_against_literal_official_regions": 78,
+  "limitations": [
+    "This confirms the projection/template result from retained real official material; it is not fresh website/API discovery, browser interaction, or continuous-update acceptance.",
+    "Existing navigation groups, including 其他信息来源, remain visible. A stored group_name equal to the school name is not treated as a department.",
+    "The Nankai information-publication source conservatively shows xxgk.nankai.edu.cn because title 信息公开网 alone does not establish a department identity.",
+    "Three Shandong graduate-admissions columns keep address-qualified publisher nodes because this retained catalog does not establish a shared observed website entrance. They are not merged solely by matching website names.",
+    "No general zero-error or whole-school coverage claim follows from these ten installed sources."
+  ],
+  "runs": [
+    {
+      "run": "candidate-v14-nankai",
+      "school": "南开大学",
+      "original_candidate_ended_at": "2026-10-11T08:55:25.117450Z",
+      "installed_source_count": 3,
+      "status": "observed_publisher_fallback_projection_verified_for_this_run",
+      "before": {
+        "code_version": "v14",
+        "status": "publisher_layer_missing_in_actual_sidebar",
+        "rendered_group_labels": [
+          "南开大学",
+          "其他信息来源"
+        ],
+        "rendered_expandable_publisher_or_unit_labels": [],
+        "actual_sidebar_tree": {
+          "南开大学": [
+            {
+              "name": "信息公开制度",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "信息公开制度"
+              ],
+              "children": []
+            },
+            {
+              "name": "最新招聘及引进",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "最新招聘及引进"
+              ],
+              "children": []
+            }
+          ],
+          "其他信息来源": [
+            {
+              "name": "招生政策",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "招生政策"
+              ],
+              "children": []
+            }
+          ]
+        },
+        "code_hashes": {
+          "backend/services/source_channels.py": "3c1dcf0c67c703ad46e3a29a7512a065b0511241bc28eb55412dcaea5aa27353",
+          "backend/services/inbox.py": "0bb2583d094b72b0e1f7af65df7ec1a903e63fb779095ec1771988e496ac5577",
+          "backend/services/source_placements.py": "a47a6be156550d52e07cbbd24e73ccc202e0037146f669251aa948236ed9830a",
+          "frontend/templates/_inbox_sources.html": "74c6efd204c41a09ceda420e4e4d251271f9a3663f72b940506417fc3aad169d"
+        }
+      },
+      "after": {
+        "code_version": "v15",
+        "status": "all_installed_sources_render_under_saved_evidence_publisher",
+        "rendered_group_labels": [
+          "南开大学",
+          "其他信息来源"
+        ],
+        "rendered_expandable_publisher_or_unit_labels": [
+          "xxgk.nankai.edu.cn",
+          "人事处",
+          "南开大学本科招生网"
+        ],
+        "actual_sidebar_tree": {
+          "南开大学": [
+            {
+              "name": "xxgk.nankai.edu.cn",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "信息公开制度"
+              ],
+              "children": []
+            },
+            {
+              "name": "人事处",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "最新招聘及引进"
+              ],
+              "children": []
+            }
+          ],
+          "其他信息来源": [
+            {
+              "name": "南开大学本科招生网",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "招生政策"
+              ],
+              "children": []
+            }
+          ]
+        },
+        "code_hashes": {
+          "backend/services/source_channels.py": "3c1dcf0c67c703ad46e3a29a7512a065b0511241bc28eb55412dcaea5aa27353",
+          "backend/services/inbox.py": "caeb90b2d9006eb0deb00d7c04a9e2fc699c2feb990e4451d27eb4a24056c071",
+          "backend/services/source_placements.py": "a47a6be156550d52e07cbbd24e73ccc202e0037146f669251aa948236ed9830a",
+          "frontend/templates/_inbox_sources.html": "74c6efd204c41a09ceda420e4e4d251271f9a3663f72b940506417fc3aad169d"
+        }
+      },
+      "source_checks": [
+        {
+          "stored_source_name": "最新招聘及引进",
+          "official_list_url": "http://rsc.nankai.edu.cn/main.htm",
+          "stored_group_name_is_navigation_context_only": "南开大学",
+          "source_channels_actual_publisher_label": "人事处",
+          "source_channels_actual_column_label": "南开大学 / 最新招聘及引进",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "南开大学",
+            "publisher_or_unit_chain": [],
+            "column_label": "最新招聘及引进"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "南开大学",
+            "publisher_or_unit_chain": [
+              "人事处"
+            ],
+            "column_label": "最新招聘及引进"
+          },
+          "catalog_observed_title": "人事处",
+          "catalog_html_sha256": "0f3aaf4126702fec8c84c5de487a26a4777ea80b27d5b5878fb38d10254b65ad",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "人事处",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 12,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 12,
+            "installed_rule_outside_observed_region": []
+          }
+        },
+        {
+          "stored_source_name": "招生政策",
+          "official_list_url": "https://zsb.nankai.edu.cn/Baokao/index.html",
+          "stored_group_name_is_navigation_context_only": "",
+          "source_channels_actual_publisher_label": "南开大学本科招生网",
+          "source_channels_actual_column_label": "招生政策",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [],
+            "column_label": "招生政策"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [
+              "南开大学本科招生网"
+            ],
+            "column_label": "招生政策"
+          },
+          "catalog_observed_title": "招生政策|南开大学本科招生网",
+          "catalog_html_sha256": "7727977ac99c5dec4beefcb3250f6e3d63849353ecdd695e9649eca151a6efd8",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "招生政策|南开大学本科招生网",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 9,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 9,
+            "installed_rule_outside_observed_region": []
+          }
+        },
+        {
+          "stored_source_name": "信息公开制度",
+          "official_list_url": "https://xxgk.nankai.edu.cn/",
+          "stored_group_name_is_navigation_context_only": "南开大学",
+          "source_channels_actual_publisher_label": "xxgk.nankai.edu.cn",
+          "source_channels_actual_column_label": "南开大学 / 信息公开制度",
+          "source_channels_basis": "official_page",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "南开大学",
+            "publisher_or_unit_chain": [],
+            "column_label": "信息公开制度"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "南开大学",
+            "publisher_or_unit_chain": [
+              "xxgk.nankai.edu.cn"
+            ],
+            "column_label": "信息公开制度"
+          },
+          "catalog_observed_title": "信息公开网",
+          "catalog_html_sha256": "397c3e50005b0a0fa80991c29d9952274d0895e9f54d0abc74595b6182afb7fc",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "信息公开网",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 3,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 3,
+            "installed_rule_outside_observed_region": []
+          }
+        }
+      ],
+      "actual_api_requests": 0,
+      "actual_http_requests": 0,
+      "provider_dispatch_guard_calls": 0,
+      "http_dispatch_guard_calls": 0,
+      "database_records_unchanged_during_each_readonly_review": true,
+      "database_record_hashes_equal_between_before_and_after": true,
+      "original_database_record_hashes": {
+        "departments": "00f982f0f14ad29b1b5c1ad8003d2fb1e7308d09f3380d93447095a4bfa8a70f",
+        "announcements": "957216735e93c0a3c32dfcd3b9c07ed6bf687ce5fbcf7b121ae1abfabc32bfdf",
+        "announcement_sources": "9118e1f3d712e8bd3fa85bd82c0866bfe7250bf9e8661c9615d8e0b65e851711",
+        "ai_budgets": "c59361d96e2e9623f367b61f06e0e95b2d2db1786b7a8223cdb3aaca5940df64",
+        "ai_school_rounds": "9916853fb59b65695e0e4286edadb346afa8b3a22673b45ca9d1fcb7671c0764",
+        "ai_executions": "c3178f90888a3480b0ddbc9b89189ba93f82606b3d80fdbeb01501c5adde5306",
+        "background_tasks": "6ad994bba865c87697af684e9ef6b5c441974d154ba9b0389e172c012ac2c713",
+        "catalog_publications": "6bec4532aac960cdfd653da03095ee5cf61a1695d67d12ebe0bb29d5c592c831"
+      },
+      "frontend_template_unchanged": true,
+      "source_channels_unchanged": true,
+      "source_ids_and_original_column_labels_preserved": true,
+      "provenance": [
+        {
+          "record": "v14-nankai-sidebar-projection-review.json",
+          "record_sha256": "d74163fd01bcadbbd4797434a0d80617f3b0fe12028f3092da12bb1953d350fb"
+        },
+        {
+          "record": "v15-nankai-sidebar-projection-review.json",
+          "record_sha256": "d2fcb2850dde2f7a4141d190715a7c17f40a6e76f5ffff3fb7dadab255fcbd4e"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v14-sdu",
+      "school": "山东大学",
+      "original_candidate_ended_at": "2026-10-11T09:06:35.391172Z",
+      "installed_source_count": 7,
+      "status": "observed_publisher_fallback_projection_verified_for_this_run",
+      "before": {
+        "code_version": "v14",
+        "status": "publisher_layer_missing_in_actual_sidebar",
+        "rendered_group_labels": [
+          "山东大学",
+          "其他信息来源"
+        ],
+        "rendered_expandable_publisher_or_unit_labels": [],
+        "actual_sidebar_tree": {
+          "山东大学": [
+            {
+              "name": "学院风采",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "学院风采"
+              ],
+              "children": []
+            },
+            {
+              "name": "学子 风采",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "学子 风采"
+              ],
+              "children": []
+            },
+            {
+              "name": "政策 法规",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "政策 法规"
+              ],
+              "children": []
+            }
+          ],
+          "其他信息来源": [
+            {
+              "name": "招生简章",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "招生简章"
+              ],
+              "children": []
+            },
+            {
+              "name": "招生拓展",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "招生拓展"
+              ],
+              "children": []
+            },
+            {
+              "name": "通知公告",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "通知公告"
+              ],
+              "children": []
+            },
+            {
+              "name": "公开公示",
+              "expandable": false,
+              "directory": false,
+              "own_column_labels": [
+                "公开公示"
+              ],
+              "children": []
+            }
+          ]
+        },
+        "code_hashes": {
+          "backend/services/source_channels.py": "3c1dcf0c67c703ad46e3a29a7512a065b0511241bc28eb55412dcaea5aa27353",
+          "backend/services/inbox.py": "0bb2583d094b72b0e1f7af65df7ec1a903e63fb779095ec1771988e496ac5577",
+          "backend/services/source_placements.py": "a47a6be156550d52e07cbbd24e73ccc202e0037146f669251aa948236ed9830a",
+          "frontend/templates/_inbox_sources.html": "74c6efd204c41a09ceda420e4e4d251271f9a3663f72b940506417fc3aad169d"
+        }
+      },
+      "after": {
+        "code_version": "v15",
+        "status": "all_installed_sources_render_under_saved_evidence_publisher",
+        "rendered_group_labels": [
+          "山东大学",
+          "其他信息来源"
+        ],
+        "rendered_expandable_publisher_or_unit_labels": [
+          "山东大学本科生院",
+          "山东大学研究生院",
+          "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/zstz.htm）",
+          "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/tzgg.htm）",
+          "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/gkgs.htm）",
+          "国际事务部（留学山大）"
+        ],
+        "actual_sidebar_tree": {
+          "山东大学": [
+            {
+              "name": "山东大学本科生院",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "学院风采"
+              ],
+              "children": []
+            },
+            {
+              "name": "山东大学研究生院",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "学子 风采",
+                "政策 法规"
+              ],
+              "children": []
+            }
+          ],
+          "其他信息来源": [
+            {
+              "name": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/zstz.htm）",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "招生拓展"
+              ],
+              "children": []
+            },
+            {
+              "name": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/tzgg.htm）",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "通知公告"
+              ],
+              "children": []
+            },
+            {
+              "name": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/gkgs.htm）",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "公开公示"
+              ],
+              "children": []
+            },
+            {
+              "name": "国际事务部（留学山大）",
+              "expandable": true,
+              "directory": false,
+              "own_column_labels": [
+                "招生简章"
+              ],
+              "children": []
+            }
+          ]
+        },
+        "code_hashes": {
+          "backend/services/source_channels.py": "3c1dcf0c67c703ad46e3a29a7512a065b0511241bc28eb55412dcaea5aa27353",
+          "backend/services/inbox.py": "caeb90b2d9006eb0deb00d7c04a9e2fc699c2feb990e4451d27eb4a24056c071",
+          "backend/services/source_placements.py": "a47a6be156550d52e07cbbd24e73ccc202e0037146f669251aa948236ed9830a",
+          "frontend/templates/_inbox_sources.html": "74c6efd204c41a09ceda420e4e4d251271f9a3663f72b940506417fc3aad169d"
+        }
+      },
+      "source_checks": [
+        {
+          "stored_source_name": "招生简章",
+          "official_list_url": "https://www.istudy.sdu.edu.cn/zsjz.htm",
+          "stored_group_name_is_navigation_context_only": "",
+          "source_channels_actual_publisher_label": "国际事务部（留学山大）",
+          "source_channels_actual_column_label": "招生简章",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [],
+            "column_label": "招生简章"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [
+              "国际事务部（留学山大）"
+            ],
+            "column_label": "招生简章"
+          },
+          "catalog_observed_title": "招生简章-山东大学留学山大",
+          "catalog_html_sha256": "d3bb61b032311f1c3a4dab7ce83045851adcea278904dd368332df67497147d3",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "招生简章-山东大学留学山大",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            },
+            {
+              "source": "header_logo_alt",
+              "identity": "国际事务部（留学山大）",
+              "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1) > img:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 10,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 10,
+            "installed_rule_outside_observed_region": []
+          }
+        },
+        {
+          "stored_source_name": "学院风采",
+          "official_list_url": "https://www.bkjx.sdu.edu.cn/",
+          "stored_group_name_is_navigation_context_only": "山东大学",
+          "source_channels_actual_publisher_label": "山东大学本科生院",
+          "source_channels_actual_column_label": "山东大学 / 学院风采",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "山东大学",
+            "publisher_or_unit_chain": [],
+            "column_label": "学院风采"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "山东大学",
+            "publisher_or_unit_chain": [
+              "山东大学本科生院"
+            ],
+            "column_label": "学院风采"
+          },
+          "catalog_observed_title": "山东大学本科生院",
+          "catalog_html_sha256": "9abf2a02bbabffb8a4ebfd052ec0a1cf75ef07594f4d1ede1d45fbaeeb6e0950",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "山东大学本科生院",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 4,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 4,
+            "installed_rule_outside_observed_region": []
+          }
+        },
+        {
+          "stored_source_name": "招生拓展",
+          "official_list_url": "https://www.yz.sdu.edu.cn/index/zstz.htm",
+          "stored_group_name_is_navigation_context_only": "",
+          "source_channels_actual_publisher_label": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/zstz.htm）",
+          "source_channels_actual_column_label": "招生拓展",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [],
+            "column_label": "招生拓展"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [
+              "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/zstz.htm）"
+            ],
+            "column_label": "招生拓展"
+          },
+          "catalog_observed_title": "招生拓展-山东大学研究生招生信息网",
+          "catalog_html_sha256": "a23ba69136f898c162d1ff0df0a05eb5e39cd7b3cbaec4b5df5fc77687acedf3",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "招生拓展-山东大学研究生招生信息网",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 10,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 10,
+            "installed_rule_outside_observed_region": []
+          }
+        },
+        {
+          "stored_source_name": "通知公告",
+          "official_list_url": "https://www.yz.sdu.edu.cn/index/tzgg.htm",
+          "stored_group_name_is_navigation_context_only": "",
+          "source_channels_actual_publisher_label": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/tzgg.htm）",
+          "source_channels_actual_column_label": "通知公告",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [],
+            "column_label": "通知公告"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [
+              "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/tzgg.htm）"
+            ],
+            "column_label": "通知公告"
+          },
+          "catalog_observed_title": "通知公告-山东大学研究生招生信息网",
+          "catalog_html_sha256": "59d9e92754c1d21d93e54d28ea453ddafda3ec9992e792681913cea28d923f5c",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "通知公告-山东大学研究生招生信息网",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 10,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 10,
+            "installed_rule_outside_observed_region": []
+          }
+        },
+        {
+          "stored_source_name": "公开公示",
+          "official_list_url": "https://www.yz.sdu.edu.cn/index/gkgs.htm",
+          "stored_group_name_is_navigation_context_only": "",
+          "source_channels_actual_publisher_label": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/gkgs.htm）",
+          "source_channels_actual_column_label": "公开公示",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [],
+            "column_label": "公开公示"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "其他信息来源",
+            "publisher_or_unit_chain": [
+              "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/gkgs.htm）"
+            ],
+            "column_label": "公开公示"
+          },
+          "catalog_observed_title": "公开公示-山东大学研究生招生信息网",
+          "catalog_html_sha256": "ecec58cae3a9ac4f4849752ac5f0df58434ece043160f6a8f4d3866987104bd9",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "公开公示-山东大学研究生招生信息网",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 10,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 10,
+            "installed_rule_outside_observed_region": []
+          }
+        },
+        {
+          "stored_source_name": "学子 风采",
+          "official_list_url": "https://www.grad.sdu.edu.cn/",
+          "stored_group_name_is_navigation_context_only": "山东大学",
+          "source_channels_actual_publisher_label": "山东大学研究生院",
+          "source_channels_actual_column_label": "山东大学 / 学子 风采",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "山东大学",
+            "publisher_or_unit_chain": [],
+            "column_label": "学子 风采"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "山东大学",
+            "publisher_or_unit_chain": [
+              "山东大学研究生院"
+            ],
+            "column_label": "学子 风采"
+          },
+          "catalog_observed_title": "山东大学研究生院",
+          "catalog_html_sha256": "1747a63952c347d2b7e00497d280569ce86b22995c90884b29f359b8e2963f48",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "山东大学研究生院",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 7,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 7,
+            "installed_rule_outside_observed_region": []
+          }
+        },
+        {
+          "stored_source_name": "政策 法规",
+          "official_list_url": "https://www.grad.sdu.edu.cn/",
+          "stored_group_name_is_navigation_context_only": "山东大学",
+          "source_channels_actual_publisher_label": "山东大学研究生院",
+          "source_channels_actual_column_label": "山东大学 / 政策 法规",
+          "source_channels_basis": "site_identity",
+          "before_actual_sidebar_placement": {
+            "navigation_group": "山东大学",
+            "publisher_or_unit_chain": [],
+            "column_label": "政策 法规"
+          },
+          "after_actual_sidebar_placement": {
+            "navigation_group": "山东大学",
+            "publisher_or_unit_chain": [
+              "山东大学研究生院"
+            ],
+            "column_label": "政策 法规"
+          },
+          "catalog_observed_title": "山东大学研究生院",
+          "catalog_html_sha256": "1747a63952c347d2b7e00497d280569ce86b22995c90884b29f359b8e2963f48",
+          "observed_branding_candidates": [
+            {
+              "source": "title",
+              "identity": "山东大学研究生院",
+              "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+            }
+          ],
+          "retained_independent_membership_check": {
+            "name_matches_real_column": true,
+            "stored_membership_count": 3,
+            "all_stored_memberships_in_observed_region": true,
+            "installed_rule_selected_count": 3,
+            "installed_rule_outside_observed_region": []
+          }
+        }
+      ],
+      "actual_api_requests": 0,
+      "actual_http_requests": 0,
+      "provider_dispatch_guard_calls": 0,
+      "http_dispatch_guard_calls": 0,
+      "database_records_unchanged_during_each_readonly_review": true,
+      "database_record_hashes_equal_between_before_and_after": true,
+      "original_database_record_hashes": {
+        "departments": "b5163afa7a93622853b95dbe28f83f5dc20a68490b596e834ec8032fac50f8db",
+        "announcements": "f401147915c0495e95ebe3f93a6ee88ad45e7529f86ae650095ddc7697d4a64a",
+        "announcement_sources": "ffcf650db704f57b6f97e39d73b05b07ef5b71c428f2bc70c6e68009d187fd67",
+        "ai_budgets": "81c653334d83a34e736ad3e053c5262625fbca7b4b1f35d51b94112c5311aa9f",
+        "ai_school_rounds": "35493e3295727571956af5ef5d85b2076ed81556f331d0cab5dd80ccb492cc3d",
+        "ai_executions": "f425643d7581fb6ce35fc5a83bc1ad2ab5ed341930e9131c976a788ce9521ab7",
+        "background_tasks": "b6ab6f51a8e7768058968f85fe951dc0b1e4cd4d762c3d2578db6cc583008917",
+        "catalog_publications": "354e3179ec8eab693bc8d21e3ae40081202145d6c5c79841fc97b5c66158775f"
+      },
+      "frontend_template_unchanged": true,
+      "source_channels_unchanged": true,
+      "source_ids_and_original_column_labels_preserved": true,
+      "provenance": [
+        {
+          "record": "v14-sdu-sidebar-projection-review.json",
+          "record_sha256": "48464396af8bbbad318ddb573e53908077c4eb6614954c3a5cc7fb535f95f29a"
+        },
+        {
+          "record": "v15-sdu-sidebar-projection-review.json",
+          "record_sha256": "375289eb4138aac7e973175341ffe3fa163ee11b6962ac3405821bc7691456a8"
+        }
+      ]
+    }
+  ]
+}

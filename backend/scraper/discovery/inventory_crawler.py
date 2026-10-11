@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 
 from filelock import FileLock
 
-from backend.scraper.http_client import same_school_url
+from backend.scraper.http_client import same_school_url, inventory_read_attempt
 from backend.services.source_inventory import Inventory, canonical_url, has_fragment_route
 from .structure import extract_structure, publication_evidence, health_from_evidence, add_publication_structure
 from .parser_revision import PARSER_REVISION, assert_current_parser, ParserRevisionChanged
@@ -43,7 +43,11 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
             error=note if is_roster else None, notes_json=json.dumps([note]))
         return
     try:
-        response = fetcher(url)
+        # Page failures are handled here, so they never increase the parent
+        # task's attempts. Expose the persisted page count to route recovery;
+        # only a later scheduled attempt can switch away from a failed proxy.
+        with inventory_read_attempt(url, page.get('network_failures', 0)):
+            response = fetcher(url)
         assert_current_parser()
         if response.get('outcome') == 'needs_manual' and response.get('result') is not None:
             from backend.scraper.acquisition import FetchFailure
@@ -51,9 +55,12 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
         html = response['html']
         final = canonical_url(response.get('url') or url)
         if not html:
-            inventory.finish(key, url, state='failed', status_code=response.get('status'),
-                             final_url=final, error=response.get('error') or 'empty_response',
-                             health='dynamic_content' if response.get('outcome') in ('requires_render', 'needs_manual') else 'unreachable')
+            result = response.get('result')
+            inventory.fail_read(key, url,
+                retryable=response.get('outcome') == 'network_error',
+                retry_after=getattr(result, 'retry_after', None), status_code=response.get('status'),
+                final_url=final, error=response.get('error') or 'empty_response',
+                health='dynamic_content' if response.get('outcome') in ('requires_render', 'needs_manual') else 'unreachable')
             return
         content_hash = hashlib.sha256(html.encode()).hexdigest()
         if (has_fragment_route(url) or has_fragment_route(final)) and response.get('transport') != 'browser':
@@ -134,6 +141,11 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
                 authority = 'reciprocal_official_unit'
             inventory.enqueue(key, target, link['label'], link['kind'], page['depth'] + 1,
                               link['path'] + ([page['label']] if page['kind'] == 'unit' else []), authority)
+            if link.get('ai_reviewed'):
+                from .layered import route_priority
+                with inventory.connect() as connection:
+                    connection.execute("UPDATE pages SET priority=? WHERE site_key=? AND url=? AND kind<>'root'",
+                                       (route_priority(link), key, target))
         latest = feed.get('latest_publication') if feed else None
         health = health_from_evidence(html, latest)
         if health in ('stale', 'infrequent') and feed and not all(
@@ -143,7 +155,8 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
         if page['kind'] == 'channel' and not feed:
             parsed['notes'].append('publication_list_requires_adapter')
         if change:
-            if not any(l['decision'] == 'navigation_pending' for l in parsed['links']):
+            from .layered import navigation_candidates
+            if not navigation_candidates(html, parsed, dict(page, discovery_policy=focus)):
                 change['navigation_complete'] = True
             parsed['notes'] = put(parsed['notes'], change)
         from flask import has_app_context
@@ -158,16 +171,23 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
                          health=health, latest_publication=latest, parser_revision=PARSER_REVISION,
                          feed_json=json.dumps(feed, ensure_ascii=False) if feed else None,
                          notes_json=json.dumps(parsed['notes'], ensure_ascii=False))
-        # Known navigation is already executable. AI only handles a missing
-        # structural route; column extraction has its own narrow page contract.
+        # Read observed routes immediately, and let the bounded AI pass identify
+        # every entrance's role, including labels that generic rules recognize.
+        if change and has_app_context():
+            from backend.services.tasks import current_execution
+            from backend.ai.school_budget import payload_school_id
+            from backend.services.discovery_round_lifecycle import observe_structure
+            school_id = payload_school_id((current_execution() or {}).get('payload') or {})
+            observe_structure(school_id, url, change['hash'], content_hash)
         routes = [link for link in parsed['links'] if link['decision'] in ('follow', 'official_external_link')]
         needed = ({'directory', 'unit'} if page['kind'] in ('root', 'directory') else {'channel'})
-        uncertain_routes = focus in ('layered', 'valuable') and any(l['decision'] == 'navigation_pending' for l in parsed['links'])
+        review_routes = focus in ('layered', 'valuable') and bool(
+            navigation_candidates(html, parsed, dict(page, discovery_policy=focus)))
         legacy_missing = focus not in ('layered', 'valuable') and page['kind'] in ('root', 'directory', 'unit') and not any(link['kind'] in needed for link in routes) and not (page['kind'] == 'unit' and feed)
-        if (uncertain_routes and not (change and change['navigation_complete'])) or legacy_missing:
+        if (review_routes and not (change and change['navigation_complete'])) or legacy_missing:
             from .ai_navigation import queue_navigation
             queue_navigation(site, dict(page, url=final, snapshot_url=url, snapshot_ref=snapshot_ref,
-                discovery_policy=focus, navigation_routes=(change or {}).get('routes', [])))
+                snapshot_hash=content_hash, discovery_policy=focus, navigation_routes=(change or {}).get('routes', [])))
     except ParserRevisionChanged:
         raise
     except ValueError as exc:
@@ -183,8 +203,10 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
                 status_code=exc.result.status, final_url=exc.result.final_url,
                 error='access_verification_required', notes_json=json.dumps(['access_verification_required']))
             return
-        inventory.finish(key, url, state='failed', health='unreachable',
-                         error=f'{type(exc).__name__}: {str(exc)[:700]}')
+        inventory.fail_read(key, url, retryable=exc.retryable,
+            retry_after=exc.result.retry_after, status_code=exc.result.status,
+            final_url=exc.result.final_url, health='unreachable',
+            error=f'{type(exc).__name__}: {str(exc)[:700]}')
 
 
 def crawl_site(inventory, key, max_pages=250, workers=4, fetcher=fetch_page, progress=None, retry_failed=False, focus='all'):

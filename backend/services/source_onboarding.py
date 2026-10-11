@@ -7,19 +7,24 @@ from datetime import datetime
 import hashlib
 import json
 
-from bs4 import BeautifulSoup
-
 from backend.database.db import db
 from backend.database.models import BackgroundTask, Department, DepartmentDirectoryEntry, School, Subscription
 from backend.database.source_governance_models import SourceConfigVersion
 from backend.scraper.discovery.publication_lists import publication_lists
-from backend.scraper.article_resources import has_public_body_resource as _public_body_resource
 from backend.scraper.http_client import same_school_url, validate_public_url
 from backend.services import tasks
 from backend.services.source_inventory import canonical_url
 
 CONFIG_FIELDS = ('name', 'list_url', 'list_selector', 'title_selector', 'link_selector',
                  'date_selector', 'content_selector', 'group_name')
+
+
+def _validation_upgrade(checkpoint):
+    from backend.services.source_validation import VALIDATION_VERSION
+    saved = (checkpoint or {}).get('column_validation') or {}
+    return bool(saved and saved.get('validation_version') != VALIDATION_VERSION and any(
+        'article_sample_mismatch' in row.get('issue', {}).get('codes', [])
+        for row in saved.get('failures', [])))
 
 
 def queue_columns(school_id, inventory, key):
@@ -69,11 +74,13 @@ def queue_columns(school_id, inventory, key):
         handle = tasks.current_execution() or {}
         run_key = f"{handle.get('id', 0)}:{handle.get('generation', 0)}"
         manual = handle.get('payload', {}).get('refresh') is True
+        validation_upgrade = bool(old and _validation_upgrade(old.checkpoint))
+        preserved_checkpoint = dict(old.checkpoint or {}) if validation_upgrade else None
         if old:
             unresolved = failed_rule or (old.result or {}).get('state') != 'connected' or bool((old.result or {}).get('issues'))
             if (old.state not in ('done', 'failed') or
-                    old.payload.get('source_shape') == shape.get('hash') and not (manual and unresolved and old.payload.get('refresh_key') != run_key) or
-                    not changed and not (manual and unresolved)):
+                    old.payload.get('source_shape') == shape.get('hash') and not validation_upgrade and not (manual and unresolved and old.payload.get('refresh_key') != run_key) or
+                    not changed and not (manual and unresolved) and not validation_upgrade):
                 continue
         snapshot = _snapshot(html, url, role='list') if html else None
         groups = {c['group_name'] for c in configs if c.get('group_name')}
@@ -87,6 +94,9 @@ def queue_columns(school_id, inventory, key):
                    'ai_assist': handle.get('payload', {}).get('ai_assist', True),
                    'official_external': bool(configs and not same_school_url(url, report['site']['root_url']))}
         job = tasks.enqueue('onboard', identity, payload, replace_finished=bool(old))
+        if preserved_checkpoint is not None:
+            job.checkpoint = preserved_checkpoint
+            db.session.commit()
         jobs.append(job.id)
     return {'onboarding_ids': jobs, 'proposal_ids': [], 'activated_ids': [], 'remaining_candidates': 0}
 
@@ -100,12 +110,28 @@ def _unconnected_columns(school_id, *, automatic=False):
         BackgroundTask.payload['school_id'].as_integer() == school_id,
         BackgroundTask.state.in_(('done', 'failed')))
     if automatic:
-        query = query.filter(checked <= datetime.utcnow() - timedelta(hours=6))
+        from backend.services.discovery_policy import get_policy
+        query = query.filter(checked <= datetime.utcnow() - timedelta(seconds=get_policy()['recovery_seconds']))
     for row in query.order_by(checked, BackgroundTask.id):
         result = row.result or {}
         if requested(row):
             continue
-        if automatic and not (row.state == 'failed' or result.get('state') == 'unsupported'
+        website_wait = result.get('website_not_before')
+        if website_wait:
+            try:
+                if datetime.fromisoformat(website_wait) > datetime.utcnow():
+                    continue
+            except (ValueError, TypeError):
+                pass
+        not_before = result.get('recovery_not_before')
+        if automatic and not_before:
+            try:
+                if datetime.fromisoformat(not_before) > datetime.utcnow():
+                    continue
+            except (ValueError, TypeError):
+                pass
+        if automatic and not (row.state == 'failed' or result.get('state') in (
+                              'unsupported', 'empty', 'access_limited', 'material_limited')
                               or result.get('state') == 'connected' and result.get('issues')):
             continue
         if automatic and result.get('state') in ('not_column', 'skipped', 'rejected'):
@@ -132,6 +158,12 @@ def retry_unconnected_columns(school_id, refresh_key, *, automatic=False, limit=
             continue
         payload.pop('snapshot', None)
         payload.update(refresh_key=refresh_key, revalidate=True)
+        reusable = ((row.result or {}).get('recovery_rules', []) + (row.result or {}).get('unresolved_rules', [])
+                    + (row.result or {}).get('empty_rules', []))
+        if reusable:
+            # The column was already observed and its list scope executed. Read
+            # it again with those rules before buying a new recognition decision.
+            payload['observed_columns'] = reusable
         if handle.get('payload', {}).get('school_id') == school_id:
             payload.update(parent_task_id=handle['id'], parent_generation=handle['generation'],
                            ai_assist=handle['payload'].get('ai_assist', True))
@@ -143,55 +175,10 @@ def retry_unconnected_columns(school_id, refresh_key, *, automatic=False, limit=
     return ids
 
 
-def recognize_column(school_id, url, html):
-    """One bounded, replayable model call. Its output is still an untested parser."""
-    from backend.ai.configuration import get_model_binding, AIConfigError
-    from backend.ai.runtime import run_skill
-    from backend.ai.skill_loader import digest, load_skill
-    try:
-        binding = get_model_binding('directory')
-    except AIConfigError:
-        return {'status': 'unsupported', 'columns': [], 'reason': '该页面暂未识别，可启用 AI 辅助解析'}
-    from backend.scraper.discovery.column_regions import materials
-    regions = materials(school_id, url, html)
-    if not regions:
-        return {'status': 'unsupported', 'columns': [], 'reason': '尚未定位到可独立读取的发布区域，入口已保留'}
-    handle = tasks.current_execution() or {}
-    checkpoint = dict(handle.get('checkpoint') or {})
-    material_hash = digest(regions)
-    saved = checkpoint.get('column_regions', {})
-    if saved.get('hash') != material_hash:
-        saved = {'hash': material_hash, 'cursor': 0, 'columns': [], 'unresolved': []}
-    for index in range(saved['cursor'], len(regions)):
-        evidence = regions[index]
-        execution_id = 'column-region:' + digest([load_skill('university-source-onboarding', 'column').resource_digest,
-            evidence, binding['id'], binding['version']])
-        try:
-            result = run_skill('university-source-onboarding', 'column', evidence, 'directory', execution_id, binding=binding)
-        except AIConfigError as exc:
-            if exc.code == 'concurrency_limit' and handle:
-                tasks.defer(capability='directory', delay=10, reason='等待 AI 空闲', checkpoint=checkpoint)
-            columns = list({(c['name'], c['list_selector']): c for c in saved['columns']}.values())
-            return {'status': 'ready' if columns else 'unsupported', 'columns': columns, 'reason':
-                    '本轮 AI 用量已达上限，未完成入口已保留' if exc.code == 'budget_exhausted' else 'AI 辅助暂不可用，其他栏目继续接入',
-                    'unresolved_regions': len(saved['unresolved']) + len(regions) - index,
-                    'error_code': exc.code}
-        if result['status'] == 'pending' and handle:
-            tasks.defer(capability='directory', delay=10, reason='等待已提交的栏目识别', checkpoint=checkpoint)
-        if result['status'] == 'succeeded' and result['output']['status'] == 'ready':
-            saved['columns'].extend(result['output']['columns'])
-        elif result['status'] != 'succeeded' or result['output']['status'] == 'unsupported':
-            saved['unresolved'].append(index)
-        saved['cursor'] = index + 1
-        checkpoint['column_regions'] = saved
-        if handle:
-            tasks.checkpoint(checkpoint)
-            if index + 1 < len(regions):
-                tasks.defer(capability='directory', delay=1, reason='继续识别下一个发布区域', checkpoint=checkpoint)
-    columns = list({(c['name'], c['list_selector']): c for c in saved['columns']}.values())
-    return {'status': 'ready' if columns else 'unsupported' if saved['unresolved'] else 'not_column', 'columns': columns,
-            'reason': '部分发布区域仍待识别' if saved['unresolved'] else '',
-            'unresolved_regions': len(saved['unresolved'])}
+def recognize_column(school_id, url, html, *, feedback=None):
+    """Compatibility entry point for bounded, evidence-based source recognition."""
+    from backend.services.source_agent import recognize_column as recognize
+    return recognize(school_id, url, html, feedback=feedback)
 
 
 def _read(url, purpose):
@@ -200,35 +187,11 @@ def _read(url, purpose):
 
 
 def _sample_matches(config, records, fetcher):
-    from backend.services.source_governance import _normal
-    from backend.scraper.acquisition import FetchFailure
-    last_error = None
-    # Pinned items may have expired or require login. A small bounded fallback
-    # sample must not reject an otherwise public list based on only those items.
-    for record in records[:5]:
-        db.session.commit()
-        validate_public_url(record['url'], resolve=False)
-        try:
-            html = fetcher(record['url'], 'article')
-        except FetchFailure as exc:
-            last_error = exc
-            continue
-        soup = BeautifulSoup(html, 'lxml')
-        for node in soup.select('script,style,nav,header,footer'):
-            node.decompose()
-        visible = _normal(soup.get_text(' ', strip=True))
-        title = _normal(record['title'])
-        body = soup.select(config['content_selector']) if config.get('content_selector') else [soup]
-        body_text = _normal(' '.join(node.get_text(' ', strip=True) for node in body))
-        resources = len(body_text) < 15 and bool(config.get('content_selector')) and _public_body_resource(body, record['url'])
-        if title and title[:20] in visible and (len(body_text) >= 15 or resources) and len(visible) >= len(title) + 15:
-            return True
-    if last_error and last_error.outcome in ('network_error', 'unavailable'):
-        raise last_error  # The existing queue owns bounded network retries.
-    return False
+    from backend.services.source_validation import article_samples
+    return article_samples(config, records, fetcher)['passed']
 
 
-def _install(school_id, config, records, *, repair=False, previous_url=None, ai_assist=True, repair_department_id=None):
+def _install(school_id, config, records, *, repair=False, previous_url=None, ai_assist=True, repair_department_id=None, validation=None):
     """Keep source/version/notices/next collection in the same commit fence."""
     from backend.services.source_governance import _hash, _json
     from backend.services.announcement_identity import upsert_listing
@@ -236,25 +199,22 @@ def _install(school_id, config, records, *, repair=False, previous_url=None, ai_
     from backend.scraper.change_detector import parse_date
     from backend.scraper.detectors.title_quality import date_from_url
     from backend.services.inbox_refresh import subscribed_sources
+    from backend.services.source_validation import same_column, record_validation
     tasks.assert_owned()
     db.session.execute(db.update(School).where(School.id == school_id).values(name=School.name))
     source = db.session.get(Department, repair_department_id) if repair_department_id else None
     if source is not None and (source.school_id != school_id or canonical_url(source.list_url) not in {
             canonical_url(config['list_url']), canonical_url(previous_url or '')}):
         raise ValueError('修复目标与已读取的官网页面不一致')
+    if source is not None and not same_column(source, config, records, validation or {}):
+        raise ValueError('column_identity_changed')
     if source is None:
-        source = Department.query.filter_by(school_id=school_id, list_url=config['list_url'],
-                                            list_selector=config['list_selector']).first()
-    if source is None and repair:
-        matches = Department.query.filter_by(school_id=school_id, list_url=config['list_url'], name=config['name']).all()
-        if len(matches) == 1:
-            source = matches[0]
-        elif not matches and previous_url:
-            # Only an observed HTTP redirect proves a moved source. Similar
-            # names at unrelated new URLs do not justify moving a subscription.
-            prior = Department.query.filter_by(school_id=school_id, list_url=previous_url, name=config['name']).all()
-            if len(prior) == 1:
-                source = prior[0]
+        candidates = Department.query.filter(Department.school_id == school_id,
+            Department.kind == 'column', Department.list_selector.is_not(None),
+            Department.list_url.in_({config['list_url'], previous_url} if previous_url else {config['list_url']})).all()
+        matches = [row for row in candidates if (repair or row.list_selector == config['list_selector'])
+                   and same_column(row, config, records, validation or {})]
+        source = matches[0] if len(matches) == 1 else None
     if source is not None and repair:
         previous = {field: getattr(source, field) or '' for field in CONFIG_FIELDS}
         if previous != config:
@@ -269,10 +229,13 @@ def _install(school_id, config, records, *, repair=False, previous_url=None, ai_
         db.session.add(SourceConfigVersion(department_id=source.id, version=1,
             config_json=_json(config), config_hash=_hash(config), previous_json=_json(None)))
     if config['group_name']:
+        from backend.services.source_placements import _within_unit
         legacy = Department.query.filter_by(school_id=school_id, name=config['group_name'], kind='column').all()
         for parent in legacy if len(legacy) == 1 else []:
-            if not parent.list_selector and parent.id != source.id and not DepartmentDirectoryEntry.query.filter_by(
-                    parent_id=parent.id, department_id=source.id).first():
+            if (not parent.list_selector and parent.id != source.id
+                    and _within_unit(config['list_url'], parent.list_url, source.school.url)
+                    and not DepartmentDirectoryEntry.query.filter_by(
+                    parent_id=parent.id, department_id=source.id).first()):
                 db.session.add(DepartmentDirectoryEntry(parent_id=parent.id, department_id=source.id, position=0))
         db.session.flush()
     # An existing valid rule is not silently overwritten by rediscovery.
@@ -283,6 +246,8 @@ def _install(school_id, config, records, *, repair=False, previous_url=None, ai_
         record_source(article, source, record['url'])
         new_count += int(created)
     source.last_scraped_at = datetime.utcnow()
+    if validation:
+        record_validation(school_id, config, validation, source.id)
     from flask import current_app
     from backend.services.runtime_catalog import RuntimeCatalog
     from backend.services.school_structure import sync_official_structure
@@ -358,87 +323,327 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
         url = canonical_url(reference['url'])
     if handle:
         tasks.checkpoint(dict(checkpoint, onboarding_page=reference))
-    detected = [] if _force_ai else publication_lists(html, url)
-    columns = [feed for feed in detected if feed.get('name') and not feed.get('heading_ambiguous')
-               and (not feed.get('column_url') or canonical_url(feed['column_url']) == url)]
-    if detected and not columns and all(feed.get('column_url') and canonical_url(feed['column_url']) != url for feed in detected):
-        return {'state': 'not_column', 'department_ids': [], 'reason': '继续读取该发布区域链接的完整栏目'}
-    recognition_issues = []
-    if not columns:
-        # Explicitly disabled assistance also applies to inherited child jobs.
-        # Rules still run normally; an unresolved page cannot start a paid call.
-        parent_ai = parent.payload.get('ai_assist') if payload.get('parent_task_id') else None
-        if payload.get('ai_assist') is False or parent_ai is False:
-            return {'state': 'unsupported', 'department_ids': [],
-                    'reason': '该页面暂未识别，其他栏目继续接入', 'error_code': 'rules_unresolved'}
-        result = recognize_column(school_id, url, html)
-        if result['status'] != 'ready':
-            return {'state': result['status'], 'department_ids': [], 'reason': result.get('reason', ''),
-                    'error_code': result.get('error_code', '')}
-        columns = result['columns']
-        if result.get('unresolved_regions'):
-            recognition_issues.append({'name': payload.get('label', ''), 'reason': '部分发布区域仍待识别，已接入的栏目可以使用'})
+    from bs4 import BeautifulSoup
+    from backend.scraper.discovery.wordpress_publications import page_kind
+    if page_kind(BeautifulSoup(html, 'lxml')) in ('article', 'attachment', 'search'):
+        # The primary page is a post/file/search result. Repeated recommendations
+        # are not independent publishing entrances. Discovery retains its actual
+        # category/navigation links; existing source/history rows stay intact.
+        return {'state': 'not_column', 'department_ids': [], 'new_count': 0,
+                'reason': '该页面为正文、附件详情或搜索结果，继续沿已观察的栏目入口处理'}
+    from backend.services.source_agent import validation_feedback, selector_observation
+    from backend.services.source_governance import _normal, _column_label
+    from backend.services.source_validation import article_samples, pagination_sample, empty_region, record_validation, sample_failure_kind, VALIDATION_VERSION
+    from backend.services.discovery_policy import progress_state, advance_progress
     assistance = payload.get('ai_assist') is not False
     if payload.get('parent_task_id') and parent.payload.get('ai_assist') is False:
         assistance = False
-    ids, issues, new_count, network_error = [], recognition_issues, 0, None
-    for column in columns:
-        pause_if_requested()
-        config = {field: column.get(field, '') for field in CONFIG_FIELDS}
-        config.update(list_url=url, group_name=payload.get('group_name', ''))
-        # A prior explicit rejection remains a user decision after upgrading.
-        from backend.database.source_governance_models import SourceProposal
-        rejected = [json.loads(p.candidate_json) for p in SourceProposal.query.filter_by(school_id=school_id, state='rejected')]
-        if any(canonical_url(item['list_url']) == url and
-               (not item.get('list_selector') or item['list_selector'] == config['list_selector']) for item in rejected):
+    page_hash = hashlib.sha256((url + '\\0' + html).encode()).hexdigest()
+    saved = dict(checkpoint.get('column_validation') or {})
+    same_retained_page = saved.get('page_hash') == page_hash
+    if saved.get('page_hash') != page_hash:
+        saved = {'page_hash': page_hash, 'stage': 'ai' if _force_ai else 'rules',
+                 'department_ids': [], 'new_count': 0, 'completed': [], 'failures': [],
+                 'progress': progress_state(), 'progress_ids': [], 'empty_columns': [], 'empty_rules': []}
+    elif _validation_upgrade({'column_validation': saved}):
+        # Retry a program-confirmed validation correction with retained page and
+        # model observations. Connected identities and the school fee ledger
+        # remain intact. This is not a new exploration round.
+        saved.update(stage='rules', failures=[], progress=progress_state(), progress_ids=[], new_count=0)
+    saved['validation_version'] = VALIDATION_VERSION
+    saved.setdefault('progress', progress_state())
+    saved.setdefault('progress_ids', [])
+    saved.setdefault('empty_columns', [])
+    saved.setdefault('empty_rules', [])
+    if same_retained_page and saved['stage'] != 'done' and not saved.get('trial_columns'):
+        retained = (checkpoint.get('column_regions') or {}).get('columns', [])
+        if retained:
+            # Earlier versions saved paid observations under column_regions but
+            # retried recognition before executing them. They are candidate
+            # rules, never installed facts: all scope/body checks still execute.
+            saved.update(trial_columns=retained, trial_origin_stage=saved['stage'],
+                trial_decision_ids=(checkpoint.get('column_regions') or {}).get('decision_ids', []),
+                trial_request_key=saved.get('last_request_key', ''), stage='trial')
+
+    def persist(**values):
+        saved.update(values)
+        if handle:
+            # Recognition also checkpoints its own region cursor. Preserve it
+            # when saving trial results or moving into the single repair turn.
+            latest = dict(tasks.current_execution().get('checkpoint') or {})
+            tasks.checkpoint(dict(latest, onboarding_page=reference, column_validation=dict(saved)))
+
+    def finish(state='unsupported', reason='', error_code='', extra_issues=()):
+        from datetime import timedelta
+        from backend.services.discovery_policy import get_policy
+        issues = [failure['issue'] for failure in saved['failures']] + list(extra_issues)
+        blocked = [failure for failure in saved['failures'] if failure.get('repairable') is False]
+        if state == 'unsupported' and blocked and len(blocked) == len(saved['failures']) and not extra_issues:
+            state = 'access_limited' if all(f.get('failure_kind') == 'access_restricted' for f in blocked) else 'material_limited'
+        result = {'state': 'connected' if saved['department_ids'] else state,
+                  'department_ids': saved['department_ids'], 'new_count': saved['new_count'],
+                  'issues': issues, 'reason': issues[0]['reason'] if issues else reason}
+        if not saved['department_ids'] and state == 'unsupported' and saved['empty_columns'] and not issues:
+            result.update(state='empty', reason='栏目暂无内容，后续将自动更新')
+        result['empty_columns'] = saved['empty_columns']
+        result['empty_rules'] = saved['empty_rules']
+        if blocked:
+            result['recovery_rules'] = [failure['config'] for failure in blocked]
+            result['unresolved_rules'] = [failure['config'] for failure in saved['failures']
+                                         if failure.get('repairable') is not False and failure.get('config')]
+            wait = max(get_policy()['recovery_seconds'], max(f.get('retry_after', 0) for f in blocked))
+            result['recovery_not_before'] = (datetime.utcnow() + timedelta(seconds=wait)).isoformat()
+            website_wait = max(f.get('retry_after', 0) for f in blocked)
+            if website_wait:
+                result['website_not_before'] = (datetime.utcnow() + timedelta(seconds=website_wait)).isoformat()
+        if error_code:
+            result['error_code'] = error_code
+        persist(stage='done', result=result)
+        return result
+
+    if saved['stage'] == 'done':
+        return saved['result']
+    persist()
+    while True:
+        stage = saved['stage']
+        decision_ids = []
+        material_pending = False
+        recognition_issues = []
+        origin_stage = saved.get('trial_origin_stage', 'rules') if stage == 'trial' else stage
+        request_key = saved.get('trial_request_key', '')
+        if stage in ('rules', 'trial'):
+            detected = (saved.get('trial_columns') if stage == 'trial' else
+                        payload.get('observed_columns') or saved.get('trial_columns')) or publication_lists(html, url)
+            if stage == 'trial' or saved.get('material_pending'):
+                # Older handoffs already persisted rules with a pending model
+                # cursor. Recover that progress as well as new trial handoffs.
+                material_pending = bool(saved.get('material_pending'))
+                decision_ids = saved.get('trial_decision_ids', [])
+                recognition_issues = saved.get('trial_recognition_issues', [])
+            columns = [feed for feed in detected if feed.get('name') and not feed.get('heading_ambiguous')
+                       and (not feed.get('column_url') or canonical_url(feed['column_url']) == url)]
+            if detected and not columns and all(feed.get('column_url') and canonical_url(feed['column_url']) != url for feed in detected):
+                return finish('not_column', '继续读取该发布区域链接的完整栏目')
+            if not columns:
+                if not assistance:
+                    return finish(reason='该页面暂未识别，其他栏目继续接入', error_code='rules_unresolved')
+                persist(stage='ai')
+                continue
+        else:
+            if not assistance:
+                return finish(reason='该页面暂未识别，其他栏目继续接入', error_code='rules_unresolved')
+            feedback = (saved.get('material_feedback', []) if saved.get('material_pending') else
+                        [failure['observation'] for failure in saved['failures'] if failure.get('repairable') is not False])
+            request_key = hashlib.sha256(json.dumps(feedback, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+            if not saved.get('material_pending') and saved.get('last_request_key') == request_key:
+                return finish(error_code='no_new_validation_evidence')
+            result = recognize_column(school_id, url, html, feedback=feedback or None)
+            material_pending = result.get('material_complete') is False
+            decision_ids = result.get('decision_ids') or ['validation-trial:' + request_key + ':' + hashlib.sha256(
+                json.dumps(result.get('columns', []), sort_keys=True, ensure_ascii=False).encode()).hexdigest()]
+            if result.get('error_code') in ('budget_exhausted', 'school_budget_exhausted'):
+                persist(material_pending=material_pending, material_feedback=feedback)
+                if handle:
+                    tasks.defer(state='waiting', phase='ai_budget', capability='directory',
+                        reason='额度已用完，进度已保存', error_code='budget_exhausted',
+                        checkpoint=dict(tasks.current_execution()['checkpoint']))
+                return {'state': 'connected' if saved['department_ids'] else 'budget_limited',
+                    'department_ids': saved['department_ids'], 'new_count': saved['new_count'],
+                    'issues': [f['issue'] for f in saved['failures']], 'error_code': result['error_code'],
+                    'continuation_required': True, 'reason': result.get('reason', '本轮识别预算已用完，已保存后续入口')}
+            if result['status'] not in ('ready', 'partial'):
+                return finish(result['status'], result.get('reason', ''), result.get('error_code', ''))
+            persist(material_pending=material_pending, material_feedback=feedback)
+            columns = result.get('columns', [])
+            if result.get('unresolved_regions'):
+                recognition_issues.append({'name': payload.get('label', ''), 'reason': '部分发布区域仍待识别，已接入的栏目可以使用'})
+
+        # A handoff caused by network I/O resumes this execution plan first.
+        # Changed prompt/skill hashes cannot turn a pending read into a new fee.
+        persist(stage='trial', trial_columns=columns, trial_origin_stage=origin_stage,
+                trial_decision_ids=decision_ids, trial_request_key=request_key,
+                trial_recognition_issues=recognition_issues)
+
+        def retried(observation):
+            # A corrected selector/name can change; matching either the named
+            # column or its observed heading/list keeps omitted failures visible.
+            return any(_normal(_column_label(column.get('name', ''), payload.get('group_name', ''))) ==
+                       _normal(_column_label(observation['name'], payload.get('group_name', '')))
+                       or any(column.get(key) and column.get(key) == observation.get(key)
+                              for key in ('heading_selector', 'list_selector')) for column in columns)
+
+        failures = [failure for failure in saved['failures'] if failure.get('repairable') is False
+                    or not retried(failure['observation'])]
+        network_error = None
+        for column in columns:
+            pause_if_requested()
+            config = {field: column.get(field, '') for field in CONFIG_FIELDS}
+            config.update(list_url=url, group_name=payload.get('group_name', ''))
+
+            def failed(reason, codes, records=(), *, failure_kind='rule_error', retry_after=0, trial_key=''):
+                repairable = failure_kind == 'rule_error'
+                failures.append({'issue': {'name': config['name'], 'reason': reason, 'codes': codes},
+                    'repairable': repairable, 'failure_kind': failure_kind, 'trial_key': trial_key,
+                    'retry_after': retry_after, 'config': dict(config, **(scope or {})),
+                    'observation': validation_feedback(column, codes, records,
+                        execution=selector_observation(column, html), articles=validation.get('articles'))})
+                status = 'rejected' if repairable else 'access_limited' if failure_kind == 'access_restricted' else 'material_limited'
+                record_validation(school_id, config, dict(validation, status=status, errors=codes))
+                db.session.commit()
+
+            # A prior explicit rejection remains a user decision after upgrading.
+            from backend.database.source_governance_models import SourceProposal
+            rejected = [json.loads(p.candidate_json) for p in SourceProposal.query.filter_by(school_id=school_id, state='rejected')]
+            if any(canonical_url(item['list_url']) == url and
+                   (not item.get('list_selector') or item['list_selector'] == config['list_selector']) for item in rejected):
+                continue
+            scope = ({'container_selector': column['container_selector'], 'heading_selector': column['heading_selector']}
+                     if column.get('container_selector') and column.get('heading_selector') else None)
+            records, errors, region = _column_scope(config, reference, scope)
+            validation = {'status': 'pending', 'page_hash': page_hash, 'list_snapshot': reference,
+                          'region': region, 'articles': {}, 'pagination': {}}
+            if errors or not records:
+                empty = empty_region(html, config, scope) if not records else None
+                if empty:
+                    validation.update(status='empty', region=empty)
+                    record_validation(school_id, config, validation)
+                    db.session.commit()
+                    if empty['name'] not in saved['empty_columns']:
+                        saved['empty_columns'].append(empty['name'])
+                        saved['empty_rules'].append(dict(config, **(scope or {})))
+                    persist()
+                    continue
+                failed('提取规则未能正确读取该栏目', errors or ['list_empty'], records)
+                continue
+            if scope and region.get('name'):
+                # The model locates the heading; only executed official text
+                # names the installed column, never an invented publisher prefix.
+                config['name'] = region['name']
+            config_key = hashlib.sha256(json.dumps(config, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+            trial_key = hashlib.sha256(json.dumps({'config': {k: v for k, v in config.items() if k != 'content_selector'},
+                'urls': [canonical_url(record['url']) for record in records]}, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+            if any(f.get('repairable') is False and f.get('trial_key') == trial_key for f in failures):
+                # A new explanation or body selector does not make the same
+                # rejected HTTP read new evidence. Other columns can still repair.
+                continue
+            if config_key in saved['completed']:
+                continue
+            existing = Department.query.filter_by(school_id=school_id, list_url=url,
+                list_selector=config['list_selector'], name=config['name']).first()
+            if existing and not payload.get('revalidate'):
+                if existing.id not in saved['department_ids']:
+                    saved['department_ids'].append(existing.id)
+                saved['completed'].append(config_key)
+                persist()
+                continue
+            try:
+                for record in records:
+                    validate_public_url(record['url'], resolve=False)
+            except ValueError:
+                failed('列表包含非公开或无效的通知地址', ['invalid_publication_url'])
+                continue
+            from backend.scraper.acquisition import FetchFailure
+            try:
+                pagination = pagination_sample(config, records, html, reference, scope, fetcher)
+            except FetchFailure as exc:
+                kind = sample_failure_kind([{'reason': exc.outcome, 'error_code': exc.result.error_code}])
+                if kind != 'rule_error':
+                    validation['pagination'] = {'state': 'unavailable', 'url': exc.result.final_url,
+                        'error_code': exc.result.error_code, 'outcome': exc.outcome}
+                    failed('官网后续分页暂时无法读取，进度已保存，稍后自动重试',
+                        ['pagination_access_restricted' if kind == 'access_restricted' else 'pagination_material_incomplete'],
+                        records, failure_kind=kind, retry_after=exc.result.retry_after or 0, trial_key=trial_key)
+                    continue
+                network_error = exc
+                failed('官网分页暂时无法读取，将自动重试', ['pagination_fetch_unavailable'])
+                continue
+            validation['pagination'] = pagination
+            if pagination['errors']:
+                failed('后续分页尚未通过实际读取验证', pagination['errors'], records)
+                continue
+            try:
+                samples = article_samples(config, records + pagination.get('sample_records', []), fetcher)
+                validation['articles'] = samples
+                for sample in samples['samples']:
+                    if sample.get('content_hash') and sample.get('matched'):
+                        proof = 'article:' + sample['final_url'] + ':' + sample['content_hash']
+                        if proof not in saved['progress_ids']:
+                            saved['progress_ids'].append(proof)
+            except FetchFailure as exc:
+                network_error = exc
+                failed('官网暂时无法读取，将自动重试', ['article_fetch_unavailable'])
+                continue
+            if not samples['passed']:
+                kind = samples.get('failure_kind', 'rule_error')
+                if kind != 'rule_error':
+                    code = 'article_access_restricted' if kind == 'access_restricted' else 'article_material_incomplete'
+                    failed('部分原文暂时无法公开读取，进度已保存，稍后自动重试', [code], records,
+                        failure_kind=kind, retry_after=samples.get('retry_after', 0), trial_key=trial_key)
+                else:
+                    failed('暂未读到与列表对应的公开通知正文', ['article_sample_mismatch'], records)
+                continue
+            validation['status'] = samples['status']
+            if repair_source and not _automatic_repair_source(payload, school):
+                return {'state': 'skipped', 'department_ids': [], 'reason': '该信息来源已不在订阅范围内'}
+            try:
+                source_id, added = _install(school_id, config, records, repair=payload.get('revalidate') is True,
+                                           previous_url=payload.get('previous_url'), ai_assist=assistance,
+                                           repair_department_id=repair_source.id if repair_source and len(columns) == 1 else None,
+                                           validation=validation)
+            except ValueError as exc:
+                if str(exc) != 'column_identity_changed':
+                    raise
+                failed('新规则尚不能对应原栏目，现有来源继续保留', ['column_identity_changed'], records)
+                continue
+            if source_id not in saved['department_ids']:
+                saved['department_ids'].append(source_id)
+            def same_blocked_region(failure):
+                old = failure.get('config') or {}
+                if old.get('container_selector') and config.get('list_selector'):
+                    return bool(scope and old['container_selector'] == scope['container_selector']
+                                and old.get('heading_selector') == scope['heading_selector'])
+                return (old.get('list_selector') == config['list_selector']
+                        and _normal(old.get('name', '')) == _normal(config['name']))
+            failures = [failure for failure in failures if not (failure.get('repairable') is False
+                and same_blocked_region(failure))]
+            saved['new_count'] += added
+            saved['completed'].append(config_key)
+            if 'source:' + str(source_id) not in saved['progress_ids']:
+                saved['progress_ids'].append('source:' + str(source_id))
+            # Assess freshly read evidence independently of website grouping.
+            from backend.services.student_information import queue_source_assessment, queue_listing_assessment
+            queue_source_assessment(source_id, ai_assist=assistance)
+            queue_listing_assessment(source_id, ai_assist=assistance)
+            persist()
+        if network_error:
+            # Keep the current stage and its original model input. The queue
+            # retries network I/O; connectivity failures never buy a new model turn.
+            raise network_error
+        persist(failures=failures)
+        for decision_id in decision_ids:
+            saved['progress'] = advance_progress(saved['progress'], decision_id, saved['progress_ids'])
+        if material_pending and not saved['progress']['stopped']:
+            # Install each completed region before continuing the same model
+            # material cursor. Freeze its input feedback until all regions end.
+            # A legacy validator upgrade may have entered via rules. That
+            # stage can execute saved plans but cannot continue the unread
+            # model-material cursor; returning there would silently finish.
+            continuation_stage = (origin_stage if origin_stage in ('ai', 'repair') else
+                                  'repair' if saved.get('material_feedback') else 'ai')
+            persist(stage=continuation_stage)
+            if handle:
+                tasks.defer(capability='directory', phase='source_material', delay=0,
+                    reason='已接入可用栏目，继续识别其余发布区域',
+                    checkpoint=dict(tasks.current_execution()['checkpoint']))
             continue
-        existing = Department.query.filter_by(school_id=school_id, list_url=url,
-            list_selector=config['list_selector'], name=config['name']).first()
-        if existing and not payload.get('revalidate'):
-            ids.append(existing.id)
+        if origin_stage != 'rules':
+            persist(last_request_key=request_key)
+        if any(failure.get('repairable') is not False for failure in failures) and assistance and not saved['progress']['stopped']:
+            # More evidence may justify further repair decisions. Replayed
+            # decisions and repeated explanations cannot manufacture progress.
+            persist(stage='repair')
             continue
-        scope = ({'container_selector': column['container_selector'], 'heading_selector': column['heading_selector']}
-                 if column.get('container_selector') and column.get('heading_selector') else None)
-        records, errors, _ = _column_scope(config, reference, scope)
-        if errors or not records:
-            issues.append({'name': config['name'], 'reason': '提取规则未能正确读取该栏目', 'codes': errors})
-            continue
-        try:
-            for record in records:
-                validate_public_url(record['url'], resolve=False)
-        except ValueError:
-            issues.append({'name': config['name'], 'reason': '列表包含非公开或无效的通知地址'})
-            continue
-        from backend.scraper.acquisition import FetchFailure
-        try:
-            matches = _sample_matches(config, records, fetcher)
-        except FetchFailure as exc:
-            network_error = exc
-            issues.append({'name': config['name'], 'reason': '官网暂时无法读取，将自动重试'})
-            continue
-        if not matches:
-            issues.append({'name': config['name'], 'reason': '暂未读到与列表对应的公开通知正文'})
-            continue
-        if repair_source and not _automatic_repair_source(payload, school):
-            return {'state': 'skipped', 'department_ids': [], 'reason': '该信息来源已不在订阅范围内'}
-        source_id, added = _install(school_id, config, records, repair=payload.get('revalidate') is True,
-                                    previous_url=payload.get('previous_url'), ai_assist=assistance,
-                                    repair_department_id=repair_source.id if repair_source and len(columns) == 1 else None)
-        ids.append(source_id); new_count += added
-        # Assess the evidence we just read, independently of website grouping.
-        # Queueing is cheap, consent follows enabled directory assistance, and
-        # the shared AI runtime owns budgets and deduplication.
-        from backend.services.student_information import queue_source_assessment, queue_listing_assessment
-        queue_source_assessment(source_id, ai_assist=assistance)
-        queue_listing_assessment(source_id, ai_assist=assistance)
-    if network_error:
-        raise network_error
-    if not ids and issues and detected and not _force_ai:
-        # A plausible but invalid generic rule must not suppress the AI route.
-        return onboard_page(dict(payload, snapshot=reference), fetcher=fetcher, _force_ai=True)
-    return {'state': 'connected' if ids else 'unsupported', 'department_ids': ids,
-            'new_count': new_count, 'issues': issues,
-            'reason': issues[0]['reason'] if issues else ''}
+        return finish(error_code='no_progress' if saved['progress']['stopped'] else '', extra_issues=recognition_issues)
 
 
 def resume_rule_discovery():

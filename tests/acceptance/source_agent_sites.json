@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "baseline_commit": "be25dfa1f45cd0cc3a5ebb890eb4e789c269a1b7",
+  "model": "deepseek-flash",
+  "requests_per_school_round": 40,
+  "tokens_per_school_round": 200000,
+  "source_target": 50,
+  "notice_target": 100,
+  "sites": [
+    {
+      "id": "cupk",
+      "name": "中国石油大学（北京）克拉玛依校区",
+      "url": "https://www.cupk.edu.cn/",
+      "split": "development"
+    },
+    {
+      "id": "hust",
+      "name": "华中科技大学",
+      "url": "https://www.hust.edu.cn/",
+      "split": "development"
+    },
+    {
+      "id": "sjtu",
+      "name": "上海交通大学",
+      "url": "https://www.sjtu.edu.cn/",
+      "split": "development"
+    },
+    {
+      "id": "zju",
+      "name": "浙江大学",
+      "url": "https://www.zju.edu.cn/",
+      "split": "regression_after_holdout",
+      "note": "v2 independent run reproduced a conditional JavaScript redirect defect; after fixing it this site is regression evidence, not final independent validation."
+    },
+    {
+      "id": "ustc",
+      "name": "中国科学技术大学",
+      "url": "https://www.ustc.edu.cn/",
+      "split": "regression_after_holdout",
+      "note": "v4 independent run exposed attachment landing pages being installed from repeated download widgets. Original measurements and budgets remain preserved."
+    },
+    {
+      "id": "pku",
+      "name": "北京大学",
+      "url": "https://www.pku.edu.cn/",
+      "split": "regression_after_holdout",
+      "note": "v5 independent run exposed direct-PDF validation limitations; after file-reading changes this site is regression evidence, not final independent validation."
+    },
+    {
+      "id": "nju",
+      "name": "南京大学",
+      "url": "https://www.nju.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v6 freeze; must not guide changes during the final measurement."
+    },
+    {
+      "id": "whu",
+      "name": "武汉大学",
+      "url": "https://www.whu.edu.cn/",
+      "split": "regression_after_holdout",
+      "note": "The v8 independent run reproduced real articles being mistaken for non-public pages by a column-only recovery check. Original requests, evidence and budget ledger are preserved; after correcting it this site is regression evidence."
+    },
+    {
+      "id": "xjtu",
+      "name": "西安交通大学",
+      "url": "https://www.xjtu.edu.cn/",
+      "split": "regression_after_holdout",
+      "note": "The v11 independent run exposed parent-task/page retry counter mismatch and paid repairs of proxy/access failures. Subsequent fixes use this evidence; retain the original same-round ledger."
+    },
+    {
+      "id": "cqu",
+      "name": "重庆大学",
+      "url": "https://www.cqu.edu.cn/",
+      "split": "held_out",
+      "note": "Added before v9 freeze. Independent from the schools that exposed validation defects; existing 40-request/200000-token limits apply."
+    },
+    {
+      "id": "nankai",
+      "name": "南开大学",
+      "url": "https://www.nankai.edu.cn/",
+      "split": "held_out",
+      "note": "Added before the post-v12 repair freeze. No implementation tuning from this site; independent validation with original 40-request/200000-token limits."
+    },
+    {
+      "id": "sdu",
+      "name": "山东大学",
+      "url": "https://www.sdu.edu.cn/",
+      "split": "held_out",
+      "note": "Added before the post-v12 repair freeze. No implementation tuning from this site; independent validation with original 40-request/200000-token limits."
+    }
+  ],
+  "required_features": [
+    "ordinary_html",
+    "nested_navigation",
+    "dynamic_page",
+    "multiple_columns_on_one_page",
+    "same_named_units",
+    "attachments",
+    "empty_column"
+  ],
+  "note": "This is a predeclared evaluation plan. Targets and feature coverage are not verified results. Held-out sites must not guide parameter changes."
+}

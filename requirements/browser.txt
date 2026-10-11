@@ -2,4 +2,3 @@
 # Match this version to `python -m playwright install chromium`.
 -c constraints.txt
 playwright==1.61.0
-aiohttp==3.14.3

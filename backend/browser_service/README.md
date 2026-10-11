@@ -15,6 +15,8 @@ Run `python scripts/run_browser.py` with these environment settings:
 | `WATCHER_BROWSER_PORT` | `8765` |
 | `WATCHER_BROWSER_URL` | Web/worker URL, e.g. `http://browser:8765`. |
 | `WATCHER_ORIGIN_BROKER_URL` | Private main-app admission endpoint, e.g. `http://web:5000/internal/browser-origin`; launchers configure it. |
+| `WATCHER_DISCOVERY_POLICY` | Optional JSON policy shared by web, workers and this service. Set the same value in every process. Defaults remain browser 45 seconds, 3 MiB HTML and one render; an explicit trial such as `{"browser_total_seconds":90}` permits a 90-second request. Flask-only `DISCOVERY_POLICY` overrides do not propagate to an already running browser service. |
+| `WATCHER_HTTP_PROXY_REQUIRED` | Set to `1` when ordinary HTTP collection must use the configured environment proxy. This disables automatic direct fallback, including on later queued retries. Explicit per-request proxies are also preserved. |
 | `WATCHER_BROWSER_CONCURRENCY` | `1`; resource ceiling, not extra retries. |
 | `WATCHER_BROWSER_MAX_SESSIONS` | `8`; origin/source contexts, idle expiry 30 minutes. |
 | `WATCHER_BROWSER_MAX_EXECUTIONS` | `128`; completed responses expire after five minutes, HTML capped at 64 MiB total. |

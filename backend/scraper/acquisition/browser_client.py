@@ -33,9 +33,9 @@ class BrowserClient:
                     outcome = 'needs_manual'
                 elif code in ('browser_busy', 'session_busy', 'verification_busy'):
                     outcome = 'busy'
-                elif code in ('invalid_url', 'blocked_destination'):
+                elif code in ('invalid_url', 'blocked_destination', 'response_too_large'):
                     outcome = 'denied'
-                elif code in ('invalid_request', 'request_conflict', 'response_too_large'):
+                elif code in ('invalid_request', 'request_conflict'):
                     outcome = 'needs_adapter'
                 elif code in ('browser_timeout', 'browser_failed'):
                     outcome = 'network_error'

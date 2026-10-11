@@ -21,6 +21,31 @@ SHELL = '<html><div id="app"></div><script src="app.js"></script></html>'
 
 
 class AcquisitionTests(unittest.TestCase):
+    def test_cms_permission_prompt_is_an_access_limit_not_an_extraction_error(self):
+        html = '<title>系统提示</title><h2>系统提示</h2><p>抱歉，暂无权限，请咨询管理员。</p>'
+        result = classify_result(FetchRequest(ROOT, purpose='article'), self.raw(html))
+        self.assertEqual(result.outcome, 'denied')
+        self.assertEqual(result.error_code, 'source_access_restricted')
+        public = '<title>系统提示</title><article><p>暂无权限，请咨询管理员是访问受限时显示的提示，本文说明学校服务的使用方法。</p></article>'
+        self.assertEqual(classify_result(FetchRequest(ROOT, purpose='article'), self.raw(public)).outcome, 'usable')
+
+    def test_injected_navigation_is_rendered_even_with_static_news(self):
+        html = '<script src="/assets/headersy.js"></script><main>' + LIST + '</main>'
+        browser = Mock(return_value=self.raw('<nav><a href="/schools/">院系</a></nav>' + LIST))
+        result = fetch(FetchRequest(ROOT, purpose='directory'), http_transport=lambda _: self.raw(html), browser_transport=browser)
+        self.assertEqual(result.transport, 'browser')
+        browser.assert_called_once()
+
+    def test_existing_navigation_does_not_render_for_header_script(self):
+        html = '<script src="/assets/header.js"></script><nav><a href="/units/">部门</a><a href="/schools/">院系</a></nav>' + LIST
+        result = classify_result(FetchRequest(ROOT, purpose='directory'), self.raw(html))
+        self.assertEqual(result.outcome, 'usable')
+
+    def test_article_region_class_case_does_not_reject_readable_body(self):
+        html = '<h2 class="Article-title">公开通知</h2><div class="Article_content"><p>各位同学，现将学期安排公布如下，请查阅通知正文。</p></div>'
+        result = classify_result(FetchRequest(ROOT, purpose='article'), self.raw(html))
+        self.assertEqual(result.outcome, 'usable')
+
     def raw(self, html, **kwargs):
         return FetchResult(ROOT, status=200, html=html, **kwargs)
 
@@ -116,6 +141,26 @@ class AcquisitionTests(unittest.TestCase):
         self.assertEqual(fetch(FetchRequest(ROOT, purpose='list'), http_transport=http).outcome, 'usable')
         http.assert_called_once()
 
+    def test_conditional_browser_redirect_in_script_shell_requires_render(self):
+        # A real university shell only redirects obsolete IE clients. The DOM
+        # is otherwise populated by its application scripts.
+        html = ('<title>学校官网</title><script>var ms_ie=false;'
+                'ms_ie && setTimeout(function(){window.top.location.href="browsers.html"},500);'
+                '</script><script defer src="main.js"></script><div id="app"></div>')
+        http = Mock(return_value=self.raw(html))
+        browser = Mock(return_value=replace(self.raw(LIST), transport='browser'))
+        result = fetch(FetchRequest(ROOT, purpose='directory'), http_transport=http,
+                       browser_transport=browser)
+        http.assert_called_once()
+        self.assertEqual(browser.call_args.args[0].url, ROOT)
+        self.assertEqual(result.outcome, 'usable')
+
+    def test_script_comment_is_not_an_executable_redirect(self):
+        http = Mock(return_value=self.raw('<script>// location="/old"\nboot();</script><div id="app"></div>'))
+        result = fetch(FetchRequest(ROOT, browser_allowed=False), http_transport=http)
+        http.assert_called_once()
+        self.assertEqual(result.outcome, 'requires_render')
+
     def test_private_redirect_is_rejected_before_transport(self):
         http = Mock(return_value=self.raw('<script>window.location="http://127.0.0.1/"</script>'))
         with self.assertRaises(ValueError):
@@ -173,16 +218,24 @@ class AcquisitionTests(unittest.TestCase):
         before = Mock()
         http = Mock(side_effect=AssertionError('Completed page must be replayed'))
         with execution_context(cache_lookup=lookup, before_fetch=before):
-            self.assertEqual(fetch(FetchRequest(ROOT), http_transport=http), completed)
+            result = fetch(FetchRequest(ROOT), http_transport=http)
+        self.assertEqual(result.html, completed.html)
+        self.assertEqual(result.final_url, completed.final_url)
+        self.assertEqual(result.status, completed.status)
+        self.assertEqual(result.outcome, 'usable')
+        self.assertIn('visible_directory_content', result.evidence)
         before.assert_called_once()
         http.assert_not_called()
 
-    def test_only_usable_results_are_checkpointed(self):
+    def test_completed_negative_observations_are_saved_without_becoming_success(self):
         store = Mock()
         with execution_context(cache_store=store):
             fetch(FetchRequest(ROOT, purpose='list'), http_transport=lambda _: self.raw(LIST))
-            fetch(FetchRequest(ROOT, purpose='list'), http_transport=lambda _: self.raw('<nav>首页</nav>'))
-        store.assert_called_once()
+            result = fetch(FetchRequest(ROOT, purpose='list'), http_transport=lambda _: self.raw('<nav>首页</nav>'))
+            fetch(FetchRequest(ROOT), http_transport=lambda _: FetchResult(ROOT, outcome='network_error', error_code='timeout'))
+        self.assertFalse(result.ok)
+        self.assertEqual(store.call_count, 2)
+        self.assertEqual(store.call_args.args[1].outcome, 'needs_adapter')
 
     def test_profile_scope_cannot_match_a_hostname_suffix(self):
         from backend.scraper.acquisition.profiles import configured_request, profile_fingerprint

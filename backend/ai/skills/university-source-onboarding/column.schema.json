@@ -7,7 +7,7 @@
     "status": {"enum": ["ready", "not_column", "unsupported"]},
     "reason": {"type": "string", "maxLength": 500},
     "columns": {
-      "type": "array", "maxItems": 8,
+      "type": "array",
       "items": {
         "type": "object", "additionalProperties": false,
         "required": ["name", "list_selector", "title_selector", "link_selector", "date_selector", "content_selector", "container_selector", "heading_selector"],

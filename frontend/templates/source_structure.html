@@ -18,7 +18,7 @@
     {{ school_header(school, 'structure', '查看院系、专业与通知来源的官网依据。') }}
     {% if report %}
     <div class="source-sync">
-        <strong>{% if report.accepted %}已通过来源核验{% else %}来源仍在核对，尚未达到 {{ report.match_threshold }}% 验收标准{% endif %}</strong>
+        <strong>{% if report.accepted %}已完成本轮来源核对{% else %}部分来源尚未完成核对，已接通的栏目可以使用{% endif %}</strong>
         <p>优先核对院系、专业、培养、选课和考试等学生相关来源。历史清单共检查 {{ report.states.get('fetched', 0) }} 个页面，保留 {{ report.states.get('pending', 0) + report.states.get('running', 0) }} 个待查入口；这些总数包含其它领域，不能当作学生相关来源的覆盖率。</p>
         <p>单位覆盖率、栏目覆盖率和来源准确率：{% if not report.accepted %}未完成独立基准核对{% else %}均已通过{% endif %}。<a href="{{ request.full_path }}">刷新进度</a></p>
         {% if report.reference_checks %}

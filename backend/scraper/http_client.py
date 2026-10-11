@@ -1,10 +1,73 @@
 """Small static HTTP client; enhanced TLS is opt-in, redirects stay public."""
 import ipaddress
+import os
 import socket
 import time
+from contextlib import contextmanager
+from contextvars import ContextVar
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from urllib.parse import urlsplit, urljoin
 
 import requests as standard_requests
+
+
+def proxy_failed_before_send(error):
+    """Only an explicit failure to establish the proxy connection is conclusive."""
+    import aiohttp
+    if isinstance(error, aiohttp.ClientProxyConnectionError):
+        return True
+    from urllib3.exceptions import MaxRetryError, ProxyError, NewConnectionError
+    if not isinstance(error, standard_requests.exceptions.ProxyError):
+        return False
+    reason = error.args[0] if error.args else None
+    if isinstance(reason, MaxRetryError):
+        reason = reason.reason
+    return isinstance(reason, ProxyError) and isinstance(reason.original_error, NewConnectionError)
+
+
+def proxy_required(policy=None):
+    from flask import current_app, has_app_context
+    return bool((policy or {}).get('proxy_required') or
+        os.environ.get('WATCHER_HTTP_PROXY_REQUIRED', '').lower() in ('1', 'true', 'yes') or
+        (has_app_context() and current_app.config.get('HTTP_PROXY_REQUIRED')))
+
+
+_inventory_read = ContextVar('inventory_http_read', default=None)
+
+
+@contextmanager
+def inventory_read_attempt(url, network_failures):
+    """Use the durable page's retry count while the parent discovery task yields."""
+    marker = _inventory_read.set(((urlsplit(url).hostname or '').lower(), network_failures))
+    try:
+        yield
+    finally:
+        _inventory_read.reset(marker)
+
+
+def retry_direct_for(url):
+    from backend.services.tasks import current_execution
+    handle = current_execution()
+    origins = ((handle or {}).get('checkpoint') or {}).get('http_retry_direct', {})
+    host = (urlsplit(url).hostname or '').lower()
+    attempt = origins.get(host)
+    page_read = _inventory_read.get()
+    page_retry = bool(page_read and page_read[0] == host and page_read[1] > 0)
+    return bool(handle and attempt is not None and
+                (handle.get('attempts', 0) > attempt or page_retry))
+
+
+def remember_proxy_failure(url):
+    """A later durable attempt may change route; never add a second sent request."""
+    from backend.services import tasks
+    handle = tasks.current_execution()
+    if handle:
+        data = dict(handle.get('checkpoint') or {})
+        origins = dict(data.get('http_retry_direct') or {})
+        origins[(urlsplit(url).hostname or '').lower()] = handle.get('attempts', 0)
+        data['http_retry_direct'] = dict(list(origins.items())[-32:])
+        tasks.checkpoint(data)
 
 
 def validate_public_url(url, resolve=True):
@@ -78,13 +141,14 @@ def _shared_permit(url, timeout):
     from backend.services import tasks
     from backend.services.runtime_leases import reserve_origin
     handle = tasks.current_execution()
-    if not handle:
-        return None
-    tasks.assert_owned(handle)
+    if handle:
+        tasks.assert_owned(handle)
     seconds = sum(timeout) if isinstance(timeout, (tuple, list)) else timeout or 30
-    permit, wait = reserve_origin(url, handle.get('worker_id', 'local'), ttl=max(120, seconds + 30))
+    permit, wait = reserve_origin(url, (handle or {}).get('worker_id', 'local'), ttl=max(120, seconds + 30))
     if not permit:
-        tasks.defer(phase='origin_wait', delay=min(900, wait), reason='官网访问正在排队', error_code='origin_busy')
+        if handle:
+            tasks.defer(phase='origin_wait', delay=min(900, wait), reason='官网访问正在排队', error_code='origin_busy')
+        raise FetchAdmissionBusy(wait)
     return permit
 
 
@@ -98,9 +162,9 @@ def _guard_response(response, permit):
     if not permit:
         return response
     from backend.services.runtime_leases import cool_origin
-    if response.status_code == 429:
-        retry = response.headers.get('Retry-After', '')
-        cool_origin(response.url, float(retry) if str(retry).isdigit() else 300)
+    retry = retry_after_seconds(response.headers.get('Retry-After', ''))
+    if response.status_code == 429 or retry is not None:
+        cool_origin(response.url, retry if retry is not None else 300)
     original_close = response.close
     held = [permit]
     def close():
@@ -134,13 +198,19 @@ class PublicHTTPClient:
         for _ in range(6):
             addresses = public_addresses(url)
             permit = _shared_permit(url, kwargs.get('timeout'))
+            automatic_proxy = 'proxies' not in kwargs and not proxy_required()
+            direct = automatic_proxy and retry_direct_for(url)
+            transport_options = dict(kwargs, **({'trust_env': False} if direct else {}))
             try:
                 try:
-                    response = pinned_request(method, url, addresses=addresses, **kwargs)
+                    response = pinned_request(method, url, addresses=addresses, **transport_options)
                 except (standard_requests.exceptions.ConnectionError, standard_requests.exceptions.Timeout) as exc:
                     proxies = standard_requests.utils.get_environ_proxies(url)
-                    if (method not in ('GET', 'HEAD') or 'proxies' in kwargs or
-                            not any(proxies.get(key) for key in ('http', 'https', 'all'))):
+                    can_switch = (method in ('GET', 'HEAD') and automatic_proxy and not direct and
+                                  any(proxies.get(key) for key in ('http', 'https', 'all')))
+                    if can_switch:
+                        remember_proxy_failure(url)
+                    if not can_switch or not proxy_failed_before_send(exc):
                         if sign_in_hop:
                             raise SourceLoginRequired(sign_in_hop) from exc
                         raise
@@ -186,3 +256,26 @@ class PublicHTTPClient:
 
 
 requests = PublicHTTPClient()
+
+
+class FetchAdmissionBusy(RuntimeError):
+    def __init__(self, retry_after):
+        self.retry_after = retry_after
+        super().__init__('官网访问正在排队')
+
+
+def retry_after_seconds(value, now=None):
+    """Retry-After can be either delta seconds or an HTTP date."""
+    if not value:
+        return None
+    try:
+        seconds = float(value)
+        return seconds if 0 <= seconds < 315360000 else None
+    except (ValueError, TypeError):
+        try:
+            stamp = parsedate_to_datetime(str(value))
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            return max(0, (stamp - (now or datetime.now(timezone.utc))).total_seconds())
+        except (ValueError, TypeError, OverflowError):
+            return None

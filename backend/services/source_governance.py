@@ -197,6 +197,22 @@ def _exploration_html(url):
         raise
 
 
+def _column_label(name, group_name=''):
+    """Strip an explicit legacy publisher prefix, preserving literal slashes."""
+    prefix = (group_name + ' / ') if group_name else ''
+    return name[len(prefix):] if prefix and name.startswith(prefix) else name
+
+
+def _column_matches(name, observed, group_name=''):
+    # Prefer the complete literal heading, including bilingual slash labels.
+    # A legacy/model prefix is discarded only when the executed leaf heading
+    # itself matches. It is never installed as a publisher relationship.
+    if _normal(_column_label(name, group_name)) == _normal(observed):
+        return True
+    return bool(' / ' in name and ' / ' not in observed and
+                _normal(name.rsplit(' / ', 1)[-1]) == _normal(observed))
+
+
 def _normal(text):
     return re.sub(r'[\s\-—_|·：:]+', '', text or '')
 
@@ -228,9 +244,88 @@ def _extract(config, reference):
     return soup, items, records, errors
 
 
+def _composite_heading(heading):
+    """A strip of independently actionable tab labels is not one column title."""
+    controls = 'a[href],button,[role="tab"],[onclick],[onmouseover]'
+    labels = {_normal(node.get_text(' ', strip=True)) for node in heading.select(controls)
+              if not node.select(controls) and node.get_text(' ', strip=True)}
+    labels -= {'更多', '查看更多', 'more', 'moreinfo', 'viewmore'}
+    return len(labels) > 1
+
+
+def _heading_region(heading, container, items):
+    """Keep an executed heading with its nearest list, not a wider page wrapper."""
+    if _composite_heading(heading):
+        return None
+    item_ids = {id(item) for item in items}
+    for region in heading.parents:
+        if region.name in ('html', 'body', '[document]'):
+            return False
+        contained = {id(node) for node in region.descendants if id(node) in item_ids}
+        if contained:
+            if contained != item_ids:
+                return None
+            # Adjacent headings can share one outer section without separate
+            # wrappers. Each list item must still follow this actual heading,
+            # not the next peer column's heading. Article titles inside a list
+            # item do not define a new publication region.
+            tags = list(region.find_all(True))
+            positions = {id(node): index for index, node in enumerate(tags)}
+            classes = set(heading.get('class', []))
+            markers = [node for node in tags if node is heading or (
+                node.name == heading.name and
+                (heading.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6')
+                 or classes and set(node.get('class', [])) == classes
+                 or heading.get('role') == 'tab' and node.get('role') == 'tab')
+                and len(node.get_text(' ', strip=True)) <= 200
+                and not any(id(parent) in item_ids for parent in [node, *node.parents])
+                and not any(id(child) in item_ids for child in node.descendants))]
+            for item in items:
+                preceding = [node for node in markers if positions[id(node)] < positions[id(item)]]
+                if not preceding or preceding[-1] is not heading:
+                    return None
+            return region
+        if region is container:
+            break
+    return False
+
+
+def _breadcrumb_region(heading, container, items, page_url, expected, column_url=None):
+    """A self-link breadcrumb can identify the sole adjacent list, never a page of widgets."""
+    from backend.scraper.discovery.structure import locator
+    links = heading.select('a[href]')
+    if len(links) < 2 or not all(item.name == 'li' for item in items):
+        return None
+    leaf = links[-1]
+    if (_normal(leaf.get_text(' ', strip=True)) != expected or
+            canonical_url(urljoin(page_url, leaf['href'])) != canonical_url(column_url or page_url)):
+        return None
+    if not all(container is item or container in item.parents for item in items):
+        return None
+    item_ids = {id(item) for item in items}
+    for common in heading.parents:
+        if common.name in ('html', 'body', '[document]'):
+            return None
+        if common is not container and common not in container.parents:
+            continue
+        # The breadcrumb and this list share a local content region. Another
+        # list/navigation subtree or independent heading makes it ambiguous.
+        if {id(node) for node in common.select('li:has(a[href])')} != item_ids:
+            return None
+        peers = [node for node in common.select('h1,h2,h3,h4,h5,h6')
+                 if not any(id(parent) in item_ids for parent in [node, *node.parents])
+                 and node is not heading and heading not in node.parents]
+        if peers:
+            return None
+        return {'name': leaf.get_text(' ', strip=True), 'container': locator(container),
+                'heading': locator(leaf), 'basis': 'executed_breadcrumb_self_link'}
+    return None
+
+
 def _column_scope(config, reference, scope_evidence=None):
     """A list must remain within one actual named publishing region."""
-    from backend.scraper.discovery.publication_lists import publication_lists
+    from backend.scraper.discovery.publication_lists import publication_lists, article_heading
+    from backend.scraper.discovery.structure import locator
     html = read_snapshot(reference)
     from backend.services.source_review_recovery import page_problem
     problem = page_problem(html)
@@ -239,11 +334,11 @@ def _column_scope(config, reference, scope_evidence=None):
     soup, items, records, errors = _extract(config, reference)
     if not items:
         if reference.get('outcome') == 'empty':
-            expected = _normal(config['name'].split(' / ')[-1])
+            expected = _normal(_column_label(config['name'], config.get('group_name', '')))
             headings = [_normal(node.get_text(' ', strip=True)) for node in soup.select('h1,h2,h3,h4')]
             return records, errors + ([] if expected in headings else ['empty_column_identity_unconfirmed']), {'empty': True}
         return records, errors + ['list_missing'], {}
-    expected = _normal(config['name'].split(' / ')[-1])
+    expected = _normal(_column_label(config['name'], config.get('group_name', '')))
     # An unnamed candidate has no claim to confirm; the page heading is itself the
     # evidence, so scope is established structurally and the heading is returned.
     unnamed = unverified_column_name(config['name'])
@@ -260,11 +355,18 @@ def _column_scope(config, reference, scope_evidence=None):
                 container, heading = containers[0], headings[0]
                 inside = lambda node: node is container or container in node.parents
                 if (container.name not in ('html', 'body') and inside(heading)
+                        and not article_heading(heading, reference['url'])
                         and all(inside(item) for item in items)
-                        and _normal(heading.get_text(' ', strip=True)) == expected):
+                        and _heading_region(heading, container, items)
+                        and _column_matches(config['name'], heading.get_text(' ', strip=True), config.get('group_name', ''))):
                     regions.append({'name': heading.get_text(' ', strip=True),
-                                    'container': scope_evidence['container_selector'],
-                                    'heading': scope_evidence['heading_selector'], 'basis': 'executed_ai_scope'})
+                                    'container': locator(_heading_region(heading, container, items)),
+                                    'heading': locator(heading), 'basis': 'executed_ai_scope'})
+                elif container.name not in ('html', 'body'):
+                    breadcrumb = _breadcrumb_region(heading, container, items, reference['url'], expected,
+                                                    config['list_url'])
+                    if breadcrumb:
+                        regions.append(breadcrumb)
         except (ValueError, TypeError, SelectorSyntaxError):
             pass
     for feed in ([] if regions else publication_lists(html, reference['url'])):
@@ -273,7 +375,7 @@ def _column_scope(config, reference, scope_evidence=None):
         if unnamed:
             if not adoptable_column_name(feed['name']):
                 continue
-        elif _normal(feed['name']) != expected:
+        elif not _column_matches(config['name'], feed['name'], config.get('group_name', '')):
             continue
         region_items = soup.select(feed['list_selector'])
         if all(any(item is node or any(parent is node for parent in item.parents)
@@ -281,8 +383,14 @@ def _column_scope(config, reference, scope_evidence=None):
             # Requiring equal item identities prevents a broad adjacent widget
             # selector from being approved because its first few samples match.
             if len(region_items) == len(items):
+                heading_nodes = soup.select(feed['heading_locator']) if feed.get('heading_locator') else []
+                if len(heading_nodes) == 1 and (_composite_heading(heading_nodes[0])
+                        or article_heading(heading_nodes[0], reference['url'])):
+                    continue
+                actual = _heading_region(heading_nodes[0], soup, items) if len(heading_nodes) == 1 else None
                 regions.append({'name': feed['name'], 'container': feed.get('container_locator', ''),
-                                'heading': feed.get('heading_locator', '')})
+                                'heading': feed.get('heading_locator', ''),
+                                **({'container': locator(actual), 'heading': locator(heading_nodes[0])} if actual else {})})
     if not regions:
         # Small genuine lists frequently have just one or two entries. A common
         # nearest section with its own exact heading is sufficient evidence.
@@ -294,6 +402,8 @@ def _column_scope(config, reference, scope_evidence=None):
             headings = parent.select('h1,h2,h3,h4,h5,h6')
             if len(headings) != 1:
                 continue
+            if _composite_heading(headings[0]) or article_heading(headings[0], reference['url']):
+                continue
             observed = headings[0].get_text(' ', strip=True)
             if unnamed:
                 # Still one named region covering exactly these entries; it only
@@ -301,9 +411,9 @@ def _column_scope(config, reference, scope_evidence=None):
                 # action ("更多") or a degenerate heading as a column name.
                 if not adoptable_column_name(observed):
                     continue
-            elif _normal(observed) != expected:
+            elif not _column_matches(config['name'], observed, config.get('group_name', '')):
                 continue
-            regions.append({'name': observed, 'container': parent.get('id', ''), 'heading': headings[0].name})
+            regions.append({'name': observed, 'container': locator(parent), 'heading': locator(headings[0])})
             break
     if not regions:
         errors.append('column_identity_or_scope_unconfirmed')
@@ -1005,6 +1115,12 @@ def prune_governance_evidence(days=30, *, all_cache=False):
     for school in SchoolOnboarding.query.all():
         collect(json.loads(school.checkpoint_json))
         collect(json.loads(school.scope_json))
+    from backend.database.models import BackgroundTask
+    from backend.database.source_governance_models import SourceValidation
+    for task in BackgroundTask.query.all():
+        collect(task.checkpoint or {})
+    for validation in SourceValidation.query.all():
+        collect(json.loads(validation.validation_json))
     # A just-captured snapshot may not be bound to a proposal until another
     # network check finishes. Even "clear caches" respects this safety window.
     cutoff = time.time() - max(1, 1 if all_cache else int(days or 365000)) * 86400

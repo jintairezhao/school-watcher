@@ -14,6 +14,7 @@ from aiohttp import ClientError
 from backend.scraper.http_client import validate_public_url
 from .display import PrivateDisplay
 from .admission import OriginAdmission, OriginBusy
+from backend.services.discovery_policy import get_policy
 
 
 class RuntimeFault(Exception):
@@ -62,9 +63,9 @@ class Execution:
 
 
 class BrowserRuntime:
-    def __init__(self, *, concurrency=1, max_sessions=8, max_executions=128,
+    def __init__(self, *, concurrency=None, max_sessions=8, max_executions=128,
                  session_ttl=1800, verification_ttl=600, validator=None, launcher=None):
-        self.concurrency = max(1, concurrency)
+        self.concurrency = max(1, concurrency or get_policy()['browser_concurrency'])
         self.slots = asyncio.Semaphore(self.concurrency)
         self.max_sessions = max(1, max_sessions)
         self.max_executions = max(1, max_executions)
@@ -278,8 +279,15 @@ class BrowserRuntime:
             self.executions.pop(execution.payload['request_id'], None)
 
     async def _navigate(self, session, payload, keep_page=False, wait_for_content=True):
+        timeout = min(float(payload.get('timeout_seconds', get_policy()['browser_total_seconds'])),
+                      float(get_policy()['browser_total_seconds']))
+        async with asyncio.timeout(timeout):
+            return await self._navigate_page(session, payload, keep_page, wait_for_content)
+
+    async def _navigate_page(self, session, payload, keep_page=False, wait_for_content=True):
         start = time.monotonic()
-        timeout = max(1000, min(float(payload.get('timeout_seconds', 45)) * 1000, 90000))
+        timeout = max(1, min(float(payload.get('timeout_seconds', get_policy()['browser_total_seconds'])),
+                             float(get_policy()['browser_total_seconds'])) * 1000)
         operation_id = secrets.token_hex(16)
         self.operation_deadlines[operation_id] = start + timeout / 1000 + 15
         old_admission = self.admissions.pop(id(session.context), None)
@@ -315,32 +323,37 @@ class BrowserRuntime:
                 # often already has plenty of text, so a body-length wait is insufficient.
                 from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
                 request = FetchRequest.from_dict(payload)
-                while time.monotonic() < start + timeout / 1000:
+                while time.monotonic() < start + timeout / 1000 - .1:
                     try:
                         document = final_document[0] or response
                         raw = FetchResult(final_url=page.url, html=await page.content(),
                             status=document.status if document else 200, transport='browser',
                             headers=await document.all_headers() if document else {})
+                        if len(raw.html.encode('utf-8')) > get_policy()['html_max_bytes']:
+                            raise RuntimeFault('response_too_large', '官网页面超过3 MiB读取上限，已停止读取')
                         verdict = classify_result(request, raw)
-                        if verdict.ok or verdict.outcome in ('denied', 'network_error') or 'manual_challenge' in verdict.evidence:
+                        if verdict.ok or verdict.outcome in ('denied', 'network_error') or (
+                                verdict.outcome == 'needs_manual' and 'automatic_challenge' not in verdict.evidence):
                             break
                     except Exception as exc:
                         # Main-frame reloads invalidate a read of its old JS context.
                         if 'Execution context was destroyed' not in str(exc) and 'navigating' not in str(exc):
                             raise
-                    await asyncio.sleep(min(.25, max(0, start + timeout / 1000 - time.monotonic())))
+                    await asyncio.sleep(min(.25, max(0, start + timeout / 1000 - .1 - time.monotonic())))
             if id(session.context) in self.admission_errors:
                 busy = self.admission_errors[id(session.context)]
                 return {'final_url': page.url, 'transport': 'browser', 'outcome': 'busy',
                         'error_code': 'origin_busy', 'retry_after': busy.retry_after, 'message': '官网访问正在排队'}
             await self.validator(page.url)
             html = await page.content()
-            if len(html.encode('utf-8')) > 8 * 1024 * 1024:
-                raise RuntimeFault('response_too_large', '页面超过抓取大小限制')
+            if len(html.encode('utf-8')) > get_policy()['html_max_bytes']:
+                raise RuntimeFault('response_too_large', '官网页面超过3 MiB读取上限，已停止读取')
             response = final_document[0] or response
+            headers = await response.all_headers() if response else {}
+            await admission.cooldown(page.url, headers, response.status if response else 200)
             return {'url': payload['url'], 'final_url': page.url,
                 'status_code': response.status if response else 200,
-                'headers': await response.all_headers() if response else {}, 'html': html,
+                'headers': headers, 'html': html,
                 'transport': 'browser', 'timings': {'total_ms': round((time.monotonic() - start) * 1000)},
                 'evidence': []}
         except Exception:

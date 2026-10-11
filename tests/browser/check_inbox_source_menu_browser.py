@@ -45,6 +45,15 @@ def seed(app):
                                       list_url=None if ident == 902 else f'https://fixture.example/source/{ident}'))
         db.session.add(Department(id=999, school_id=2, name='教务通知', list_url='https://second.example/news'))
         db.session.flush()
+        # Official directory evidence supplies ownership. Sibling URLs and
+        # matching name prefixes alone do not establish a department relation.
+        for base in [100, 200, *[300 + i * 10 for i in range(20)], 700]:
+            source = db.session.get(Department, base)
+            db.session.add(Department(id=base + 5, school_id=1, name=source.name,
+                group_name=source.group_name, kind='unit', list_url=f'https://fixture.example/unit/{base}'))
+            db.session.flush()
+            db.session.add_all([DepartmentDirectoryEntry(parent_id=base + 5, department_id=base + i, position=i)
+                                for i in range(3)])
         db.session.add_all([DepartmentDirectoryEntry(parent_id=p, department_id=d, position=i)
                            for p in (800, 900) for i, d in enumerate((901, 902))])
         for ident, name, _ in rows:
@@ -99,7 +108,8 @@ def check(capture=True):
                 go()
                 mode('closed')
                 expect(page.locator('#sourcePanel')).to_be_hidden()
-                expect(page.locator('.mailbox-views a')).to_have_count(3)
+                expect(page.locator('.mailbox-views a')).to_have_count(2)
+                expect(page.locator('a[href^="/channels"]')).to_have_count(0)
                 expect(page.locator('#groupFilter')).to_have_count(0)
                 page.locator('#openFilters').click()
                 mode('overlay')
@@ -123,7 +133,7 @@ def check(capture=True):
                 assert not page.locator('.notice-panel').evaluate('(e) => e.inert')
                 group = page.locator('[data-source-group="院系设置"]')
                 group.locator('.source-group-toggle').click()
-                unit = page.locator('[data-source-unit="200"]')
+                unit = page.locator('[data-source-unit="205"]')
                 unit.locator('.source-unit-toggle').click()
                 first = unit.locator('.department-option:has(input[value="201"])')
                 first.scroll_into_view_if_needed()
@@ -146,7 +156,7 @@ def check(capture=True):
                 page.locator('#sourceQuery').fill('化学 招生')
                 expect(unit).to_be_visible()
                 expect(unit.locator('.department-option:visible')).to_have_count(1)
-                expect(page.locator('[data-source-unit="100"]')).to_be_hidden()
+                expect(page.locator('[data-source-unit="105"]')).to_be_hidden()
                 assert page.url == before
                 page.locator('#sourceQuery').fill('不存在的部门')
                 expect(page.locator('#sourceSearchEmpty')).to_be_visible()
@@ -253,7 +263,12 @@ def check(capture=True):
                         go('school=1&period=all&selected=901')
                         page.evaluate('(theme) => document.documentElement.dataset.theme = theme', theme)
                         if width == 390:
-                            page.locator('.reader-back').click(); settled()
+                            page.locator('.reader-back').click()
+                            expect(page.locator('.notice-panel')).to_be_visible()
+                            expect(page.locator('.notice-panel')).not_to_have_attribute('aria-busy', 'true')
+                            expect(page.locator('[data-notice-link][data-announcement-id="901"]')).to_be_visible()
+                            expect(page.locator('.reader-panel')).to_be_hidden()
+                            assert 'selected=' not in page.url
                         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (width, theme, 'overflow')
                         name = f'{width}-{theme}-reading'
                         path = output / (name + '.png'); page.screenshot(path=str(path)); screenshots.append(str(path))

@@ -26,6 +26,15 @@ def article_html(column=COLUMN):
 
 
 class WordPressPublicationTests(unittest.TestCase):
+    def test_attachment_detail_does_not_publish_its_repeated_download_widget_as_a_new_column(self):
+        html = ('<body class="attachment single single-attachment"><main><article id="post-18724" '
+                'class="attachment type-attachment"><h1>本科教学质量报告</h1>'
+                '<a href="/files/report.pdf">点击下载</a></article>'
+                '<div class="popular-downloads"><h3>其他热门下载</h3><ul class="wpp-list">' + ''.join(
+                    f'<li><a href="/?attachment_id={i}">中国科学技术大学本科教学质量报告{i}</a></li>'
+                    for i in (10001, 10002, 10003)) + '</ul></div></main></body>')
+        self.assertFalse(publication_lists(html, ROOT + '?attachment_id=18724'))
+
     def test_search_results_follow_categories_not_five_digit_article_titles(self):
         html = '<body class="search"><main><ul class="article-list with-tag">' + rows() + '</ul></main></body>'
         result = extract_structure(html, ROOT + 'search/考试', ROOT, 'channel', '考试', [])

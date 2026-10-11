@@ -37,6 +37,17 @@ class SourceConfigVersion(db.Model):
     __table_args__ = (db.UniqueConstraint('department_id', 'version', name='uq_source_version'),)
 
 
+class SourceValidation(db.Model):
+    """Compact executed evidence; no manual fact confirmation or review queue."""
+    __tablename__ = 'source_validations'
+    id = db.Column(db.Integer, primary_key=True)
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id', ondelete='CASCADE'), nullable=False, index=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='CASCADE'), index=True)
+    config_hash = db.Column(db.String(64), nullable=False)
+    validation_json = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+
 class SourceReviewEvent(db.Model):
     __tablename__ = 'source_review_events'
     id = db.Column(db.Integer, primary_key=True)

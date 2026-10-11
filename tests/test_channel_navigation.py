@@ -108,22 +108,33 @@ class ChannelNavigationTests(unittest.TestCase):
         row = self.rows(self.overview())[self.teaching.id]
         self.assertEqual(row['count'], 2)
         self.assertIsNone(row['latest_at'])
-        page = BeautifulSoup(self.client.get('/channels').text, 'lxml')
-        self.assertIn('发布日期未注明', page.select_one(f'[data-channel-id="{self.teaching.id}"]').get_text())
+        self.assertEqual(urlsplit(row['filter_url']).fragment, 'sources')
 
-    def test_channel_page_links_to_complete_history_and_preserves_actual_publication_urls(self):
+    def test_legacy_channels_redirects_to_sources_and_preserves_actual_publication_urls(self):
         record_source(self.notice, self.news, self.school.url + '/news/also-published')
         db.session.commit()
-        response = self.client.get('/channels')
-        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/channels', query_string={
+            'school': self.school.id, 'view': 'saved', 'q': '  选课  ',
+            'period': 'week', 'page': 4, 'selected': self.notice.id})
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Cache-Control'], 'no-store')
-        page = BeautifulSoup(response.text, 'lxml')
-        link = next(a for a in page.select('a[href]') if parse_qs(urlsplit(a['href']).query).get('dept') == [str(self.teaching.id)])
-        history = self.client.get(link['href'])
+        target = urlsplit(response.headers['Location'])
+        self.assertEqual(target.path, '/')
+        self.assertEqual(target.fragment, 'sources')
+        self.assertEqual(parse_qs(target.query), {
+            'school': [str(self.school.id)], 'view': ['saved'], 'q': ['选课'], 'period': ['all']})
+        fallback = self.client.get('/channels?school=invalid&view=unknown')
+        self.assertEqual(parse_qs(urlsplit(fallback.headers['Location']).query), {'period': ['all']})
+        link = self.rows(self.overview())[self.teaching.id]['filter_url']
+        self.assertEqual(urlsplit(link).fragment, 'sources')
+        history = self.client.get(link)
         self.assertIn('历史资料通知', history.text)
         article = BeautifulSoup(self.client.get(f'/announcement/{self.notice.id}').text, 'lxml')
         self.assertIsNotNone(article.select_one('a[href="' + self.school.url + '/news/also-published"]'))
-        self.assertEqual(self.app.test_client().get('/channels').status_code, 302)
+        anonymous = self.app.test_client().get('/channels')
+        self.assertEqual(anonymous.status_code, 302)
+        self.assertEqual(urlsplit(anonymous.headers['Location']).path, '/explore')
+        self.assertEqual(anonymous.headers['Cache-Control'], 'no-store')
 
 
 if __name__ == '__main__':

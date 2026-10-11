@@ -14,6 +14,7 @@ from playwright.sync_api import sync_playwright
 from test_desktop_onboarding import FirstSubscriptionTests
 from backend.database.db import db
 from backend.database.models import BackgroundTask, Department
+from backend.ai.models import AIBudget, AISchoolRound
 from backend.services.source_governance import propose_source
 
 output = ROOT / '.local/onboarding-checks/screenshots'
@@ -79,6 +80,23 @@ try:
             assert page.locator('#discoveryReview').count() == 0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), ('progress overflow', width)
             page.screenshot(path=str(output / f'discovery-results-{width}.png'), full_page=True)
+            row.state, row.phase = 'waiting', 'ai_budget'
+            key = f'school-discovery:{fixture.school.id}:test:1'
+            if not db.session.get(AISchoolRound, fixture.school.id):
+                db.session.add(AISchoolRound(school_id=fixture.school.id, budget_key=key))
+                db.session.add(AIBudget(key=key, used_requests=40, used_tokens=187638, reserved_tokens=2048))
+            db.session.commit()
+            page.locator('#discoveryRefresh').click()
+            page.wait_for_function("() => document.getElementById('discoveryMessage').textContent.includes('额度已用完，进度已保存')")
+            assert '40 次' in page.locator('#discoveryAIUsage').inner_text()
+            assert '187,638' in page.locator('#discoveryAIUsage').inner_text()
+            assert '另预留 2,048' in page.locator('#discoveryAIUsage').inner_text()
+            assert not page.locator('#discoveryRetry').is_visible()
+            assert not page.locator('#discoveryProgress').is_visible()
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), ('budget overflow', width)
+            page.screenshot(path=str(output / f'discovery-budget-{width}.png'), full_page=True)
+            row.state, row.phase = 'running', 'fetch'
+            db.session.commit()
             if width == 1280:
                 department = Department(school_id=fixture.school.id, name='测试学院', list_url='https://www.shu.edu.cn/test/')
                 db.session.add(department); db.session.commit()

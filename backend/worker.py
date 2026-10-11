@@ -28,11 +28,15 @@ def _schedule_due(lease=None):
                 raise tasks.LeaseLost('Scheduler lease was lost')
         task = BackgroundTask.query.filter_by(identity=f'{kind}:{key}').first()
         checked = (task.finished_at or task.checked_at or task.updated_at) if task else None
-        # Apply the current setting, including interval changes made while the
-        # app was closed. An old next_run_at is only a display estimate.
+        scheduled = bool(task and task.next_run_at and checked and (task.state == 'failed' or
+            (task.result or {}).get('_collection_interval_seconds') == seconds))
+        if scheduled:
+            seconds = max(0, (task.next_run_at - checked).total_seconds())
+        # A changed user setting overrides the previous interval; otherwise
+        # reuse the saved jitter/cooldown instead of rerolling on every tick.
         if not task or (task.state in ('done', 'failed') and checked <= now - timedelta(seconds=seconds)):
             import hashlib
-            delay = int(hashlib.sha256(f'{kind}:{key}'.encode()).hexdigest()[:8], 16) % min(60, max(1, seconds // 10))
+            delay = 0 if scheduled else int(hashlib.sha256(f'{kind}:{key}'.encode()).hexdigest()[:8], 16) % min(60, max(1, seconds // 10))
             tasks.enqueue(kind, key, payload, min_interval=seconds, delay=delay)
 
     from backend.services.starter_catalog import managed_schools
@@ -216,12 +220,8 @@ def dispatch(kind, payload):
         result = adapt_site(name, url, monthly=bool((payload.get('refresh') or checkpoint.get('entry_retries'))
                                                   and not checkpoint.get('directory_refresh_started')))
         if result.get('entry_failure'):
-            checkpoint = dict((tasks.current_execution() or {}).get('checkpoint') or {})
-            retries = checkpoint.get('entry_retries', 0)
-            if retries < 2 and result['entry_failure'].get('status_code') not in (401, 403):
-                checkpoint.update(entry_retries=retries + 1, directory_refresh_started=False)
-                tasks.defer(capability='directory', phase='entry_retry', checkpoint=checkpoint, delay=30,
-                            reason='官网首页暂未读取成功，程序将自动重试')
+            # The persistent page frontier owns attempts and website waits.
+            # Do not add a second retry loop or reset it on a parent handoff.
             return result
         handle = tasks.current_execution() or {}
         checkpoint = dict(handle.get('checkpoint') or {})
@@ -242,7 +242,8 @@ def dispatch(kind, payload):
         if result.get('continuation_required'):
             checkpoint = dict((tasks.current_execution() or {}).get('checkpoint') or {})
             checkpoint.update(directory_refresh_started=True, pending_pages=result.get('pending_pages', 0))
-            tasks.defer(capability='directory', phase='directory_slice', checkpoint=checkpoint, delay=1,
+            tasks.defer(capability='directory', phase='directory_slice', checkpoint=checkpoint,
+                        delay=max(1, result.get('pending_delay_seconds') or 0),
                         reason='本轮检查已保存，继续处理剩余部门与栏目')
         return result
     if not school.subscriber_count:

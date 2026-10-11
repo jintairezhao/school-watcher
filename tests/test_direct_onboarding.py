@@ -17,6 +17,12 @@ HTML = '<html><title>通知公告 - 测试大学</title><body><section id="notic
     for i, title in enumerate(TITLES)) + '</ul></section></body></html>'
 
 
+def ai_column(**changes):
+    return dict({'name': '通知公告', 'list_selector': '#notices li', 'title_selector': 'a',
+                 'link_selector': 'a', 'date_selector': 'span', 'content_selector': 'article',
+                 'container_selector': '#notices', 'heading_selector': '#notices h2'}, **changes)
+
+
 class DirectOnboardingTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='direct-onboarding-')
@@ -72,14 +78,20 @@ class DirectOnboardingTests(unittest.TestCase):
 
     def test_unreadable_pinned_items_do_not_block_valid_later_sample(self):
         from backend.services.source_onboarding import onboard_page
+        title = '关于开展大学生创新创业项目申报的通知'
+        html = HTML.replace('</ul>', f'<li><a href="/info/3.htm">{title}</a><span>2026-10-01</span></li></ul>')
         def fetch(url, purpose):
+            if url == URL:
+                return html
             if url in (URL.replace('/notices/', '/info/0.htm'), URL.replace('/notices/', '/info/1.htm')):
                 return '<p>该内容暂不可见</p>'
+            if url.endswith('/info/3.htm'):
+                return f'<article><h1>{title}</h1><p>请各学院组织学生参加创新创业项目申报，具体申报办法和时间见通知。</p></article>'
             return self.fetch(url, purpose)
         with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Later public sample is sufficient')):
             result = onboard_page({'school_id': self.school_id, 'url': URL}, fetcher=fetch)
         self.assertEqual(result['state'], 'connected')
-        self.assertEqual(Announcement.query.count(), 3)
+        self.assertEqual(Announcement.query.count(), 4)
 
     def test_navigation_images_and_private_attachment_urls_cannot_validate_empty_body(self):
         from backend.services.source_onboarding import _sample_matches
@@ -214,6 +226,60 @@ class DirectOnboardingTests(unittest.TestCase):
         self.assertEqual({a.title for a in Announcement.query.all()}, set(TITLES))
         self.assertEqual(SourceProposal.query.count(), 0)
 
+    def test_ai_cannot_join_adjacent_publication_regions_under_one_heading(self):
+        from backend.services.source_onboarding import onboard_page
+        html = HTML.replace('<section id="notices">', '<main id="content"><section id="notices">').replace(
+            '</body>', '<section id="news"><h2>校园新闻</h2><ul><li><a href="/info/9.htm">学校举办校园开放日活动</a></li></ul></section></main></body>')
+        for heading_html in (html, html.replace('<h2>', '<div class="column-label">').replace('</h2>', '</div>')):
+            with self.subTest(custom_heading='column-label' in heading_html):
+                output = {'status': 'ready', 'columns': [{
+                    'name': '通知公告', 'list_selector': '#content li', 'title_selector': 'a',
+                    'link_selector': 'a', 'date_selector': '', 'content_selector': 'article',
+                    'container_selector': '#content',
+                    'heading_selector': '#notices .column-label' if 'column-label' in heading_html else '#notices h2'}]}
+                with patch('backend.services.source_onboarding.publication_lists', return_value=[]), \
+                     patch('backend.services.source_onboarding.recognize_column', return_value=output):
+                    result = onboard_page({'school_id': self.school_id, 'url': URL},
+                        fetcher=lambda url, purpose: heading_html if url == URL else self.fetch(url, purpose))
+                self.assertEqual(result['state'], 'unsupported')
+                self.assertEqual(Department.query.count(), 0)
+                self.assertEqual(Announcement.query.count(), 0)
+
+    def test_ai_column_uses_observed_heading_without_invented_publisher_prefix(self):
+        from backend.services.source_onboarding import onboard_page
+        output = {'status': 'ready', 'columns': [{
+            'name': '虚构部门 / 通知公告', 'list_selector': '#notices li', 'title_selector': 'a',
+            'link_selector': 'a', 'date_selector': 'span', 'content_selector': 'article',
+            'container_selector': '#notices', 'heading_selector': '#notices h2'}]}
+        with patch('backend.services.source_onboarding.publication_lists', return_value=[]), \
+             patch('backend.services.source_onboarding.recognize_column', return_value=output):
+            result = onboard_page({'school_id': self.school_id, 'url': URL}, fetcher=self.fetch)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(Department.query.one().name, '通知公告')
+        self.assertEqual(json.loads(SourceConfigVersion.query.one().config_json)['name'], '通知公告')
+
+    def test_legacy_parent_name_without_matching_website_never_claims_column(self):
+        from backend.database.models import DepartmentDirectoryEntry
+        from backend.services.source_onboarding import onboard_page
+        legacy = Department(school_id=self.school_id, name='学生工作部',
+            list_url='https://other.example.edu.cn/', group_name='组织机构')
+        db.session.add(legacy); db.session.commit()
+        result = onboard_page({'school_id': self.school_id, 'url': URL, 'group_name': legacy.name}, fetcher=self.fetch)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(Announcement.query.count(), 3)
+        self.assertEqual(DepartmentDirectoryEntry.query.count(), 0)
+
+    def test_legacy_parent_with_matching_website_retains_column_membership(self):
+        from backend.database.models import DepartmentDirectoryEntry
+        from backend.services.source_onboarding import onboard_page
+        legacy = Department(school_id=self.school_id, name='学生工作部', list_url=URL, group_name='组织机构')
+        db.session.add(legacy); db.session.commit()
+        result = onboard_page({'school_id': self.school_id, 'url': URL, 'group_name': legacy.name}, fetcher=self.fetch)
+        self.assertEqual(result['state'], 'connected')
+        membership = DepartmentDirectoryEntry.query.one()
+        self.assertEqual(membership.parent_id, legacy.id)
+        self.assertEqual(membership.department_id, result['department_ids'][0])
+
     def test_ai_budget_exhaustion_keeps_already_recognized_columns(self):
         from backend.services.source_onboarding import recognize_column
         from backend.ai.configuration import AIConfigError
@@ -227,6 +293,74 @@ class DirectOnboardingTests(unittest.TestCase):
         self.assertEqual(result['status'],'ready')
         self.assertEqual(result['columns'],[column])
         self.assertEqual(result['unresolved_regions'],1)
+
+    def test_failed_ai_trial_gets_one_evidence_based_correction(self):
+        from backend.services.source_onboarding import onboard_page
+        with patch('backend.services.source_onboarding.publication_lists', return_value=[]), \
+             patch('backend.services.source_onboarding.recognize_column', side_effect=[
+                 {'status': 'ready', 'columns': [ai_column(list_selector='#missing li')]},
+                 {'status': 'ready', 'columns': [ai_column()]}]) as recognize:
+            result = onboard_page({'school_id': self.school_id, 'url': URL}, fetcher=self.fetch)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(result['new_count'], 3)
+        self.assertFalse(result['issues'])
+        self.assertEqual(recognize.call_count, 2)
+        feedback = recognize.call_args.kwargs['feedback']
+        self.assertEqual(feedback[0]['list_selector'], '#missing li')
+        self.assertIn('list_missing', feedback[0]['codes'])
+        self.assertEqual(SourceProposal.query.count(), 0)
+
+    def test_failed_ai_correction_cannot_repeat_forever(self):
+        from backend.services.source_onboarding import onboard_page
+        with patch('backend.services.source_onboarding.publication_lists', return_value=[]), \
+             patch('backend.services.source_onboarding.recognize_column', return_value={
+                 'status': 'ready', 'columns': [ai_column(list_selector='#missing li')]}) as recognize:
+            result = onboard_page({'school_id': self.school_id, 'url': URL}, fetcher=self.fetch)
+        self.assertEqual(result['state'], 'unsupported')
+        self.assertEqual(recognize.call_count, 2)
+        self.assertEqual(Department.query.count(), 0)
+
+    def test_partial_success_survives_feedback_deferral_and_restart(self):
+        from backend.services import tasks
+        from backend.services.source_onboarding import onboard_page
+        html = HTML.replace('</body>', '<section id="news"><h2>校园新闻</h2><ul><li><a href="/info/9.htm">'
+                            '学校举办校园开放日活动</a></li></ul></section></body>')
+        def fetch(url, purpose):
+            if url == URL:
+                return html
+            if url.endswith('/9.htm'):
+                return '<article><h1>学校举办校园开放日活动</h1><p>学校邀请在校大学生参加本次校园开放日，具体参与办法详见通知。</p></article>'
+            return self.fetch(url, purpose)
+        detected = [ai_column(), ai_column(name='校园新闻', list_selector='#missing li',
+                    container_selector='#news', heading_selector='#news h2')]
+        task = tasks.enqueue('onboard', 'partial-repair', {'school_id': self.school_id, 'url': URL})
+        handle = tasks.claim(capabilities=['http'])
+        def pending(*args, **kwargs):
+            tasks.defer(capability='directory', delay=0, reason='等待栏目识别')
+        with tasks.execution_scope(handle), \
+             patch('backend.services.source_onboarding.publication_lists', return_value=detected), \
+             patch('backend.services.source_onboarding.recognize_column', side_effect=pending) as recognize:
+            with self.assertRaises(tasks.TaskDeferred) as deferred:
+                onboard_page(task.payload, fetcher=fetch)
+        self.assertEqual(Announcement.query.count(), 3)
+        self.assertEqual(recognize.call_count, 1)
+        tasks.handoff(handle, deferred.exception)
+        resumed = tasks.claim(capabilities=['directory'])
+        self.assertIsNotNone(resumed)
+        with tasks.execution_scope(resumed), \
+             patch('backend.services.source_onboarding.publication_lists', side_effect=AssertionError('Rules already executed')), \
+             patch('backend.services.source_onboarding.recognize_column', return_value={
+                 'status': 'ready', 'columns': [ai_column(name='校园新闻', list_selector='#news li',
+                     container_selector='#news', heading_selector='#news h2', date_selector='')]}) as recognize:
+            result = onboard_page(task.payload, fetcher=fetch)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(len(result['department_ids']), 2)
+        self.assertEqual(result['new_count'], 4)
+        self.assertFalse(result['issues'])
+        self.assertEqual(Announcement.query.count(), 4)
+        self.assertEqual(Department.query.count(), 2)
+        self.assertEqual(recognize.call_args.kwargs['feedback'][0]['name'], '校园新闻')
+        tasks.finish(resumed, result)
 
     def test_unrelated_article_is_not_accepted(self):
         from backend.services.source_onboarding import onboard_page
@@ -400,7 +534,9 @@ class DirectOnboardingTests(unittest.TestCase):
         unit = Department(school_id=self.school_id, name='计算机学院', list_url='https://example.edu.cn/cs/')
         db.session.add(unit); db.session.flush()
         sub = Subscription.query.one(); sub.department_ids = [unit.id]; db.session.commit()
-        result = onboard_page({'school_id': self.school_id, 'url': URL, 'group_name': unit.name}, fetcher=self.fetch)
+        column_url = unit.list_url + 'notices/'
+        result = onboard_page({'school_id': self.school_id, 'url': column_url, 'group_name': unit.name},
+            fetcher=lambda url, purpose: HTML if url == column_url else self.fetch(url, purpose))
         self.assertEqual(result['state'], 'connected')
         self.assertEqual([d.id for d in subscribed_sources(unit.school, sub.department_ids)], result['department_ids'])
         self.assertEqual(BackgroundTask.query.filter_by(kind='collect').count(), 1)

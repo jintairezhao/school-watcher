@@ -1,0 +1,778 @@
+{
+  "date": "2026-10-11",
+  "purpose": "Public sanitized recovery evidence; source discovery coverage is reported separately.",
+  "rules": [
+    "Real network reads and retained-material replays are labeled separately.",
+    "No HTML, HTTP headers, body excerpts, keys, cookies, local user database contents or local machine paths are included.",
+    "The original 40-request school exploration ledgers remain unchanged; no replacement round was opened."
+  ],
+  "checks": [
+    {
+      "check_id": "sjtu_live_saved_ai_rule_install_and_daily_read",
+      "school": "上海交通大学",
+      "evidence_kind": "real_official_network_read",
+      "code_version": "working_tree_after_article_case_and_checkpoint_recovery_fixes",
+      "exact_code_hash_recorded": false,
+      "started_at": "2026-10-11T08:07:53.962547+00:00",
+      "completed_at": "2026-10-11T08:08:18.649931+00:00",
+      "ledger": {
+        "original_run": "candidate-v1-sjtu",
+        "original_actual_requests": 40,
+        "original_actual_tokens": 183843,
+        "additional_model_requests": 0,
+        "original_ledger_unchanged": true,
+        "new_round_created": false
+      },
+      "logical_page_reads": 5,
+      "http_document_calls": 5,
+      "browser_document_navigations": 1,
+      "browser_asset_requests_measured": false,
+      "reads": [
+        {
+          "final_url": "https://www.sjtu.edu.cn/tg/index.html",
+          "purpose": "directory",
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "transport": "browser",
+          "html_sha256": "4b332748b35b1d127762052a6e38d9b4efb5a5e7f3e839c987bcabc5bdc7badd",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        },
+        {
+          "final_url": "https://www.sjtu.edu.cn/tg/20261009/226515.html",
+          "purpose": "article",
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "transport": "http",
+          "html_sha256": "30de919aee48c394f7ccc42a8b8d2e0bdcaf7bcbc91b822c17272db968fabc66",
+          "evidence": [
+            "article_region"
+          ]
+        },
+        {
+          "final_url": "https://www.sjtu.edu.cn/tg/20251126/217243.html",
+          "purpose": "article",
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "transport": "http",
+          "html_sha256": "eb251ce09345e5ac295054f0158731d3cc63ebee66c6b116ca9875aeb72fc13e",
+          "evidence": [
+            "article_region"
+          ]
+        },
+        {
+          "final_url": "https://www.sjtu.edu.cn/tg/20260930/226344.html",
+          "purpose": "article",
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "transport": "http",
+          "html_sha256": "01ef4d922996ee68e17384b85123c1292fb322bc995ff84adfb58dbe3d37f75f",
+          "evidence": [
+            "article_region"
+          ]
+        },
+        {
+          "final_url": "https://www.sjtu.edu.cn/tg/index.html",
+          "purpose": "list",
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "transport": "http",
+          "html_sha256": "7483384f32b969a57414d56cedbfe81eb4ccde29cdd6e3f2898c485b66b043b3",
+          "evidence": [
+            "publication_link"
+          ]
+        }
+      ],
+      "status": "connected",
+      "connected_sources": 1,
+      "sources": [
+        {
+          "name": "通知公告",
+          "group_name": "上海交通大学",
+          "list_url": "https://www.sjtu.edu.cn/tg/index.html"
+        }
+      ],
+      "first_notice_count": 10,
+      "article_validation": [
+        {
+          "passed": true,
+          "status": "full",
+          "failure_kind": "",
+          "matched_count": 3,
+          "required_matches": 2,
+          "available_count": 10,
+          "sample_count": 3,
+          "identity_conflicts": [],
+          "samples": [
+            {
+              "url": "https://www.sjtu.edu.cn/tg/20261009/226515.html",
+              "final_url": "https://www.sjtu.edu.cn/tg/20261009/226515.html",
+              "title": "2026年上海市“中华文化国际传播”项目申报的通知",
+              "content_hash": "30de919aee48c394f7ccc42a8b8d2e0bdcaf7bcbc91b822c17272db968fabc66",
+              "matched": true,
+              "title_matched": true,
+              "reason": "matched",
+              "attachment": false
+            },
+            {
+              "url": "https://www.sjtu.edu.cn/tg/20251126/217243.html",
+              "final_url": "https://www.sjtu.edu.cn/tg/20251126/217243.html",
+              "title": "上海交通大学关于2026年放假及调课安排的通知",
+              "content_hash": "eb251ce09345e5ac295054f0158731d3cc63ebee66c6b116ca9875aeb72fc13e",
+              "matched": true,
+              "title_matched": true,
+              "reason": "matched",
+              "attachment": false
+            },
+            {
+              "url": "https://www.sjtu.edu.cn/tg/20260930/226344.html",
+              "final_url": "https://www.sjtu.edu.cn/tg/20260930/226344.html",
+              "title": "关于组织申报2026年度中国科技期刊卓越行动计划二期高起点新刊项目的通知",
+              "content_hash": "01ef4d922996ee68e17384b85123c1292fb322bc995ff84adfb58dbe3d37f75f",
+              "matched": true,
+              "title_matched": true,
+              "reason": "matched",
+              "attachment": false
+            }
+          ]
+        }
+      ],
+      "daily_collection": {
+        "new_count": 0,
+        "checked": 10
+      },
+      "limitations": [
+        "The existing paid model output was supplied for full program validation; this was not a fresh whole-school AI discovery.",
+        "The article/list HTTP probe required one browser navigation for the observed script navigation loader.",
+        "The second list read shows no-new-notice behavior, not long-term update stability."
+      ],
+      "provenance": [
+        {
+          "record": "sjtu-current-verification/report.json",
+          "record_sha256": "5fd184c9c333f6a535b02ad6811e34b520d1a122e2616558cab501a1754be2c2"
+        }
+      ]
+    },
+    {
+      "check_id": "sjtu_original_checkpoint_automatic_replay",
+      "school": "上海交通大学",
+      "evidence_kind": "complete_retained_official_material_replay",
+      "code_version": "working_tree_after_checkpoint_trial_reuse_fix",
+      "validation_version": 3,
+      "exact_code_hash_recorded": false,
+      "ledger": {
+        "original_run": "candidate-v1-sjtu",
+        "original_actual_requests": 40,
+        "original_actual_tokens": 183843,
+        "additional_model_requests": 0,
+        "original_ledger_unchanged": true,
+        "new_round_created": false
+      },
+      "actual_http_requests": 0,
+      "actual_model_requests": 0,
+      "original_checkpoint_reused": true,
+      "explicit_observed_columns_override": false,
+      "status": "connected",
+      "connected_sources": 1,
+      "notice_count": 10,
+      "matched_articles": 3,
+      "articles": [
+        {
+          "url": "https://www.sjtu.edu.cn/tg/20251126/217243.html",
+          "title": "上海交通大学关于2026年放假及调课安排的通知",
+          "content_hash": "eb251ce09345e5ac295054f0158731d3cc63ebee66c6b116ca9875aeb72fc13e",
+          "matched": true
+        },
+        {
+          "url": "https://www.sjtu.edu.cn/tg/20260930/226344.html",
+          "title": "关于组织申报2026年度中国科技期刊卓越行动计划二期高起点新刊项目的通知",
+          "content_hash": "01ef4d922996ee68e17384b85123c1292fb322bc995ff84adfb58dbe3d37f75f",
+          "matched": true
+        },
+        {
+          "url": "https://www.sjtu.edu.cn/tg/20260921/226133.html",
+          "title": "关于启动2027年“上海交通大学校长奖”遴选工作的通知",
+          "content_hash": "f83c43ce07893b40d86dc21127df534d5f4c21d96966ccb4ad11f252a96938de",
+          "matched": true
+        }
+      ],
+      "limitations": [
+        "This replays complete saved official pages; it contains no fresh HTTP or AI request."
+      ],
+      "provenance": [
+        {
+          "record": "sjtu-checkpoint-recovery/report.json",
+          "record_sha256": "2ab49fbe4f28d8d9e05b129c0e0b875f75daf81f7552b25d648d46a50aeed69e"
+        }
+      ]
+    },
+    {
+      "check_id": "xjtu_paid_checkpoint_live_proxy_route_recovery_and_install",
+      "school": "西安交通大学",
+      "evidence_kind": "real_official_network_read_with_retained_list_and_paid_rules",
+      "code_version": "working_tree_after_proxy_route_and_checkpoint_recovery_fixes_before_final_v13_title_review",
+      "exact_code_hash_recorded": false,
+      "ledger": {
+        "original_run": "candidate-v11-xjtu",
+        "original_actual_requests": 40,
+        "original_actual_tokens": 147090,
+        "additional_model_requests": 0,
+        "original_ledger_unchanged": true,
+        "new_round_created": false
+      },
+      "initial_attempt": {
+        "reads": [
+          {
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+            "purpose": "article",
+            "status": 403,
+            "outcome": "network_error",
+            "error_code": "http_proxy_access_denied",
+            "transport": "http",
+            "html_sha256": "5b13fb5957b84ef7bb9d0b6cd509c947ff6a37d67efdac2b896ddd3b908aad10",
+            "evidence": [
+              "proxy_route_retry_available"
+            ]
+          },
+          {
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235261.htm",
+            "purpose": "article",
+            "status": 403,
+            "outcome": "network_error",
+            "error_code": "http_proxy_access_denied",
+            "transport": "http",
+            "html_sha256": "5b13fb5957b84ef7bb9d0b6cd509c947ff6a37d67efdac2b896ddd3b908aad10",
+            "evidence": [
+              "proxy_route_retry_available"
+            ]
+          },
+          {
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235315.htm",
+            "purpose": "article",
+            "status": 403,
+            "outcome": "network_error",
+            "error_code": "http_proxy_access_denied",
+            "transport": "http",
+            "html_sha256": "5b13fb5957b84ef7bb9d0b6cd509c947ff6a37d67efdac2b896ddd3b908aad10",
+            "evidence": [
+              "proxy_route_retry_available"
+            ]
+          },
+          {
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235305.htm",
+            "purpose": "article",
+            "status": 403,
+            "outcome": "network_error",
+            "error_code": "http_proxy_access_denied",
+            "transport": "http",
+            "html_sha256": "5b13fb5957b84ef7bb9d0b6cd509c947ff6a37d67efdac2b896ddd3b908aad10",
+            "evidence": [
+              "proxy_route_retry_available"
+            ]
+          },
+          {
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235330.htm",
+            "purpose": "article",
+            "status": 403,
+            "outcome": "network_error",
+            "error_code": "http_proxy_access_denied",
+            "transport": "http",
+            "html_sha256": "5b13fb5957b84ef7bb9d0b6cd509c947ff6a37d67efdac2b896ddd3b908aad10",
+            "evidence": [
+              "proxy_route_retry_available"
+            ]
+          }
+        ],
+        "task_after": {
+          "state": "pending",
+          "phase": "retry",
+          "attempts": 1,
+          "available_at": "2026-10-11T08:16:56.724801"
+        },
+        "normal_retry_scheduled": true
+      },
+      "new_process_continuations": [
+        {
+          "process_restart": true,
+          "wire_reads": 1,
+          "cache_hits": 0,
+          "reads": [
+            {
+              "final_url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+              "purpose": "article",
+              "status": 200,
+              "outcome": "usable",
+              "error_code": "",
+              "transport": "http",
+              "html_sha256": "b5f09b280b8ec07671c3b28155a485fc6edaf9c939c1fcb14f5203b83c4a4c83",
+              "evidence": [
+                "direct_on_durable_retry",
+                "article_region"
+              ]
+            }
+          ],
+          "task_after": {
+            "state": "pending",
+            "phase": "origin_wait",
+            "attempts": 1,
+            "available_at": "2026-10-11T08:18:58.151536"
+          }
+        },
+        {
+          "process_restart": true,
+          "wire_reads": 1,
+          "cache_hits": 1,
+          "reads": [
+            {
+              "final_url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+              "purpose": "article",
+              "status": 200,
+              "outcome": "usable",
+              "error_code": "",
+              "transport": "http",
+              "html_sha256": "b5f09b280b8ec07671c3b28155a485fc6edaf9c939c1fcb14f5203b83c4a4c83",
+              "evidence": [
+                "direct_on_durable_retry",
+                "article_region",
+                "article_region"
+              ]
+            },
+            {
+              "final_url": "http://news.xjtu.edu.cn/info/1033/235261.htm",
+              "purpose": "article",
+              "status": 200,
+              "outcome": "usable",
+              "error_code": "",
+              "transport": "http",
+              "html_sha256": "f13a932b4dd4728655bde8b7120eff3ad9bc00c8aa6eddb3032492438d642034",
+              "evidence": [
+                "direct_on_durable_retry",
+                "article_region"
+              ]
+            }
+          ],
+          "task_after": {
+            "state": "pending",
+            "phase": "origin_wait",
+            "attempts": 1,
+            "available_at": "2026-10-11T08:19:18.724204"
+          }
+        },
+        {
+          "process_restart": true,
+          "wire_reads": 1,
+          "cache_hits": 2,
+          "reads": [
+            {
+              "final_url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+              "purpose": "article",
+              "status": 200,
+              "outcome": "usable",
+              "error_code": "",
+              "transport": "http",
+              "html_sha256": "b5f09b280b8ec07671c3b28155a485fc6edaf9c939c1fcb14f5203b83c4a4c83",
+              "evidence": [
+                "direct_on_durable_retry",
+                "article_region",
+                "article_region"
+              ]
+            },
+            {
+              "final_url": "http://news.xjtu.edu.cn/info/1033/235261.htm",
+              "purpose": "article",
+              "status": 200,
+              "outcome": "usable",
+              "error_code": "",
+              "transport": "http",
+              "html_sha256": "f13a932b4dd4728655bde8b7120eff3ad9bc00c8aa6eddb3032492438d642034",
+              "evidence": [
+                "direct_on_durable_retry",
+                "article_region",
+                "article_region"
+              ]
+            },
+            {
+              "final_url": "http://news.xjtu.edu.cn/info/1033/235315.htm",
+              "purpose": "article",
+              "status": 200,
+              "outcome": "usable",
+              "error_code": "",
+              "transport": "http",
+              "html_sha256": "4f3de9d9ba60caec7191eab51be2d5ccee0615b76fec7650704f5595d567f54e",
+              "evidence": [
+                "direct_on_durable_retry",
+                "article_region"
+              ]
+            }
+          ],
+          "task_after": {
+            "state": "pending",
+            "phase": "source_material",
+            "attempts": 1,
+            "available_at": "2026-10-11T08:19:36.392449"
+          }
+        }
+      ],
+      "recorded_http_document_calls": 8,
+      "diagnostic_interruption": {
+        "additional_completed_http_document_calls": 1,
+        "status": 200,
+        "url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+        "reason": "A preliminary harness omitted TaskDeferred handling and exited; the normal worker already handles this handoff.",
+        "lease_expiry_wait_preserved": true
+      },
+      "known_http_document_calls_including_preliminary_harness": 9,
+      "connected_sources": 1,
+      "sources": [
+        {
+          "name": "交大要闻",
+          "group_name": "西安交通大学",
+          "list_url": "https://www.xjtu.edu.cn/"
+        }
+      ],
+      "notice_count": 8,
+      "final_task": {
+        "state": "pending",
+        "phase": "source_material",
+        "attempts": 1,
+        "available_at": "2026-10-11T08:19:36.392449"
+      },
+      "limitations": [
+        "Installation preceded the final stricter v13 title review; use the next check for final sample identity results.",
+        "Other completed model proposals failed scope/date/link checks and were not force-installed.",
+        "The task remains queued for unresolved material; this is not whole-school completion."
+      ],
+      "provenance": [
+        {
+          "record": "xjtu-checkpoint-recovery/start.json",
+          "record_sha256": "99a4c962db8d890f5bbaa6ee3ec978191e16f3366cf39b7d372baa4a1ef4094d"
+        },
+        {
+          "record": "xjtu-checkpoint-recovery/resume-1791706738107916000.json",
+          "record_sha256": "2d5b8dfd2e0474ace9f42d125a4801fece7ae477f5f690d5cfd73acfd0ded282"
+        },
+        {
+          "record": "xjtu-checkpoint-recovery/resume-1791706758680354100.json",
+          "record_sha256": "c61cdf1b462b38412766c091a78d3dd066b8146d4f1bef4e7316ffebb3df8632"
+        },
+        {
+          "record": "xjtu-checkpoint-recovery/resume-1791706776398631300.json",
+          "record_sha256": "f16057263fbed33f44bf86bbebc4dce9780e11fb8366cb7bb15532d67e9b9835"
+        }
+      ]
+    },
+    {
+      "check_id": "xjtu_final_v13_retained_title_and_scope_review",
+      "school": "西安交通大学",
+      "evidence_kind": "complete_retained_official_material_replay",
+      "code_version": "v13",
+      "source_revision_hashes": {
+        "backend/services/source_validation.py": "21f4305dddb5499ca61420982d23c1eda87c0f71324cfd393d55ef75ee42af52",
+        "backend/services/source_onboarding.py": "36a7b826e9c08bf5dfbb8ed68f22e2caa5dadbc923839c52119bd60fc21fc6d2"
+      },
+      "actual_http_requests": 0,
+      "actual_model_requests": 0,
+      "ledger": {
+        "original_run": "candidate-v11-xjtu",
+        "original_actual_requests": 40,
+        "original_actual_tokens": 147090,
+        "additional_model_requests": 0,
+        "original_ledger_unchanged": true,
+        "new_round_created": false
+      },
+      "scope_errors": [],
+      "validation": {
+        "passed": true,
+        "status": "limited",
+        "failure_kind": "",
+        "matched_count": 2,
+        "required_matches": 2,
+        "available_count": 8,
+        "sample_count": 3,
+        "identity_conflicts": [],
+        "samples": [
+          {
+            "url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+            "title": "西安交大召开2026年度第三次二级单位书记院长例会",
+            "content_hash": "b5f09b280b8ec07671c3b28155a485fc6edaf9c939c1fcb14f5203b83c4a4c83",
+            "matched": true,
+            "title_matched": true,
+            "reason": "matched",
+            "listed_title_abbreviated": false,
+            "title_prefix_observed": false,
+            "observed_title_candidates": [
+              "西安交大召开2026年度第三次二级单位书记院长例会西安交通大学新闻网",
+              "",
+              "西安交大召开2026年度第三次二级单位书记院长例会",
+              "相关文章",
+              "校内网站链接",
+              "高校合作网站链接"
+            ],
+            "attachment": false
+          },
+          {
+            "url": "http://news.xjtu.edu.cn/info/1033/235261.htm",
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235261.htm",
+            "title": "西安交大金属材料强度全国重点实验室在压电薄膜领域合作...",
+            "content_hash": "f13a932b4dd4728655bde8b7120eff3ad9bc00c8aa6eddb3032492438d642034",
+            "matched": false,
+            "title_matched": false,
+            "reason": "article_title_abbreviated",
+            "listed_title_abbreviated": true,
+            "title_prefix_observed": true,
+            "observed_title_candidates": [
+              "西安交大金属材料强度全国重点实验室在压电薄膜领域合作发表《科学》西安交通大学新闻网",
+              "",
+              "西安交大金属材料强度全国重点实验室在压电薄膜领域合作发表《科学》",
+              "相关文章",
+              "校内网站链接",
+              "高校合作网站链接"
+            ],
+            "attachment": false
+          },
+          {
+            "url": "http://news.xjtu.edu.cn/info/1033/235315.htm",
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235315.htm",
+            "title": "西安交大一附院成功实施机器人微创心脏移植手术",
+            "content_hash": "4f3de9d9ba60caec7191eab51be2d5ccee0615b76fec7650704f5595d567f54e",
+            "matched": true,
+            "title_matched": true,
+            "reason": "matched",
+            "listed_title_abbreviated": false,
+            "title_prefix_observed": false,
+            "observed_title_candidates": [
+              "西安交大一附院成功实施机器人微创心脏移植手术西安交通大学新闻网",
+              "“不开胸”换心脏",
+              "西安交大一附院成功实施机器人微创心脏移植手术",
+              "相关文章",
+              "校内网站链接",
+              "高校合作网站链接"
+            ],
+            "attachment": false
+          }
+        ]
+      },
+      "complete_identity_matches": 2,
+      "abbreviated_title_limited_observations": 1,
+      "limitations": [
+        "The abbreviated homepage title is retained as limited evidence and is not counted as a complete title match."
+      ],
+      "provenance": [
+        {
+          "record": "xjtu-v13-retained-title-review.json",
+          "record_sha256": "34750a3436b0055ef6fa4bad1541b1408ef43000f68fabeaefd6bbd419fbc14c"
+        }
+      ]
+    },
+    {
+      "check_id": "xjtu_graduate_site_disconnect_durable_route_recovery",
+      "school": "西安交通大学",
+      "evidence_kind": "real_official_network_read",
+      "code_version": "v12",
+      "exact_code_hash_recorded": false,
+      "actual_model_requests": 0,
+      "actual_http_document_calls": 2,
+      "first_read": {
+        "page_state": "pending",
+        "normal_retry_wait_seconds": 34.974978,
+        "page_network_failures": 1,
+        "reads": [
+          {
+            "url": "http://yz.xjtu.edu.cn/",
+            "final_url": "http://yz.xjtu.edu.cn/",
+            "status": 0,
+            "outcome": "network_error",
+            "error_code": "http_serverdisconnectederror",
+            "sha256": "",
+            "evidence": []
+          }
+        ]
+      },
+      "resumed_read": {
+        "process_restart": true,
+        "page_state": "fetched",
+        "page_network_failures": 0,
+        "reads": [
+          {
+            "url": "http://yz.xjtu.edu.cn/",
+            "final_url": "http://yz.xjtu.edu.cn/",
+            "status": 200,
+            "outcome": "usable",
+            "error_code": "",
+            "sha256": "5daca875ae5ad229bedef3cb1efd776bad7958960e404a06be558fc829066316",
+            "evidence": [
+              "direct_on_durable_retry",
+              "visible_directory_content"
+            ]
+          }
+        ]
+      },
+      "limitations": [
+        "This verifies one official page and recovery path; it does not install a whole-school source set."
+      ],
+      "provenance": [
+        {
+          "record": "v12-page-route-recovery/start.json",
+          "record_sha256": "76c218c31d8239b2d79b56a8da91f54dd63521d06aef5cdbf7c254bd641d69af"
+        },
+        {
+          "record": "v12-page-route-recovery/resume.json",
+          "record_sha256": "3d9c5d17fd630531ee615444a8ec9e6b2be16487ca2ca2eef7e80e586565629d"
+        }
+      ]
+    },
+    {
+      "check_id": "xjtu_news_proxy_403_durable_route_recovery",
+      "school": "西安交通大学",
+      "evidence_kind": "real_official_network_read",
+      "code_version": "v13",
+      "exact_code_hash_recorded": false,
+      "actual_model_requests": 0,
+      "actual_http_document_calls": 2,
+      "first_read": {
+        "page_state": "pending",
+        "normal_retry_wait_seconds": 23.671634,
+        "page_network_failures": 1,
+        "reads": [
+          {
+            "url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+            "status": 403,
+            "title": "403 Forbidden",
+            "outcome": "network_error",
+            "error_code": "http_proxy_access_denied",
+            "sha256": "5b13fb5957b84ef7bb9d0b6cd509c947ff6a37d67efdac2b896ddd3b908aad10",
+            "evidence": [
+              "proxy_route_retry_available"
+            ]
+          }
+        ]
+      },
+      "resumed_read": {
+        "process_restart": true,
+        "page_state": "fetched",
+        "page_network_failures": 0,
+        "reads": [
+          {
+            "url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+            "final_url": "http://news.xjtu.edu.cn/info/1033/235348.htm",
+            "status": 200,
+            "title": "西安交大召开2026年度第三次二级单位书记院长例会-西安交通大学新闻网",
+            "outcome": "usable",
+            "error_code": "",
+            "sha256": "b5f09b280b8ec07671c3b28155a485fc6edaf9c939c1fcb14f5203b83c4a4c83",
+            "evidence": [
+              "direct_on_durable_retry",
+              "article_region"
+            ]
+          }
+        ]
+      },
+      "limitations": [
+        "This verifies one official page and recovery path; it does not install a whole-school source set."
+      ],
+      "provenance": [
+        {
+          "record": "v13-news-route-recovery/start.json",
+          "record_sha256": "71a9e85a1cd61bfe5be90e72a6cda3c64a796861af7308b492ee23b7298745bd"
+        },
+        {
+          "record": "v13-news-route-recovery/resume.json",
+          "record_sha256": "653ae84660d158ca6b36c0c81a4c7d4d18ba27956c3f135845496a8c5e6c12cd"
+        }
+      ]
+    },
+    {
+      "check_id": "xjtu_saved_rules_material_pending_budget_resume",
+      "school": "西安交通大学",
+      "evidence_kind": "retained_real_checkpoint_and_budget_control_replay",
+      "code_version": "v14",
+      "exact_code_hash_recorded": true,
+      "code_hashes": {
+        "backend/services/source_onboarding.py": "ba7d880738f6ba6e95d4bab6cefd4192c1304a328c5a1ba3670e99b1930d2b6e",
+        "backend/services/source_validation.py": "21f4305dddb5499ca61420982d23c1eda87c0f71324cfd393d55ef75ee42af52"
+      },
+      "actual_model_requests": 0,
+      "actual_http_document_calls": 0,
+      "provider_dispatch_guard_calls": 0,
+      "http_dispatch_guard_calls": 0,
+      "original_paid_ledger": {
+        "original_run": "candidate-v11-xjtu",
+        "original_actual_requests": 40,
+        "original_actual_tokens": 147090,
+        "additional_model_requests": 0,
+        "reserved_requests_before_after": [
+          0,
+          0
+        ],
+        "reserved_tokens_before_after": [
+          0,
+          0
+        ],
+        "original_ledger_unchanged": true,
+        "new_round_created": false
+      },
+      "before": {
+        "state": "pending",
+        "phase": "source_material",
+        "validation_stage": "rules",
+        "material_pending": true,
+        "source_count": 1,
+        "notice_count": 8,
+        "execution_count": 40,
+        "cursor": 1,
+        "paid_decision_count": 1
+      },
+      "queue_handoffs": [
+        {
+          "state": "pending",
+          "phase": "source_material",
+          "error_code": ""
+        },
+        {
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted"
+        }
+      ],
+      "after": {
+        "state": "waiting",
+        "phase": "ai_budget",
+        "error_code": "budget_exhausted",
+        "material_pending": true,
+        "source_count": 1,
+        "notice_count": 8,
+        "execution_count": 40,
+        "cursor": 1,
+        "paid_decision_count": 1
+      },
+      "preserved": {
+        "source_ids_and_rules": true,
+        "notice_ids_and_content": true,
+        "paid_decision_ids": true,
+        "cursor": true,
+        "task_generation": true,
+        "budget_values": true,
+        "paid_execution_count": true
+      },
+      "limitations": [
+        "This replays the exact saved rules/material_pending checkpoint in an isolated SQLite copy using retained official-page material; it is not fresh official-network or provider acceptance.",
+        "The original 40-request paid ledger and executions are copied without increasing quota or creating a replacement round. The production budget reservation logic runs; credential access and provider/HTTP dispatch are guarded.",
+        "The connected source remains available, while unread material stays queued at the original exhausted budget instead of being marked done. This does not establish whole-school coverage."
+      ],
+      "provenance": [
+        {
+          "record": "xjtu-v14-budget-checkpoint-replay.json",
+          "record_sha256": "c9a61d2a8f15de017e69e370cdbb095d2ff53ed3a5bb17fd7082cd77fc7ef221"
+        }
+      ]
+    }
+  ]
+}

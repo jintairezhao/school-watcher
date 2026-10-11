@@ -13,13 +13,9 @@ from flask import current_app
 from backend.database.db import db
 from backend.database.source_governance_models import SourceProposal, SourceReviewEvent
 from backend.services.source_inventory import canonical_url
+from backend.services.discovery_policy import get_policy, progress_state, advance_progress
 
 STEP_ACTION = 'exploration_step_v2'
-MAX_CALLS = 4
-MAX_READS = 8
-MAX_MATERIAL_ROUNDS = 3
-PROPOSAL_TOKENS = 240000
-SCHOOL_TOKENS = 1200000
 REFERENCES = ('identity', 'page-types', 'extraction-patterns')
 
 
@@ -113,8 +109,9 @@ def material(proposal):
         'evidence': evidence, 'observed_urls': sorted(observed), 'links': links,
         'acquisition_results': bundle.get('samples', {}),
         'operation_results': bundle.get('operation_results', []),
-        'limits': {'calls': MAX_CALLS, 'material_rounds': MAX_MATERIAL_ROUNDS, 'pages': MAX_READS,
-                   'token_budget': PROPOSAL_TOKENS}, 'available_references': list(REFERENCES)}
+        'limits': {key: get_policy()[key] for key in ('ai_decision_read_limit', 'progress_check_decisions',
+                   'progress_no_change_checks', 'ai_school_request_limit', 'ai_school_token_limit')},
+        'available_references': list(REFERENCES)}
 
 
 def set_workflow(proposal, status, **detail):
@@ -140,8 +137,9 @@ def acquire(proposal, action, observed):
         if name not in REFERENCES:
             return {'status': 'invalid_reference'}
         names = bundle.setdefault('skill_references', [])
-        if name not in names:
-            names.append(name)
+        if name in names:
+            return {'status': 'cached', 'reference': name}
+        names.append(name)
         result = {'status': 'obtained', 'reference': name}
     elif kind == 'read_page':
         url, purpose = canonical_url(action.get('url', '')), action.get('purpose')
@@ -154,12 +152,10 @@ def acquire(proposal, action, observed):
         cached = next((ref for _, ref in references(bundle) if canonical_url(ref['url']) == url), None)
         if cached:
             return {'status': 'cached', 'url': url, 'hash': cached['hash']}
-        if len(events(proposal.id, 'exploration_read')) >= MAX_READS:
-            return {'status': 'page_budget_exhausted'}
         # A failed URL is not reread indefinitely within the same exploration.
         previous = next((x for x in bundle.get('operation_results', []) if x.get('url') == url), None)
         if previous:
-            return previous
+            return dict(previous, status='cached_failure')
         tasks.assert_owned()
         db.session.commit()
         try:
@@ -204,7 +200,40 @@ def inferred_actions(proposal, evidence):
     # Identity may require the root/department navigation, never a guessed address.
     actions += [{'type': 'read_page', 'url': url, 'purpose': 'directory', 'reason': '核对官方机构入口'}
                 for url in [bundle.get('root_url')] if url and url != bundle['list']['url']]
-    return actions[:3]
+    return actions[:max(1, int(get_policy()['ai_decision_read_limit']))]
+
+
+def effective_results(proposal):
+    """Only successfully obtained material and validated output advance work."""
+    bundle = json.loads(proposal.evidence_json)
+    result = {'snapshot:' + ref['hash'] for _, ref in references(bundle)
+              if ref.get('hash') and ref.get('outcome', 'usable') in ('usable', 'needs_adapter')}
+    validation = json.loads(proposal.validation_json)
+    if validation.get('passed') and proposal.validated_hash:
+        result.add('validated:' + proposal.validated_hash)
+    return result
+
+
+def record_step_progress(proposal, detail):
+    """Persist actual model execution IDs, including all accepted fragments."""
+    from backend.database.source_governance_models import DiscoveryWorkItem
+    workflow = json.loads(proposal.validation_json).get('workflow', {})
+    prior = next((json.loads(event.detail_json).get('progress') for event in reversed(events(proposal.id))
+                  if json.loads(event.detail_json).get('progress')), None)
+    state = workflow.get('progress') or prior or progress_state(detail.get('progress_before', []))
+    ids = set(detail.get('decision_ids', []))
+    ids.update(row.execution_id for row in DiscoveryWorkItem.query.filter_by(
+        school_id=proposal.school_id, kind='extraction').filter(
+        DiscoveryWorkItem.group_key.startswith(f'source:{proposal.id}:fragment:')).all()
+        if row.execution_id and row.result_json)
+    if not ids and detail.get('status') in ('succeeded', 'partial') and detail.get('execution_id'):
+        ids.add(detail['execution_id'])
+    detail['decision_ids'] = sorted(ids)
+    for ident in sorted(ids):
+        state = advance_progress(state, ident, effective_results(proposal))
+    detail['progress'] = state
+    set_workflow(proposal, workflow.get('status', 'checking'), progress=state)
+    return state
 
 
 def run(proposal_id, *, inventory=None):
@@ -249,7 +278,7 @@ def run(proposal_id, *, inventory=None):
     changed = False
     legacy_attempts = sum(json.loads(e.detail_json).get('status') in (None, 'pending', 'uncertain', 'failed')
                           for e in events(proposal.id, 'skill_attempt'))
-    for _ in range(MAX_CALLS + 1):
+    while True:
         tasks.assert_owned()
         # Serialize allocation of a paid step, including standalone review callers.
         db.session.execute(db.update(SourceProposal).where(SourceProposal.id == proposal.id)
@@ -260,8 +289,10 @@ def run(proposal_id, *, inventory=None):
         preflights = [json.loads(e.detail_json).get('preflight') for e in journal]
         failed_plans = [g._json(p['proposed_config']) for p in preflights if p and p.get('proposed_config')]
         repeated_plan = any(failed_plans.count(plan) >= 2 for plan in set(failed_plans))
-        if not pending and (repeated_plan or len(journal) >= MAX_CALLS or sum(
-                (json.loads(e.detail_json).get('validation') or {}).get('validator_version') == g.VERSION for e in journal) >= 2):
+        previous_progress = json.loads(proposal.validation_json).get('workflow', {}).get('progress') or next(
+            (json.loads(event.detail_json).get('progress') for event in reversed(journal)
+             if json.loads(event.detail_json).get('progress')), {})
+        if not pending and (repeated_plan or previous_progress.get('stopped')):
             db.session.commit(); break
         if pending:
             detail = json.loads(pending.detail_json)
@@ -295,12 +326,11 @@ def run(proposal_id, *, inventory=None):
             db.session.execute(db.update(School).where(School.id == proposal.school_id).values(name=School.name))
             evidence = material(proposal)
             reservation = len(canonical(evidence).encode()) + len(load_skill('university-source-onboarding', 'extraction').prompt.encode()) + int(binding.get('max_output_tokens', 8000))
-            school_events = db.session.query(SourceReviewEvent).join(SourceProposal).filter(
-                SourceProposal.school_id == proposal.school_id, SourceReviewEvent.action == STEP_ACTION).all()
             attempt = len(journal) + 1
             detail = {'execution_id': f'explore-v2:{proposal.id}:{attempt}:{proposal.evidence_hash[:16]}',
                 'attempt': attempt, 'revision': proposal.revision, 'input': evidence, 'reservation': reservation,
                 'binding_version': binding['version'], 'applied': False}
+            detail['progress_before'] = sorted(effective_results(proposal))
             event = save_event(proposal.id, STEP_ACTION, detail)
         db.session.commit()
         from backend.services.directory_work import extraction_suggestion
@@ -325,6 +355,10 @@ def run(proposal_id, *, inventory=None):
                     'extraction', evidence, binding, existing_attempts=prior_attempts)
                 detail['manifest_started'] = True
             except AIConfigError as exc:
+                if exc.code == 'budget_exhausted' and tasks.current_execution():
+                    set_workflow(proposal, 'checking', ai_status='budget_exhausted', reason='本轮 AI 额度已用完，进度已保存')
+                    tasks.defer(capability='directory', phase='ai_budget', state='waiting',
+                                error_code='budget_exhausted', reason='本轮 AI 额度已用完，进度已保存')
                 if exc.code == 'concurrency_limit' and tasks.current_execution():
                     set_workflow(proposal, 'checking', ai_status='waiting', reason='AI 正在处理其他页面，材料已保存并排队')
                     tasks.defer(capability='directory', phase='source_material', delay=5,
@@ -336,6 +370,10 @@ def run(proposal_id, *, inventory=None):
         else:
             result = detail['result']
         if result.get('status') not in ('succeeded', 'partial'):
+            if result.get('error_code') == 'budget_exhausted' and tasks.current_execution():
+                set_workflow(proposal, 'checking', ai_status='budget_exhausted', reason='本轮 AI 额度已用完，进度已保存')
+                tasks.defer(capability='directory', phase='ai_budget', state='waiting',
+                            error_code='budget_exhausted', reason='本轮 AI 额度已用完，进度已保存')
             set_workflow(proposal, 'recognition_incomplete', ai_status=result.get('status'),
                          reason='AI 调用未完成：' + (result.get('error_detail') or result.get('error_code') or '结果未知；保留进度，不自动重复计费'))
             if result.get('status') == 'pending' and tasks.current_execution():
@@ -373,7 +411,13 @@ def run(proposal_id, *, inventory=None):
                 old_bundle.setdefault('operation_results', []).append(feedback)
                 proposal.evidence_json, proposal.evidence_hash = g._json(old_bundle), g._hash(old_bundle)
                 detail.update(applied=True, preflight=feedback)
+                progress = record_step_progress(proposal, detail)
                 event.detail_json = g._json(detail); db.session.commit()
+                if progress['stopped']:
+                    break
+                if tasks.current_execution():
+                    tasks.defer(capability='directory', phase='source_material', delay=0,
+                                reason='试提取结果已保存，继续判断并让出当前执行时段')
                 continue
             if not detail.get('config_applied'):
                 detail['previous_config'] = json.loads(proposal.candidate_json)
@@ -414,11 +458,17 @@ def run(proposal_id, *, inventory=None):
                          ai_status='succeeded', reason=reason, needed_evidence=missing)
             changed = True
             detail['applied'] = True; detail['validation'] = validation
+            progress = record_step_progress(proposal, detail)
             event.detail_json = g._json(detail); db.session.commit()
             if validation['passed']:
                 return {'status': 'validated', 'changed': True}
             if saved_only:
                 return {'status': 'needs_recovery', 'changed': True}
+            if progress['stopped']:
+                break
+            if tasks.current_execution():
+                tasks.defer(capability='directory', phase='source_material', delay=0,
+                            reason='验证结果已保存，继续判断并让出当前执行时段')
             continue
         actions = suggestion.get('actions') or inferred_actions(proposal, evidence)
         if decision == 'choose' and suggestion.get('question'):
@@ -428,14 +478,16 @@ def run(proposal_id, *, inventory=None):
                 set_workflow(proposal, 'user_choice', ai_status='succeeded', reason=reason, question=question, needed_evidence=missing)
                 detail['applied'] = True; event.detail_json = g._json(detail); db.session.commit()
                 return {'status': 'user_choice', 'changed': changed}
-        rounds = sum(bool(json.loads(e.detail_json).get('operations')) for e in journal)
         results = []
-        if actions and rounds < MAX_MATERIAL_ROUNDS:
+        if actions:
             set_workflow(proposal, 'checking', ai_status='succeeded', reason=reason, needed_evidence=missing)
-            for action in actions[:3]:
+            for action in actions[:max(1, int(get_policy()['ai_decision_read_limit']))]:
                 results.append(acquire(proposal, action, observed))
         detail['operations'] = results; detail['applied'] = True
+        progress = record_step_progress(proposal, detail)
         event.detail_json = g._json(detail); db.session.commit()
+        if progress['stopped']:
+            break
         if not any(r.get('status') in ('obtained', 'fetch_failed', 'login_required', 'access_limited') for r in results):
             set_workflow(proposal, 'recognition_incomplete', ai_status='succeeded', reason=reason,
                          needed_evidence=missing, operations=results)
@@ -443,6 +495,6 @@ def run(proposal_id, *, inventory=None):
         if tasks.current_execution():
             tasks.defer(capability='directory', phase='source_material', delay=0,
                         checkpoint=tasks.current_execution().get('checkpoint'), reason='补充材料已保存，等待下一轮判断')
-    set_workflow(proposal, 'recognition_incomplete', ai_status='limit_reached',
-                 reason='本轮自动识别未完成，已保存取得的材料和判断，等待进一步适配')
-    return {'status': 'review_required', 'changed': changed}
+    set_workflow(proposal, 'recognition_incomplete', ai_status='no_discovery_progress',
+                 reason='这条官网路径未取得新的有效材料，已保存结果并停止重复尝试')
+    return {'status': 'branch_stopped', 'changed': changed}

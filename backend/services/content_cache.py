@@ -51,7 +51,14 @@ def fetch_content(ann_id):
         html = _fetch_html(url, raise_fetch_errors=True, purpose='article', source_id='content:' + str(ann_id),
                            readiness_selector=', '.join(dict.fromkeys(selectors)))
         final_url = getattr(html, 'final_url', url)
-        if not html:
+        attachment = getattr(getattr(html, 'result', None), 'attachment', {})
+        if attachment.get('verified'):
+            from html import escape
+            # A link to the actual read file is the cached attachment view. Its
+            # contents are not invented text and aren't executed in the app.
+            html = '<article><p><a href="' + escape(final_url, quote=True) + '">' + escape(
+                attachment.get('filename') or '查看官网 PDF 附件') + '</a></p></article>'
+        elif not html:
             raise ValueError('暂时无法读取官网正文，请打开原文查看')
         soup = BeautifulSoup(html, 'lxml')
         content = None
@@ -60,7 +67,8 @@ def fetch_content(ann_id):
                 candidate = soup.select_one(selector)
             except Exception:
                 continue
-            if candidate is not None and candidate.get_text(' ', strip=True):
+            from backend.scraper.article_resources import has_public_body_resource
+            if candidate is not None and (candidate.get_text(' ', strip=True) or has_public_body_resource([candidate], final_url)):
                 content = candidate
                 break
         if content is None:

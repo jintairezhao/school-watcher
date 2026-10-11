@@ -1,4 +1,4 @@
-"""Actual publication channels stay distinct, navigable and safe on every viewport."""
+"""Real publication sources live in the existing sidebar on every viewport."""
 import json
 import os
 from datetime import datetime, timezone
@@ -45,6 +45,7 @@ with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Browsing 
             hidden_school = School(name='未订阅的测试学校', url='https://other.example.edu.cn/')
             db.session.add_all([student, single, hidden_school, teaching_unit, student_unit])
             db.session.flush()
+            DepartmentDirectoryEntry.query.filter_by(department_id=fixture.column.id).delete()
             db.session.add_all([
                 DepartmentDirectoryEntry(parent_id=teaching_unit.id, department_id=fixture.column.id),
                 DepartmentDirectoryEntry(parent_id=student_unit.id, department_id=student.id)])
@@ -89,26 +90,37 @@ with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Browsing 
 
             page.route('**/*', serve)
             page.add_init_script('localStorage.setItem("theme", ' + json.dumps(theme) + ')')
-            page.goto('http://localhost/channels')
-            expect(page.get_by_role('heading', name='按发布渠道', exact=True)).to_be_visible()
-            expect(page.locator('.channel-school')).to_have_count(1)
-            expect(page.locator('.channel-summary')).to_contain_text('3 条已收录通知')
-            expect(page.locator(f'[data-channel-id="{fixture.column.id}"] .channel-count')).to_contain_text('2 条')
-            expect(page.locator(f'[data-channel-id="{fixture.column.id}"] .channel-count')).to_contain_text('1 条未读')
+            page.goto(f'http://localhost/?school={school_id}&period=all')
+            expect(page.locator('.mailbox-views a')).to_have_count(2)
+            expect(page.locator('a[href^="/channels"]')).to_have_count(0)
+            expect(page.get_by_role('link', name='按发布渠道', exact=True)).to_have_count(0)
+            page.locator('#openFilters').click()
+            group = page.locator('[data-source-group="组织机构"]')
+            group.locator('.source-group-toggle').click()
+            teaching_branch = group.locator('[data-source-unit-name="教务处"]')
+            student_branch = group.locator('[data-source-unit-name="学生工作处"]')
+            teaching_branch.locator('.source-unit-toggle').click()
+            student_branch.locator('.source-unit-toggle').click()
+            expect(teaching_branch.locator(f'[data-department][value="{fixture.column.id}"]')).to_be_visible()
+            expect(student_branch.locator(f'[data-department][value="{student.id}"]')).to_be_visible()
+            expect(teaching_branch.locator('.department-count')).to_have_text('2')
+            expect(student_branch.locator('.department-count')).to_have_text('1')
             assert '未订阅的测试学校' not in page.locator('main').inner_text()
-            expect(page.locator(f'[data-channel-id="{fixture.column.id}"] .channel-name')).to_contain_text('教务处')
-            expect(page.locator(f'[data-channel-id="{student.id}"] .channel-name')).to_contain_text('学生工作处')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-            page.screenshot(path=str(output / f'channels-{width}-{theme}.png'), full_page=True)
+            page.screenshot(path=str(output / f'source-sidebar-{width}-{theme}.png'), full_page=True)
 
-            # A secondary publication opens exactly that source, including the shared article.
-            page.locator(f'[data-channel-id="{student.id}"] .channel-row').click()
+            # Same-named columns stay under their real publishers; search and selection
+            # filter this inbox, including an article also published by another unit.
+            page.locator('#sourceQuery').fill('学生工作处')
+            expect(teaching_branch).to_be_hidden()
+            student_branch.locator(f'.department-option:has([data-department][value="{student.id}"])').click()
             expect(page.locator('[data-notice-link]')).to_have_count(1)
             expect(page.locator('[data-notice-link]')).to_contain_text(shared.title)
             params = parse_qs(urlsplit(page.url).query)
             assert params['dept'] == [str(student.id)] and params['period'] == ['all']
             assert page.locator('[data-notice-link] [data-channel-link]').count() == 0
             expect(page.locator('.notice-source-label')).to_contain_text('学生工作处')
+            page.locator('[data-close-sources]').click()
             page.locator('[data-notice-link]').click()
             page.locator('.article-sources summary').click()
             expect(page.locator('.article-sources li')).to_have_count(2)
@@ -121,29 +133,44 @@ with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Browsing 
             expect(page.locator('.article-sources')).to_have_attribute('open', '')
             expect(page.locator('.article-sources [data-channel-link]')).to_be_visible()
             page.locator('.article-sources [data-channel-link]').click()
+            expect(page.locator('#sourcePanel')).to_be_visible()
+            expect(page.locator(f'[data-department][value="{single.id}"]')).to_be_visible()
+            expect(page.locator(f'[data-department][value="{single.id}"]')).to_be_checked()
+            page.locator('[data-close-sources]').click()
             expect(page.locator('.notice-panel')).to_be_visible()
             expect(page.locator('[data-notice-link]')).to_have_count(1)
             expect(page.locator('[data-notice-link]')).to_contain_text(library.title)
 
-            # Saved channel navigation stays inside saved notices.
-            page.goto('http://localhost/channels?view=saved')
-            expect(page.locator('.channel-summary')).to_contain_text('1 条已收藏通知')
-            page.locator(f'[data-channel-id="{student.id}"] .channel-row').click()
+            # Saved scope and a bookmarked source link work with the same drawer.
+            page.goto(f'http://localhost/?school={school_id}&dept={student.id}&period=all&view=saved#sources')
+            expect(page.locator('#sourcePanel')).to_be_visible()
+            expect(page.locator(f'[data-department][value="{student.id}"]')).to_be_visible()
+            expect(page.locator(f'[data-department][value="{student.id}"]')).to_be_checked()
+            page.locator('#sourceQuery').fill('不存在的发布站点')
+            expect(page.locator('#sourceSearchEmpty')).to_be_visible()
+            page.locator('[data-close-sources]').click()
             expect(page.locator('[data-notice-link]')).to_have_count(1)
             assert parse_qs(urlsplit(page.url).query).get('view') == ['saved']
             page.locator('.notice-channel-link').click()
+            expect(page.locator('#sourcePanel')).to_be_visible()
+            expect(page.locator('#sourceQuery')).to_have_value('')
+            expect(page.locator(f'[data-department][value="{student.id}"]')).to_be_visible()
             assert parse_qs(urlsplit(page.url).query).get('view') == ['saved']
 
-            page.goto('http://localhost/channels')
-            page.locator('#channelQuery').fill('不存在的发布站点')
-            page.get_by_role('button', name='查找渠道', exact=True).click()
-            expect(page.get_by_role('heading', name='没有匹配的发布渠道')).to_be_visible()
-            page.get_by_role('link', name='查看全部渠道', exact=True).click()
-            expect(page.locator('.channel-school')).to_have_count(1)
+            # Old links reach the inbox; a separate channel page is no longer needed.
+            # Playwright does not route the follow-up request after a fulfilled redirect.
+            legacy = fixture.client.get(f'/channels?school={school_id}&view=saved')
+            assert legacy.status_code == 302
+            page.goto('http://localhost' + legacy.headers['Location'])
+            assert urlsplit(page.url).path == '/'
+            assert parse_qs(urlsplit(page.url).query).get('view') == ['saved']
+            expect(page.locator('#sourcePanel')).to_be_visible()
+            expect(page.locator('a[href^="/channels"]')).to_have_count(0)
+            expect(page.locator('[data-notice-link]')).to_have_count(1)
             assert not errors and not external, (errors, external)
             results.append({'width': width, 'theme': theme, 'distinct_publishers': True,
                             'multiple_publications': True, 'single_source_navigation': True,
-                            'saved_scope_preserved': True, 'overflow': False})
+                            'saved_scope_preserved': True, 'sidebar_only': True, 'overflow': False})
             page.close()
         finally:
             fixture.tearDown()

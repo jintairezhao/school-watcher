@@ -7,8 +7,9 @@ import json
 from bs4 import BeautifulSoup, NavigableString
 from backend.database.db import db
 from backend.database.source_governance_models import DiscoveryWorkItem
+from backend.services.discovery_policy import DEFAULTS, get_policy
 
-MATERIAL_BYTES = 24 * 1024
+MATERIAL_BYTES = DEFAULTS['evidence_max_bytes']
 MAX_ATTEMPTS = 3
 RETRY_DELAYS = (30, 120)
 BLOCKING_CODES = {'authentication_failed', 'budget_exhausted', 'not_configured', 'configuration_changed',
@@ -103,15 +104,16 @@ def partition(evidence, mode):
     """Bound the entire serialized request, retaining every material fragment."""
     from backend.ai.skill_loader import canonical
     size = lambda value: len(canonical(value).encode('utf-8'))
-    candidate_limit = 1 if mode == 'extraction' else 8
+    material_bytes = int(get_policy()['evidence_max_bytes'])
+    candidate_limit = 1 if mode == 'extraction' else max(1, min(8, int(get_policy()['navigation_batch_size'])))
     def explicit_urls(candidates, refs):
         return {url for url in [*(ref.get('url') for ref in refs),
             *(candidate.get('url') or candidate.get('config', {}).get('list_url') for candidate in candidates)]
             if isinstance(url, str) and url.startswith(('http://', 'https://'))}
-    if size(evidence) <= MATERIAL_BYTES and len(evidence['candidates']) <= candidate_limit:
+    if size(evidence) <= material_bytes and len(evidence['candidates']) <= candidate_limit:
         request = deepcopy(evidence)
         request['observed_urls'] = sorted(set(request.get('observed_urls', [])) | explicit_urls(request['candidates'], request['evidence']))
-        if size(request) <= MATERIAL_BYTES:
+        if size(request) <= material_bytes:
             return [request]
     base = {'school_id': evidence['school_id'], 'entities': evidence.get('entities', [])}
     pieces = []
@@ -154,7 +156,7 @@ def partition(evidence, mode):
             request['observed_urls'] = sorted({url for url in evidence.get('observed_urls', []) if url in corpus or url in linked}
                 | explicit_urls(candidates, [ref]))
             # Always retain explicit candidate addresses for evidence-bound operations.
-            if size(request) > MATERIAL_BYTES:
+            if size(request) > material_bytes:
                 raise ValueError('material_metadata_exceeds_24kib')
             result.append(request)
     return result
@@ -211,7 +213,7 @@ def extraction_suggestion(accepted, evidence, *, complete=False):
     if actions:
         result = deepcopy(owner)
         result['decision'] = 'explore'
-        result['actions'] = sorted(actions, key=lambda a: a.get('type') != 'read_page')[:3]
+        result['actions'] = sorted(actions, key=lambda a: a.get('type') != 'read_page')[:max(1, int(get_policy()['ai_decision_read_limit']))]
         return result, ''
     if complete and accepted:
         priority = {'choose': 0, 'review': 1, 'explore': 2, 'not_column': 3}
@@ -299,7 +301,12 @@ def prepare(school_id, generation, group_key, mode, evidence):
         identity = fingerprint([school_id, generation, group_key, candidate['candidate_id'], digest])
         row = DiscoveryWorkItem.query.filter_by(identity=identity).first()
         if row is None:
-            attempts = max((r.attempts for r in previous if r.candidate_id == candidate['candidate_id']), default=0)
+            history = [r for r in previous if r.candidate_id == candidate['candidate_id']]
+            # Successfully interpreting one snapshot does not spend the retry
+            # allowance of newly acquired material. Failed interpretations keep
+            # their count; the school's shared request/token budget never resets.
+            latest = max(history, key=lambda r: r.id, default=None)
+            attempts = 0 if latest and latest.result_json else max((r.attempts for r in history), default=0)
             row = DiscoveryWorkItem(identity=identity, school_id=school_id, generation=generation,
                 group_key=group_key, candidate_id=candidate['candidate_id'], kind=mode,
                 reference_url=(evidence.get('evidence') or [{}])[0].get('url', ''),

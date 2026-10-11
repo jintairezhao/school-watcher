@@ -1,0 +1,54 @@
+{
+  "version": "2.6",
+  "build_scope": "local_windows_x64_v15",
+  "runtime_checks": {
+    "version": "2.6",
+    "status": "passed",
+    "web": true,
+    "chromium": true
+  },
+  "gui_checks": {
+    "status": "passed",
+    "native_window": true,
+    "version": "2.6"
+  },
+  "upgrade_checks": {
+    "program_path_inherited": true,
+    "all_data_paths_retained": true,
+    "personal_files_unchanged": true,
+    "shortcut_selection_retained": true,
+    "no_location_configuration_on_update": true,
+    "automatic_restart": true,
+    "manual_download_skips_wizard": true,
+    "waits_for_previous_process": true,
+    "missing_original_installation_refused": true
+  },
+  "sizes": {
+    "version": "2.6",
+    "artifacts": [
+      {
+        "name": "School-Watcher-2.6-windows-x64-portable.zip",
+        "bytes": 84967325,
+        "mb": 84.97,
+        "mib": 81.03,
+        "mb_exact": 84.967325,
+        "mib_exact": 81.03115558624268
+      },
+      {
+        "name": "School-Watcher-2.6-windows-x64-setup.exe",
+        "bytes": 66085795,
+        "mb": 66.09,
+        "mib": 63.02,
+        "soft_target_bytes": 100000000,
+        "above_soft_target": false,
+        "mb_exact": 66.085795,
+        "mib_exact": 63.024325370788574
+      }
+    ]
+  },
+  "notes": [
+    "Local build uses pinned dependencies in an isolated environment.",
+    "Published packages are rebuilt from the reviewed main commit by CI; their sizes can differ.",
+    "macOS requires actual separate CI artifacts; no inferred macOS sizes."
+  ]
+}

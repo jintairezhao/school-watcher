@@ -32,11 +32,11 @@ def usage_dashboard(days=30, offset_minutes=0, *, now=None):
     # Only select metadata needed by the charts; prompts, outputs and keys never leave the DB.
     rows = db.session.query(AIExecution.created_at, AIExecution.provider, AIExecution.model,
                             AIExecution.purpose, AIExecution.skill_id, AIExecution.status,
-                            AIExecution.usage).filter(
+                            AIExecution.usage, AIExecution.request_sent).filter(
         AIExecution.created_at <= now).yield_per(1000)
     for row in rows:
         # Reserved requests may not have been dispatched yet.
-        if row.status == 'reserved':
+        if not row.request_sent:
             continue
         date = (row.created_at + offset).date()
         history_start = min(history_start, date) if history_start else date

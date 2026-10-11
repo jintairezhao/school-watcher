@@ -108,6 +108,17 @@ def scope_selector(parent):
     return locator(parent)
 
 
+def article_heading(heading, page_url):
+    """An observed CMS article link is not the name of its adjacent list."""
+    links = ([heading] if heading.name == 'a' else []) + heading.select('a[href]')
+    ancestor = heading.find_parent('a', href=True)
+    if ancestor is not None:
+        links.append(ancestor)
+    return any((target := resolve_page_link(page_url, link.get('href', '')))
+               and canonical_url(target) != canonical_url(page_url) and ARTICLE.search(target)
+               for link in links)
+
+
 def wrapped_heading(first_item):
     """Traverse empty layout wrappers, stopping before adjacent content widgets."""
     branch = first_item.parent
@@ -281,6 +292,9 @@ def heading_evidence(first_item, url, tabs=None):
     if not (2 <= len(label) <= 40 and label not in SKIP):
         label = ''
     column_url, column_locator = '', ''
+    heading_article_reference = article_heading(label_node, url)
+    if heading_article_reference:
+        label = ''
     for link in links:
         href = link.get('href', '').strip()
         if not resolve_page_link(url, href):
@@ -308,8 +322,9 @@ def heading_evidence(first_item, url, tabs=None):
                 choices[target] = locator(link)
         if len(choices) == 1:
             column_url, column_locator = next(iter(choices.items()))
-    return {'name': label, 'heading_locator': locator(label_node) if label else '',
-            'column_url': column_url, 'column_link_locator': column_locator}
+    return {'name': label, 'heading_locator': locator(label_node) if label or heading_article_reference else '',
+            'column_url': column_url, 'column_link_locator': column_locator,
+            **({'heading_article_reference': True} if heading_article_reference else {})}
 
 
 def samples_for(items, config, url):
@@ -357,7 +372,7 @@ def samples_for(items, config, url):
 def publication_lists(html, url):
     soup = BeautifulSoup(html, 'lxml')
     from .wordpress_publications import POST_LIST, page_kind
-    if page_kind(soup) in ('article', 'search'):
+    if page_kind(soup) in ('article', 'attachment', 'search'):
         return []
     from .major_directories import major_scopes
     reviewed_majors = major_scopes(soup, url)

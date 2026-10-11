@@ -19,6 +19,7 @@
         <p id="discoveryStages" class="text-muted">正在处理 {{ discovery.processing_count }} 个后台任务</p>
         <p id="discoveryChanges" class="text-muted"></p>
         <p id="discoveryAI" class="text-muted">{{ discovery.ai_message }}</p>
+        <p id="discoveryAIUsage" class="text-muted" hidden></p>
         <details id="discoveryGaps"{% if not discovery.incomplete_reasons %} hidden{% endif %}><summary>暂未读取的页面</summary><ul id="discoveryGapList">{% for reason in discovery.incomplete_reasons %}<li>{{ reason }}</li>{% endfor %}</ul></details>
         <p id="discoveryCurrent" class="text-muted"></p>
         <div class="discovery-actions">

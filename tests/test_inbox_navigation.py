@@ -9,7 +9,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def dept(ident, name, group='组织机构', school=1):
-    return SimpleNamespace(id=ident, name=name, group_name=group, school_id=school)
+    return SimpleNamespace(id=ident, name=name, group_name=group, school_id=school,
+                           list_url='https://school.example/' + name.split('-')[0] + '/')
 
 
 class SourceHierarchyTests(unittest.TestCase):
@@ -62,6 +63,23 @@ class SourceHierarchyTests(unittest.TestCase):
         unit = source_hierarchy([child], [child, foreign])['组织机构'][0]
         self.assertFalse(unit['expandable'])
         self.assertEqual(unit['name'], child.name)
+
+    def test_name_prefix_at_another_website_cannot_supply_parent(self):
+        from backend.services.inbox import source_hierarchy
+        parent, child = dept(1, '工程学院'), dept(2, '工程学院-通知公告')
+        parent.list_url, child.list_url = 'https://north.example.edu.cn/', 'https://south.example.edu.cn/notices/'
+        unit = source_hierarchy([child], [parent, child])['组织机构'][0]
+        self.assertEqual(unit['name'], child.name)
+        self.assertFalse(unit['expandable'])
+
+    def test_same_named_legacy_parents_must_be_unambiguous_within_website(self):
+        from backend.services.inbox import source_hierarchy
+        first, second, child = dept(1, '工程学院'), dept(2, '工程学院'), dept(3, '工程学院-通知公告')
+        first.list_url = second.list_url = 'https://engineering.example.edu.cn/'
+        child.list_url = 'https://engineering.example.edu.cn/notices/'
+        unit = source_hierarchy([child], [first, second, child])['组织机构'][0]
+        self.assertEqual(unit['name'], child.name)
+        self.assertFalse(unit['expandable'])
 
     @patch('backend.services.source_placements.official_source_placements')
     def test_official_parent_replaces_flat_college_group_without_merging_unknown_entry(self, placements):

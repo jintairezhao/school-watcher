@@ -94,7 +94,8 @@ def adapt_site(name, root_url, *, monthly=False):
                        if canonical_url(s.url) == canonical_url(root_url)), None)
         handle = tasks.current_execution()
         checkpoint = dict((handle or {}).get('checkpoint') or {})
-        page_budget = max(1, int(current_app.config.get('DISCOVERY_PAGE_BUDGET', 40)))
+        from backend.services.discovery_policy import get_policy
+        slice_pages = max(1, int(get_policy()['discovery_slice_pages']))
         checked_this_round = checkpoint.get('student_scan_pages', 0)
         starting = not checkpoint.get('student_scan_started')
         pending_before = inventory.report(key)['states'].get('pending', 0)
@@ -139,7 +140,7 @@ def adapt_site(name, root_url, *, monthly=False):
                     sync_official_structure(school, catalog)
                     queued_columns.extend(queue_columns(school.id, inventory, key)['onboarding_ids'])
         background_retry = starting and (handle or {}).get('payload', {}).get('trigger') == 'background_discovery'
-        result = crawl_site(inventory, key, max_pages=min(3, max(0, page_budget - checked_this_round)), workers=2,
+        result = crawl_site(inventory, key, max_pages=slice_pages, workers=2,
                             focus='valuable', retry_failed=monthly or background_retry, progress=progress)
         checked_this_round += result.get('processed_this_run', 0)
         from backend.services.discovery_control import pause_if_requested
@@ -162,8 +163,6 @@ def adapt_site(name, root_url, *, monthly=False):
         pending = result['states'].get('pending', 0) + result['states'].get('running', 0)
         with inventory.connect() as connection:
             deferred_routes = connection.execute("SELECT count(*) FROM edges WHERE site_key=? AND decision='navigation_pending'", (key,)).fetchone()[0]
-        page_limited = bool(pending and checked_this_round >= page_budget)
-        limited = page_limited or bool((handle or {}).get('checkpoint', {}).get('navigation_budget_limited'))
         entry = next((p for p in result['pages'] if p['kind'] == 'root' and p['state'] in ('failed', 'blocked')), None)
         entry_failure = ({'reason': entry.get('error') or '学校官网暂未读取成功',
                           'status_code': entry.get('status_code'), 'health': entry.get('health')}
@@ -172,13 +171,14 @@ def adapt_site(name, root_url, *, monthly=False):
             tasks.checkpoint(dict(handle.get('checkpoint') or {}, first_slice_finished=True))
         from backend.services.discovery_changes import counts
         changes = counts(result)
-        record_progress(phase='complete' if page_limited else 'crawl' if pending or governance['remaining_candidates'] else 'complete',
-                        entry_failure=entry_failure, changes=changes, exploration_limited=limited,
-                        deferred_pages=pending if page_limited else 0)
+        record_progress(phase='crawl' if pending or governance['remaining_candidates'] else 'complete',
+                        entry_failure=entry_failure, changes=changes, exploration_limited=False,
+                        deferred_pages=pending)
         return {'departments': catalog.candidates(key), 'pending_pages': pending,
+                'pending_delay_seconds': inventory.next_pending_delay(key),
                 'changes': changes,
                 'entry_failure': entry_failure,
-                'continuation_required': bool(pending or governance['remaining_candidates']) and not page_limited, **governance,
-                'discovery_policy': 'student-routes-1', 'exploration_limited': limited,
-                'deferred_pages': pending if page_limited else 0, 'deferred_routes': deferred_routes,
-                'coverage_verified': False, 'message': '本轮优先信息已检查，其他线索已保留供后续自动补充' if limited else '已找到的信息正在接入，继续寻找对学生有用的内容'}
+                'continuation_required': bool(pending or governance['remaining_candidates']), **governance,
+                'discovery_policy': 'student-routes-2', 'exploration_limited': False,
+                'deferred_pages': pending, 'deferred_routes': deferred_routes,
+                'coverage_verified': False, 'message': '已找到的信息正在接入，剩余官网入口已保存并继续处理'}

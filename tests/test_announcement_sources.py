@@ -18,6 +18,20 @@ class MembershipTests(unittest.TestCase):
     write = fixture.LightweightTests.write
     state = fixture.LightweightTests.state
 
+    def test_public_pdf_view_saves_the_actual_attachment_link_without_fabricated_body(self):
+        from backend.services.content_cache import fetch_content
+        from backend.scraper.acquisition import FetchResult, FetchedHTML
+        self.notice.url = 'https://example.edu.cn/files/notice.pdf'
+        db.session.commit()
+        observed = FetchedHTML(FetchResult(self.notice.url, status=200, outcome='usable', attachment={
+            'verified': True, 'format': 'pdf', 'filename': '真实通知.pdf', 'bytes': 500, 'sha256': 'a' * 64}))
+        with patch('backend.scraper.engine._fetch_html', return_value=observed):
+            result = fetch_content(self.notice.id)
+        self.assertTrue(result['saved'])
+        self.assertIn(self.notice.url, self.notice.content_html)
+        self.assertIn('真实通知.pdf', self.notice.content_text)
+        self.assertFalse(self.notice.content_error)
+
     def test_reader_keeps_original_signature_separate_from_current_column(self):
         from test_article_provenance import article
         self.teaching.name = '院内新闻'

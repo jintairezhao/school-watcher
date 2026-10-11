@@ -2,6 +2,7 @@
 import asyncio
 import hashlib
 import os
+import re
 import time
 from urllib.parse import urlsplit
 
@@ -13,8 +14,8 @@ class OriginAdmission:
         self.url = os.environ.get('WATCHER_ORIGIN_BROKER_URL', '').rstrip('/')
         self.secret = os.environ.get('WATCHER_BROWSER_TOKEN', '')
         self.initial = (urlsplit(payload['url']).hostname or '').lower().rstrip('.')
-        self.identity = payload.get('request_id') or hashlib.sha256(
-            (str(payload.get('id')) + ':' + str(payload.get('generation'))).encode()).hexdigest()
+        identity = str(payload.get('request_id') or (str(payload.get('id')) + ':' + str(payload.get('generation'))))
+        self.identity = identity if re.fullmatch(r'[a-f0-9]{64}', identity) else hashlib.sha256(identity.encode()).hexdigest()
         self.ttl = ttl
         self.tokens = set()
         self.lock = asyncio.Lock()
@@ -38,10 +39,18 @@ class OriginAdmission:
                 return
             if len(self.tokens) >= 32:
                 raise RuntimeError('Too many document origins')
-            result = await self._request('reserve', {'url': url, 'token': token, 'ttl': self.ttl})
+            result = await self._request('reserve', {'url': url, 'token': token,
+                                                   'execution_id': self.identity, 'ttl': self.ttl})
             if not result.get('allowed'):
                 raise OriginBusy(result.get('retry_after', 2))
             self.tokens.add(token)
+
+    async def cooldown(self, url, headers, status):
+        from backend.scraper.http_client import retry_after_seconds
+        seconds = retry_after_seconds(headers.get('retry-after') or headers.get('Retry-After'))
+        if self.url and (seconds is not None or status == 429):
+            await self._request('cooldown', {'url': url, 'token': self.identity,
+                                            'seconds': seconds if seconds is not None else 300})
 
     async def close(self):
         if self.url:

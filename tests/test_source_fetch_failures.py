@@ -8,21 +8,21 @@ from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import requests
 from backend.scraper.engine import _fetch_html
+from backend.scraper.acquisition import FetchResult
 from backend.services.source_collection import fetch_source_page,SourceAccessError
 
 
 class FetchFailureTests(unittest.TestCase):
     def test_configured_source_does_not_hide_dns_failure_as_empty_html(self):
-        with patch.dict(os.environ,{'WATCHER_BROWSER':'0'}),patch('backend.scraper.engine.requests.get',
+        with patch.dict(os.environ,{'WATCHER_BROWSER':'0'}),patch('backend.scraper.acquisition.http_transport.public_addresses',
                 side_effect=ValueError('No public IPv4 address could be verified')):
             with self.assertRaisesRegex(RuntimeError,'公网地址'):
                 _fetch_html('https://www.example.edu.cn/',raise_fetch_errors=True)
             self.assertEqual(_fetch_html('https://www.example.edu.cn/'),'')
 
     def test_access_challenge_has_no_immediate_retry(self):
-        response=requests.Response();response.status_code=202
-        response._content=b'<script>$_ts={};</script>';response._content_consumed=True
-        with patch.dict(os.environ,{'WATCHER_BROWSER':'0'}),patch('backend.scraper.engine.requests.get',return_value=response):
+        response=FetchResult('https://www.example.edu.cn/', status=202, html='<script>$_ts={};</script>')
+        with patch.dict(os.environ,{'WATCHER_BROWSER':'0'}),patch('backend.scraper.acquisition.coordinator.http_fetch',return_value=response):
             with self.assertRaisesRegex(SourceAccessError,'访问校验') as caught:
                 _fetch_html('https://www.example.edu.cn/',raise_fetch_errors=True)
             self.assertFalse(caught.exception.retryable)

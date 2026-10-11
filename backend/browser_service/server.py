@@ -15,7 +15,7 @@ def create_service(runtime=None, token=None, public_origin=None):
         raise ValueError('WATCHER_BROWSER_TOKEN must contain at least 32 characters')
     public_origin = (public_origin or os.environ.get('WATCHER_PUBLIC_ORIGIN', '')).rstrip('/')
     runtime = runtime or BrowserRuntime(
-        concurrency=int(os.environ.get('WATCHER_BROWSER_CONCURRENCY', '1')),
+        concurrency=int(os.environ['WATCHER_BROWSER_CONCURRENCY']) if os.environ.get('WATCHER_BROWSER_CONCURRENCY') else None,
         max_sessions=int(os.environ.get('WATCHER_BROWSER_MAX_SESSIONS', '8')),
         max_executions=int(os.environ.get('WATCHER_BROWSER_MAX_EXECUTIONS', '128')))
 

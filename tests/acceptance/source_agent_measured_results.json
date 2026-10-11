@@ -1,0 +1,1562 @@
+{
+  "date": "2026-10-11",
+  "model": "deepseek-flash",
+  "per_school_same_round_limits": {
+    "actual_requests": 40,
+    "tokens": 200000
+  },
+  "notes": [
+    "Installed rows are not automatically correct sources. Known incorrect historical rows remain in isolated measurement databases; the new validator rejects them without deleting history.",
+    "Historical versions are tuning and regression evidence, not results from one uniform final implementation. WHU resumed the same ledger across versions v8 and v10.",
+    "Windows are sequential live reads at different times; elapsed values measure observation windows, not equal-coverage speed.",
+    "Counters include admission deferrals and evidence lookups. Snapshot lookups are not a cache avoidance percentage; transport attempts are not proof of delivery.",
+    "Reference counts describe reviewed official sources, not Agent connections."
+  ],
+  "runs": [
+    {
+      "run": "baseline-cupk",
+      "school": "中国石油大学（北京）克拉玛依校区",
+      "started_at": "2026-10-03T20:08:32.741667Z",
+      "ended_at": "2026-10-03T20:18:39.616872Z",
+      "elapsed_seconds": 606.864,
+      "measurement_windows": [],
+      "actual_requests": 7,
+      "actual_tokens": 31913,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 0,
+      "logical_page_attempts": 29,
+      "task_fetch_cache_hits": 1,
+      "discovery_snapshot_lookups": 0,
+      "installed_rule_rows": 0,
+      "notice_rows": 0,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "render",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 13
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "school": "华中科技大学",
+      "started_at": "2026-10-03T20:54:15.440662Z",
+      "ended_at": "2026-10-03T21:05:03.545499Z",
+      "elapsed_seconds": 648.008,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-03T20:54:15.440689Z",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-03T21:05:03.545499Z",
+          "last_http_index": 96,
+          "last_task_cache_hits": 71,
+          "last_discovery_cache_hits": 1192
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 121522,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 96,
+      "logical_page_attempts": 96,
+      "task_fetch_cache_hits": 71,
+      "discovery_snapshot_lookups": 1192,
+      "installed_rule_rows": 10,
+      "notice_rows": 98,
+      "validation_trial_errors": {
+        "column_identity_or_scope_unconfirmed": 35,
+        "invalid_list_item": 9,
+        "article_sample_mismatch": 15,
+        "duplicate_list_items": 12
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 14
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 11
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 13
+        }
+      ]
+    },
+    {
+      "run": "baseline-hust",
+      "school": "华中科技大学",
+      "started_at": "2026-10-03T20:19:09.661099Z",
+      "ended_at": "2026-10-03T20:29:31.211871Z",
+      "elapsed_seconds": 621.54,
+      "measurement_windows": [],
+      "actual_requests": 15,
+      "actual_tokens": 61526,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 0,
+      "logical_page_attempts": 46,
+      "task_fetch_cache_hits": 0,
+      "discovery_snapshot_lookups": 0,
+      "installed_rule_rows": 11,
+      "notice_rows": 93,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 2
+        },
+        {
+          "kind": "navigation_review",
+          "state": "pending",
+          "phase": "ai_resource",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 9
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "run": "baseline-sjtu",
+      "school": "上海交通大学",
+      "started_at": "2026-10-03T20:29:05.797758Z",
+      "ended_at": "2026-10-03T20:39:06.100046Z",
+      "elapsed_seconds": 600.291,
+      "measurement_windows": [],
+      "actual_requests": 28,
+      "actual_tokens": 117206,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 0,
+      "logical_page_attempts": 267,
+      "task_fetch_cache_hits": 94,
+      "discovery_snapshot_lookups": 0,
+      "installed_rule_rows": 0,
+      "notice_rows": 0,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 8
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 18
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "origin_wait",
+          "error_code": "origin_busy",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-sjtu",
+      "school": "上海交通大学",
+      "started_at": "2026-10-03T20:54:15.440386Z",
+      "ended_at": "2026-10-03T21:04:15.616726Z",
+      "elapsed_seconds": 600.081,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-03T20:54:15.440413Z",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-03T21:04:15.616726Z",
+          "last_http_index": 182,
+          "last_task_cache_hits": 189,
+          "last_discovery_cache_hits": 509
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 183843,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 182,
+      "logical_page_attempts": 269,
+      "task_fetch_cache_hits": 189,
+      "discovery_snapshot_lookups": 509,
+      "installed_rule_rows": 0,
+      "notice_rows": 0,
+      "validation_trial_errors": {
+        "article_sample_mismatch": 33,
+        "column_identity_or_scope_unconfirmed": 30,
+        "invalid_list_item": 13
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 2
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 10
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 11
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "origin_wait",
+          "error_code": "origin_busy",
+          "count": 4
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "run": "baseline-zju",
+      "school": "浙江大学",
+      "started_at": "2026-10-11T02:28:00.207007Z",
+      "ended_at": "2026-10-11T02:29:20.507949Z",
+      "elapsed_seconds": 80.067,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T02:28:00.207033Z",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T02:29:20.507949Z",
+          "last_http_index": 6,
+          "last_task_cache_hits": 0,
+          "last_discovery_cache_hits": 0
+        }
+      ],
+      "actual_requests": 0,
+      "actual_tokens": 0,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 6,
+      "logical_page_attempts": 6,
+      "task_fetch_cache_hits": 0,
+      "discovery_snapshot_lookups": 0,
+      "installed_rule_rows": 0,
+      "notice_rows": 0,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "run": "candidate-v2-zju",
+      "school": "浙江大学",
+      "started_at": "2026-10-11T02:33:57.952762Z",
+      "ended_at": "2026-10-11T02:35:02.296377Z",
+      "elapsed_seconds": 64.255,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T02:33:57.952793Z",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T02:35:02.296377Z",
+          "last_http_index": 2,
+          "last_task_cache_hits": 2,
+          "last_discovery_cache_hits": 0
+        }
+      ],
+      "actual_requests": 0,
+      "actual_tokens": 0,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 2,
+      "logical_page_attempts": 2,
+      "task_fetch_cache_hits": 2,
+      "discovery_snapshot_lookups": 0,
+      "installed_rule_rows": 0,
+      "notice_rows": 0,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "run": "baseline-ustc",
+      "school": "中国科学技术大学",
+      "started_at": "2026-10-11T02:35:31.978590Z",
+      "ended_at": "2026-10-11T02:43:10.210758Z",
+      "elapsed_seconds": 458.143,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T02:35:31.978616Z",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T02:43:10.210758Z",
+          "last_http_index": 265,
+          "last_task_cache_hits": 2,
+          "last_discovery_cache_hits": 750
+        }
+      ],
+      "actual_requests": 38,
+      "actual_tokens": 158512,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 265,
+      "logical_page_attempts": 299,
+      "task_fetch_cache_hits": 2,
+      "discovery_snapshot_lookups": 750,
+      "installed_rule_rows": 6,
+      "notice_rows": 76,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 8
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 28
+        }
+      ]
+    },
+    {
+      "run": "candidate-v4-ustc",
+      "school": "中国科学技术大学",
+      "started_at": "2026-10-11T02:56:42.425883Z",
+      "ended_at": "2026-10-11T03:06:43.160136Z",
+      "elapsed_seconds": 600.593,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T02:56:42.425908Z",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T03:06:43.160136Z",
+          "last_http_index": 174,
+          "last_task_cache_hits": 3,
+          "last_discovery_cache_hits": 4786
+        }
+      ],
+      "actual_requests": 37,
+      "actual_tokens": 188578,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 174,
+      "logical_page_attempts": 174,
+      "task_fetch_cache_hits": 3,
+      "discovery_snapshot_lookups": 4786,
+      "installed_rule_rows": 17,
+      "notice_rows": 10,
+      "validation_trial_errors": {
+        "column_identity_or_scope_unconfirmed": 36,
+        "invalid_publication_date": 27,
+        "invalid_list_item": 6,
+        "article_sample_mismatch": 3,
+        "pagination_repeats_first_page": 1
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 6
+        },
+        {
+          "kind": "navigation_review",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 13
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 37
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 21
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 2
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 59
+        }
+      ]
+    },
+    {
+      "run": "baseline-pku",
+      "school": "北京大学",
+      "started_at": "2026-10-11T03:03:39.609101Z",
+      "ended_at": "2026-10-11T03:10:33.072354Z",
+      "elapsed_seconds": 413.377,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T03:03:39.609127Z",
+          "snapshot_sha256": null,
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T03:10:33.072354Z",
+          "last_http_index": 154,
+          "last_task_cache_hits": 4,
+          "last_discovery_cache_hits": 885
+        }
+      ],
+      "actual_requests": 38,
+      "actual_tokens": 179280,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 154,
+      "logical_page_attempts": 140,
+      "task_fetch_cache_hits": 4,
+      "discovery_snapshot_lookups": 885,
+      "installed_rule_rows": 3,
+      "notice_rows": 46,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 8
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 34
+        }
+      ]
+    },
+    {
+      "run": "candidate-v5-pku",
+      "school": "北京大学",
+      "started_at": "2026-10-11T03:14:53.505286Z",
+      "ended_at": "2026-10-11T03:24:53.624945Z",
+      "elapsed_seconds": 600.027,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T03:14:53.505310Z",
+          "snapshot_sha256": "2902c10a96a73c4eb89f94e5f50fd2e87b576819f94f0dc9520974e3926f4432",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T03:24:53.624945Z",
+          "last_http_index": 196,
+          "last_task_cache_hits": 74,
+          "last_discovery_cache_hits": 2685
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 176728,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 196,
+      "logical_page_attempts": 208,
+      "task_fetch_cache_hits": 74,
+      "discovery_snapshot_lookups": 2685,
+      "installed_rule_rows": 0,
+      "notice_rows": 0,
+      "validation_trial_errors": {
+        "article_sample_mismatch": 31,
+        "column_identity_or_scope_unconfirmed": 12
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "render",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 8
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 26
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 9
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 39
+        }
+      ]
+    },
+    {
+      "run": "baseline-nju",
+      "school": "南京大学",
+      "started_at": "2026-10-11T03:29:23.885351Z",
+      "ended_at": "2026-10-11T03:37:14.522809Z",
+      "elapsed_seconds": 470.546,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T03:29:23.885365Z",
+          "snapshot_sha256": null,
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T03:37:14.522809Z",
+          "last_http_index": 44,
+          "last_task_cache_hits": 13,
+          "last_discovery_cache_hits": 1048
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 182938,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 44,
+      "logical_page_attempts": 43,
+      "task_fetch_cache_hits": 13,
+      "discovery_snapshot_lookups": 1048,
+      "installed_rule_rows": 2,
+      "notice_rows": 16,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 8
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 37
+        }
+      ]
+    },
+    {
+      "run": "candidate-v7-nju",
+      "school": "南京大学",
+      "started_at": "2026-10-11T03:38:02.972092Z",
+      "ended_at": "2026-10-11T03:48:05.918972Z",
+      "elapsed_seconds": 602.85,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T03:38:02.972102Z",
+          "snapshot_sha256": "c7b059adec511d86d751d5d75afb875f51acd0b4b30da3d66b064ad919e498f7",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T03:48:05.918972Z",
+          "last_http_index": 30,
+          "last_task_cache_hits": 14,
+          "last_discovery_cache_hits": 516
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 178936,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 30,
+      "logical_page_attempts": 75,
+      "task_fetch_cache_hits": 14,
+      "discovery_snapshot_lookups": 516,
+      "installed_rule_rows": 1,
+      "notice_rows": 14,
+      "validation_trial_errors": {
+        "column_identity_or_scope_unconfirmed": 12,
+        "article_sample_mismatch": 3,
+        "invalid_publication_date": 11
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 4
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 6
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "run": "baseline-whu",
+      "school": "武汉大学",
+      "started_at": "2026-10-11T06:01:56.121346Z",
+      "ended_at": "2026-10-11T06:07:44.873770Z",
+      "elapsed_seconds": 348.66,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T06:01:56.121371Z",
+          "snapshot_sha256": null,
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T06:07:44.873770Z",
+          "last_http_index": 110,
+          "last_task_cache_hits": 3,
+          "last_discovery_cache_hits": 977
+        }
+      ],
+      "actual_requests": 37,
+      "actual_tokens": 152387,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 110,
+      "logical_page_attempts": 68,
+      "task_fetch_cache_hits": 3,
+      "discovery_snapshot_lookups": 977,
+      "installed_rule_rows": 18,
+      "notice_rows": 126,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 8
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 35
+        }
+      ]
+    },
+    {
+      "run": "candidate-v8-whu",
+      "school": "武汉大学",
+      "started_at": "2026-10-11T06:08:49.706285Z",
+      "ended_at": "2026-10-11T06:43:06.195964Z",
+      "elapsed_seconds": 926.288,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T06:08:49.706307Z",
+          "snapshot_sha256": "c818d04cee373880ca2a62b13ced7ac5d73b3b25bcef2d3e26b446923674ccb1",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T06:19:11.501217Z",
+          "last_http_index": 284,
+          "last_task_cache_hits": 697,
+          "last_discovery_cache_hits": 926
+        },
+        {
+          "started_at": "2026-10-11T06:38:01.508854Z",
+          "snapshot_sha256": "f66365e1d0eeeb6f7ed6312149dbb76789264124fddbcf1ed5d05c06a663e96f",
+          "first_http_index": 284,
+          "first_task_cache_hits": 697,
+          "first_discovery_cache_hits": 926,
+          "ended_at": "2026-10-11T06:43:06.195964Z",
+          "last_http_index": 377,
+          "last_task_cache_hits": 770,
+          "last_discovery_cache_hits": 4483
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 169084,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 377,
+      "logical_page_attempts": 532,
+      "task_fetch_cache_hits": 770,
+      "discovery_snapshot_lookups": 4483,
+      "installed_rule_rows": 9,
+      "notice_rows": 68,
+      "validation_trial_errors": {
+        "article_sample_mismatch": 165,
+        "invalid_list_item": 2,
+        "column_identity_or_scope_unconfirmed": 5,
+        "invalid_publication_date": 5,
+        "article_fetch_unavailable": 3
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 3
+        },
+        {
+          "kind": "navigation_review",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 35
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 16
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 9
+        },
+        {
+          "kind": "onboard",
+          "state": "failed",
+          "phase": "complete",
+          "error_code": "http_connect_timeout",
+          "count": 1
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 3
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "origin_wait",
+          "error_code": "origin_busy",
+          "count": 2
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 56
+        }
+      ]
+    },
+    {
+      "run": "baseline-xjtu",
+      "school": "西安交通大学",
+      "started_at": "2026-10-11T06:26:39.780534Z",
+      "ended_at": "2026-10-11T06:35:42.800401Z",
+      "elapsed_seconds": 542.922,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T06:26:39.780560Z",
+          "snapshot_sha256": null,
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T06:35:42.800401Z",
+          "last_http_index": 212,
+          "last_task_cache_hits": 0,
+          "last_discovery_cache_hits": 735
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 129342,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 212,
+      "logical_page_attempts": 97,
+      "task_fetch_cache_hits": 0,
+      "discovery_snapshot_lookups": 735,
+      "installed_rule_rows": 11,
+      "notice_rows": 79,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 6
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 26
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-xjtu",
+      "school": "西安交通大学",
+      "started_at": "2026-10-11T06:51:36.279520Z",
+      "ended_at": "2026-10-11T07:01:36.895074Z",
+      "elapsed_seconds": 600.515,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T06:51:36.279545Z",
+          "snapshot_sha256": "c4360a7be9638df1262c69043b49c1134957a720294d9390a1916884a27cf241",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T07:01:36.895074Z",
+          "last_http_index": 141,
+          "last_task_cache_hits": 26,
+          "last_discovery_cache_hits": 1145
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 147090,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 141,
+      "logical_page_attempts": 149,
+      "task_fetch_cache_hits": 26,
+      "discovery_snapshot_lookups": 1145,
+      "installed_rule_rows": 0,
+      "notice_rows": 0,
+      "validation_trial_errors": {
+        "article_sample_mismatch": 4,
+        "column_identity_or_scope_unconfirmed": 17,
+        "invalid_list_item": 4,
+        "invalid_publication_date": 8,
+        "duplicate_list_items": 2
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 4
+        },
+        {
+          "kind": "navigation_review",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 67
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 6
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "run": "baseline-cqu",
+      "school": "重庆大学",
+      "started_at": "2026-10-11T07:12:08.251448Z",
+      "ended_at": "2026-10-11T07:18:04.509800Z",
+      "elapsed_seconds": 356.152,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T07:12:08.251479Z",
+          "snapshot_sha256": null,
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T07:18:04.509800Z",
+          "last_http_index": 121,
+          "last_task_cache_hits": 8,
+          "last_discovery_cache_hits": 862
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 121604,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 121,
+      "logical_page_attempts": 104,
+      "task_fetch_cache_hits": 8,
+      "discovery_snapshot_lookups": 862,
+      "installed_rule_rows": 1,
+      "notice_rows": 15,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 8
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 33
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-cqu",
+      "school": "重庆大学",
+      "started_at": "2026-10-11T07:18:55.740674Z",
+      "ended_at": "2026-10-11T07:28:55.647650Z",
+      "elapsed_seconds": 599.819,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T07:18:55.740697Z",
+          "snapshot_sha256": "c4360a7be9638df1262c69043b49c1134957a720294d9390a1916884a27cf241",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T07:28:55.647650Z",
+          "last_http_index": 138,
+          "last_task_cache_hits": 74,
+          "last_discovery_cache_hits": 4625
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 128927,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 138,
+      "logical_page_attempts": 137,
+      "task_fetch_cache_hits": 74,
+      "discovery_snapshot_lookups": 4625,
+      "installed_rule_rows": 7,
+      "notice_rows": 90,
+      "validation_trial_errors": {
+        "column_identity_or_scope_unconfirmed": 17,
+        "duplicate_list_items": 7,
+        "invalid_publication_date": 1,
+        "article_sample_mismatch": 2,
+        "pagination_repeats_first_page": 2
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "render",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 4
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 59
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 11
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 54
+        }
+      ]
+    },
+    {
+      "run": "baseline-nankai",
+      "school": "南开大学",
+      "started_at": "2026-10-11T08:21:20.528392Z",
+      "ended_at": "2026-10-11T08:33:47.681047Z",
+      "elapsed_seconds": 747.067,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T08:21:20.528421Z",
+          "snapshot_sha256": null,
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T08:33:47.681047Z",
+          "last_http_index": 146,
+          "last_task_cache_hits": 0,
+          "last_discovery_cache_hits": 113
+        }
+      ],
+      "actual_requests": 17,
+      "actual_tokens": 63947,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 146,
+      "logical_page_attempts": 36,
+      "task_fetch_cache_hits": 0,
+      "discovery_snapshot_lookups": 113,
+      "installed_rule_rows": 0,
+      "notice_rows": 0,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 3
+        },
+        {
+          "kind": "navigation_review",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 3
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 9
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "run": "candidate-v14-nankai",
+      "school": "南开大学",
+      "started_at": "2026-10-11T08:45:01.223278Z",
+      "ended_at": "2026-10-11T08:55:25.117450Z",
+      "elapsed_seconds": 623.795,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T08:45:01.223304Z",
+          "snapshot_sha256": "53abcf47835a7375c2f53f3e6363dd561de7e07f82d87ca5aac0add27d17ea4f",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T08:55:25.117450Z",
+          "last_http_index": 126,
+          "last_task_cache_hits": 58,
+          "last_discovery_cache_hits": 920
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 163345,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 126,
+      "logical_page_attempts": 133,
+      "task_fetch_cache_hits": 58,
+      "discovery_snapshot_lookups": 920,
+      "installed_rule_rows": 3,
+      "notice_rows": 24,
+      "validation_trial_errors": {
+        "column_identity_or_scope_unconfirmed": 138,
+        "invalid_publication_date": 20,
+        "invalid_list_item": 48,
+        "article_fetch_unavailable": 9,
+        "article_sample_mismatch": 3,
+        "list_missing": 1,
+        "pagination_fetch_unavailable": 1
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 7
+        },
+        {
+          "kind": "navigation_review",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 2
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 8
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 10
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "origin_wait",
+          "error_code": "origin_busy",
+          "count": 1
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "retry",
+          "error_code": "http_connect_timeout",
+          "count": 4
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 13
+        }
+      ]
+    },
+    {
+      "run": "baseline-sdu",
+      "school": "山东大学",
+      "started_at": "2026-10-11T08:34:20.739943Z",
+      "ended_at": "2026-10-11T08:44:30.885564Z",
+      "elapsed_seconds": 610.058,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T08:34:20.739968Z",
+          "snapshot_sha256": null,
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T08:44:30.885564Z",
+          "last_http_index": 189,
+          "last_task_cache_hits": 49,
+          "last_discovery_cache_hits": 976
+        }
+      ],
+      "actual_requests": 34,
+      "actual_tokens": 153081,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": false,
+      "http_transport_attempts": 189,
+      "logical_page_attempts": 140,
+      "task_fetch_cache_hits": 49,
+      "discovery_snapshot_lookups": 976,
+      "installed_rule_rows": 11,
+      "notice_rows": 70,
+      "validation_trial_errors": {},
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 5
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 25
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 5
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "origin_wait",
+          "error_code": "origin_busy",
+          "count": 1
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "render",
+          "error_code": "",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "run": "candidate-v14-sdu",
+      "school": "山东大学",
+      "started_at": "2026-10-11T08:56:31.200475Z",
+      "ended_at": "2026-10-11T09:06:35.391172Z",
+      "elapsed_seconds": 604.079,
+      "measurement_windows": [
+        {
+          "started_at": "2026-10-11T08:56:31.200500Z",
+          "snapshot_sha256": "53abcf47835a7375c2f53f3e6363dd561de7e07f82d87ca5aac0add27d17ea4f",
+          "first_http_index": 0,
+          "first_task_cache_hits": 0,
+          "first_discovery_cache_hits": 0,
+          "ended_at": "2026-10-11T09:06:35.391172Z",
+          "last_http_index": 102,
+          "last_task_cache_hits": 202,
+          "last_discovery_cache_hits": 1715
+        }
+      ],
+      "actual_requests": 40,
+      "actual_tokens": 122002,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "http_transport_attempts": 102,
+      "logical_page_attempts": 118,
+      "task_fetch_cache_hits": 202,
+      "discovery_snapshot_lookups": 1715,
+      "installed_rule_rows": 7,
+      "notice_rows": 54,
+      "validation_trial_errors": {
+        "column_identity_or_scope_unconfirmed": 17,
+        "article_sample_mismatch": 14,
+        "article_material_incomplete": 11,
+        "article_fetch_unavailable": 2,
+        "invalid_list_item": 3
+      },
+      "task_states": [
+        {
+          "kind": "discover",
+          "state": "pending",
+          "phase": "directory_slice",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "navigation_review",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 8
+        },
+        {
+          "kind": "navigation_review",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 6
+        },
+        {
+          "kind": "navigation_review",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 8
+        },
+        {
+          "kind": "onboard",
+          "state": "done",
+          "phase": "complete",
+          "error_code": "",
+          "count": 15
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "fetch",
+          "error_code": "",
+          "count": 2
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "origin_wait",
+          "error_code": "origin_busy",
+          "count": 1
+        },
+        {
+          "kind": "onboard",
+          "state": "pending",
+          "phase": "render",
+          "error_code": "",
+          "count": 1
+        },
+        {
+          "kind": "onboard",
+          "state": "waiting",
+          "phase": "ai_budget",
+          "error_code": "budget_exhausted",
+          "count": 26
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,712 @@
+{
+  "method": "Public metadata from completed candidate-v14 independent-school API runs; retained local projection fixture, not fresh network verification.",
+  "runs": [
+    {
+      "run": "candidate-v14-nankai",
+      "school": {
+        "id": 1,
+        "name": "南开大学",
+        "url": "https://www.nankai.edu.cn/"
+      },
+      "sources": [
+        {
+          "id": 1,
+          "name": "最新招聘及引进",
+          "kind": "column",
+          "list_url": "http://rsc.nankai.edu.cn/main.htm",
+          "group_name": "南开大学",
+          "list_selector": "#wp_news_w32 > li"
+        },
+        {
+          "id": 2,
+          "name": "招生政策",
+          "kind": "column",
+          "list_url": "https://zsb.nankai.edu.cn/Baokao/index.html",
+          "group_name": "",
+          "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(div.main li:has(a), div.content li:has(a), ul.list-tz li)"
+        },
+        {
+          "id": 3,
+          "name": "信息公开制度",
+          "kind": "column",
+          "list_url": "https://xxgk.nankai.edu.cn/",
+          "group_name": "南开大学",
+          "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > :is(ul.news-list li, ul.news_list li, ul.notice-list li)"
+        }
+      ],
+      "pages": [
+        {
+          "url": "http://rsc.nankai.edu.cn/main.htm",
+          "final_url": "http://rsc.nankai.edu.cn/main.htm",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "date_unknown",
+          "title": "人事处",
+          "content_hash": "0f3aaf4126702fec8c84c5de487a26a4777ea80b27d5b5878fb38d10254b65ad",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"6170351a455c39a981a2\\\", \\\"reference_url\\\": \\\"http://rsc.nankai.edu.cn/main.htm\\\", \\\"final_url\\\": \\\"http://rsc.nankai.edu.cn/main.htm\\\", \\\"content_hash\\\": \\\"0f3aaf4126702fec8c84c5de487a26a4777ea80b27d5b5878fb38d10254b65ad\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"人事处\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://xxgk.nankai.edu.cn/",
+          "final_url": "https://xxgk.nankai.edu.cn/",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "date_unknown",
+          "title": "信息公开网",
+          "content_hash": "397c3e50005b0a0fa80991c29d9952274d0895e9f54d0abc74595b6182afb7fc",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"6170351a455c39a981a2\\\", \\\"reference_url\\\": \\\"https://xxgk.nankai.edu.cn/\\\", \\\"final_url\\\": \\\"https://xxgk.nankai.edu.cn/\\\", \\\"content_hash\\\": \\\"397c3e50005b0a0fa80991c29d9952274d0895e9f54d0abc74595b6182afb7fc\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"信息公开网\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://zsb.nankai.edu.cn/",
+          "final_url": "https://zsb.nankai.edu.cn/",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "date_unknown",
+          "title": "南开大学本科招生网",
+          "content_hash": "02825cf60823d05fd15c40da74a407db47a02b0dd355d762607e5e2a96e52f9f",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"6170351a455c39a981a2\\\", \\\"reference_url\\\": \\\"https://zsb.nankai.edu.cn/\\\", \\\"final_url\\\": \\\"https://zsb.nankai.edu.cn/\\\", \\\"content_hash\\\": \\\"02825cf60823d05fd15c40da74a407db47a02b0dd355d762607e5e2a96e52f9f\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"南开大学本科招生网\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://zsb.nankai.edu.cn/Baokao/index.html",
+          "final_url": "https://zsb.nankai.edu.cn/Baokao/index.html",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "recent_publication",
+          "title": "招生政策|南开大学本科招生网",
+          "content_hash": "7727977ac99c5dec4beefcb3250f6e3d63849353ecdd695e9649eca151a6efd8",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"6170351a455c39a981a2\\\", \\\"reference_url\\\": \\\"https://zsb.nankai.edu.cn/Baokao/index.html\\\", \\\"final_url\\\": \\\"https://zsb.nankai.edu.cn/Baokao/index.html\\\", \\\"content_hash\\\": \\\"7727977ac99c5dec4beefcb3250f6e3d63849353ecdd695e9649eca151a6efd8\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"招生政策|南开大学本科招生网\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        }
+      ],
+      "paths": {
+        "http://rsc.nankai.edu.cn/main.htm": [
+          {
+            "unit_key": "school:6170351a455c39a981a2",
+            "unit_name": "南开大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.nankai.edu.cn/",
+                "title": "南开大学",
+                "content_hash": "9311698ec78a64d1931d5b533aeab53712b15a44c0ec4f0241a46781a32e17dd",
+                "checked_at": "2026-10-11T08:45:39+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(4) > a:nth-of-type(1)",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "人才招聘",
+            "entry_url": "http://rsc.nankai.edu.cn/main.htm",
+            "entry_nodes": [
+              {
+                "node_key": "fefe2ed5c16bd6dfa93b2c31",
+                "name": "人才师资",
+                "kind": "group",
+                "url": "https://www.nankai.edu.cn/218/list.htm",
+                "relation": "website_entrance"
+              }
+            ],
+            "entry_urls": [
+              "http://rsc.nankai.edu.cn/main.htm"
+            ],
+            "entry_names": [
+              "人才招聘"
+            ]
+          }
+        ],
+        "https://xxgk.nankai.edu.cn/": [
+          {
+            "unit_key": "school:6170351a455c39a981a2",
+            "unit_name": "南开大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.nankai.edu.cn/",
+                "title": "南开大学",
+                "content_hash": "9311698ec78a64d1931d5b533aeab53712b15a44c0ec4f0241a46781a32e17dd",
+                "checked_at": "2026-10-11T08:45:39+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "信息公开",
+            "entry_url": "https://xxgk.nankai.edu.cn/",
+            "entry_nodes": [],
+            "entry_urls": [
+              "https://xxgk.nankai.edu.cn/"
+            ],
+            "entry_names": [
+              "信息公开"
+            ]
+          }
+        ],
+        "https://zsb.nankai.edu.cn/": [
+          {
+            "unit_key": "school:6170351a455c39a981a2",
+            "unit_name": "南开大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.nankai.edu.cn/",
+                "title": "南开大学",
+                "content_hash": "9311698ec78a64d1931d5b533aeab53712b15a44c0ec4f0241a46781a32e17dd",
+                "checked_at": "2026-10-11T08:45:39+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(8) > a:nth-of-type(1)",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(8) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "本科招生",
+            "entry_url": "https://zsb.nankai.edu.cn/",
+            "entry_nodes": [
+              {
+                "node_key": "516000e51101bc77636f46e0",
+                "name": "招生就业",
+                "kind": "group",
+                "url": "https://www.nankai.edu.cn/239/list.htm",
+                "relation": "website_entrance"
+              }
+            ],
+            "entry_urls": [
+              "https://zsb.nankai.edu.cn/"
+            ],
+            "entry_names": [
+              "本科招生"
+            ]
+          }
+        ]
+      },
+      "expected_publishers": [
+        {
+          "source_id": 1,
+          "publisher_key": "site:5e20c32e262649afc06f99aa",
+          "publisher_label": "人事处",
+          "basis": "site_identity"
+        },
+        {
+          "source_id": 2,
+          "publisher_key": "site:050724371ec1831dbf505db7",
+          "publisher_label": "南开大学本科招生网",
+          "basis": "site_identity"
+        },
+        {
+          "source_id": 3,
+          "publisher_key": "page:55401ffa38e5fc12fca60945",
+          "publisher_label": "xxgk.nankai.edu.cn",
+          "basis": "official_page"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v14-sdu",
+      "school": {
+        "id": 1,
+        "name": "山东大学",
+        "url": "https://www.sdu.edu.cn/"
+      },
+      "sources": [
+        {
+          "id": 1,
+          "name": "招生简章",
+          "kind": "column",
+          "list_url": "https://www.istudy.sdu.edu.cn/zsjz.htm",
+          "group_name": "",
+          "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > :is(div.faq.content > div.w_1110 > div.f_r.d_text.fr > div.in_list > div.q_l)"
+        },
+        {
+          "id": 2,
+          "name": "学院风采",
+          "kind": "column",
+          "list_url": "https://www.bkjx.sdu.edu.cn/",
+          "group_name": "山东大学",
+          "list_selector": ".fcbox .swiper-slide"
+        },
+        {
+          "id": 3,
+          "name": "招生拓展",
+          "kind": "column",
+          "list_url": "https://www.yz.sdu.edu.cn/index/zstz.htm",
+          "group_name": "",
+          "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(div.wp.flex > div.nyRight > div.nyrCon > ul.txtList > li)"
+        },
+        {
+          "id": 4,
+          "name": "通知公告",
+          "kind": "column",
+          "list_url": "https://www.yz.sdu.edu.cn/index/tzgg.htm",
+          "group_name": "",
+          "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(div.wp.flex > div.nyRight > div.nyrCon > ul.txtList > li)"
+        },
+        {
+          "id": 5,
+          "name": "公开公示",
+          "kind": "column",
+          "list_url": "https://www.yz.sdu.edu.cn/index/gkgs.htm",
+          "group_name": "",
+          "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(div.wp.flex > div.nyRight > div.nyrCon > ul.txtList > li)"
+        },
+        {
+          "id": 6,
+          "name": "学子 风采",
+          "kind": "column",
+          "list_url": "https://www.grad.sdu.edu.cn/",
+          "group_name": "山东大学",
+          "list_selector": "div.zczj div.zc:nth-of-type(2) div.wenz ul > li.clearfix"
+        },
+        {
+          "id": 7,
+          "name": "政策 法规",
+          "kind": "column",
+          "list_url": "https://www.grad.sdu.edu.cn/",
+          "group_name": "山东大学",
+          "list_selector": "div.zczj div.zc:nth-of-type(1) div.list > ul > li.guojie_li"
+        }
+      ],
+      "pages": [
+        {
+          "url": "https://www.bkjx.sdu.edu.cn/",
+          "final_url": "https://www.bkjx.sdu.edu.cn/",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "date_unknown",
+          "title": "山东大学本科生院",
+          "content_hash": "9abf2a02bbabffb8a4ebfd052ec0a1cf75ef07594f4d1ede1d45fbaeeb6e0950",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"969c8ea0159820264453\\\", \\\"reference_url\\\": \\\"https://www.bkjx.sdu.edu.cn/\\\", \\\"final_url\\\": \\\"https://www.bkjx.sdu.edu.cn/\\\", \\\"content_hash\\\": \\\"9abf2a02bbabffb8a4ebfd052ec0a1cf75ef07594f4d1ede1d45fbaeeb6e0950\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"山东大学本科生院\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://www.grad.sdu.edu.cn/",
+          "final_url": "https://www.grad.sdu.edu.cn/",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "recent_publication",
+          "title": "山东大学研究生院",
+          "content_hash": "1747a63952c347d2b7e00497d280569ce86b22995c90884b29f359b8e2963f48",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"969c8ea0159820264453\\\", \\\"reference_url\\\": \\\"https://www.grad.sdu.edu.cn/\\\", \\\"final_url\\\": \\\"https://www.grad.sdu.edu.cn/\\\", \\\"content_hash\\\": \\\"1747a63952c347d2b7e00497d280569ce86b22995c90884b29f359b8e2963f48\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"山东大学研究生院\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://www.istudy.sdu.edu.cn/",
+          "final_url": "https://www.istudy.sdu.edu.cn/",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "recent_publication",
+          "title": "山东大学留学山大",
+          "content_hash": "911dff5ac85556f72985e891c9e349ecb3dbc33534df09f6798d1d5c0aa58bbd",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"969c8ea0159820264453\\\", \\\"reference_url\\\": \\\"https://www.istudy.sdu.edu.cn/\\\", \\\"final_url\\\": \\\"https://www.istudy.sdu.edu.cn/\\\", \\\"content_hash\\\": \\\"911dff5ac85556f72985e891c9e349ecb3dbc33534df09f6798d1d5c0aa58bbd\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"山东大学留学山大\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}, {\\\"source\\\": \\\"header_logo_alt\\\", \\\"identity\\\": \\\"国际事务部（留学山大）\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1) > img:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://www.istudy.sdu.edu.cn/zsjz.htm",
+          "final_url": "https://www.istudy.sdu.edu.cn/zsjz.htm",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "date_unknown",
+          "title": "招生简章-山东大学留学山大",
+          "content_hash": "d3bb61b032311f1c3a4dab7ce83045851adcea278904dd368332df67497147d3",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"969c8ea0159820264453\\\", \\\"reference_url\\\": \\\"https://www.istudy.sdu.edu.cn/zsjz.htm\\\", \\\"final_url\\\": \\\"https://www.istudy.sdu.edu.cn/zsjz.htm\\\", \\\"content_hash\\\": \\\"d3bb61b032311f1c3a4dab7ce83045851adcea278904dd368332df67497147d3\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"招生简章-山东大学留学山大\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}, {\\\"source\\\": \\\"header_logo_alt\\\", \\\"identity\\\": \\\"国际事务部（留学山大）\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1) > img:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://www.yz.sdu.edu.cn/",
+          "final_url": "https://www.yz.sdu.edu.cn/",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "recent_publication",
+          "title": "山东大学研究生招生信息网",
+          "content_hash": "867870b2c77542cac5bca9a8b7b552f5226a121723f44a85f5f6890b695ea720",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"969c8ea0159820264453\\\", \\\"reference_url\\\": \\\"https://www.yz.sdu.edu.cn/\\\", \\\"final_url\\\": \\\"https://www.yz.sdu.edu.cn/\\\", \\\"content_hash\\\": \\\"867870b2c77542cac5bca9a8b7b552f5226a121723f44a85f5f6890b695ea720\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"山东大学研究生招生信息网\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://www.yz.sdu.edu.cn/index/gkgs.htm",
+          "final_url": "https://www.yz.sdu.edu.cn/index/gkgs.htm",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "recent_publication",
+          "title": "公开公示-山东大学研究生招生信息网",
+          "content_hash": "ecec58cae3a9ac4f4849752ac5f0df58434ece043160f6a8f4d3866987104bd9",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"969c8ea0159820264453\\\", \\\"reference_url\\\": \\\"https://www.yz.sdu.edu.cn/index/gkgs.htm\\\", \\\"final_url\\\": \\\"https://www.yz.sdu.edu.cn/index/gkgs.htm\\\", \\\"content_hash\\\": \\\"ecec58cae3a9ac4f4849752ac5f0df58434ece043160f6a8f4d3866987104bd9\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"公开公示-山东大学研究生招生信息网\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://www.yz.sdu.edu.cn/index/tzgg.htm",
+          "final_url": "https://www.yz.sdu.edu.cn/index/tzgg.htm",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "recent_publication",
+          "title": "通知公告-山东大学研究生招生信息网",
+          "content_hash": "59d9e92754c1d21d93e54d28ea453ddafda3ec9992e792681913cea28d923f5c",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"969c8ea0159820264453\\\", \\\"reference_url\\\": \\\"https://www.yz.sdu.edu.cn/index/tzgg.htm\\\", \\\"final_url\\\": \\\"https://www.yz.sdu.edu.cn/index/tzgg.htm\\\", \\\"content_hash\\\": \\\"59d9e92754c1d21d93e54d28ea453ddafda3ec9992e792681913cea28d923f5c\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"通知公告-山东大学研究生招生信息网\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        },
+        {
+          "url": "https://www.yz.sdu.edu.cn/index/zstz.htm",
+          "final_url": "https://www.yz.sdu.edu.cn/index/zstz.htm",
+          "state": "fetched",
+          "kind": "channel",
+          "health": "recent_publication",
+          "title": "招生拓展-山东大学研究生招生信息网",
+          "content_hash": "a23ba69136f898c162d1ff0df0a05eb5e39cd7b3cbaec4b5df5fc77687acedf3",
+          "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"969c8ea0159820264453\\\", \\\"reference_url\\\": \\\"https://www.yz.sdu.edu.cn/index/zstz.htm\\\", \\\"final_url\\\": \\\"https://www.yz.sdu.edu.cn/index/zstz.htm\\\", \\\"content_hash\\\": \\\"a23ba69136f898c162d1ff0df0a05eb5e39cd7b3cbaec4b5df5fc77687acedf3\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"招生拓展-山东大学研究生招生信息网\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]"
+        }
+      ],
+      "paths": {
+        "https://www.yz.sdu.edu.cn/": [
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(5) > a:nth-of-type(1)",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(2)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "研究生招生",
+            "entry_url": "https://www.yz.sdu.edu.cn/",
+            "entry_nodes": [
+              {
+                "node_key": "51dae85c0b7ed1354a6e1b7f",
+                "name": "招生就业",
+                "kind": "group",
+                "url": "",
+                "relation": "menu_group"
+              }
+            ],
+            "entry_urls": [
+              "https://www.yz.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "研究生招生"
+            ]
+          },
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > dl:nth-of-type(5) > dd:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "研究生招生",
+            "entry_url": "https://www.yz.sdu.edu.cn/",
+            "entry_nodes": [],
+            "entry_urls": [
+              "https://www.yz.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "研究生招生"
+            ]
+          }
+        ],
+        "https://www.grad.sdu.edu.cn/": [
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(2)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "研究生教育",
+            "entry_url": "https://www.grad.sdu.edu.cn/",
+            "entry_nodes": [
+              {
+                "node_key": "44fe9a71de5d2a4138e3a7af",
+                "name": "教育教学",
+                "kind": "group",
+                "url": "",
+                "relation": "menu_group"
+              }
+            ],
+            "entry_urls": [
+              "https://www.grad.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "研究生教育"
+            ]
+          },
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > dl:nth-of-type(3) > dd:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "研究生教育",
+            "entry_url": "https://www.grad.sdu.edu.cn/",
+            "entry_nodes": [],
+            "entry_urls": [
+              "https://www.grad.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "研究生教育"
+            ]
+          }
+        ],
+        "https://www.istudy.sdu.edu.cn/": [
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(3)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "国际教育",
+            "entry_url": "https://www.istudy.sdu.edu.cn/",
+            "entry_nodes": [
+              {
+                "node_key": "44fe9a71de5d2a4138e3a7af",
+                "name": "教育教学",
+                "kind": "group",
+                "url": "",
+                "relation": "menu_group"
+              }
+            ],
+            "entry_urls": [
+              "https://www.istudy.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "国际教育"
+            ]
+          },
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(5) > a:nth-of-type(1)",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(3)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "国际招生",
+            "entry_url": "https://www.istudy.sdu.edu.cn/",
+            "entry_nodes": [
+              {
+                "node_key": "51dae85c0b7ed1354a6e1b7f",
+                "name": "招生就业",
+                "kind": "group",
+                "url": "",
+                "relation": "menu_group"
+              }
+            ],
+            "entry_urls": [
+              "https://www.istudy.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "国际招生"
+            ]
+          },
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > dl:nth-of-type(3) > dd:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > dl:nth-of-type(5) > dd:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "国际教育",
+            "entry_url": "https://www.istudy.sdu.edu.cn/",
+            "entry_nodes": [],
+            "entry_urls": [
+              "https://www.istudy.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "国际教育",
+              "国际招生"
+            ]
+          }
+        ],
+        "https://www.bkjx.sdu.edu.cn/": [
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "本科生教育",
+            "entry_url": "https://www.bkjx.sdu.edu.cn/",
+            "entry_nodes": [
+              {
+                "node_key": "44fe9a71de5d2a4138e3a7af",
+                "name": "教育教学",
+                "kind": "group",
+                "url": "",
+                "relation": "menu_group"
+              }
+            ],
+            "entry_urls": [
+              "https://www.bkjx.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "本科生教育"
+            ]
+          },
+          {
+            "unit_key": "school:969c8ea0159820264453",
+            "unit_name": "山东大学",
+            "nodes": [],
+            "references": [
+              {
+                "url": "https://www.sdu.edu.cn/",
+                "title": "山东大学 SHANDONG UNIVERSITY",
+                "content_hash": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+                "checked_at": "2026-10-11T08:56:34+00:00",
+                "locators": [
+                  "document",
+                  "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > dl:nth-of-type(3) > dd:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)"
+                ]
+              }
+            ],
+            "basis": "school_website_entry",
+            "verified": false,
+            "entry_name": "本科生教育",
+            "entry_url": "https://www.bkjx.sdu.edu.cn/",
+            "entry_nodes": [],
+            "entry_urls": [
+              "https://www.bkjx.sdu.edu.cn/"
+            ],
+            "entry_names": [
+              "本科生教育"
+            ]
+          }
+        ]
+      },
+      "expected_publishers": [
+        {
+          "source_id": 1,
+          "publisher_key": "site:e99d4287936b555c97c83ec2",
+          "publisher_label": "国际事务部（留学山大）",
+          "basis": "site_identity"
+        },
+        {
+          "source_id": 2,
+          "publisher_key": "site:35d9b7cbb6ff973f0bbee5ec",
+          "publisher_label": "山东大学本科生院",
+          "basis": "site_identity"
+        },
+        {
+          "source_id": 3,
+          "publisher_key": "site:b88b7ac84ab2f1caf066c9f9",
+          "publisher_label": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/zstz.htm）",
+          "basis": "site_identity"
+        },
+        {
+          "source_id": 4,
+          "publisher_key": "site:bb6a86715a89bb49be7ffad9",
+          "publisher_label": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/tzgg.htm）",
+          "basis": "site_identity"
+        },
+        {
+          "source_id": 5,
+          "publisher_key": "site:4387ff1796e1f2e687e1eae5",
+          "publisher_label": "山东大学研究生招生信息网（www.yz.sdu.edu.cn/index/gkgs.htm）",
+          "basis": "site_identity"
+        },
+        {
+          "source_id": 6,
+          "publisher_key": "site:71fae9d6ef8e2e7f009ee1d5",
+          "publisher_label": "山东大学研究生院",
+          "basis": "site_identity"
+        },
+        {
+          "source_id": 7,
+          "publisher_key": "site:71fae9d6ef8e2e7f009ee1d5",
+          "publisher_label": "山东大学研究生院",
+          "basis": "site_identity"
+        }
+      ]
+    }
+  ]
+}

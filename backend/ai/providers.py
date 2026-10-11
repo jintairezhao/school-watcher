@@ -60,13 +60,15 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
     url = endpoint_for(profile['provider'], profile['region'])
     budget = min(int(max_tokens or profile.get('max_output_tokens', 4096)), 16384)
     streaming = bool(streaming and profile['provider'] == 'deepseek')
+    from backend.services.discovery_policy import get_policy
+    temperature = get_policy()['ai_temperature']
     common = {'model': profile['model'], 'stream': streaming}
     if profile['provider'] == 'dashscope':
         body = {**common, 'input': {'messages': messages}, 'parameters': {
-            'result_format': 'message', 'max_tokens': budget, 'temperature': 0.1,
+            'result_format': 'message', 'max_tokens': budget, 'temperature': temperature,
             'response_format': {'type': 'json_object'}, 'enable_thinking': False}}
     else:
-        body = {**common, 'messages': messages, 'max_tokens': budget, 'temperature': 0.1,
+        body = {**common, 'messages': messages, 'max_tokens': budget, 'temperature': temperature,
                 'response_format': {'type': 'json_object'}}
         if profile['provider'] == 'deepseek':
             # These bounded classification/summary calls need the JSON answer;

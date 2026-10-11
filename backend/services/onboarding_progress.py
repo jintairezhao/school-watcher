@@ -26,12 +26,16 @@ def ai_available():
 
 
 def _ai_message(task, data, available):
+    if data.get('ai_state') == 'disabled':
+        return '本校已关闭 AI 识别，仍会自动查找和更新公开通知'
     if not available:
         return 'AI 尚未开启，仍会自动查找和更新公开通知'
     if data.get('ai_error_code') == 'budget_exhausted':
-        return '本轮 AI 用量已达上限；明确栏目继续接入，未完成的入口已保留'
+        return '额度已用完，进度已保存；已接入的栏目继续更新'
     if data.get('ai_state') == 'running':
         return 'AI 已连接，正在分析官网'
+    if data.get('ai_state') == 'queued':
+        return '已安排 AI 识别官网入口，已接入的栏目继续更新'
     history = dict((task.checkpoint or {}).get('ai_navigation') or {}) if task else {}
     succeeded = sum(value == 'succeeded' for value in history.values())
     failed = sum(value in ('failed', 'uncertain') for value in history.values())
@@ -50,7 +54,42 @@ def _ai_message(task, data, available):
                   'concurrency_limit': '正在等待 AI 空闲', 'network_result_unknown': '网络响应中断'}.get(code, '本次识别未完成')
         count = f'{succeeded} 次成功、{failed or 1} 次未完成'
         return f'AI 已配置：{count}（{reason}），继续按网页规则识别。'
+    reviewed, cached = data.get('ai_reviewed_routes', 0), data.get('ai_cached_routes', 0)
+    if reviewed:
+        return f'AI 已识别 {reviewed} 个官网入口' + (f'，另复用 {cached} 个已识别入口' if cached else '')
+    if cached:
+        return f'已复用 {cached} 个 AI 识别的官网入口'
     return 'AI 辅助已完成本批识别' if succeeded or data.get('ai_state') == 'succeeded' else 'AI 辅助已开启'
+
+
+def _navigation_progress(task, jobs, data):
+    """Independent navigation workers retain their own actual AI progress."""
+    data = dict(data)
+    if not task:
+        return data
+    if (task.payload or {}).get('ai_assist') is False:
+        return dict(data, ai_state='disabled', ai_error_code='', ai_reviewed_routes=0, ai_cached_routes=0)
+    children = [job for job in jobs if job.kind == 'navigation_review' and
+        job.payload.get('school_generation', job.payload.get('parent_generation')) == task.generation]
+    reviewed = sum(max((job.result or {}).get('reviewed_routes', 0),
+                       (job.checkpoint or {}).get('route_cursor', 0)) for job in children)
+    cached = sum((job.result or {}).get('cached_routes', 0) for job in children)
+    data.update(ai_reviewed_routes=reviewed, ai_cached_routes=cached)
+    failures = [job for job in children if job.state == 'failed' or
+        (job.result or {}).get('status') == 'needs_recovery' or
+        ((job.checkpoint or {}).get('discovery_progress') or {}).get('ai_state') in ('failed', 'uncertain')]
+    if failures:
+        latest = max(failures, key=lambda job: job.updated_at)
+        progress = (latest.checkpoint or {}).get('discovery_progress') or {}
+        data.update(ai_state='failed', ai_error_code=(latest.result or {}).get('error_code') or
+                    progress.get('ai_error_code') or latest.error_code)
+    elif any(job.state == 'running' for job in children):
+        data.update(ai_state='running', ai_error_code='')
+    elif any(job.state in ('pending', 'waiting') for job in children):
+        data.update(ai_state='queued', ai_error_code='')
+    elif reviewed or cached:
+        data.update(ai_state='succeeded', ai_error_code='')
+    return data
 
 
 def status(school):
@@ -64,6 +103,11 @@ def status(school):
     jobs = [t for t in BackgroundTask.query.filter(BackgroundTask.kind.in_(
         ('onboard', 'navigation_review', 'student_assessment'))).all() if t.payload.get('school_id') == school.id
         and (t.kind != 'student_assessment' or t.payload.get('automatic_source') or t.payload.get('automatic_listing'))]
+    data = _navigation_progress(task, jobs, data)
+    budget_paused = any(job.state == 'waiting' and job.phase == 'ai_budget'
+                        for job in ([task] if task else []) + jobs)
+    if budget_paused:
+        data.update(ai_state='budget_paused', ai_error_code='budget_exhausted')
     from backend.services.announcement_sources import source_expression
     article_count = Announcement.query.filter(source_expression(school_ids=[school.id])).count()
     from backend.database.student_information_models import StudentAssessment
@@ -126,24 +170,47 @@ def status(school):
         message = '本轮查找未完成，可以重试；已接入的栏目仍可使用' if count else '本轮查找未完成，可以重试'
     elif state == 'done' or count:
         message = f'已找到 {article_count} 条通知，后续自动更新' if article_count else '本轮暂未读到公开通知，学校已保留'
+    if budget_paused and not pause:
+        message = '额度已用完，进度已保存；已接入的栏目继续更新'
+        if not busy and not any(t.state == 'pending' for t in live) and not (task and task.state == 'pending'):
+            state, active = 'budget_paused', False
     gaps = []
+    recovery_jobs = []
     for job in jobs:
         if job.kind == 'student_assessment':
             continue
         result = job.result or {}
+        if result.get('recovery_rules') and job.state in ('done', 'failed'):
+            recovery_jobs.append(job)
         if job.kind == 'navigation_review' and result.get('status') == 'needs_recovery':
             gaps.append({'name': job.payload.get('page', {}).get('label', ''),
                 'url': job.payload.get('page', {}).get('url', ''),
                 'reason': '部分入口用途尚待判断，已保留官网路径，可稍后重新查找'})
         if job.state == 'failed' or result.get('state') == 'unsupported' or result.get('issues'):
+            codes = [code for issue in result.get('issues', []) for code in issue.get('codes', [])]
+            access_codes = {'article_access_restricted', 'pagination_access_restricted'}
+            material_codes = {'article_material_incomplete', 'pagination_material_incomplete'}
+            kind = ('access_limited' if codes and all(code in access_codes for code in codes)
+                    else 'material_limited' if codes and all(code in material_codes for code in codes)
+                    else 'unresolved')
             gaps.append({'name': job.payload.get('label', ''), 'url': job.payload.get('url', ''),
-                'reason': result.get('reason') or '该页面暂未接入，稍后可重试'})
+                'kind': kind, 'reason': result.get('reason') or '该页面暂未接入，稍后可重试'})
     if data.get('entry_failure'):
         gaps.insert(0, {'name': school.name, 'url': school.url, 'reason': data['entry_failure']['reason']})
     if data.get('failed_pages'):
         gaps.append({'reason': f"有 {data['failed_pages']} 个官网入口暂未读取成功"})
-    if not active and not pause and article_count and gaps:
+    if not active and not pause and not budget_paused and article_count and gaps:
         message = f'已找到 {article_count} 条通知，部分官网页面暂不可读'
+    if recovery_jobs and not active and not pause and not budget_paused and state != 'failed':
+        state = 'retry_wait'
+        message = ('已接通的栏目继续更新，部分来源进度已保存，后台稍后恢复'
+                   if count else '部分来源暂时不可读取，进度已保存，后台稍后恢复')
+        dates = [job.result.get('recovery_not_before') for job in recovery_jobs
+                 if job.result.get('recovery_not_before')]
+        if dates:
+            retry_at = min(dates)
+            if not retry_at.endswith('Z') and '+' not in retry_at:
+                retry_at += 'Z'
     onboarding = db.session.get(SchoolOnboarding, school.id)
     import json
     departments = len(json.loads(onboarding.scope_json or '[]')) if onboarding else len({d.group_name for d in columns if d.group_name})
@@ -152,6 +219,7 @@ def status(school):
         departments = official_units
     available = ai_available()
     review_count = SourceProposal.query.filter_by(school_id=school.id, state='needs_review').count()
+    from backend.ai.school_budget import school_usage
     return {'state': state, 'message': message, 'phase': data.get('phase', 'fetch'),
         'busy': busy, 'active': active, 'retry_at': retry_at,
         'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
@@ -160,20 +228,23 @@ def status(school):
         'updated_at': data.get('updated_at'), 'source_count': len(columns), 'verified_source_count': count,
         'article_count': article_count, 'assessed_source_count': len(source_assessments),
         'useful_source_count': useful_source_count,
-        'department_count': departments, 'processing_count': len(live), 'failed_count': len(gaps),
+        'department_count': departments, 'processing_count': len(live),
+        'failed_count': sum(gap.get('kind') not in ('access_limited', 'material_limited') for gap in gaps),
         'unit_checked': data.get('unit_checked', 0), 'unit_pending': data.get('unit_pending', 0),
         'unit_failed': data.get('unit_failed', 0),
         'column_tasks': sum(t.kind == 'onboard' for t in live),
         'assessment_tasks': sum(t.kind == 'student_assessment' for t in live),
-        'waiting_recovery_count': 0, 'review_count': review_count, 'queued_review_count': 0,
+        'waiting_recovery_count': len(recovery_jobs), 'review_count': review_count, 'queued_review_count': 0,
         'background_exploration': any(t.kind == 'navigation_review' for t in live),
         'ai_available': available, 'ai_state': data.get('ai_state', 'not_started'),
+        'ai_reviewed_routes': data.get('ai_reviewed_routes', 0), 'ai_cached_routes': data.get('ai_cached_routes', 0),
         'ai_message': _ai_message(task, data, available),
+        'ai_usage': school_usage(school.id), 'budget_paused': budget_paused,
         'coverage': {'complete': False, 'gaps': gaps, 'placement_gap_count': 0},
         'incomplete_reasons': [g['reason'] for g in gaps],
         'needs_verification': any(t.state == 'waiting' and t.phase == 'verification' for t in ([task] if task else []) + live),
         'can_pause': bool(task and not pause and (task.state in ('pending', 'running', 'waiting') or any(
             t.kind in ('onboard', 'navigation_review', 'student_assessment') for t in live))),
         'can_resume': state == 'paused',
-        'can_retry': not active and state != 'paused' and (state != 'waiting' or task.phase == 'ai_setup'),
+        'can_retry': not active and state not in ('paused', 'budget_paused') and (state != 'waiting' or task.phase == 'ai_setup'),
         'task_id': task.id if task else None}

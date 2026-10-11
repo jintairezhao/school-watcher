@@ -1,0 +1,2825 @@
+{
+  "description": "Public official-page ground truth, manually reviewed from actual reads. These counts do not mean the Agent discovered or connected these sources. Evidence snapshots and unsuccessful attempts stay in local acceptance storage.",
+  "summary": {
+    "schools": 8,
+    "confirmed_sources": 55,
+    "reviewed_memberships": 162,
+    "unique_reviewed_notice_urls": 157
+  },
+  "schools": [
+    "上海交通大学",
+    "中国石油大学（北京）克拉玛依校区",
+    "中国科学技术大学",
+    "北京大学",
+    "华中科技大学",
+    "南京大学",
+    "武汉大学",
+    "重庆大学"
+  ],
+  "sources": [
+    {
+      "url": "http://life.hust.edu.cn/tzgg.htm",
+      "list_html_sha256": "fa9d8d0f49d514d95dd03f77994256e647903d5eb4f17722d6f8660f847b8665",
+      "publisher_evidence": {
+        "text": "生命科学与技术学院,通知公告",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "生命科学与技术学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于做好中秋、国庆假期安全管理工作的通知",
+          "url": "http://life.hust.edu.cn/info/1725/12660.htm",
+          "final_url": "http://life.hust.edu.cn/info/1725/12660.htm",
+          "article_heading": "关于做好中秋、国庆假期安全管理工作的通知",
+          "html_sha256": "a39280c17d3a7b51d48fac1c2939745234bc9f5a019c776b4fe4808f33e8d413",
+          "fetched_at": "2026-10-03T20:09:29.484221+00:00"
+        },
+        {
+          "title": "生命学院关于做好2023级本科生毕业设计（论文）工作的通知",
+          "url": "http://life.hust.edu.cn/info/1849/12646.htm",
+          "final_url": "http://life.hust.edu.cn/info/1849/12646.htm",
+          "article_heading": "生命学院关于做好2023级本科生毕业设计（论文）工作的通知",
+          "html_sha256": "52e76e1f882f307571d1f7e49adc7b1aafbf078e7b1696aed33cfdd111b141b5",
+          "fetched_at": "2026-10-03T20:09:30.567529+00:00"
+        },
+        {
+          "title": "关于生命学院2027年本科生推荐免试研究生资格名单的公示",
+          "url": "http://life.hust.edu.cn/info/1849/12645.htm",
+          "final_url": "http://life.hust.edu.cn/info/1849/12645.htm",
+          "article_heading": "关于生命学院2027年本科生推荐免试研究生资格名单的公示",
+          "html_sha256": "7a5743b5fd89b2e297492e25a29de36c960a1336d4f2aadb0c6491c4df9f41c6",
+          "fetched_at": "2026-10-03T20:33:29.663546+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://www.cupk.edu.cn/jwb/tzgg/",
+      "list_html_sha256": "ce9e2d54e0a9817c3b829e590c7883ba65ef47a243c7d733beeab4a2cbd49182",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区教务部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 / 通知公告",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "教务部",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2026年下半年全国大学英语四、六级考试报名通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-09-17/538585.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-09-17/538585.shtml",
+          "article_heading": "2026年下半年全国大学英语四、六级考试报名通知",
+          "html_sha256": "ff10cba019a0937b66c48ff05d25cd05068f087f0a040f50750fab23adedd34a",
+          "fetched_at": "2026-10-03T20:09:29.003544+00:00"
+        },
+        {
+          "title": "关于办理2026级本科生新生学生证的通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-09-15/538548.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-09-15/538548.shtml",
+          "article_heading": "关于办理2026级本科生新生学生证的通知",
+          "html_sha256": "4355820428bc6f80b9db734c8c1561d2992b11cf7cd127ac3d470372c6379218",
+          "fetched_at": "2026-10-03T20:09:30.015170+00:00"
+        },
+        {
+          "title": "2026年本科卓越工程师国际化培养拟推荐人员名单公示",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-09-14/538520.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-09-14/538520.shtml",
+          "article_heading": "2026年本科卓越工程师国际化培养拟推荐人员名单公示",
+          "html_sha256": "0484bd2c4c4b0763415f167afa4961f8c32e1796f3fd6bb115ada5ee15d36116",
+          "fetched_at": "2026-10-03T20:09:30.999727+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2026/09/15/123472.pdf",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2026/09/15/123473.xls",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2026/09/17/123565.pdf"
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/jwb/jxyx/tzgg/",
+      "list_html_sha256": "98bb40b63c5108f6efb5caa1aa107f87470f1b0f175166ae69ebb745a8363d66",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区教务部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 / 教学运行 / 通知公告",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "教务部",
+        "教学运行",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2026年下半年全国大学英语四、六级考试报名通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-09-17/538585.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-09-17/538585.shtml",
+          "article_heading": "2026年下半年全国大学英语四、六级考试报名通知",
+          "html_sha256": "ff10cba019a0937b66c48ff05d25cd05068f087f0a040f50750fab23adedd34a",
+          "fetched_at": "2026-10-03T20:09:29.003544+00:00"
+        },
+        {
+          "title": "2026年9月全国计算机等级考试（NCRE）模拟考试通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-09-14/538504.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-09-14/538504.shtml",
+          "article_heading": "2026年9月全国计算机等级考试（NCRE）模拟考试通知",
+          "html_sha256": "fdbe7f647af20a9371291bf15c8bff92871c30686ec2fe965ef1779aeddceee9",
+          "fetched_at": "2026-10-03T20:09:32.014721+00:00"
+        },
+        {
+          "title": "关于2026-2027学年秋季学期英语免修申请的通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-09-01/538072.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-09-01/538072.shtml",
+          "article_heading": "关于2026-2027学年秋季学期英语免修申请的通知",
+          "html_sha256": "0b634f66fa2929025e8004c1e7d4f408ff0deb791bd7fbf91ff079e994f7bd5f",
+          "fetched_at": "2026-10-03T20:09:35.034488+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://www.cupk.edu.cn/jwb/gjjy/tzgg/",
+      "list_html_sha256": "0e1f9c1cbfbfe5478f97e5a4341411104267531b93f092d4d24d0285afe0aa4e",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区教务部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 / 国际教育 / 通知公告",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "教务部",
+        "国际教育",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于召开对外经济贸易大学2026年暑期国际学校招生宣讲会的通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-06-17/534821.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-06-17/534821.shtml",
+          "article_heading": "关于召开对外经济贸易大学2026年暑期国际学校招生宣讲会的通知",
+          "html_sha256": "9ed6efad5b62b2f1bbb835c405ad75cdedfeaac2f65facdedf1f9008d4d86429",
+          "fetched_at": "2026-10-03T20:09:39.059089+00:00"
+        },
+        {
+          "title": "2023年赴俄乌白专业人才培养计划遴选推荐通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2023-03-06/515318.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2023-03-06/515318.shtml",
+          "article_heading": "2023年赴俄乌白专业人才培养计划遴选推荐通知",
+          "html_sha256": "4b379515afde13e82d0d328c6b18cb2f6f7d0e8dd727d9d2fb7f784c24f90d08",
+          "fetched_at": "2026-10-03T20:09:41.075821+00:00"
+        },
+        {
+          "title": "2023年俄罗斯互换奖学金（中俄政府奖学金）申请通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2023-01-18/515076.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2023-01-18/515076.shtml",
+          "article_heading": "2023年俄罗斯互换奖学金（中俄政府奖学金）申请通知",
+          "html_sha256": "154a7b01f84e63f0bd1fff345ffcb7cd13bbe45834fb02f7af86025fc0dfd8e3",
+          "fetched_at": "2026-10-03T20:09:43.112858+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2023/03/06/74263.docx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2023/03/06/74264.docx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2023/01/18/72128.docx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2023/01/18/72129.doc",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2023/01/18/72130.zip"
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/jwb/jxyj/tzgg/",
+      "list_html_sha256": "0d92e57539c5d7184c89081ccddec413791d61a9f234241f02e8fa92968e3eba",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区教务部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 / 教学研究 / 通知公告",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "教务部",
+        "教学研究",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于2026年自治区高校本科教育教学研究和改革项目结题验收结果的公示",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-07-31/537560.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-07-31/537560.shtml",
+          "article_heading": "关于2026年自治区高校本科教育教学研究和改革项目结题验收结果的公示",
+          "html_sha256": "1c0aab0c1dc536479d5fb845b0272e6b3d15731e4d3bd2ee1ef110901484a3ee",
+          "fetched_at": "2026-10-03T20:09:45.112460+00:00"
+        },
+        {
+          "title": "关于开展2026年教育教学研究和改革项目中期检查及部分项目结题验收工作的通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-05-22/534447.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-05-22/534447.shtml",
+          "article_heading": "关于开展2026年教育教学研究和改革项目中期检查及部分项目结题验收工作的通知",
+          "html_sha256": "fef440e2e085f5498e4ee7dfbee5fe1ccbce4eadbc2a9c639c5274f55d04e2cb",
+          "fetched_at": "2026-10-03T20:09:46.114864+00:00"
+        },
+        {
+          "title": "关于开展2025年本科教育教学研究与改革项目立项工作的通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2025-06-16/528832.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2025-06-16/528832.shtml",
+          "article_heading": "关于开展2025年本科教育教学研究与改革项目立项工作的通知",
+          "html_sha256": "afdefc6aa2c1df03bbadb265ca6e319fe88bd3f69e5bdeb92d0e08d59b8b977b",
+          "fetched_at": "2026-10-03T20:09:47.134764+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2026/05/25/113135.xls",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2026/05/22/113111.docx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2026/05/22/113112.xlsx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2026/05/22/113113.docx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2026/05/22/113114.xlsx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2025/06/16/101968.doc",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2025/06/16/101963.docx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2025/06/16/101964.docx",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2025/06/16/101965.doc",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2025/06/16/101966.pdf",
+        "https://www.cupk.edu.cn/jwb/upload/resources/file/2025/06/16/101967.xlsx"
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/yjsb/tzgg/py/",
+      "list_html_sha256": "165e35a91ca3fcab5eee722e7df1ce90ca4339f4df891970fd5a642b2fe9f3f1",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区研究生部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 / 通知公告 / 培养",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "研究生部",
+        "通知公告",
+        "培养"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2026年下半年全国大学英语四、六级考试报名通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-09-17/538585.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-09-17/538585.shtml",
+          "article_heading": "2026年下半年全国大学英语四、六级考试报名通知",
+          "html_sha256": "ff10cba019a0937b66c48ff05d25cd05068f087f0a040f50750fab23adedd34a",
+          "fetched_at": "2026-10-03T20:09:29.003544+00:00"
+        },
+        {
+          "title": "克拉玛依校区2026级硕士研究生培养计划制定及选课说明",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2026-08-27/538001.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2026-08-27/538001.shtml",
+          "article_heading": "克拉玛依校区2026级硕士研究生培养计划制定及选课说明",
+          "html_sha256": "72e137608f39adf3690e0e152a1a0f837c8763eff7c43c19d35478689a901129",
+          "fetched_at": "2026-10-03T20:09:57.167977+00:00"
+        },
+        {
+          "title": "关于2026级研究生新生及2027届毕业研究生图像采集的通知",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2026-08-24/537768.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2026-08-24/537768.shtml",
+          "article_heading": "关于2026级研究生新生及2027届毕业研究生图像采集的通知",
+          "html_sha256": "d37120e95cd002618d956456d0f4ef8b9ab5189258b5b26cff87c4c02f8e7325",
+          "fetched_at": "2026-10-03T20:09:58.182988+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2026/08/27/122061.xlsx",
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2026/08/24/121479.doc"
+      ]
+    },
+    {
+      "url": "http://mse.hust.edu.cn/sylm/tzgg.htm",
+      "list_html_sha256": "712ae227b565f146d2bd508eccbb72e37a8765069966b0906535edc197e9af92",
+      "publisher_evidence": {
+        "text": "机械科学与工程学院,通知公告",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "机械科学与工程学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "机械科学与工程学院诚邀全球英才",
+          "url": "http://mse.hust.edu.cn/info/1181/15070.htm",
+          "final_url": "http://mse.hust.edu.cn/info/1181/15070.htm",
+          "article_heading": "机械科学与工程学院诚邀全球英才",
+          "html_sha256": "a5459fc7cbf5b4c10672a68b9c9b120d128e859239509de705280faa41ff6da3",
+          "fetched_at": "2026-10-03T20:09:31.830452+00:00"
+        },
+        {
+          "title": "华中科技大学机械科学与工程学院专任教师科学研究岗位招聘",
+          "url": "http://mse.hust.edu.cn/info/1181/17692.htm",
+          "final_url": "http://mse.hust.edu.cn/info/1181/17692.htm",
+          "article_heading": "华中科技大学机械科学与工程学院专任教师科学研究岗位招聘",
+          "html_sha256": "08b624c4e48894010a6b2d2ea4f345421c7e6cc5d6e45e3e1561a65099644c2d",
+          "fetched_at": "2026-10-03T20:09:32.842290+00:00"
+        },
+        {
+          "title": "智能制造装备与技术全国重点实验室2027年度开放课题申请通知",
+          "url": "https://imet.hust.edu.cn/info/1031/2870.htm",
+          "final_url": "https://imet.hust.edu.cn/info/1031/2870.htm",
+          "article_heading": "智能制造装备与技术全国重点实验室2027年度开放课题申请通知-智能制造装备与技术全国重点实验室",
+          "html_sha256": "c55f3da5f6ab80fe9944de2fb42d0bc11d6bd30b38b5edb13fa14b0f86defafb",
+          "fetched_at": "2026-10-03T20:33:30.276367+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://imet.hust.edu.cn/1.docx"
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/yjsb/tzgg/xw/",
+      "list_html_sha256": "abc894676d6710b0cf879eddcfc55c830633bf4f444bd30a3dbb25fc1d043a34",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区研究生部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 / 通知公告 / 学位",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "研究生部",
+        "通知公告",
+        "学位"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于做好2026年6月研究生学位工作的通知",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2026-03-23/533148.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2026-03-23/533148.shtml",
+          "article_heading": "关于做好2026年6月研究生学位工作的通知",
+          "html_sha256": "98665591c74b5a730db927a823be726e392ee35fd916685b7e4ceadfc93d2865",
+          "fetched_at": "2026-10-03T20:10:02.322106+00:00"
+        },
+        {
+          "title": "关于2025年秋季学期克拉玛依校区研究生开题工作的通知",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2025-10-30/530792.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2025-10-30/530792.shtml",
+          "article_heading": "关于2025年秋季学期克拉玛依校区研究生开题工作的通知",
+          "html_sha256": "d3b5f2e5a7649d2780d718baa1e7c35afb0d1831bf7335ee698706c6b75035c6",
+          "fetched_at": "2026-10-03T20:10:03.382457+00:00"
+        },
+        {
+          "title": "关于做好2025年6月批次研究生学位工作的通知",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2025-03-19/526967.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2025-03-19/526967.shtml",
+          "article_heading": "关于做好2025年6月批次研究生学位工作的通知",
+          "html_sha256": "2f97c5c0c5af6ec9367d74ffc8cd939e28477c22f88fc06a30210180fbeb5ccb",
+          "fetched_at": "2026-10-03T20:10:04.319423+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://www.cupk.edu.cn/yjsb/pdfcl/2025/20250401/pycllc.pdf",
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2026/03/23/111141.zip",
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2025/10/30/105852.zip",
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2025/10/30/105853.doc",
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2025/10/30/105854.zip",
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2025/03/19/99161.zip"
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/yjsb/tzgg/jxjy/",
+      "list_html_sha256": "14c1d83afe6bfd0537e382ab93c98e43bad631ecbd4ef18fb735cf08fffc70a3",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区研究生部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 / 通知公告 / 继续教育",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "研究生部",
+        "通知公告",
+        "继续教育"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于举办2026年石油工程专业技术人员副高级培训班的通知",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2026-04-27/533391.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2026-04-27/533391.shtml",
+          "article_heading": "关于举办2026年石油工程专业技术人员副高级培训班的通知",
+          "html_sha256": "00009f5edbf2e53e62f0fc31dbdd607df746413b6916b05ab129d90d9eb64503",
+          "fetched_at": "2026-10-03T20:10:08.204829+00:00"
+        },
+        {
+          "title": "关于举办2026年专业技术人员专业课培训班的通知",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2026-04-10/533390.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2026-04-10/533390.shtml",
+          "article_heading": "关于举办2026年专业技术人员专业课培训班的通知",
+          "html_sha256": "1bb806f96fea501d479cafb86603aa14ef3cfe2663c8a1a5317df149a52290e8",
+          "fetched_at": "2026-10-03T20:10:09.215746+00:00"
+        },
+        {
+          "title": "关于举办2025年第三期专业技术人员初中级培训班的通知",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2025-07-11/529442.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2025-07-11/529442.shtml",
+          "article_heading": "关于举办2025年第三期专业技术人员初中级培训班的通知",
+          "html_sha256": "b234505137aa1223f110e1b26a02c7d215f9c769f16cab37febe8f3be38e7c1c",
+          "fetched_at": "2026-10-03T20:10:10.224668+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2026/04/08/111412.pdf",
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2025/04/30/100661.pdf"
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/xgybw/tzgg/tzgg/",
+      "list_html_sha256": "1d9163d1741ac29d4111edc02407d5005a0ac2cb307a098ca555dce872d9becc",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区学生工作与安全保卫部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+        "href": "https://www.cupk.edu.cn/xgybw/tzgg/tzgg/"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "学生工作与安全保卫部",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于办理2026级新生户口迁移的通知",
+          "url": "https://www.cupk.edu.cn/xgybw/c/2026-09-15/538546.shtml",
+          "final_url": "https://www.cupk.edu.cn/xgybw/c/2026-09-15/538546.shtml",
+          "article_heading": "关于办理2026级新生户口迁移的通知",
+          "html_sha256": "771dd7deb138b46cec82d85eb9d6d17d04f5fa961ddea9f5c15ccb6d63a09aa8",
+          "fetched_at": "2026-10-03T20:10:14.258926+00:00"
+        },
+        {
+          "title": "2026年校区本研一体化“专业+管理”复合型人才培育班考核结果",
+          "url": "https://www.cupk.edu.cn/xgybw/c/2026-07-04/535112.shtml",
+          "final_url": "https://www.cupk.edu.cn/xgybw/c/2026-07-04/535112.shtml",
+          "article_heading": "2026年校区本研一体化“专业+管理”复合型人才培育班考核结果",
+          "html_sha256": "fb3ca48c91fb87bb5985c1cc32074efe062c24e6bfd5c70ea328d390206644c8",
+          "fetched_at": "2026-10-03T20:10:15.256130+00:00"
+        },
+        {
+          "title": "关于2026年校区本研一体化“专业+管理”复合型人才培育班考核结果的公示",
+          "url": "https://www.cupk.edu.cn/xgybw/c/2026-06-29/535024.shtml",
+          "final_url": "https://www.cupk.edu.cn/xgybw/c/2026-06-29/535024.shtml",
+          "article_heading": "关于2026年校区本研一体化“专业+管理”复合型人才培育班考核结果的公示",
+          "html_sha256": "606645973f759b04c32ab1b9b913f6a46c265913158a966f8caac59f448080df",
+          "fetched_at": "2026-10-03T20:10:16.295839+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://www.cupk.edu.cn/yjsb/tzgg/",
+      "list_html_sha256": "fd0ae21207ff6d375a7059528480d714d430d19332017d99fe1933c17515f7b9",
+      "publisher_evidence": {
+        "text": "中国石油大学（北京）克拉玛依校区研究生部",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 / 通知公告",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "研究生部",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2026年下半年全国大学英语四、六级考试报名通知",
+          "url": "https://www.cupk.edu.cn/jwb/c/2026-09-17/538585.shtml",
+          "final_url": "https://www.cupk.edu.cn/jwb/c/2026-09-17/538585.shtml",
+          "article_heading": "2026年下半年全国大学英语四、六级考试报名通知",
+          "html_sha256": "ff10cba019a0937b66c48ff05d25cd05068f087f0a040f50750fab23adedd34a",
+          "fetched_at": "2026-10-03T20:09:29.003544+00:00"
+        },
+        {
+          "title": "克拉玛依校区2026级硕士研究生培养计划制定及选课说明",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2026-08-27/538001.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2026-08-27/538001.shtml",
+          "article_heading": "克拉玛依校区2026级硕士研究生培养计划制定及选课说明",
+          "html_sha256": "72e137608f39adf3690e0e152a1a0f837c8763eff7c43c19d35478689a901129",
+          "fetched_at": "2026-10-03T20:09:57.167977+00:00"
+        },
+        {
+          "title": "关于2026级研究生新生及2027届毕业研究生图像采集的通知",
+          "url": "https://www.cupk.edu.cn/yjsb/c/2026-08-24/537768.shtml",
+          "final_url": "https://www.cupk.edu.cn/yjsb/c/2026-08-24/537768.shtml",
+          "article_heading": "关于2026级研究生新生及2027届毕业研究生图像采集的通知",
+          "html_sha256": "d37120e95cd002618d956456d0f4ef8b9ab5189258b5b26cff87c4c02f8e7325",
+          "fetched_at": "2026-10-03T20:09:58.182988+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2026/08/27/122061.xlsx",
+        "https://www.cupk.edu.cn/yjsb/upload/resources/file/2026/08/24/121479.doc"
+      ]
+    },
+    {
+      "url": "http://icare.hust.edu.cn/English/News.htm",
+      "list_html_sha256": "262a3d5b610e7baa4665330bf16c823f304d89e7dcbdbecf10900ba34f16e196",
+      "publisher_evidence": {
+        "text": "华中科技大学中欧清洁与可再生能源学院",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "News",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "中欧清洁与可再生能源学院",
+        "News"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "ICARE Hosts Academic Lecture on International Hydrogen Energy Research",
+          "url": "http://icare.hust.edu.cn/info/1066/9419.htm",
+          "final_url": "http://icare.hust.edu.cn/info/1066/9419.htm",
+          "article_heading": "ICARE Hosts Academic Lecture on International Hydrogen Energy Research",
+          "html_sha256": "677280a0bd7b50b274a2f8539711c29033ffed378b38d18b262ce37f60565056",
+          "fetched_at": "2026-10-03T20:09:36.706112+00:00"
+        },
+        {
+          "title": "Encounter Chinese Culture, Explore a Zero-Carbon Future",
+          "url": "http://icare.hust.edu.cn/info/1066/9398.htm",
+          "final_url": "http://icare.hust.edu.cn/info/1066/9398.htm",
+          "article_heading": "Encounter Chinese Culture, Explore a Zero-Carbon Future",
+          "html_sha256": "7a40e4931a4349f812ebe8b5afbd51ae17d87953c163840c3e5e68a1a47fd956",
+          "fetched_at": "2026-10-03T20:09:37.710731+00:00"
+        },
+        {
+          "title": "Breakthrough Achieved by the Research Team of Professor Li Qing, Chinese Supervisor of ICARE from the School of Materials Science and Engineering, in Proton Exchange Membrane Water Electrolysis for Hydrogen Production",
+          "url": "http://icare.hust.edu.cn/info/1066/9404.htm",
+          "final_url": "http://icare.hust.edu.cn/info/1066/9404.htm",
+          "article_heading": "Breakthrough Achieved by the Research Team of Professor Li Qing, Chinese Supervisor of ICARE from the School of Materials Science and Engineering, in Proton Exchange Membrane Water Electrolysis for Hydrogen Production",
+          "html_sha256": "19f136878184190433a7435b804987bbef777f3d8ad4e9602710a15d835744fe",
+          "fetched_at": "2026-10-03T20:33:30.844892+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "http://icare.hust.edu.cn/__local/A/6D/A8/456A98674F9B70F933CCF332166_B9F9EA8E_955B.jpg",
+        "http://icare.hust.edu.cn/__local/7/1F/9D/A6BB032FACB9011AFAF44BC00AA_767FDC3D_7E20.jpg",
+        "http://icare.hust.edu.cn/__local/C/5A/E8/E4FBCB8BB1FA065D75694B12C32_FCAC47A9_3B867.jpg",
+        "http://icare.hust.edu.cn/__local/3/DE/FD/7D15FECF3CDEFB20E1F7B258775_2BB21FD2_71224.jpg",
+        "http://icare.hust.edu.cn/__local/F/91/5A/86AB6F38B06DFB8299FC86A5751_2618D8DF_82EF0.jpg",
+        "http://icare.hust.edu.cn/__local/B/E3/F6/24E7379BEE2733B6198586CBF7B_1B658E46_28321.jpg",
+        "http://icare.hust.edu.cn/__local/B/4A/89/4D49E01A4370A68598EBD45A933_ADB3D8D5_A5BFB.jpg",
+        "http://icare.hust.edu.cn/__local/E/5C/35/5AE8E6D33F26E19B4E044EAF1DC_9A6DB20D_2C9DB.jpg",
+        "http://icare.hust.edu.cn/__local/2/31/41/8C57F6B556BF78E9D4864A01068_FA26E134_6CB54.jpg",
+        "http://icare.hust.edu.cn/__local/7/CF/D2/60972AC614DE5827BFF9D3D2DEF_0EAE1692_20612.jpg",
+        "http://icare.hust.edu.cn/__local/B/13/0F/16B6AEFB392C517AAECC56DB0D9_4E108484_7220F.jpg",
+        "http://icare.hust.edu.cn/__local/F/EF/30/4B50AB37C0FEBA62D78F354A2B9_120F761D_17884.jpg",
+        "http://icare.hust.edu.cn/__local/A/C6/D8/8037CE0BD8274ECE07568679079_D7B442D1_773C3.jpg",
+        "http://icare.hust.edu.cn/__local/B/9D/AE/8461B9E537C754E7ECEB2AA34A9_064EC444_2BA9C.jpg"
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/cxcy/tzgg/",
+      "list_html_sha256": "1594ab26f6cdd3f8792bae1e7c1fcdef0201cf390c2671d91f6c675d0e750b70",
+      "publisher_evidence": {
+        "text": "中国石油大学(北京)克拉玛依校区创新创业学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "当前位置： 首页 > 通知公告",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "channel_path": [
+        "中国石油大学（北京）克拉玛依校区",
+        "创新创业学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "【学科竞赛】校区创新创业竞赛认定目录（2026年）",
+          "url": "https://www.cupk.edu.cn/cxcy/c/2026-01-29/532920.shtml",
+          "final_url": "https://www.cupk.edu.cn/cxcy/c/2026-01-29/532920.shtml",
+          "article_heading": "【学科竞赛】校区创新创业竞赛认定目录（2026年）",
+          "html_sha256": "0898b991736774311d56dddc4adbb82b6c99fa15dfe0b378fdf4e02d01390886",
+          "fetched_at": "2026-10-03T20:10:21.431140+00:00"
+        },
+        {
+          "title": "【学科竞赛】关于公布2026年拟组织创新创业竞赛项目的通知",
+          "url": "https://www.cupk.edu.cn/cxcy/c/2026-03-17/533070.shtml",
+          "final_url": "https://www.cupk.edu.cn/cxcy/c/2026-03-17/533070.shtml",
+          "article_heading": "【学科竞赛】关于公布2026年拟组织创新创业竞赛项目的通知",
+          "html_sha256": "fd67d9a9209833e31b01d6231d07474f07547ee5b806f31801f142ace1b52431",
+          "fetched_at": "2026-10-03T20:10:22.293926+00:00"
+        },
+        {
+          "title": "【大创中期】关于开展2026年大学生创新创业训练计划项目中期检查工作的通知",
+          "url": "https://www.cupk.edu.cn/cxcy/c/2026-09-15/538550.shtml",
+          "final_url": "https://www.cupk.edu.cn/cxcy/c/2026-09-15/538550.shtml",
+          "article_heading": "【大创中期】关于开展2026年大学生创新创业训练计划项目中期检查工作的通知",
+          "html_sha256": "41a72bb6995f4e1f3d9b8dcfa84e569c5ed54a51ada4020739142029de22965b",
+          "fetched_at": "2026-10-03T20:10:23.309301+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://www.cupk.edu.cn/cxcy/upload/resources/file/2026/03/17/111009.xlsx",
+        "https://www.cupk.edu.cn/cxcy/upload/resources/file/2026/09/15/123479.xlsx",
+        "https://www.cupk.edu.cn/cxcy/upload/resources/file/2026/09/15/123480.docx",
+        "https://www.cupk.edu.cn/cxcy/upload/resources/file/2026/09/15/123481.docx",
+        "https://www.cupk.edu.cn/cxcy/upload/resources/file/2026/09/15/123482.docx",
+        "https://www.cupk.edu.cn/cxcy/upload/resources/file/2026/09/15/123483.docx",
+        "https://www.cupk.edu.cn/cxcy/upload/resources/file/2026/09/15/123484.docx"
+      ]
+    },
+    {
+      "url": "http://seee.hust.edu.cn/llxx/tzgg.htm",
+      "list_html_sha256": "d2aa566a64b59fb2ecb83c844ee89665791fb350f6a67284228a918f6cd65708",
+      "publisher_evidence": {
+        "text": "华中科技大学电气与电子工程学院,通知公告",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "电气与电子工程学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于校党委巡视“回头看”第一组 结束工作的公告",
+          "url": "http://seee.hust.edu.cn/info/1011/15108.htm",
+          "final_url": "http://seee.hust.edu.cn/info/1011/15108.htm",
+          "article_heading": "关于校党委巡视“回头看”第一组 结束工作的公告",
+          "html_sha256": "8418dfd6ae121002cd4eff5276a8a1acec86ab203ebf189e8913c7c4ea806920",
+          "fetched_at": "2026-10-03T20:09:38.964930+00:00"
+        },
+        {
+          "title": "关于召开中国共产党华中科技大学电气与电子工程学院第三次党员代表大会的通知",
+          "url": "http://seee.hust.edu.cn/info/1011/15109.htm",
+          "final_url": "http://seee.hust.edu.cn/info/1011/15109.htm",
+          "article_heading": "关于召开中国共产党华中科技大学电气与电子工程学院第三次党员代表大会的通知",
+          "html_sha256": "b4c37a403fd69166681e7b5d150eae64b4c204aa0527269239dee09318b43087",
+          "fetched_at": "2026-10-03T20:09:39.974265+00:00"
+        },
+        {
+          "title": "关于校党委对电气与电子工程学院党委开展巡视“回头看”的公告",
+          "url": "http://seee.hust.edu.cn/info/1011/6684.htm",
+          "final_url": "http://seee.hust.edu.cn/info/1011/6684.htm",
+          "article_heading": "关于校党委对电气与电子工程学院党委开展巡视“回头看”的公告",
+          "html_sha256": "54cc57b40998a32e8dd47378c16c883cee5c563f1a5e26eb78a486e816b2b6ce",
+          "fetched_at": "2026-10-03T20:33:31.241801+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "http://ses.hust.edu.cn/xwzx/xytz.htm",
+      "list_html_sha256": "f1412cfd8063d63a7bec0536aa87ab7729300f2e298378e1d46adc4c9a639a21",
+      "publisher_evidence": {
+        "text": "华中科技大学工程科学学院,学院通知",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "学院通知",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "工程科学学院",
+        "学院通知"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "工医理交叉国际化实验班2021级校内选拔录取名单公示",
+          "url": "http://ses.hust.edu.cn/info/1037/2074.htm",
+          "final_url": "http://ses.hust.edu.cn/info/1037/2074.htm",
+          "article_heading": "工医理交叉国际化实验班2021级校内选拔录取名单公示",
+          "html_sha256": "3387e04ae6146bd3a6dc5b7eacbc2d8015f1fa5d7f7239d9c2e5f53ad5679031",
+          "fetched_at": "2026-10-03T20:09:48.787359+00:00"
+        },
+        {
+          "title": "工程科学学院2022届本科毕业生推免综合成绩排名公示",
+          "url": "http://ses.hust.edu.cn/info/1037/2065.htm",
+          "final_url": "http://ses.hust.edu.cn/info/1037/2065.htm",
+          "article_heading": "工程科学学院2022届本科毕业生推免综合成绩排名公示",
+          "html_sha256": "3b42f002bb34a2a43d88fe11a8406a0330fa3e1643175d1bc6df90f2e5a0120b",
+          "fetched_at": "2026-10-03T20:09:49.778680+00:00"
+        },
+        {
+          "title": "工程科学学院推荐2021届本科毕业生免试攻读硕士学位研究生工作细则",
+          "url": "http://ses.hust.edu.cn/info/1037/1954.htm",
+          "final_url": "http://ses.hust.edu.cn/info/1037/1954.htm",
+          "article_heading": "工程科学学院推荐2021届本科毕业生免试攻读硕士学位研究生工作细则",
+          "html_sha256": "d7e8ca4ba82c6d1f229acead0bd2fa4ac007db08e167f6192a2c3a20787c1658",
+          "fetched_at": "2026-10-03T20:33:31.586248+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "http://ses.hust.edu.cn/__local/F/EB/39/4C3A82562BE0B2B690827576E27_0D931087_F3B6.jpg"
+      ]
+    },
+    {
+      "url": "http://www.cs.hust.edu.cn/sylm/tzgg/xz.htm",
+      "list_html_sha256": "4ba0d1b2cb8afde544cf3435172ef5576febb4f9bce9efd1e0a1cb575c79a3ae",
+      "publisher_evidence": {
+        "text": "计算机科学与技术学院,行政",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "行政",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "计算机科学与技术学院",
+        "行政"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "计算机学院关于召开规范财务管理制度政策宣讲会的通知",
+          "url": "http://www.cs.hust.edu.cn/info/1441/3098.htm",
+          "final_url": "http://www.cs.hust.edu.cn/info/1441/3098.htm",
+          "article_heading": "计算机学院关于召开规范财务管理制度政策宣讲会的通知",
+          "html_sha256": "41bc7171a0eb2b6b45471107d34db1b52e19c36d66c4e8739597a107b8ef69fe",
+          "fetched_at": "2026-10-03T20:09:53.912075+00:00"
+        },
+        {
+          "title": "关于举行党的二十大精神宣讲会的通知",
+          "url": "http://www.cs.hust.edu.cn/info/1441/2774.htm",
+          "final_url": "http://www.cs.hust.edu.cn/info/1441/2774.htm",
+          "article_heading": "关于举行党的二十大精神宣讲会的通知",
+          "html_sha256": "e2cdbf9c40169a3b7c367dc361a60af7f855b2b82fb0dbb3470a67465bd533a5",
+          "fetched_at": "2026-10-03T20:09:54.919029+00:00"
+        },
+        {
+          "title": "关于举行党的十九届六中全会精神宣讲会的通知",
+          "url": "http://www.cs.hust.edu.cn/info/1441/1716.htm",
+          "final_url": "http://www.cs.hust.edu.cn/info/1441/1716.htm",
+          "article_heading": "关于举行党的十九届六中全会精神宣讲会的通知",
+          "html_sha256": "72446c830d3b7f8da9ed81dc9279fd3c1664d2317244c84a65bc488321777823",
+          "fetched_at": "2026-10-03T20:33:32.056506+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "http://www.cs.hust.edu.cn/__local/E/3B/9B/B0E1B40737CF3A0BFC19B924952_B09744CA_1B2C.png"
+      ]
+    },
+    {
+      "url": "http://aup.hust.edu.cn/index/tzgg.htm",
+      "list_html_sha256": "4e4d683af7be88237d6610b766856a7ac6f8209f971f1d052af86a0091aee90a",
+      "publisher_evidence": {
+        "text": "建筑与城市规划学院,通知公告",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "建筑与城市规划学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "建筑与城市规划学院关于2027届研究生支教团成员候选人推荐名单公示",
+          "url": "http://aup.hust.edu.cn/info/1076/5282.htm",
+          "final_url": "http://aup.hust.edu.cn/info/1076/5282.htm",
+          "article_heading": "建筑与城市规划学院关于2027届研究生支教团成员候选人推荐名单公示",
+          "html_sha256": "0ee9ef2ca9bceecfaf587f53cc0518a50745aaeec823362cfb44ea8175c2c1fa",
+          "fetched_at": "2026-10-03T20:09:58.470840+00:00"
+        },
+        {
+          "title": "关于校党委巡视“回头看”第三组结束工作的公告",
+          "url": "http://aup.hust.edu.cn/info/1079/5225.htm",
+          "final_url": "http://aup.hust.edu.cn/info/1079/5225.htm",
+          "article_heading": "关于校党委巡视“回头看”第三组结束工作的公告",
+          "html_sha256": "0e94fdd9de007be1cb408430ecc8246b8e1d24349cbcbbe71df0365cf7f96991",
+          "fetched_at": "2026-10-03T20:09:59.462270+00:00"
+        },
+        {
+          "title": "建筑与城市规划学院关于推荐参加华中科技大学第十四届“求是杯”大学生创业计划竞赛(“挑战杯”校赛)的公示",
+          "url": "http://aup.hust.edu.cn/info/1077/5204.htm",
+          "final_url": "http://aup.hust.edu.cn/info/1077/5204.htm",
+          "article_heading": "建筑与城市规划学院关于推荐参加华中科技大学第十四届“求是杯”大学生创业计划竞赛(“挑战杯”校赛)的公示",
+          "html_sha256": "3b015400129c74ec1c50aa5465461e1cca86db8598d4d400224d959cabc521ec",
+          "fetched_at": "2026-10-03T20:33:32.467807+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "http://aup.hust.edu.cn/__local/B/19/B9/38C5BA99898278827CC82683D95_6730BC59_8F27.png",
+        "http://aup.hust.edu.cn/__local/D/13/3F/361E6CAD7B2F34871EBCE8C10DB_652BA62F_1036B.png"
+      ]
+    },
+    {
+      "url": "http://civil.hust.edu.cn/index/tzgg.htm",
+      "list_html_sha256": "afe156f2a90e9118cd76d9ef2a89267aeb8b63bf3a252443451bdf5d3011bdb1",
+      "publisher_evidence": {
+        "text": "华中科技大学土木与水利工程学院,通知公告",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "土木与水利工程学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于土木与水利工程学院2026年大学生暑期“三下乡”社会实践活动优秀团队和优秀个人评选结果的公示",
+          "url": "http://civil.hust.edu.cn/info/1363/18388.htm",
+          "final_url": "http://civil.hust.edu.cn/info/1363/18388.htm",
+          "article_heading": "关于土木与水利工程学院2026年大学生暑期“三下乡”社会实践活动优秀团队和优秀个人评选结果的公示",
+          "html_sha256": "f711ff184c59d67e999834b1d6adcde2d954202c2710c4f3f1d613dfb5036f9f",
+          "fetched_at": "2026-10-03T20:10:00.757423+00:00"
+        },
+        {
+          "title": "土木与水利工程学院2027年接收推荐免试研究生第二批直博生复试名单公示",
+          "url": "http://civil.hust.edu.cn/info/1363/18375.htm",
+          "final_url": "http://civil.hust.edu.cn/info/1363/18375.htm",
+          "article_heading": "土木与水利工程学院2027年接收推荐免试研究生第二批直博生复试名单公示",
+          "html_sha256": "0cb91c094cee8bd9788f6c260fe9acb48b5f7f8502dd126e73e387511060acd1",
+          "fetched_at": "2026-10-03T20:10:01.722778+00:00"
+        },
+        {
+          "title": "土木与水利工程学院2027年接收推荐免试研究生复试名单公示",
+          "url": "http://civil.hust.edu.cn/info/1363/18373.htm",
+          "final_url": "http://civil.hust.edu.cn/info/1363/18373.htm",
+          "article_heading": "土木与水利工程学院2027年接收推荐免试研究生复试名单公示",
+          "html_sha256": "82d8d3ee48311601f9b7b58bbf3aee8e57d2d43b1245998cb38faf4cbbb25dd8",
+          "fetched_at": "2026-10-03T20:33:32.748244+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "http://civil.hust.edu.cn/system/resource/images/fileTypeImages/icon_pdf.gif"
+      ]
+    },
+    {
+      "url": "https://pharm.sjtu.edu.cn/zsgz.html",
+      "list_html_sha256": "2d27c2010dbb6ef1b8c10216094653cb2c3a898bf56da8bf3d27571b8a258129",
+      "publisher_evidence": {
+        "text": "上海交通大学药学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "招生工作",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(2) > li:nth-of-type(7) > dl:nth-of-type(1) > dd:nth-of-type(1) > a:nth-of-type(1)",
+        "href": "https://pharm.sjtu.edu.cn/zsgz.html"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "药学院",
+        "招生工作"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2027年药学院、生物医药前沿学院招收推免生综合考核实施细则",
+          "url": "https://pharm.sjtu.edu.cn/zsgz/6364.html",
+          "final_url": "https://pharm.sjtu.edu.cn/zsgz/6364.html",
+          "article_heading": "2027年药学院、生物医药前沿学院招收推免生综合考核实施细则-上海交通大学药学院",
+          "html_sha256": "f05081771e4e495356824841b92c30b67cfbcd9087939301c141e6d7eef2bc9d",
+          "fetched_at": "2026-10-03T20:15:41.291162+00:00"
+        },
+        {
+          "title": "药学院2026级博士招生（第二批）综合考核结果公示",
+          "url": "https://pharm.sjtu.edu.cn/zsgz/6192.html",
+          "final_url": "https://pharm.sjtu.edu.cn/zsgz/6192.html",
+          "article_heading": "药学院2026级博士招生（第二批）综合考核结果公示-上海交通大学药学院",
+          "html_sha256": "42c6b3197070c3ef5e5996c4d1e1eac1b307b610980eba33c1b29a5c19ba13a2",
+          "fetched_at": "2026-10-03T20:15:42.150679+00:00"
+        },
+        {
+          "title": "上海交通大学药学院全国优秀大学生暑期学术交流营报名通知",
+          "url": "https://pharm.sjtu.edu.cn/zsgz/6182.html",
+          "final_url": "https://pharm.sjtu.edu.cn/zsgz/6182.html",
+          "article_heading": "上海交通大学药学院全国优秀大学生暑期学术交流营报名通知-上海交通大学药学院",
+          "html_sha256": "21f7df1aaadf1afd177ee1341fc0c8edc55ef274fe15bab6a281e6926cf1612f",
+          "fetched_at": "2026-10-03T20:33:33.036355+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "http://tzb.hust.edu.cn/index/tzgg.htm",
+      "list_html_sha256": "96f2b4ba503feb2c5c7c8db24901f2f3829eb9fdc33a3e27b5e0deead8e73680",
+      "publisher_evidence": {
+        "text": "华中科技大学党委统战部,通知公告",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "党委统战部",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于开展华中科技大学2025年度铸牢中华民族共同体意识中华经典诵读大赛的通知",
+          "url": "http://tzb.hust.edu.cn/info/1074/5878.htm",
+          "final_url": "http://tzb.hust.edu.cn/info/1074/5878.htm",
+          "article_heading": "关于开展华中科技大学2025年度铸牢中华民族共同体意识中华经典诵读大赛的通知",
+          "html_sha256": "ec5f6e162a9504ad9debf7e84fa72dc7ec7f9023878538f913cce3d40d4fbf70",
+          "fetched_at": "2026-10-03T20:10:18.556677+00:00"
+        },
+        {
+          "title": "关于中央巡视整改落实情况专项巡视组结束现场巡视工作的公告",
+          "url": "http://tzb.hust.edu.cn/info/1074/5738.htm",
+          "final_url": "http://tzb.hust.edu.cn/info/1074/5738.htm",
+          "article_heading": "关于中央巡视整改落实情况专项巡视组结束现场巡视工作的公告",
+          "html_sha256": "b5ea1d6d882d2a5407b7bfef9e6cada11a4c2b4057d3df100386b87bd50839e5",
+          "fetched_at": "2026-10-03T20:10:19.575457+00:00"
+        },
+        {
+          "title": "关于校党委开展中央巡视整改落实情况专项巡视的公告",
+          "url": "http://tzb.hust.edu.cn/info/1074/5718.htm",
+          "final_url": "http://tzb.hust.edu.cn/info/1074/5718.htm",
+          "article_heading": "关于校党委开展中央巡视整改落实情况专项巡视的公告",
+          "html_sha256": "c05e5802811b2307f725f3425ed3868a10e8eeb05f5265a0b4bb10392bfa59e6",
+          "fetched_at": "2026-10-03T20:33:33.070165+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56",
+      "list_html_sha256": "faa85807841d3e851cd1fa5b80aa97d47288cffc790134ec6dab1169de44ec7a",
+      "publisher_evidence": {
+        "text": "招生资讯 | 上海交通大学设计学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "招生资讯 | 上海交通大学设计学院",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "设计学院",
+        "招生资讯"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "上海交通大学2026年艺术本科专业（美术类）招生咨询问答",
+          "url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56/detail/6a39dd3c52b9ab036cb9c27e",
+          "final_url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56/detail/6a39dd3c52b9ab036cb9c27e",
+          "article_heading": "上海交通大学2026年艺术本科专业（美术类）招生咨询问答 | 上海交通大学设计学院",
+          "html_sha256": "7f855820adfbde305bbb844137324cd5af2e886f88290eddb83fcb0daaf8ac32",
+          "fetched_at": "2026-10-03T20:15:44.653145+00:00"
+        },
+        {
+          "title": "上海交通大学2026年艺术本科专业 （美术类）招生简章",
+          "url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56/detail/6a39dc8952b9ab036cb9a527",
+          "final_url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56/detail/6a39dc8952b9ab036cb9a527",
+          "article_heading": "上海交通大学2026年艺术本科专业 （美术类）招生简章 | 上海交通大学设计学院",
+          "html_sha256": "d9531cdd59d2c315d2108d9cab7ad7beb0645def1106dd1caaedbd6b29c31d39",
+          "fetched_at": "2026-10-03T20:22:02.761479+00:00"
+        },
+        {
+          "title": "【IIDE】上海交通大学国际工业设计工程项目2025年招生",
+          "url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56/detail/665f2392dc43e76c96e98a60",
+          "final_url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56/detail/665f2392dc43e76c96e98a60",
+          "article_heading": "【IIDE】上海交通大学国际工业设计工程项目2025年招生 | 上海交通大学设计学院",
+          "html_sha256": "5a544262a601127f33b287a32cd663b8c5012d9797fecda0f7c87b636054376b",
+          "fetched_at": "2026-10-03T20:33:33.757644+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://yzb.sjtu.edu.cn/zkxx/bszs",
+      "list_html_sha256": "88f560819542956d204fa315ebbd86dd11486ba0c5201223487aada8ab01092c",
+      "publisher_evidence": {
+        "text": "博士招生 - 上海交通大学研究生招生网",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "博士招生 - 上海交通大学研究生招生网",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "研究生招生网",
+        "博士招生"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "上海交通大学2027年“医工交叉平台”博士研究生招生简章",
+          "url": "https://yzb.sjtu.edu.cn/post/3766",
+          "final_url": "https://yzb.sjtu.edu.cn/post/3766",
+          "article_heading": "上海交通大学2027年“医工交叉平台”博士研究生招生简章 - 上海交通大学研究生招生网",
+          "html_sha256": "84c46f6ece56ec354046cd6ae8cfd5c901d9ff834a5adce94fd632aff7cecdad",
+          "fetched_at": "2026-10-03T20:15:47.231504+00:00"
+        },
+        {
+          "title": "关于2026年秋季博士研究生录取通知书发放及学号查询的通知",
+          "url": "https://yzb.sjtu.edu.cn/post/3755",
+          "final_url": "https://yzb.sjtu.edu.cn/post/3755",
+          "article_heading": "关于2026年秋季博士研究生录取通知书发放及学号查询的通知 - 上海交通大学研究生招生网",
+          "html_sha256": "d3825756175d7241b2a282d1df75742e7f4a5f185e8ae6ed6aec0cae1e1ca439",
+          "fetched_at": "2026-10-03T20:15:48.210387+00:00"
+        },
+        {
+          "title": "上海交通大学2027级“明志荣誉博士生”招生简章",
+          "url": "https://yzb.sjtu.edu.cn/post/3744",
+          "final_url": "https://yzb.sjtu.edu.cn/post/3744",
+          "article_heading": "上海交通大学2027级“明志荣誉博士生”招生简章 - 上海交通大学研究生招生网",
+          "html_sha256": "0e3213b4de940596847932279177efa321befa24a1de2ec20c33372c61af1cf2",
+          "fetched_at": "2026-10-03T20:16:04.269718+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2026/07/5f027602c190eab28be1cedfea3d04c0.pdf",
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2026/07/c85c01fd2ff4ebf058dff86e821d02e7.docx"
+      ]
+    },
+    {
+      "url": "https://psychology.sjtu.edu.cn/zsxx.html",
+      "list_html_sha256": "869117582e42d167f336c90b1180c97bd72520108a73ba8e71a7b99fc7a5cffb",
+      "publisher_evidence": {
+        "text": "招生信息-上海交通大学心理学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "招生信息-上海交通大学心理学院",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "心理学院",
+        "招生信息"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2027年心理学院招收推免生综合考核实施细则",
+          "url": "https://psychology.sjtu.edu.cn/zsxx/659.html",
+          "final_url": "https://psychology.sjtu.edu.cn/zsxx/659.html",
+          "article_heading": "2027年心理学院招收推免生综合考核实施细则-上海交通大学心理学院",
+          "html_sha256": "4868a6f4f50fc61f8ad1932a205a3f719c53c5dcd2a6c3b7a84b421092c84937",
+          "fetched_at": "2026-10-03T20:15:49.848074+00:00"
+        },
+        {
+          "title": "心理学院关于2027年硕士研究生招生专业调整的公告",
+          "url": "https://psychology.sjtu.edu.cn/zsxx/607.html",
+          "final_url": "https://psychology.sjtu.edu.cn/zsxx/607.html",
+          "article_heading": "心理学院关于2027年硕士研究生招生专业调整的公告-上海交通大学心理学院",
+          "html_sha256": "c580d759e39e8d4eb4ed375ef55491b97239016d5d2d02ff8f594d212538c734",
+          "fetched_at": "2026-10-03T20:15:50.753885+00:00"
+        },
+        {
+          "title": "上海交通大学心理学院2027年优才夏令营报名通知",
+          "url": "https://psychology.sjtu.edu.cn/zsxx/592.html",
+          "final_url": "https://psychology.sjtu.edu.cn/zsxx/592.html",
+          "article_heading": "上海交通大学心理学院2027年优才夏令营报名通知-上海交通大学心理学院",
+          "html_sha256": "e86f3812c6c9af1d389dd1acf1180eda36ba15d2386025b925e7757ef12dda78",
+          "fetched_at": "2026-10-03T20:33:35.431117+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://yzb.sjtu.edu.cn/zkxx/gatzs",
+      "list_html_sha256": "a0fc2db006b8bdef5c67bf97ef0981ea8e8bcc3a0abd242757e2cc11f26aae11",
+      "publisher_evidence": {
+        "text": "港澳台招生 - 上海交通大学研究生招生网",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "港澳台招生 - 上海交通大学研究生招生网",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "研究生招生网",
+        "港澳台招生"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于2026年港澳台研究生录取通知书发放的通知",
+          "url": "https://yzb.sjtu.edu.cn/post/3756",
+          "final_url": "https://yzb.sjtu.edu.cn/post/3756",
+          "article_heading": "关于2026年港澳台研究生录取通知书发放的通知 - 上海交通大学研究生招生网",
+          "html_sha256": "bd8a9b371609eb733b2e11682b55688b01ccdb5f890ea60ba43009b971b755b2",
+          "fetched_at": "2026-10-03T20:16:09.247624+00:00"
+        },
+        {
+          "title": "上海交通大学2026年研究生新生报到须知",
+          "url": "https://yzb.sjtu.edu.cn/post/3733",
+          "final_url": "https://yzb.sjtu.edu.cn/post/3733",
+          "article_heading": "上海交通大学2026年研究生新生报到须知 - 上海交通大学研究生招生网",
+          "html_sha256": "f5e1fb4a3c17906146f3f450bf58da620d3b422f22fa8f0f095b777af24635ab",
+          "fetched_at": "2026-10-03T20:16:10.271917+00:00"
+        },
+        {
+          "title": "关于2026年面向港澳台地区研究生录取通知书邮寄地址确认及有关事项的通知",
+          "url": "https://yzb.sjtu.edu.cn/post/3712",
+          "final_url": "https://yzb.sjtu.edu.cn/post/3712",
+          "article_heading": "关于2026年面向港澳台地区研究生录取通知书邮寄地址确认及有关事项的通知 - 上海交通大学研究生招生网",
+          "html_sha256": "1c3914901088d20f495391adcb709ba8c72a651658bdf0a5d21a664ede1faa33",
+          "fetched_at": "2026-10-03T20:33:36.614784+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2026/07/d6cf5d8ed43b9648b928da072c0b059a.pdf",
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2025/07/04064bb9d40b7aeffb01a4cde2098ffe.pdf",
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2025/07/76ce8bd61e820f90cb8cd8b5e335d47a.pdf"
+      ]
+    },
+    {
+      "url": "https://psychology.sjtu.edu.cn/pyfa.html",
+      "list_html_sha256": "f33b07c9afcbf673609c5107ba0615a85e0a168677f603a215575f84d8ae549a",
+      "publisher_evidence": {
+        "text": "学生培养-上海交通大学心理学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学生培养-上海交通大学心理学院",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "心理学院",
+        "学生培养"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "上海交通大学心理学、应用心理专业2026年博士研究生（2024级）学位论文开题（第二批）日程安排",
+          "url": "https://psychology.sjtu.edu.cn/pyfa/586.html",
+          "final_url": "https://psychology.sjtu.edu.cn/pyfa/586.html",
+          "article_heading": "上海交通大学心理学、应用心理专业2026年博士研究生（2024级）学位论文开题（第二批）日程安排-上海交通大学心理学院",
+          "html_sha256": "b3da1d3949a4910516f6868e002b63b0e3965159ec30ea6d33d64c2357b7958d",
+          "fetched_at": "2026-10-03T20:16:16.101337+00:00"
+        },
+        {
+          "title": "上海交通大学心理学、应用心理专业 2026年硕士研究生学位论文中期检查考核通知",
+          "url": "https://psychology.sjtu.edu.cn/pyfa/584.html",
+          "final_url": "https://psychology.sjtu.edu.cn/pyfa/584.html",
+          "article_heading": "上海交通大学心理学、应用心理专业 2026年硕士研究生学位论文中期检查考核通知-上海交通大学心理学院",
+          "html_sha256": "4fd3bf0071e0fd4fe20790ae04c12debf45af63381005ab29c6e0f35db6347c6",
+          "fetched_at": "2026-10-03T20:16:17.118900+00:00"
+        },
+        {
+          "title": "上海交通大学心理学、应用心理专业2026年博士研究生（2024级）学位论文开题日程安排",
+          "url": "https://psychology.sjtu.edu.cn/pyfa/576.html",
+          "final_url": "https://psychology.sjtu.edu.cn/pyfa/576.html",
+          "article_heading": "上海交通大学心理学、应用心理专业2026年博士研究生（2024级）学位论文开题日程安排-上海交通大学心理学院",
+          "html_sha256": "ab9e3a33ea7576f66053f33bb1c2a4e07a7640330aa579fd7e7044df69291fa6",
+          "fetched_at": "2026-10-03T20:33:37.369454+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://psychology.sjtu.edu.cn/upload/ueditor/file/20260616/1781590357422925.docx",
+        "https://psychology.sjtu.edu.cn/upload/ueditor/file/20260525/1779712947720024.pdf"
+      ]
+    },
+    {
+      "url": "https://naoce.sjtu.edu.cn/dabiangonggao.html",
+      "list_html_sha256": "5b970532dd2bb8eb4719c4a8c94dd6348300b467efe613e746eadac22a2a7bbb",
+      "publisher_evidence": {
+        "text": "答辩公告-上海交通大学船舶海洋与建筑工程学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "答辩公告-上海交通大学船舶海洋与建筑工程学院",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "船舶海洋与建筑工程学院",
+        "答辩公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "博士生学位论文答辩公告-闫斌（指导教师：叶冠林）",
+          "url": "https://naoce.sjtu.edu.cn/dabiangonggao/15752.html",
+          "final_url": "https://naoce.sjtu.edu.cn/dabiangonggao/15752.html",
+          "article_heading": "博士生学位论文答辩公告-闫斌（指导教师：叶冠林）-上海交通大学船舶海洋与建筑工程学院",
+          "html_sha256": "a217418df62bcc459e19ce1c0c21b16b48912c16f9b008e1e61abc14074c5d50",
+          "fetched_at": "2026-10-03T20:16:25.401716+00:00"
+        },
+        {
+          "title": "博士生学位论文答辩公告-谢东东（指导教师：杨健）",
+          "url": "https://naoce.sjtu.edu.cn/dabiangonggao/15751.html",
+          "final_url": "https://naoce.sjtu.edu.cn/dabiangonggao/15751.html",
+          "article_heading": "博士生学位论文答辩公告-谢东东（指导教师：杨健）-上海交通大学船舶海洋与建筑工程学院",
+          "html_sha256": "89153e07465600530bfe3f2de1a4f2cc9a56fcbeae471032668b67d4194b41f4",
+          "fetched_at": "2026-10-03T20:16:26.297024+00:00"
+        },
+        {
+          "title": "博士生学位论文答辩公告-张建宏（指导教师：程正顺）",
+          "url": "https://naoce.sjtu.edu.cn/dabiangonggao/15749.html",
+          "final_url": "https://naoce.sjtu.edu.cn/dabiangonggao/15749.html",
+          "article_heading": "博士生学位论文答辩公告-张建宏（指导教师：程正顺）-上海交通大学船舶海洋与建筑工程学院",
+          "html_sha256": "16a5ec04ab954efc51941ddebabb38b6163c12f2966a9f565517acaece688f6e",
+          "fetched_at": "2026-10-03T20:33:38.076180+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "http://ii.hust.edu.cn/tzgg.htm",
+      "list_html_sha256": "e43deaa69a2c41697ad63e96038d78165c5c97e620b0b1f473ff58bd7de2698e",
+      "publisher_evidence": {
+        "text": "华中科技大学创新研究院,通知公告",
+        "locator": "meta[name=keywords]"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "title"
+      },
+      "channel_path": [
+        "华中科技大学",
+        "创新研究院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2026年评选通过入驻研究生创客空间团队名单",
+          "url": "http://ii.hust.edu.cn/info/1012/1769.htm",
+          "final_url": "http://ii.hust.edu.cn/info/1012/1769.htm",
+          "article_heading": "2026年评选通过入驻研究生创客空间团队名单",
+          "html_sha256": "1299d23280c02fc6464ae0e793bbd4de33cb88116a46df72b67cd580f4c69969",
+          "fetched_at": "2026-10-03T20:10:35.353439+00:00"
+        },
+        {
+          "title": "关于做好第六批(2025年)创客团队终期验收工作的通知",
+          "url": "http://ii.hust.edu.cn/info/1012/1761.htm",
+          "final_url": "http://ii.hust.edu.cn/info/1012/1761.htm",
+          "article_heading": "关于做好第六批(2025年)创客团队终期验收工作的通知",
+          "html_sha256": "a9c360ce7626f2a8f30ecf999321567e01720dda13959905bf614c6e5d300e1d",
+          "fetched_at": "2026-10-03T20:10:36.363264+00:00"
+        },
+        {
+          "title": "关于申请研究生创客空间的通知",
+          "url": "http://ii.hust.edu.cn/info/1012/1758.htm",
+          "final_url": "http://ii.hust.edu.cn/info/1012/1758.htm",
+          "article_heading": "关于申请研究生创客空间的通知",
+          "html_sha256": "a483a1721d36990cb56a7dec9aa9b794dff950ba14081be09f6378701475e2d2",
+          "fetched_at": "2026-10-03T20:33:39.467982+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "http://ii.hust.edu.cn/__local/0/6B/E1/7D1E948CB971286B396ED97CA71_6C7492D9_37A2.png",
+        "http://ii.hust.edu.cn/__local/E/70/6E/2FB068AE7423C66A4AB8C85675B_D2395456_2B00A.png"
+      ]
+    },
+    {
+      "url": "https://www.jwc.sjtu.edu.cn/index/mxxsdtz.htm",
+      "list_html_sha256": "6993fbc4c77f51e4fbe051f3efb899e1eb4f7d4ae656b6520dd35182320faf0e",
+      "publisher_evidence": {
+        "text": "面向学生的通知-上海交通大学教务处",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "面向学生的通知-上海交通大学教务处",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "教务处",
+        "面向学生的通知"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于2026级学生参加“大学物理（荣誉）”课程选拔测试的通知",
+          "url": "https://www.jwc.sjtu.edu.cn/info/1222/128931.htm",
+          "final_url": "https://www.jwc.sjtu.edu.cn/info/1222/128931.htm",
+          "article_heading": "关于2026级学生参加“大学物理（荣誉）”课程选拔测试的通知-上海交通大学教务处",
+          "html_sha256": "ede2896766bbe9f8c89e08f6028cb3ba48de75097ad1ab5701e692a4781b62c3",
+          "fetched_at": "2026-10-03T20:22:05.202815+00:00"
+        },
+        {
+          "title": "关于2026级新生登录学信网进行学籍自查的通知",
+          "url": "https://www.jwc.sjtu.edu.cn/info/1222/128841.htm",
+          "final_url": "https://www.jwc.sjtu.edu.cn/info/1222/128841.htm",
+          "article_heading": "关于2026级新生登录学信网进行学籍自查的通知-上海交通大学教务处",
+          "html_sha256": "ecfe262c0d75ad5f1a33e01e821a2cd67811604620d138ac1b35edcc1c162c40",
+          "fetched_at": "2026-10-03T20:22:07.304816+00:00"
+        },
+        {
+          "title": "关于公示2026年华五“AI+X”微专业入选学生名单的通知",
+          "url": "https://www.jwc.sjtu.edu.cn/info/1222/128751.htm",
+          "final_url": "https://www.jwc.sjtu.edu.cn/info/1222/128751.htm",
+          "article_heading": "关于公示2026年华五“AI+X”微专业入选学生名单的通知-上海交通大学教务处",
+          "html_sha256": "b6b9f5092515150a4b2b500a74d7325e049cb632fbf8d7ffccb07634cb50f6b0",
+          "fetched_at": "2026-10-03T20:33:39.589609+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://see.sjtu.edu.cn/bks_tzgg.html",
+      "list_html_sha256": "d14dc29a15e91efaa64f94697cece83ad0a84cae604d0a0404f3e6a3950272a2",
+      "publisher_evidence": {
+        "text": "通知公告-上海交通大学电气工程学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通知公告-上海交通大学电气工程学院",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "电气工程学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "电气工程学院2026级本科新生报到、资格审查的通知",
+          "url": "https://see.sjtu.edu.cn/bks_tzgg/2562.html",
+          "final_url": "https://see.sjtu.edu.cn/bks_tzgg/2562.html",
+          "article_heading": "电气工程学院2026级本科新生报到、资格审查的通知-上海交通大学电气工程学院",
+          "html_sha256": "8c387d59a5f19490fbd9ef2e8dee32c70d0d8d0da80070f59b88df2cf4bd062d",
+          "fetched_at": "2026-10-03T20:22:13.767848+00:00"
+        },
+        {
+          "title": "电气工程学院2026年本科生转专业工作实施细则",
+          "url": "https://see.sjtu.edu.cn/bks_tzgg/2334.html",
+          "final_url": "https://see.sjtu.edu.cn/bks_tzgg/2334.html",
+          "article_heading": "电气工程学院2026年本科生转专业工作实施细则-上海交通大学电气工程学院",
+          "html_sha256": "55d9c97741f3e3e5bcc1a1302df8a271555d2972f43aaf4eed91e1ef1c9b0d71",
+          "fetched_at": "2026-10-03T20:22:14.827030+00:00"
+        },
+        {
+          "title": "【短期项目】2026新加坡国立大学计算机学院暑期科研实习项目",
+          "url": "https://see.sjtu.edu.cn/bks_tzgg/2281.html",
+          "final_url": "https://see.sjtu.edu.cn/bks_tzgg/2281.html",
+          "article_heading": "【短期项目】2026新加坡国立大学计算机学院暑期科研实习项目-上海交通大学电气工程学院",
+          "html_sha256": "f6af9218d2032a82493e973b51a007372b80cb40f5ba5a7f37501d9eb8909255",
+          "fetched_at": "2026-10-03T20:33:40.417222+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://see.sjtu.edu.cn/upload/ueditor/file/20260305/55971116/交我办项目申请流程指导.pdf"
+      ]
+    },
+    {
+      "url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+      "list_html_sha256": "ccd0ee46ae63460c37ad8eb92c011dff32749870802ae166214d7e4d1d4cbcc7",
+      "publisher_evidence": {
+        "text": "新闻通告-上海交通大学教务处",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "新闻通告-上海交通大学教务处",
+        "locator": "title"
+      },
+      "channel_path": [
+        "上海交通大学",
+        "教务处",
+        "新闻通告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于公示2025年度实验教学改革项目中期...",
+          "url": "https://www.jwc.sjtu.edu.cn/info/1030/124151.htm",
+          "final_url": "https://www.jwc.sjtu.edu.cn/info/1030/124151.htm",
+          "article_heading": "关于公示2025年度实验教学改革项目中期检查结果的通知-上海交通大学教务处",
+          "html_sha256": "3b88a982699ffa5949042ca0caf143b03190c13144c610320af2dc3a7ac030da",
+          "fetched_at": "2026-10-03T20:22:16.305100+00:00"
+        },
+        {
+          "title": "关于公示2024年度实验教学改革项目结题...",
+          "url": "https://www.jwc.sjtu.edu.cn/info/1030/123041.htm",
+          "final_url": "https://www.jwc.sjtu.edu.cn/info/1030/123041.htm",
+          "article_heading": "关于公示2024年度实验教学改革项目结题验收结果的通知-上海交通大学教务处",
+          "html_sha256": "7e400b3029f3f6060a948ac4cc9244f6e744372a3f7eec8b56a7d2c7e54e75f8",
+          "fetched_at": "2026-10-03T20:22:17.301985+00:00"
+        },
+        {
+          "title": "关于启动2025-2026学年第二学期本科教学...",
+          "url": "https://www.jwc.sjtu.edu.cn/info/1030/127141.htm",
+          "final_url": "https://www.jwc.sjtu.edu.cn/info/1030/127141.htm",
+          "article_heading": "关于启动2025-2026学年第二学期本科教学研究生助教（普通岗）考核工作的通知-上海交通大学教务处",
+          "html_sha256": "cb521c5058e86454f5b28481025d53c85b14df59f4e2bba1726a9f2d08f9d176",
+          "fetched_at": "2026-10-03T20:33:40.938902+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://sgy.ustc.edu.cn/",
+      "final_url": "https://sgy.ustc.edu.cn/main.htm",
+      "list_html_sha256": "9c949bf33a0329f6621598a2357c868b067b98afe9cd8aaad2a361c915b1f93e",
+      "fetched_at": "2026-10-11T02:28:23.971895+00:00",
+      "publisher_evidence": {
+        "text": "少年班学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "公告",
+        "locator": ".news_center_title"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "少年班学院",
+        "公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "关于2026年部分专项奖学金候选人的公示",
+          "url": "https://sgy.ustc.edu.cn/2026/1008/c37821a755374/page.htm",
+          "final_url": "https://sgy.ustc.edu.cn/2026/1008/c37821a755374/page.htm",
+          "article_heading": "关于2026年部分专项奖学金候选人的公示",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "0e2e34b4b9f5ed1265ea37345fb27be40fdaa445f205e7313ff1de89fbb561cc",
+          "fetched_at": "2026-10-11T02:38:50.884481+00:00"
+        },
+        {
+          "title": "关于2026年本科生国家奖学金候选人的公示",
+          "url": "https://sgy.ustc.edu.cn/2026/0914/c37821a753350/page.htm",
+          "final_url": "https://sgy.ustc.edu.cn/2026/0914/c37821a753350/page.htm",
+          "article_heading": "关于2026年本科生国家奖学金候选人的公示",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "ab29b3d4eaae0c80965729ca98e39be43afd4b57d26088742f81a93d63c09965",
+          "fetched_at": "2026-10-11T02:38:51.985084+00:00"
+        },
+        {
+          "title": "少年班学院2026级零零班拟录取名单公示",
+          "url": "https://sgy.ustc.edu.cn/2026/0902/c37821a751907/page.htm",
+          "final_url": "https://sgy.ustc.edu.cn/2026/0902/c37821a751907/page.htm",
+          "article_heading": "少年班学院2026级零零班拟录取名单公示",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "31957de8fcc750468740a1145783d33e01a8dddd999bf8c380bce89a29fe874a",
+          "fetched_at": "2026-10-11T02:38:53.062386+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://math.ustc.edu.cn/",
+      "final_url": "https://math.ustc.edu.cn/main.htm",
+      "list_html_sha256": "24793d2a8fb96d8264152b61d4623f1a24938bf1fa5983831ec8127a46435f0e",
+      "fetched_at": "2026-10-11T02:28:26.034634+00:00",
+      "publisher_evidence": {
+        "text": "中国科学技术大学数学科学学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学院新闻",
+        "locator": "[frag=\"窗口4\"] h3"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "数学科学学院",
+        "学院新闻"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "AI来了，数学工作者在做什么？2026年全国科普月活动成功举办",
+          "url": "https://math.ustc.edu.cn/2026/1009/c18649a755442/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/1009/c18649a755442/page.htm",
+          "article_heading": "AI来了，数学工作者在做什么？2026年全国科普月活动成功举办",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "721dc212b8690ddce8bc042307cbf71969788757579d6839d95f925c86d21f69",
+          "fetched_at": "2026-10-11T02:38:54.490817+00:00"
+        },
+        {
+          "title": "“从认识人工智能到探索科研新范式”报告会成功举办",
+          "url": "https://math.ustc.edu.cn/2026/0915/c18649a753445/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/0915/c18649a753445/page.htm",
+          "article_heading": "“从认识人工智能到探索科研新范式”报告会成功举办",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "312a5ad98256f2b577c8dedefe6e9415631400d4ebf0f4920b34e7f75062af45",
+          "fetched_at": "2026-10-11T02:38:55.698633+00:00"
+        },
+        {
+          "title": "数学科学学院主办期刊《Communications in Mathematics and Statistics》入选世界一流科技期刊目录",
+          "url": "https://math.ustc.edu.cn/2026/0918/c18649a753786/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/0918/c18649a753786/page.htm",
+          "article_heading": "数学科学学院主办期刊《Communications in Mathematics and Statistics》入选世界一流科技期刊目录",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "1370531a3c73f765edde62f63d9f0317bc7fe6a14c67e024908327b29742183e",
+          "fetched_at": "2026-10-11T02:38:56.770674+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://math.ustc.edu.cn/_upload/article/images/2d/ab/9a411d664b26b0f6d61609c1c32c/007480bd-7f98-4a02-8eed-c458a8594ce0.jpg",
+        "https://math.ustc.edu.cn/_upload/article/images/2d/ab/9a411d664b26b0f6d61609c1c32c/509c902e-0775-46a1-b8ee-575418d8ece4.png",
+        "https://math.ustc.edu.cn/_upload/article/images/2d/ab/9a411d664b26b0f6d61609c1c32c/97b92ba4-a60e-4cca-ab06-6e066db43c79.png",
+        "https://math.ustc.edu.cn/_upload/article/images/2d/ab/9a411d664b26b0f6d61609c1c32c/9c8eae0e-1603-4cb5-86c1-8c5ba8b4cf7e.png",
+        "https://math.ustc.edu.cn/_upload/article/images/2d/ab/9a411d664b26b0f6d61609c1c32c/ec773886-8337-48af-b45b-a51bd329b7e7.png",
+        "https://math.ustc.edu.cn/_upload/article/images/2d/ab/9a411d664b26b0f6d61609c1c32c/9a4abcb5-9c61-4e70-8a0a-192f2e4532b3.png",
+        "https://math.ustc.edu.cn/_upload/article/images/2d/ab/9a411d664b26b0f6d61609c1c32c/041c5687-1e83-4511-952b-457f2dac3681.png",
+        "https://math.ustc.edu.cn/_upload/article/images/6f/4d/72adf9cb498a9faf691482905115/9acb3f86-a186-4871-a6a2-eb2e2bb498e5.jpg",
+        "https://math.ustc.edu.cn/_upload/article/images/6f/4d/72adf9cb498a9faf691482905115/f8bb08bc-82c6-4cb7-839e-a337019aa15d.jpg",
+        "https://math.ustc.edu.cn/_upload/article/images/6f/4d/72adf9cb498a9faf691482905115/46151a39-cd24-45d8-b9d9-864eca01a6a7.jpg",
+        "https://math.ustc.edu.cn/_upload/article/images/6f/4d/72adf9cb498a9faf691482905115/4612b570-834d-4a0c-8247-7449013e1fe6.jpg",
+        "https://math.ustc.edu.cn/_upload/article/images/5f/79/189810a541cfa9bfbe45c5e40383/45ceb10c-59ed-409c-beea-b6f3ce898ea2.png",
+        "https://math.ustc.edu.cn/_upload/article/images/5f/79/189810a541cfa9bfbe45c5e40383/64eea0c6-e632-43cb-86fa-0766fc97aba1.png"
+      ]
+    },
+    {
+      "url": "https://math.ustc.edu.cn/",
+      "final_url": "https://math.ustc.edu.cn/main.htm",
+      "list_html_sha256": "24793d2a8fb96d8264152b61d4623f1a24938bf1fa5983831ec8127a46435f0e",
+      "fetched_at": "2026-10-11T02:28:26.034634+00:00",
+      "publisher_evidence": {
+        "text": "中国科学技术大学数学科学学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "[frag=\"窗口5\"] h3"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "数学科学学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "数学科学学院2026年专项奖学金（研究生）初评结果公示",
+          "url": "https://math.ustc.edu.cn/2026/1010/c18650a755634/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/1010/c18650a755634/page.htm",
+          "article_heading": "数学科学学院2026年专项奖学金（研究生）初评结果公示",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "c180b855195c78c3c2d97084784ae451051d5852da142e99dc651f51781ff6ef",
+          "fetched_at": "2026-10-11T02:39:02.729245+00:00"
+        },
+        {
+          "title": "数学科学学院2026年度研究生国家奖学金初评结果公示",
+          "url": "https://math.ustc.edu.cn/2026/1009/c18650a755450/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/1009/c18650a755450/page.htm",
+          "article_heading": "数学科学学院2026年度研究生国家奖学金初评结果公示",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "a6ea8adbd02b02633a35db3625553e40f472055dc328152039d810ca25534ea4",
+          "fetched_at": "2026-10-11T02:39:03.780641+00:00"
+        },
+        {
+          "title": "关于评选2026年蒋震奖助学金及蒋震海外研究生奖学金的通知",
+          "url": "https://math.ustc.edu.cn/2026/0930/c18650a755052/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/0930/c18650a755052/page.htm",
+          "article_heading": "关于评选2026年蒋震奖助学金及蒋震海外研究生奖学金的通知",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "a4021d518c5b17cd9474772c0f40baa23bc50c7185a5adbbe6db2756eec7edd5",
+          "fetched_at": "2026-10-11T02:39:04.849467+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://math.ustc.edu.cn/_upload/article/files/f3/6c/8f1f84394e6eb523d52c57af45e4/74dd9376-e693-4d8b-ac52-fcf78a996761.zip",
+        "https://math.ustc.edu.cn/_ueditor/themes/default/images/icon_rar.gif"
+      ]
+    },
+    {
+      "url": "https://math.ustc.edu.cn/",
+      "final_url": "https://math.ustc.edu.cn/main.htm",
+      "list_html_sha256": "24793d2a8fb96d8264152b61d4623f1a24938bf1fa5983831ec8127a46435f0e",
+      "fetched_at": "2026-10-11T02:28:26.034634+00:00",
+      "publisher_evidence": {
+        "text": "中国科学技术大学数学科学学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学术交流",
+        "locator": "[frag=\"窗口6\"] h3"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "数学科学学院",
+        "学术交流"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "【10月08日-10月09日】五教5201&5204 代数系列报告",
+          "url": "https://math.ustc.edu.cn/2026/1007/c18653a755242/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/1007/c18653a755242/page.htm",
+          "article_heading": "【10月08日-10月09日】五教5201&5204 代数系列报告",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "73db0a40340e0ee75a086fb77bb8c5bbfca70e013e1fe307dabd1c2043b3c28b",
+          "fetched_at": "2026-10-11T02:39:05.886749+00:00"
+        },
+        {
+          "title": "【10月9日-10月15日】五教5506&5501 Towards the operator limit of random matrices",
+          "url": "https://math.ustc.edu.cn/2026/1004/c18653a755211/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/1004/c18653a755211/page.htm",
+          "article_heading": "【10月9日-10月15日】五教5506&5501 Towards the operator limit of random matrices",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "15d4552267698137d15dc61489146cc5a1998653d5cc4346efff7b462b910cde",
+          "fetched_at": "2026-10-11T02:39:06.841476+00:00"
+        },
+        {
+          "title": "【09月26日-09月27日】安徽省非线性科学学会第五次会员大会暨2026年学术年会",
+          "url": "https://math.ustc.edu.cn/2026/0924/c18653a754547/page.htm",
+          "final_url": "https://math.ustc.edu.cn/2026/0924/c18653a754547/page.htm",
+          "article_heading": "【09月26日-09月27日】安徽省非线性科学学会第五次会员大会暨2026年学术年会",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "e3d650fd0b3b0cca0338448afbed2feb84021749f30df752d93551cb714f9914",
+          "fetched_at": "2026-10-11T02:39:08.293459+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://math.ustc.edu.cn/_upload/article/images/7f/73/3f808e9a45898e61794e7bd6a81f/d38c0d69-11c2-485e-8b6a-7fd13220da10.png",
+        "https://math.ustc.edu.cn/_upload/article/images/7f/73/3f808e9a45898e61794e7bd6a81f/b87dc6a9-5fbd-40e8-a550-38740a77e474.jpg"
+      ]
+    },
+    {
+      "url": "https://cs.ustc.edu.cn/",
+      "final_url": "https://cs.ustc.edu.cn/main.htm",
+      "list_html_sha256": "1310dfe17b7d84aa59b77d078512a6f80fc4f5dadf085f4ea8106008cdb275a1",
+      "fetched_at": "2026-10-11T02:34:26.897173+00:00",
+      "publisher_evidence": {
+        "text": "计算机科学与技术学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "新闻",
+        "locator": ".post-12 h3"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "计算机科学与技术学院",
+        "新闻"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "融入新集体 启航新征程——计算机学院举办2025级转专业学生学习经验分享与发展交流会",
+          "url": "https://cs.ustc.edu.cn/2026/0915/c3058a753440/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/0915/c3058a753440/page.htm",
+          "article_heading": "融入新集体 启航新征程——计算机学院举办2025级转专业学生学习经验分享与发展交流会",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "b7e9f88c571ad334c6e6269e83fb3008ce480a37092d3bdc2fa5d977d1b4b1d0",
+          "fetched_at": "2026-10-11T02:39:09.456093+00:00"
+        },
+        {
+          "title": "聚力学工队伍，厚植育人担当 ——计算机科学与技术学院举办2026年教师节座谈交流会暨“校风传承月”主题活动",
+          "url": "https://cs.ustc.edu.cn/2026/0915/c3058a753403/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/0915/c3058a753403/page.htm",
+          "article_heading": "聚力学工队伍，厚植育人担当 ——计算机科学与技术学院举办2026年教师节座谈交流会暨“校风传承月”主题活动",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "48ac65feeff7591422cee94d5a57819226fe86e6194df11096346031515d0a48",
+          "fetched_at": "2026-10-11T02:39:10.430703+00:00"
+        },
+        {
+          "title": "中国科大在2026年全国大学生计算机系统能力大赛中首次夺冠",
+          "url": "https://cs.ustc.edu.cn/2026/0907/c3058a752346/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/0907/c3058a752346/page.htm",
+          "article_heading": "中国科大在2026年全国大学生计算机系统能力大赛中首次夺冠",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "f925a0973a5c879d7d45aa29b52823de94374aed515ba37dd65ac4be33f76f91",
+          "fetched_at": "2026-10-11T02:39:11.899421+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://cs.ustc.edu.cn/_upload/article/images/32/29/538299f744bf9d64f02a17b6eb2a/8207cbd9-5cf7-49bf-86e3-4d8e53501893.png",
+        "https://cs.ustc.edu.cn/_upload/article/images/32/29/538299f744bf9d64f02a17b6eb2a/32bf4ac6-83d8-4bbf-9793-54d83a8627cd.png",
+        "https://cs.ustc.edu.cn/_upload/article/images/32/29/538299f744bf9d64f02a17b6eb2a/82619abe-4a7e-41f0-86fd-a6a296ad45c0.png",
+        "https://cs.ustc.edu.cn/_upload/article/images/6a/6d/182946294122982889affc191157/2ca663b2-a569-4bb9-aed2-126d8350d88e.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/6a/6d/182946294122982889affc191157/73658778-9e24-4dcd-8c2a-ff88cb3987cb.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/6a/6d/182946294122982889affc191157/ac4dba37-7319-4b58-a60c-e9b2203930cd.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/6a/6d/182946294122982889affc191157/1cdc9b66-7aa8-47fe-befc-9849f125e63d.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/6a/6d/182946294122982889affc191157/be3bbf53-5d6d-40e8-8924-e657a472adf2.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/6a/6d/182946294122982889affc191157/91696982-317e-43cb-8920-a0eff0a11aa6.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/6a/6d/182946294122982889affc191157/820f8c96-5c31-4d57-951d-c3d4a41f866c.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/5a/7e/5849aeec4b2fb8667300293f70e4/fce12775-6b2a-461f-bf6a-da7f1017ee3a.gif",
+        "https://cs.ustc.edu.cn/_upload/article/images/5a/7e/5849aeec4b2fb8667300293f70e4/e58f589a-dba7-4013-afc0-4bea381333b3.gif"
+      ]
+    },
+    {
+      "url": "https://cs.ustc.edu.cn/",
+      "final_url": "https://cs.ustc.edu.cn/main.htm",
+      "list_html_sha256": "1310dfe17b7d84aa59b77d078512a6f80fc4f5dadf085f4ea8106008cdb275a1",
+      "fetched_at": "2026-10-11T02:34:26.897173+00:00",
+      "publisher_evidence": {
+        "text": "计算机科学与技术学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "公告通知",
+        "locator": ".post-21 h3"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "计算机科学与技术学院",
+        "公告通知"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2026年秋季学期英才班助学金评审结果公示通知",
+          "url": "https://cs.ustc.edu.cn/2026/0928/c3054a754715/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/0928/c3054a754715/page.htm",
+          "article_heading": "2026年秋季学期英才班助学金评审结果公示通知",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "c9486763325fac031dff1f12b16b03a36bdc7238caaa72c2b4ab602950f5bcd7",
+          "fetched_at": "2026-10-11T02:39:12.856566+00:00"
+        },
+        {
+          "title": "计算机学院2026年度本科生国家奖学金初评结果公示",
+          "url": "https://cs.ustc.edu.cn/2026/0916/c3054a753547/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/0916/c3054a753547/page.htm",
+          "article_heading": "计算机学院2026年度本科生国家奖学金初评结果公示",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "9e24a0397145ddaaf97da7b0af8658cf15cb04e540414d492598de9896c4e47c",
+          "fetched_at": "2026-10-11T02:39:14.050691+00:00"
+        },
+        {
+          "title": "计算机学院2026年度\"宝钢奖学金\"初评结果公示",
+          "url": "https://cs.ustc.edu.cn/2026/0902/c3054a751943/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/0902/c3054a751943/page.htm",
+          "article_heading": "计算机学院2026年度\"宝钢奖学金\"初评结果公示",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "600d58c36deb7c79dc32018e730684e6cbe9de466be02fb8eeb7ad873e7cad70",
+          "fetched_at": "2026-10-11T02:39:15.075317+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://cs.ustc.edu.cn/_upload/article/files/1d/b0/d116e2984232b5d5ee7741a98bf0/744e5f75-8ab6-4830-84ed-ae4d8e76926a.pdf"
+      ]
+    },
+    {
+      "url": "https://cs.ustc.edu.cn/",
+      "final_url": "https://cs.ustc.edu.cn/main.htm",
+      "list_html_sha256": "1310dfe17b7d84aa59b77d078512a6f80fc4f5dadf085f4ea8106008cdb275a1",
+      "fetched_at": "2026-10-11T02:34:26.897173+00:00",
+      "publisher_evidence": {
+        "text": "计算机科学与技术学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学术活动",
+        "locator": ".post-22 h3"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "计算机科学与技术学院",
+        "学术活动"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "中科院计算所王瑞平研究员学术报告会",
+          "url": "https://cs.ustc.edu.cn/2026/1009/c14893a755448/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/1009/c14893a755448/page.htm",
+          "article_heading": "中科院计算所王瑞平研究员学术报告会",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "0a81d29b2129a7467df359ae4c9ea41ffa55006979d2761dbba820a483b54e00",
+          "fetched_at": "2026-10-11T02:39:16.099026+00:00"
+        },
+        {
+          "title": "浙江大学陈佳伟研究员学术报告会",
+          "url": "https://cs.ustc.edu.cn/2026/1009/c14893a755447/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/1009/c14893a755447/page.htm",
+          "article_heading": "浙江大学陈佳伟研究员学术报告会",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "659bf3ce336b854595b5f99f528f32692b62eeca87059d37b7277b6fe903eb78",
+          "fetched_at": "2026-10-11T02:39:17.048826+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://cs.ustc.edu.cn/_upload/article/images/37/25/dada480b4986bc62c82ead14ea0a/f25cd902-3313-4842-9505-c0e58be147a2.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/62/6c/2ca9a69345c589ccaeea5547184d/bcad291b-cce6-47d8-b23f-674abb0c0c38.jpg"
+      ]
+    },
+    {
+      "url": "https://cs.ustc.edu.cn/",
+      "final_url": "https://cs.ustc.edu.cn/main.htm",
+      "list_html_sha256": "1310dfe17b7d84aa59b77d078512a6f80fc4f5dadf085f4ea8106008cdb275a1",
+      "fetched_at": "2026-10-11T02:34:26.897173+00:00",
+      "publisher_evidence": {
+        "text": "计算机科学与技术学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学生工作",
+        "locator": ".post-23 h3"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "计算机科学与技术学院",
+        "学生工作"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "筑牢安全防线，凝聚班级力量",
+          "url": "https://cs.ustc.edu.cn/2026/1008/c20182a755275/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/1008/c20182a755275/page.htm",
+          "article_heading": "筑牢安全防线，凝聚班级力量",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "6ac9cd50fd9e2d1cf1aeeceb92e1ebf66c86964891368beff00aed7f182533ac",
+          "fetched_at": "2026-10-11T02:39:18.245894+00:00"
+        },
+        {
+          "title": "探秘牧场，寻味淮南——计算机学院2025级本科1班举办安全教育主题体验暨淮南秋游活动",
+          "url": "https://cs.ustc.edu.cn/2026/1008/c20182a755273/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/1008/c20182a755273/page.htm",
+          "article_heading": "探秘牧场，寻味淮南——计算机学院2025级本科1班举办安全教育主题体验暨淮南秋游活动",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "c4670ac8df95aee3e8591970598bfb04b1f334574df27c78485a368ec803ccc6",
+          "fetched_at": "2026-10-11T02:39:19.428493+00:00"
+        },
+        {
+          "title": "启程正当下,笺墨绘未来",
+          "url": "https://cs.ustc.edu.cn/2026/1008/c20182a755272/page.htm",
+          "final_url": "https://cs.ustc.edu.cn/2026/1008/c20182a755272/page.htm",
+          "article_heading": "启程正当下,笺墨绘未来",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "823fc1191fa89dece06167f7fe9d3bc2076c65bf96f68ea1b13f7f2cccb93cf3",
+          "fetched_at": "2026-10-11T02:39:20.376866+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://cs.ustc.edu.cn/_upload/article/images/2e/74/e16d269b4c1aaae039c8709bb54d/31d2b302-e740-41ce-8f2c-f0d398c827af.png",
+        "https://cs.ustc.edu.cn/_upload/article/images/2e/74/e16d269b4c1aaae039c8709bb54d/c5f1e43c-d288-4721-8ce8-8211efcdeb9f.png",
+        "https://cs.ustc.edu.cn/_upload/article/images/2e/74/e16d269b4c1aaae039c8709bb54d/baef5f34-70d9-48c4-8853-43ffcca44f92.png",
+        "https://cs.ustc.edu.cn/_upload/article/images/2e/74/e16d269b4c1aaae039c8709bb54d/952e34fe-7cd4-4208-8551-e585680e1185.png",
+        "https://cs.ustc.edu.cn/_upload/article/images/9d/b9/af0a4366439bbc1d9d973f499a3a/44d2bea8-6fa2-4aee-b50a-63d8e967c20c.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/9d/b9/af0a4366439bbc1d9d973f499a3a/4693a0e7-5a50-40b9-83c1-fbef3946e5e5.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/9d/b9/af0a4366439bbc1d9d973f499a3a/17d93c6c-dae6-4125-8a9c-4721ae31ef20.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/9d/b9/af0a4366439bbc1d9d973f499a3a/82a1f003-f2c4-4e08-b58e-7c3db6cf0ece.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/9d/b9/af0a4366439bbc1d9d973f499a3a/15f5c789-8ce5-4b66-a3cb-517c1bc0bec4.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/9d/b9/af0a4366439bbc1d9d973f499a3a/558e7a49-beb5-4c04-b18c-c6610d603ee5.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/9d/b9/af0a4366439bbc1d9d973f499a3a/4637c5d2-1e2e-4884-be43-d03c41e81d82.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/86/23/c63fae5940dc9fb5207bf9545df0/a59454eb-681d-4573-8e1b-b13391cf0278.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/86/23/c63fae5940dc9fb5207bf9545df0/3264f92e-06e4-430d-9a0b-40ee3ba4ceaf.jpg",
+        "https://cs.ustc.edu.cn/_upload/article/images/86/23/c63fae5940dc9fb5207bf9545df0/9fc27453-b1ee-4fac-97e0-298860b51953.jpg"
+      ]
+    },
+    {
+      "url": "https://physics.ustc.edu.cn/",
+      "final_url": "https://physics.ustc.edu.cn/main.htm",
+      "list_html_sha256": "2ff00d0dc8085bf0e4793e853a125c4c42999c1748234b4ca5398c59c3febce6",
+      "fetched_at": "2026-10-11T02:28:28.561542+00:00",
+      "publisher_evidence": {
+        "text": "中国科学技术大学物理学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学院要闻",
+        "locator": "[frag=\"窗口11\"] h3"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "物理学院",
+        "新闻中心",
+        "学院要闻"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "我院蒋建华教授团队发现临界拓扑现象",
+          "url": "https://physics.ustc.edu.cn/2026/1009/c3588a755413/page.htm",
+          "final_url": "https://physics.ustc.edu.cn/2026/1009/c3588a755413/page.htm",
+          "article_heading": "我院蒋建华教授团队发现临界拓扑现象",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "3b87874276593833e46368f4233d0f39d501aec9c05bb3c1b8dd9b9a3f965607",
+          "fetched_at": "2026-10-11T02:39:21.517168+00:00"
+        },
+        {
+          "title": "我院郭光灿院士团队韩正甫、陈巍、银振强、王双等实现抗噪声量子密钥分发",
+          "url": "https://physics.ustc.edu.cn/2026/1005/c3588a755229/page.htm",
+          "final_url": "https://physics.ustc.edu.cn/2026/1005/c3588a755229/page.htm",
+          "article_heading": "我院郭光灿院士团队韩正甫、陈巍、银振强、王双等实现抗噪声量子密钥分发",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "8c541178b71420920e7211e5b4acd1858c13e0865a2f533558b9e3b9fc40559e",
+          "fetched_at": "2026-10-11T02:39:22.634042+00:00"
+        },
+        {
+          "title": "做志存高远的攀登者——光学系师生共话校风传承",
+          "url": "https://physics.ustc.edu.cn/2026/1010/c3588a755526/page.htm",
+          "final_url": "https://physics.ustc.edu.cn/2026/1010/c3588a755526/page.htm",
+          "article_heading": "做志存高远的攀登者——光学系师生共话校风传承",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "5ebda5a21166d989288b2ba18caae14d31dfec248be650592d82cba76339d779",
+          "fetched_at": "2026-10-11T02:39:23.620473+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://physics.ustc.edu.cn/_upload/article/images/3c/dd/76ffa3914e3dae977a54f6c117e5/4a985550-7171-4319-86cd-6d01007e761f.jpg",
+        "https://physics.ustc.edu.cn/_upload/article/images/63/2d/f410139143fc8c70f28934e787a9/3884945d-c5a7-4e12-95d7-a86cb7f80fac.jpg",
+        "https://physics.ustc.edu.cn/_upload/article/images/63/2d/f410139143fc8c70f28934e787a9/16028143-461a-488e-9123-5fb1439b1af4.jpg",
+        "https://physics.ustc.edu.cn/_upload/article/images/13/96/b40b11464c3bbdccef2f3eafd5e3/0e1f836c-277e-4fae-bbe0-1baa85478314.jpg",
+        "https://physics.ustc.edu.cn/_upload/article/images/13/96/b40b11464c3bbdccef2f3eafd5e3/849dc1d8-b17a-48a7-a229-caa691fffd47.png"
+      ]
+    },
+    {
+      "url": "https://physics.ustc.edu.cn/3584/list.htm",
+      "final_url": "https://physics.ustc.edu.cn/3584/list.htm",
+      "list_html_sha256": "4fa84d28207553d076f46cb8944988cff9e3d46ffcc6941b15b2d220c5850a5e",
+      "fetched_at": "2026-10-11T02:40:25.389272+00:00",
+      "publisher_evidence": {
+        "text": "中国科学技术大学东区物理学院",
+        "locator": "address p"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": "title"
+      },
+      "channel_path": [
+        "中国科学技术大学",
+        "物理学院",
+        "新闻中心",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "物理学院2026年国家奖学金公示通知",
+          "url": "https://physics.ustc.edu.cn/2026/1011/c3584a755681/page.htm",
+          "final_url": "https://physics.ustc.edu.cn/2026/1011/c3584a755681/page.htm",
+          "article_heading": "物理学院2026年国家奖学金公示通知",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "0ec99a5bcc1bb8dedd5e9c8d39315c91a8119aa599394f1b5f484a3449b3c247",
+          "fetched_at": "2026-10-11T02:58:34.586507+00:00"
+        },
+        {
+          "title": "物理学院2026年“862校友优秀新生奖学金”评审结果公示",
+          "url": "https://physics.ustc.edu.cn/2026/1009/c3584a755412/page.htm",
+          "final_url": "https://physics.ustc.edu.cn/2026/1009/c3584a755412/page.htm",
+          "article_heading": "物理学院2026年“862校友优秀新生奖学金”评审结果公示",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "b95821168bf6785e85540663a203b915298ce72c158fbe78e5abd5a96ea9b9a3",
+          "fetched_at": "2026-10-11T02:58:35.885730+00:00"
+        },
+        {
+          "title": "中国科学技术大学物理学院2026年接收推荐免试研究生公告",
+          "url": "https://physics.ustc.edu.cn/2026/0907/c3584a752421/page.htm",
+          "final_url": "https://physics.ustc.edu.cn/2026/0907/c3584a752421/page.htm",
+          "article_heading": "中国科学技术大学物理学院2026年接收推荐免试研究生公告",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "fead7964b0fbfb1711a10c53d10282b4b3f9b06f0fec37a0794ca5a58f8fbba6",
+          "fetched_at": "2026-10-11T02:58:36.961556+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://physics.ustc.edu.cn/_upload/article/images/9c/cc/e4b40c55458d822b3c58affa7956/dd7658b9-8912-4835-8460-bd22545c5994.jpg"
+      ]
+    },
+    {
+      "url": "https://ues.pku.edu.cn/",
+      "final_url": "https://ues.pku.edu.cn/",
+      "list_html_sha256": "47f401adefa148ca4283cedf32e67a123ec3ca97b8d4719cc089435462c489c5",
+      "fetched_at": "2026-10-11T03:04:52.380520+00:00",
+      "publisher_evidence": {
+        "text": "北京大学城市与环境学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学 院新闻",
+        "locator": ".news.fl > .commonTitle h3"
+      },
+      "channel_path": [
+        "北京大学",
+        "城市与环境学院",
+        "学院新闻"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "媒体关注 | 《光明日报》报道城环学院右玉思政实践",
+          "url": "https://ues.pku.edu.cn/xyxw/b76937ebcc8744a5a0362cb65a6ff28f.htm",
+          "final_url": "https://ues.pku.edu.cn/xyxw/b76937ebcc8744a5a0362cb65a6ff28f.htm",
+          "article_heading": "北京大学城市与环境学院_媒体关注 | 《光明日报》报道城环学院右玉思政实践",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "76edc0204ea71fb9751e5e370bdcb6826d43feedafbe0488e0dc9218c027fc88",
+          "fetched_at": "2026-10-11T03:15:50.766245+00:00"
+        },
+        {
+          "title": "国庆回家 · 叙旧座谈——学院举办离退休教师返校交流活动",
+          "url": "https://ues.pku.edu.cn/xyxw/c3fb9b6a3e7a45418632d96d6f8d2530.htm",
+          "final_url": "https://ues.pku.edu.cn/xyxw/c3fb9b6a3e7a45418632d96d6f8d2530.htm",
+          "article_heading": "北京大学城市与环境学院_国庆回家 · 叙旧座谈——学院举办离退休教师返校交流活动",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "45798d82929cee6c3010c45a9198a00665f4e23d851a69a382784a2129e59ead",
+          "fetched_at": "2026-10-11T03:15:52.983558+00:00"
+        },
+        {
+          "title": "祝贺！3位城环人荣获AGU全球环境变化青年科学家奖",
+          "url": "https://ues.pku.edu.cn/xyxw/d7538f32008c4bbdaa8ce21ed623e74e.htm",
+          "final_url": "https://ues.pku.edu.cn/xyxw/d7538f32008c4bbdaa8ce21ed623e74e.htm",
+          "article_heading": "北京大学城市与环境学院_祝贺！3位城环人荣获AGU全球环境变化青年科学家奖",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "e74af158a32ac848074df345a92a50fc4aeb0a87dd9e116c295b8ee1b50104a8",
+          "fetched_at": "2026-10-11T03:15:55.083330+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://ues.pku.edu.cn/",
+      "final_url": "https://ues.pku.edu.cn/",
+      "list_html_sha256": "47f401adefa148ca4283cedf32e67a123ec3ca97b8d4719cc089435462c489c5",
+      "fetched_at": "2026-10-11T03:04:52.380520+00:00",
+      "publisher_evidence": {
+        "text": "北京大学城市与环境学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通 知公告",
+        "locator": ".notice.fr > .commonTitle h3"
+      },
+      "channel_path": [
+        "北京大学",
+        "城市与环境学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "城市与环境学院关于2026年国庆节放假期间带值班工作的通知",
+          "url": "https://ues.pku.edu.cn/sytzgg/8035724b684e4b6486047c151d32389c.htm",
+          "final_url": "https://ues.pku.edu.cn/sytzgg/8035724b684e4b6486047c151d32389c.htm",
+          "article_heading": "北京大学城市与环境学院_城市与环境学院关于2026年国庆节放假期间带值班工作的通知",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "b4dc7161371ac101f0d766a2964b4f6bf01055024597a3178bf09f330ce4e92a",
+          "fetched_at": "2026-10-11T03:15:56.224506+00:00"
+        },
+        {
+          "title": "2026年北京大学城市与环境学院教学科研岗位招聘启事",
+          "url": "https://hr.pku.edu.cn/rczp/jxky/d7dbda4bae034a039b97b580457f086a.htm",
+          "final_url": "https://hr.pku.edu.cn/rczp/jxky/d7dbda4bae034a039b97b580457f086a.htm",
+          "article_heading": "2026年北京大学城市与环境学院教学科研岗位招聘启事",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > h3:nth-of-type(1)",
+          "html_sha256": "31a9551b98e7d530525e2bdb3c5c56212539cf83e4d9a71625b4f2cd8e25188b",
+          "fetched_at": "2026-10-11T03:15:57.157411+00:00"
+        },
+        {
+          "title": "关于调整北京大学城市与环境学院2027年全国硕士研究生招生考试全日制硕士初试科目考试内容的公告",
+          "url": "https://ues.pku.edu.cn/jyjx/yjsjy/zsxx/beb754ffdb7849738526a44ed566c4ac.htm",
+          "final_url": "https://ues.pku.edu.cn/jyjx/yjsjy/zsxx/beb754ffdb7849738526a44ed566c4ac.htm",
+          "article_heading": "北京大学城市与环境学院_关于调整北京大学城市与环境学院2027年全国硕士研究生招生考试全日制硕士初试科目考试内容的公告",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "20e7296511d1c407525efbc0e228a71b799545b68ea2a10492cbf9ec8d13831e",
+          "fetched_at": "2026-10-11T03:15:58.112532+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://ues.pku.edu.cn/",
+      "final_url": "https://ues.pku.edu.cn/",
+      "list_html_sha256": "47f401adefa148ca4283cedf32e67a123ec3ca97b8d4719cc089435462c489c5",
+      "fetched_at": "2026-10-11T03:04:52.380520+00:00",
+      "publisher_evidence": {
+        "text": "北京大学城市与环境学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学 术讲座",
+        "locator": ".lectureBox > .commonTitle h3"
+      },
+      "channel_path": [
+        "北京大学",
+        "城市与环境学院",
+        "学术讲座"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "气候变化背景下陆地生态系统光合驯化与水热胁迫影响机制",
+          "url": "https://ues.pku.edu.cn/kxyj/xsjz/d4692c260eb14a18bf5eee8ba2cb2f1a.htm",
+          "final_url": "https://ues.pku.edu.cn/kxyj/xsjz/d4692c260eb14a18bf5eee8ba2cb2f1a.htm",
+          "article_heading": "北京大学城市与环境学院_气候变化背景下陆地生态系统光合驯化与水热胁迫影响机制",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "3bb975d346456cceaf82eedf6987ff52411731f332886b93e4dc1b031cf67fb8",
+          "fetched_at": "2026-10-11T03:15:59.051682+00:00"
+        },
+        {
+          "title": "Beyond Carbon Myopia: Towards Sustainable, Profitable and Inclusive Land Use",
+          "url": "https://ues.pku.edu.cn/kxyj/xsjz/7f0d470d9aac4d6c98d708afb40ce16a.htm",
+          "final_url": "https://ues.pku.edu.cn/kxyj/xsjz/7f0d470d9aac4d6c98d708afb40ce16a.htm",
+          "article_heading": "北京大学城市与环境学院_Beyond Carbon Myopia: Towards Sustainable, Profitable and Inclusive Land Use",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "310393a4aee2f85d458aa320809787b424dacab5f629dad25e1f6ea0cbd175ea",
+          "fetched_at": "2026-10-11T03:16:00.127645+00:00"
+        },
+        {
+          "title": "Plant responses to climate change: a perspective from  the Alps to the Poles",
+          "url": "https://ues.pku.edu.cn/kxyj/xsjz/7eeb39e9d3b549f9889e1fbcfd7318a0.htm",
+          "final_url": "https://ues.pku.edu.cn/kxyj/xsjz/7eeb39e9d3b549f9889e1fbcfd7318a0.htm",
+          "article_heading": "北京大学城市与环境学院_ Plant responses to climate change: a perspective from  the Alps to the Poles",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "7bb6656140327cf5a49ad371a67b1dea8a8a4a7d46dc503e3173167358a308f8",
+          "fetched_at": "2026-10-11T03:16:01.436304+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://ues.pku.edu.cn/images/2026-09/bcf16520a79b4bdbaf68e2250be3677d.jpg",
+        "https://ues.pku.edu.cn/images/2026-08/203211790adf43d9b40a1151aa47ed39.jpg",
+        "https://ues.pku.edu.cn/images/2026-08/abe3d2d71e024134883c56f9cb6bc1b4.jpg"
+      ]
+    },
+    {
+      "url": "https://eecs.pku.edu.cn/",
+      "final_url": "https://eecs.pku.edu.cn/",
+      "list_html_sha256": "89c800e611cfa3e228a19e93b42996b14d435bebbdc82f1ae31a91b7559aa94f",
+      "fetched_at": "2026-10-11T03:04:57.633458+00:00",
+      "publisher_evidence": {
+        "text": "北京大学信息科学技术学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "新闻 动态",
+        "locator": ".row1 .container h2"
+      },
+      "channel_path": [
+        "北京大学",
+        "信息科学技术学院",
+        "新闻动态"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "信息科学技术学院2026年新生晚会举行",
+          "url": "https://eecs.pku.edu.cn/info/1040/13483.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1040/13483.htm",
+          "article_heading": "信息科学技术学院2026年新生晚会举行-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "f92df426a8b70d2a06ed1de381b63b62640c9d26d1eef7db4d3d3416673f8922",
+          "fetched_at": "2026-10-11T03:16:02.868695+00:00"
+        },
+        {
+          "title": "灵感在线，服务在线：信科电脑小队 Vibe Coding 主题讲座暨电脑义诊活动顺利举办！",
+          "url": "https://eecs.pku.edu.cn/info/1040/13443.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1040/13443.htm",
+          "article_heading": "灵感在线，服务在线：信科电脑小队 Vibe Coding 主题讲座暨电脑义诊活动顺利举办！-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "02504cb8bccb9f983c967afb433c6febd155540ba8f061c65a2e36fd668a015a",
+          "fetched_at": "2026-10-11T03:16:03.987467+00:00"
+        },
+        {
+          "title": "EECS·新生班鉴丨2604班：以赛促学，以辩明理",
+          "url": "https://eecs.pku.edu.cn/info/1040/13383.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1040/13383.htm",
+          "article_heading": "EECS·新生班鉴丨2604班：以赛促学，以辩明理-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "1ebe908548ab908bb9fe15209a3a7e2e281273749381ed83df227a16a9d8adf5",
+          "fetched_at": "2026-10-11T03:16:04.909508+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CnzNQbU4N8MR62MqmvDMmCZL4vinmLp4nRnRL8L4nlCPLRC0gihFp2hmCIa0LkysMkyaM1hfMRf7L8LbU4nfnzn2M7W7UNQfMRW7L4QkUzQFLzWfnNLaLznFMNC8MmNJv2bjo4OeoDrTvDL0qIbtpYyPLRUag474MR94gtA8pUvcc&oid=1828791678&tid=1040&nid=13483&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CoR7Q4olLanRN4nqzlPLmvaLRL4nl7piozlYM8MfUmCaMz-0gihFp2hmCIa0U1yaUYh2n1yDM47anNWVL7QkoRC4LNQVolUYM7QRUN74L4nFL8laLzfknzAFoRU4UmvJv2bjo4OeoDrTvDL0qIbtpYyPLRUag474MR94gtA8pUvcc&oid=1828791678&tid=1040&nid=13483&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CUmlQ4nzUPM4r7oqR74LlU8UzGDMR7pbLRfRn77DnNQVMmv0gihFp2hmCIa0MkhfL1hkMShRoR9ZnNnfLmNsMlW7MRQVL49iL7WVnl-bUznFnmGDol-iL8nFMz7bol7Jv2bjo4OeoDrTvDL0qIbtpYyPLRUag474MR94gtA8pUvcc&oid=1828791678&tid=1040&nid=13483&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CnzvQPUm-aMzA7UqlQ2MNnfU49ZolrpVU4-iUzWknmN8L4-0gihFp2hmCIa0L1hRMkyiMYyPUlLbU4QRoRMkozLaLzvZMzLiMl7YLmGbnmrFLRL8nz-4MzMFLm6knlCJv2bjo4OeoDrTvDL0qIbtpYyPLRUag474MR94gtA8pUvcc&oid=1828791678&tid=1040&nid=13483&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CnzQQRM4GbMmG8LqNnVU8CPMz78U8Wp2oz9sn7LsM4L8LRL0gihFp2hmCIa0nShRLYy4M1yYnzGDL49iMRQVoRvYn77PnRW7L778U87aMzWFMln2M8M2nRrFMzffoz-Jv2bjo4OeoDrTvDL0qIbtpYyPLRUag474MR94gtA8pUvcc&oid=1828791678&tid=1040&nid=13483&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CoRGQsLzNsLRvDoqll8UmCDL4Laozrp7M4UZM8WknzQRnlC0gihFp2hmCIa0LYyioky4L1y4UmlYnRVRU4lYolCDo7LaUmVkUmMkoRLYozfFUmf2nzL4o7VFUNnkL87Jv2bjo4OeoDrTvDL0qIbtpYyPLRUag474MR94gtA8pUvcc&oid=1828791678&tid=1040&nid=13483&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CMm7QYLlV2L4LYnqNrRLzr2MRV7Mlnp7M4vPL4-aMzlPnR90gihFp2hmCIa0LYhVUYysMkhVMz6RnzAVUmvDo7MkL4M7L7LPolV7nNWRUmnFn7r7MNMkMmfFLNrfnzNJqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LkyPL4UZLYbw62v8c&oid=1828791678&tid=1040&nid=13483&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CUl7QYMmGPnzL8nqzUYUm7Zo7rVLRrpVLln2ozMfUNW7M7L0gihFp2hmCIa0nSy8LYysnkyPL8W2L4C8M4lPnRv4LR9PM87an7UbUNLDLRWFUzvbL8M2MzAFLNn7Uz7JqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LkyPL4UZLYbw62v8c&oid=1828791678&tid=1040&nid=13483&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CU4fQfMRNsoz62nqNUDUzvZUmTRUm7p8L4v4L7-DMlWVnz90gihFp2hmCIa0MYhfokhkMSysUl-soRrfLmnRMz-PLmQ2LRTkLRvsn7CaL46FM7Q7nRLPoRQFLzl4nz-JqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LkyPL4U8LYbw62v8c&oid=1828791678&tid=1040&nid=13443&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CU8CQ8ozQVnmGPoqzNbnznVoRMRnNLpPLRV7L8rkUN7DMRv0gihFp2hmCIa0n1hRokhfLkhVLlL4L4fVM4CPUz7iLRNZoRf7L4l4U4GsnlMFMmNaL8WVM4fFMz-Jv2bjo4OeoDrTvDL0qIbtpYyPLRUag474MRU4gtA8pUvcc&oid=1828791678&tid=1040&nid=13443&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CL7lQ8Mm7PnzvPMq4TRMz-aLNCsnR9psMmNbnzvYL4LbMzN0gihFp2hmCIa0nkyZLSyPMSh7Lz-Znmv4Mz74n7Q7Lzr7Lm62L4nRnNQfL4VFMmV7UNlZnNQFLlC4LmvJqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LkyPL4U8LYbw62v8c&oid=1828791678&tid=1040&nid=13443&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CLRrQRM4VVUmlbnqzU4nzV7LRvaozLpsUzN4ozU8oRf7Uzl0gihFp2hmCIa0M1yPnkyiUSh7M7LbU4QVozvso7VRLzNYLzVRMRCZLNrknNQFnRTkLzGDMz6Fo77soSb/v2rjo4OeoDrTvDL0qIbtpYyPLRUag474MRU4gtA8pUvcc&oid=1828791678&tid=1040&nid=13443&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CUmQQ7Uz7DUNCYMqmf7nNCaozM7L4-piMzT7M4-PUNCZoRl0gihFp2hmCIa0U1hfUSh2M1h2n7lbM4TVMNUZUmL4M8QknmW2MmNZMlV7ozMFUlWfLRMRozMFUN7bn1b/v2rjo4OeoDrTvDL0qIbtpYyPLRUag474MRU4gtA8pUvcc&oid=1828791678&tid=1040&nid=13443&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CozlQ4L4QVnRvsLql7ZolrkUNCPL7-pinlLsLm-sMz7YMll0gihFp2hmCIa0LkhRU1ybnkyio7laLmUZnz9DU8-4MzA2MRnRoRnRoRf2MmnFL8UPL8lDnlWFLzLPMz7JqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LkyPL4U8LYbw62v8c&oid=1828791678&tid=1040&nid=13443&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CMz-QPU4CsUm6knqRLaLzN8L46RMlMp2MRrfUlW7U4vYnR70gihFp2hmCIa0MYhfMky4MSyYMmCYL4CbMz6kU8n7L8U4oRlZUllZnzLDUNrFMzLZMznknmAFLlL4MNLJqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LkyPL4U8LYbw62v8c&oid=1828791678&tid=1040&nid=13443&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5M4fC7MNrfMmC4MQmLZLzMknmQkMl-qaLlLiMm9iL7MRLNL0gihFp2hmCIa0USyDL1yaoShfUznfoz6RL4nRM4Lbnm7DU8UPLzfVn7VVn7QFMmLaUNV2MlnFL8VVnz7Jv2bjo4OeoDrTvDL0qIbtpYyPLRUag474L494gtA8pUpcc&oid=1828791678&tid=1040&nid=13383&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5L4-CDnRAVoRCbUQmCDUmr7Ml7PMRfqRLz9ZLRQ2MzVfU4l0gihFp2hmCIa0MSybMYyZLSy4nRW7L7C4M4MkM7CiM7QkLmTfo77sozMRMNVFMz78UzvDLRTFLz9YnlCJqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LkyPL4LZLYbw62p8c&oid=1828791678&tid=1040&nid=13383&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5LmvCiL7r2nRT7LQ4V2olMRL4QkMNVqRUlUYL8-4MRLZUll0gihFp2hmCIa0nkysokhVLSyiUzNaL8LiLRnVUzn2L8-DMRAVolMfnz7sL7rFoln7nlrkMR6FLzn2nz9JqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LkyPL4LZLYbw62p8c&oid=1828791678&tid=1040&nid=13383&e=.jpeg"
+      ]
+    },
+    {
+      "url": "https://eecs.pku.edu.cn/",
+      "final_url": "https://eecs.pku.edu.cn/",
+      "list_html_sha256": "89c800e611cfa3e228a19e93b42996b14d435bebbdc82f1ae31a91b7559aa94f",
+      "fetched_at": "2026-10-11T03:04:57.633458+00:00",
+      "publisher_evidence": {
+        "text": "北京大学信息科学技术学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通知 公告",
+        "locator": ".index-tzgg .container h2"
+      },
+      "channel_path": [
+        "北京大学",
+        "信息科学技术学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "新生舞会｜“袖起青衿 舞映韶光”十二院联合新生舞会活动流程介绍",
+          "url": "https://eecs.pku.edu.cn/info/1047/13543.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1047/13543.htm",
+          "article_heading": "新生舞会｜“袖起青衿 舞映韶光”十二院联合新生舞会活动流程介绍-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "8ed34355c348d1d9b3a914e9f742b5a8fe10be27b19add26be4a381dacc2ed08",
+          "fetched_at": "2026-10-11T03:16:06.156876+00:00"
+        },
+        {
+          "title": "信码智联·践行思远｜首期“Tech Open Day”：去华为北研所，看见技术的落地",
+          "url": "https://eecs.pku.edu.cn/info/1047/13523.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1047/13523.htm",
+          "article_heading": "信码智联·践行思远｜首期“Tech Open Day”：去华为北研所，看见技术的落地-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "95ca538e6c4ffe107c4f55cad249d5c7b3a38c72e70c3d68c981ef7c2511d7c0",
+          "fetched_at": "2026-10-11T03:16:07.270320+00:00"
+        },
+        {
+          "title": "“信谈1024”| 活动报名：信科党政班子师生面对面活动【2026年第十期（总第57期）】",
+          "url": "https://eecs.pku.edu.cn/info/1047/13493.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1047/13493.htm",
+          "article_heading": "“信谈1024”| 活动报名：信科党政班子师生面对面活动【2026年第十期（总第57期）】-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "a113c4dd96cf7c9c00f2a44ce517c584e26145cc9f7d8c2616c4ddd69b335398",
+          "fetched_at": "2026-10-11T03:16:08.303364+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=KMzMOknzAkL8n7nxNQ2nlV2ol-Po7UJanm-sozAVLRffolC0gihFp2hmCIa0MkyPLYy8MYyinRTRUzl8U8-DLzC8M4CsUNMRLlCDMz9DMmQFMRNPn7QRU8MFLz7aLNCJv2bjo4OeoDrTvDL0qIbtpYyPLRUsg474MzU4gtA8pU0cc&oid=1828791678&tid=1047&nid=13543&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=KnNlOiMlrkL7Cioxl-DU874U4UiUmWJRLNUaL8C8LR9YnmL0gihFp2hmCIa0Mkh2okysUYhkL7rknNLboR7PLlCYM8rknzVknR7ZMzQfnlVFoRCbLmCaL4nFLzNaMR9Jv2bjo4OeoDrTvDL0qIbtpYyPLRUsg474MzU4gtA8pU0cc&oid=1828791678&tid=1047&nid=13543&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=KUmAO2U8laMR6VnxzLYM4UYU87PnlQJ2ozv4MN-PM4-bnRl0gihFp2hmCIa0LSyZnky4LYhVUNUPU4fVMRGbLl78nlnVUzG8M77sMRNaolVFL7LsU87snRVFM7CaUmNJv2bjo4OeoDrTvDL0qIbtpYyPLRUsg474MzU4gtA8pU0cc&oid=1828791678&tid=1047&nid=13543&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=KLRTORU4NbUlU8MxlCZU8CbUz-YU8CJ4nRWknm7ZLz9iLm90gihFp2hmCIa0n1ybMSyPU1h7L7-DMzLPLlMVU4r7M8WVM7UDnllDnzrRM4AFnR-8LRCanNVFL4-ZMzLJv2bjo4OeoDrTvDL0qIbtpYyPLRUsg474MzU4gtA8pU0cc&oid=1828791678&tid=1047&nid=13543&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=KMzNObMzvDoRliLxNl4M7rRLRWkM7UJPUlLbMmUsMzCinll0gihFp2hmCIa0MShVLYh2nkhknzlsL49anRCaM7LiUN-ZMR98M8LsL77iMzMFLRMkL7r7U8QFMmCbM4CJv2bjo4OeoDrTvDL0qIbtpYyPLRUsg474MzU4gtA8pU0cc&oid=1828791678&tid=1047&nid=13543&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=Ko7CODLznfUlCbMxm7ZnlQ7nRGbL8CJZMzrkUNCZMzG4MR-0gihFp2hmCIa0Mky8MYhVMShkMzNDU4-bolCYLz7solV2nRTkL4f2UlUbLzAFo7UiL4AkMlnFL4TfoR-Jv2bjo4OeoDrTvDL0qIbtpYyPLRUsg474MzU4gtA8pU0cc&oid=1828791678&tid=1047&nid=13543&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=KU8lOZMRQ2Um7sox7Q7MmGZMNLDLmNJ8nRl4nNC4UlC8L4N0gihFp2hmCIa0MkhfU1hkM1hRMRCZMzUsM49PnRW7nNlZnNQVLlnRUl-PLRTFUNrkUz-aLlWFL49YU4NJqjfjo4OeoDrTvDL0qIbtpYyPLRUsg474Mz-4gtA8pU0cc&oid=1828791678&tid=1047&nid=13523&e=.jpg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=KnzUO8UmMkMmTRLxN74LRM7MmWkn7LJZLz-Zo7QfUNlPnz90gihFp2hmCIa0UYyYM1y4LSyDMm-DM7VVMlLbnNl4Lm7an77DMNL8oRUaUzTFLz9ZL8Q2oRQFM7l4okb/v2veo4OeQIr4CYhXptQ0g47aMRv0LzLiLmLJqd0nx&oid=1828791678&tid=1047&nid=13523&e=.jpg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=Kn77OPnmV7nRUbUxzLYLmnfLmM2nNQJ7LmfVLlLPMRUaU4C0gihFp2hmCIa0n1yaLYy8USyPnNlsM4LbM4vDnlWknmAVLRLbnR-bn7-DMmrFnmvsnmvYMzWFL4NiLYb/v2veo4OeQIr4CYhXptQ0g47aMRv0LzL8ozLJqd0nx&oid=1828791678&tid=1047&nid=13493&e=.jpg"
+      ]
+    },
+    {
+      "url": "https://eecs.pku.edu.cn/",
+      "final_url": "https://eecs.pku.edu.cn/",
+      "list_html_sha256": "89c800e611cfa3e228a19e93b42996b14d435bebbdc82f1ae31a91b7559aa94f",
+      "fetched_at": "2026-10-11T03:04:57.633458+00:00",
+      "publisher_evidence": {
+        "text": "北京大学信息科学技术学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学工 动态",
+        "locator": ".index-xgdt .container h2"
+      },
+      "channel_path": [
+        "北京大学",
+        "信息科学技术学院",
+        "学工动态"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "灵感在线，服务在线：信科电脑小队 Vibe Coding 主题讲座暨电脑义诊活动顺利举办！",
+          "url": "https://eecs.pku.edu.cn/info/1041/13453.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1041/13453.htm",
+          "article_heading": "灵感在线，服务在线：信科电脑小队 Vibe Coding 主题讲座暨电脑义诊活动顺利举办！-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "4888c5bfdcf573eff937a821f99af28a99345a830a66be57dc9ba42efa38862b",
+          "fetched_at": "2026-10-11T03:16:09.449874+00:00"
+        },
+        {
+          "title": "EECS·新生班鉴丨2604班：以赛促学，以辩明理",
+          "url": "https://eecs.pku.edu.cn/info/1041/13413.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1041/13413.htm",
+          "article_heading": "EECS·新生班鉴丨2604班：以赛促学，以辩明理-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "23c17fc9a221aa0d2842b8fbabbdd291c746d1784ed9cd13c21870a8c2c62331",
+          "fetched_at": "2026-10-11T03:16:10.413048+00:00"
+        },
+        {
+          "title": "传承北大精神，探索信息科技——北京大学信息科学技术学院2026年校友子女夏令营成功举办",
+          "url": "https://eecs.pku.edu.cn/info/1061/12393.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1061/12393.htm",
+          "article_heading": "传承北大精神，探索信息科技——北京大学信息科学技术学院2026年校友子女夏令营成功举办-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "feabc467a007d80e3ae5421a26b5e20159abe30707bb5bcc6e9f9a2b644af976",
+          "fetched_at": "2026-10-11T03:16:11.513850+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=FL7l9DM4ARL7CZMA47bU4nkMmUbM4C1soll8oRvDL7WkoR-0gihFp2hmCIa0MYhfokhkMSysUl-soRrfLmnRMz-PLmQ2LRTkLRvsn7CaL46FM7Q7nRLPoRQFLzl4nz-JqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LSyPL4UiLYbw62m8c&oid=1828791678&tid=1041&nid=13453&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=FM469VLz-iMznRUA4GbUzWRnR7bM8L1DUz9PMm-ZM4LiL8C0gihFp2hmCIa0n1hRokhfLkhVLlL4L4fVM4CPUz7iLRNZoRf7L4l4U4GsnlMFMmNaL8WVM4fFMz-Jv2bjo4OeoDrTvDL0qIbtpYyPLRUPg474MRl4gtA8pUmcc&oid=1828791678&tid=1041&nid=13453&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=FLzW97Mz67M87YLA8Lin7CDM4GiL4l1DLRGbUzMfMNnRnll0gihFp2hmCIa0nkyZLSyPMSh7Lz-Znmv4Mz74n7Q7Lzr7Lm62L4nRnNQfL4VFMmV7UNlZnNQFLlC4LmvJqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LSyPL4UiLYbw62m8c&oid=1828791678&tid=1041&nid=13453&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=FLzQ9kMmCDMznkMA7W2Mm7DUzAfLRN1PMNn2Llr2nNQ2U4v0gihFp2hmCIa0M1yPnkyiUSh7M7LbU4QVozvso7VRLzNYLzVRMRCZLNrknNQFnRTkLzGDMz6Fo77soSb/v2rjo4OeoDrTvDL0qIbtpYyPLRUPg474MRl4gtA8pUmcc&oid=1828791678&tid=1041&nid=13453&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=FoRT9kLmNiMlLYnAR-8U47ZUlLPLz617Mz-iLlW2M8n2L7C0gihFp2hmCIa0U1hfUSh2M1h2n7lbM4TVMNUZUmL4M8QknmW2MmNZMlV7ozMFUlWfLRMRozMFUN7bn1b/v2rjo4OeoDrTvDL0qIbtpYyPLRUPg474MRl4gtA8pUmcc&oid=1828791678&tid=1041&nid=13453&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=FMmU9Dn7LbLzMVMAzWRoRNinm62o7714LmAfU4UbUm-snRC0gihFp2hmCIa0LkhRU1ybnkyio7laLmUZnz9DU8-4MzA2MRnRoRnRoRf2MmnFL8UPL8lDnlWFLzLPMz7JqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LSyPL4UiLYbw62m8c&oid=1828791678&tid=1041&nid=13453&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=FL4L9bMl7aU467nAlMRnmvPn7UYoRL1YUzG4olQVU4MVMRU0gihFp2hmCIa0MYhfMky4MSyYMmCYL4CbMz6kU8n7L8U4oRlZUllZnzLDUNrFMzLZMznknmAFLlL4MNLJqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LSyPL4UiLYbw62m8c&oid=1828791678&tid=1041&nid=13453&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=6UmU_iLRGYLR7bMFln7M4MRo7MVUNQ9VMzNiLzARLz7YnNl0gihFp2hmCIa0USyDL1yaoShfUznfoz6RL4nRM4Lbnm7DU8UPLzfVn7VVn7QFMmLaUNV2MlnFL8VVnz7Jv2bjo4OeoDrTvDL0qIbtpYyPLRUPg474MR74gtA8pUAcc&oid=1828791678&tid=1041&nid=13413&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=6nzl_sUm-YMRlsMFm7DnRARoRUDo7-9bUmnkM77DU4TRMNL0gihFp2hmCIa0MSybMYyZLSy4nRW7L7C4M4MkM7CiM7QkLmTfo77sozMRMNVFMz78UzvDLRTFLz9YnlCJqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LSyPL4UPLYbw62A8c&oid=1828791678&tid=1041&nid=13413&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=6nl-_sMNQkM8nRnFmr7LRMVoRLZL4-98Lm-aolMfU49aLmC0gihFp2hmCIa0nkysokhVLSyiUzNaL8LiLRnVUzn2L8-DMRAVolMfnz7sL7rFoln7nlrkMR6FLzn2nz9JqjfTQ4Oeo4xTQ5MmgDTJQty0LzG8LSyPL4UPLYbw62A8c&oid=1828791678&tid=1041&nid=13413&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5oRWCkoRUYMmvbMQ49ZLRLDo7L4L4UqbMRLbolWRMmnfnz70gihFp2hmCIa0LYyaL1h2MkyZnNLYM77ZMzCboR67LzWRM8VfUl7DUz7sLRQFLmM7LmTknznFL46kLlCJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5MzTC2nRMVoz9ZUQmffo7V2n7-ZL4NqPoRMkM77ioRvYnzG0gihFp2hmCIa0nkhfLkyanSy4nNnRLmLsnNW7UlW7ollYMmMVMN-sL4GZLlQFUmLYLzC4MznFLzGZn77JqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5MlMC7L47bUl-DUQ4lZL4LYMRCanm6qRMRC4nmCPnmL4olC0gihFp2hmCIa0UYy8LShfUYybLRUDMRTVMRW2MmTfMlLbUl74Ul-8nNr2U8WFnNl4o7-4ozfFMRGbo7LJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5ozUCbnR62MlMRMQlQRLRviozGiUzQqRUNCDL4T2olWVU4C0gihFp2hmCIa0UYyiMkyPLYhRM4LPU4UZLmLZnlLaL474nRG8UzCsM4VknzVFozQfLzARnlQFMRUYL4-JqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5UzUC8Llr2U8CsoQz9DLNliozNDnmrqVUN7iLm-DL4UZUmC0gihFp2hmCIa0LSyDMkyYMYyPL7V2L7MVM8rfLRWfL7-Po7MRLR67MRCZnRnFM8lZL7l4UmnFMRMVLR9JqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5M77C4MlMfUN74nQlnkoRU8n7U8UzUqDU4ARLzviMlCbMzN0gihFp2hmCIa0Mkh2nSh2MYh2UzUPMRv4LzfRMlL8L8-YMmrRM7V7olWVUzTFL4Lso774U46FL49DLN7JqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5o7LC4UNrVM4NDLQ8UPLzQ2Mz7aMlMq7n7CYUzLYnRV2LNC0gihFp2hmCIa0nky8MkhVMSyiU8W2o774nRNsLmW7M7M2UmARLRC4L8-sMlMFozNDU4NiMRnFLNVkMllJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5M4VCknmv8o7LbMQ8n2nmGiL7Q2U4UqsU4NPM87iUz9in7l0gihFp2hmCIa0L1hRnShRMYy4MNMkM7rVLz6kUmNbMlUPLmUioRlDolUPMNMFLmVRn7lsnmMFM77bL8UJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5LmMC2MmrVMRCDLQzLZMmlPn7r2LzQq2LzvsMmGaM4AkU490gihFp2hmCIa0nkyZMkyaUYybn7MfMzvaUlUDL4UsUzUsnzLanzW7L4TVMRMFo7CbLzAkLmrFLzl4LN-JqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5LmvCanzUaolU4LQmNaM7CPMNr7ozlqaUln2o7QRoRCYUzN0gihFp2hmCIa0USyDM1hVn1hkL4GsU4vanzN8M7UZU8C8MzWfMlrfU4WRL4QFMz67MzV7LNMFLm9sUl-JqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5UmCCsMmvZM4-YUQmlaLzUYMzvPLlCqsoR74MmfkUzM2MmU0gihFp2hmCIa0MSyPn1hRL1yPo7LinNlYM4-ZozMfMmNsMz6VM4MVMzvZL4MFL4W2LRQRUznFLzLPozCJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5Ll-C4UmnkUzVkLQ4A2LmvsU4fkLmGqiMlCYUNrkoRTRnzN0gihFp2hmCIa0oSy8M1y8UYh7M7r7M4CbUmNbL4-8nNMRM4r7nlVfMRLZUNrFUNC8L49iMRrFL4VVnRUJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5nzCCPUlrknRQkUQzUsLmU8U8LYLzGqYLmNZM7CaM8UZL7U0gihFp2hmCIa0nkh2LYyankyYLzQRn7LPLzlPM4UDU4M2oRWRMNr7MNnkMzWFn7LsMRGaozQFLNV2LN7JqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=5M47CsozMkMRNDnQN74Mmf7M4NaUzGqanNCPn7V7LzTkL8l0gihFp2hmCIa0U1y8okysnSyDnzGbU4r7nR7soznRU4lanzCsolnko7-4MzQFMRWfU4LYMmWFLmCZL49JqjfTQ4Oeo4xTQ5MmgDTJQty0LzGDLSyPLmLbLYbw62p8c&oid=1828791678&tid=1061&nid=12393&e=.jpeg"
+      ]
+    },
+    {
+      "url": "https://eecs.pku.edu.cn/",
+      "final_url": "https://eecs.pku.edu.cn/",
+      "list_html_sha256": "89c800e611cfa3e228a19e93b42996b14d435bebbdc82f1ae31a91b7559aa94f",
+      "fetched_at": "2026-10-11T03:04:57.633458+00:00",
+      "publisher_evidence": {
+        "text": "北京大学信息科学技术学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "讲座 信息",
+        "locator": ".index-jzxx .container h2"
+      },
+      "channel_path": [
+        "北京大学",
+        "信息科学技术学院",
+        "讲座信息"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "知存讲座第五十一期：企业Token经济学——企业如何管理AI时代的新资源",
+          "url": "https://eecs.pku.edu.cn/info/1050/13513.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1050/13513.htm",
+          "article_heading": "知存讲座第五十一期：企业Token经济学——企业如何管理AI时代的新资源-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "b356afed887ad539bf1d20f1abd1c1827349ed02771481210034706ecbba4290",
+          "fetched_at": "2026-10-11T03:16:12.411618+00:00"
+        },
+        {
+          "title": "知存讲座第五十期：存算一体在AI的应用以及未来发展",
+          "url": "https://eecs.pku.edu.cn/info/1050/13153.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1050/13153.htm",
+          "article_heading": "知存讲座第五十期：存算一体在AI的应用以及未来发展-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "d8eb101a2e08833f1da01dc5c17a89ca6b384cb91326c3c236b1cfaff188f2b7",
+          "fetched_at": "2026-10-11T03:16:13.454616+00:00"
+        },
+        {
+          "title": "CS Peer Talk | On the Informativeness of Moments in Optimal Stopping",
+          "url": "https://eecs.pku.edu.cn/info/1050/12923.htm",
+          "final_url": "https://eecs.pku.edu.cn/info/1050/12923.htm",
+          "article_heading": "CS Peer Talk | On the Informativeness of Moments in Optimal Stopping-北京大学信息科学技术学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "cb78201d6b3d419c3ce186b62f1d060cd0994d65d3cccce19cd46f8eede40f76",
+          "fetched_at": "2026-10-11T03:16:14.494985+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CMlrQ2LmnfozQ7Mq4UDU4NsL8QfLzvpPnl-anllaUzvDLR70gihFp2hmCIa0oSyDoSybLShkL49DL8LDUmT2oz6fM8r7n7VfLN7anR62LzWFLz-ZLmlYU4fFLmT7L4CJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGiLkyPL4lPLYbw62v8c&oid=1828791678&tid=1050&nid=13513&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=CMRGQaLm67MR7ZLq4NaoR9YMNrfnlrp2MzCbLRARnRUiM7C0gihFp2hmCIa0Lkh2MShfLSh7UNUsL7nRLR-iMmnRUz98o7-bL4MkMz-8L8MFoR9PUNUsnRnFU8MVokbaptveo4OeQIr4CYhXptQ0g47aMzG0LzLiLzLJqdvnx&oid=1828791678&tid=1050&nid=13513&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=vLRC6aU8MkLmVRL_R-8nmCDUlWfo77FDLl78nRUPUNWfnll0gihFp2hmCIa0UYhVUYhfUYy4olMfo7UbUlCiU4QfLzM7ozA7UlC8nRLPU8MFU4nfM4WfMmVFLmlPnllJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGiLkyPL47iLYbw6298c&oid=1828791678&tid=1050&nid=13153&e=.jpeg",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=vozW6fnlLbnRU4n_zlPU8UYMNUDnRAFko7LbLz9bL8U4Uzv0gihFp2hmCIa0Mkh7nShkLShkM47PMmGbMll8MRCanlUDLRA7nRCin7CsLmAFUmlPLNLPnmQFU8WRL1baptveo4OeQIr4CYhXptQ0g47aMzG0LzLPMzLJqd9nx&oid=1828791678&tid=1050&nid=13153&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=qLmQp2MNLsnRT7Mvl7DLRQ7olrRLzU6sMRU4LRNiLRMRLmL0gihFp2hmCIa0LkhfnSysLYysnlr2UNlYMzUiM4f7oR6fnzW2n7-sUmMknmQFoRNsoz7snmMFLzC8UmUJv2bjo4OeoDrTvDL0qIbtpYyPLRlag47Yoz-4gtA8pU_cc&oid=1828791678&tid=1050&nid=12923&e=.png",
+        "https://eecs.pku.edu.cn/virtual_attach_file.vsb?afc=qUzlpbn7-sUNlYMv4vDL4r7MmviLRN6snmvaoz78M8Uin7-0gihFp2hmCIa0U1yiUYy8okhfnN-iUlMko7nVLRn7Ml78UlC8o7MkLRQRM4WFLzf7U4NaL4MFLzf2MRNJqjfTQ4Oeo4xTQ5MmgDTJQty0LzGiLkyPLmNYLYbw62_8c&oid=1828791678&tid=1050&nid=12923&e=.jpeg"
+      ]
+    },
+    {
+      "url": "https://sfl.pku.edu.cn/",
+      "final_url": "https://sfl.pku.edu.cn/",
+      "list_html_sha256": "2a5ca980861101585d627b9b47c4b584d8bbae6e6513992710380ed0043e1cb1",
+      "fetched_at": "2026-10-11T03:04:55.045273+00:00",
+      "publisher_evidence": {
+        "text": "北京大学外国语学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学院 新闻 /  NEWS",
+        "locator": "section.news h2"
+      },
+      "channel_path": [
+        "北京大学",
+        "外国语学院",
+        "学院 新闻 / NEWS"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "墨西哥中华文化交流协会代表团访问北京大学",
+          "url": "https://sfl.pku.edu.cn/xyxw/6a570b6674e34cfc86a783238ca9071d.htm",
+          "final_url": "https://sfl.pku.edu.cn/xyxw/6a570b6674e34cfc86a783238ca9071d.htm",
+          "article_heading": "墨西哥中华文化交流协会代表团访问北京大学",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "0b1cb9f3dab211817a42d6bd44979a768bdd9dada6f48a4c5d50f4d64388990b",
+          "fetched_at": "2026-10-11T03:16:15.634427+00:00"
+        },
+        {
+          "title": "德语语言文学研究的当代转型——马丁·胡博（Mart...",
+          "url": "https://sfl.pku.edu.cn/xyxw/b709ca6627154b5398f2931981180c11.htm",
+          "final_url": "https://sfl.pku.edu.cn/xyxw/b709ca6627154b5398f2931981180c11.htm",
+          "article_heading": "德语语言文学研究的当代转型——马丁·胡博（Martin Huber）教授系列学术讲座圆满举行",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "a480eec2126280099073dab00d3ae2846fdcc33ec8af9cf4f344e506bc7b34c6",
+          "fetched_at": "2026-10-11T03:16:16.514329+00:00"
+        },
+        {
+          "title": "泰语专业师生与清迈大学来访教师代表座谈交流",
+          "url": "https://sfl.pku.edu.cn/xyxw/1a9f57db1fc242d9888445b928acfbf5.htm",
+          "final_url": "https://sfl.pku.edu.cn/xyxw/1a9f57db1fc242d9888445b928acfbf5.htm",
+          "article_heading": "泰语专业师生与清迈大学来访教师代表座谈交流",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "66e6f2ff47d6afdd83bb4c4d79abd7693d59dab80e234e8fc9b381a980b69b6e",
+          "fetched_at": "2026-10-11T03:16:17.590550+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://sfl.pku.edu.cn/images/2026-10/9eb9933753f5428088a0370319e6328c.jpg",
+        "https://sfl.pku.edu.cn/images/2026-10/0e2fc6fb209549d59b85f4ea61a44423.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-10/f17dfb186dc64ebb8c3579c6b4df41d1.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-10/36088f45ad2b495d85f72e008a979d8e.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-10/b178d24bfe284405b7c3872248a270d2.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-10/e0ce9ef13bc74678ae32bd3c2188d37d.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-10/26003417e54c4e9a8871fbbbd6f918f3.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-10/0573d0834f2b46e6bee94976bb72653a.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-10/6a7de0b47e1a49f3ac189a8db5047985.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-09/e5a1fa7c3ec24756910327babd513aee.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-09/5e9ac16c8d9b4affb92884a29478ddbf.jpeg",
+        "https://sfl.pku.edu.cn/images/2026-09/fa72f5b3b3fb48bea314ffeaeb6b7048.jpeg"
+      ]
+    },
+    {
+      "url": "https://sfl.pku.edu.cn/",
+      "final_url": "https://sfl.pku.edu.cn/",
+      "list_html_sha256": "2a5ca980861101585d627b9b47c4b584d8bbae6e6513992710380ed0043e1cb1",
+      "fetched_at": "2026-10-11T03:04:55.045273+00:00",
+      "publisher_evidence": {
+        "text": "北京大学外国语学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通知 公告 /  ANNOUNCEMENT",
+        "locator": "section.announce h2"
+      },
+      "channel_path": [
+        "北京大学",
+        "外国语学院",
+        "通知 公告 / ANNOUNCEMENT"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "外国语学院2026国庆节假期带值班表",
+          "url": "https://sfl.pku.edu.cn/tzgg/fc8c48decfca4e879b2d094beb0af0db.htm",
+          "final_url": "https://sfl.pku.edu.cn/tzgg/fc8c48decfca4e879b2d094beb0af0db.htm",
+          "article_heading": "外国语学院2026国庆节假期带值班表",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "1f2dac3fdeb052770be2d4f555459abaa1b95fbf28e4a93c1b44119114938e6c",
+          "fetched_at": "2026-10-11T03:16:18.544379+00:00"
+        },
+        {
+          "title": "北京大学外国语学院2027年推荐免试研究生复试通知及复试名单",
+          "url": "https://sfl.pku.edu.cn/tzgg/ce666470fbe84ae8940b22020d067f3d.htm",
+          "final_url": "https://sfl.pku.edu.cn/tzgg/ce666470fbe84ae8940b22020d067f3d.htm",
+          "article_heading": "北京大学外国语学院2027年推荐免试研究生复试通知及复试名单",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "dbed140a685c52e48b9ebbf10f901239a7bd7d0ac61cfe0688e5d72bca52e23d",
+          "fetched_at": "2026-10-11T03:16:19.742514+00:00"
+        },
+        {
+          "title": "陈士林先生讣告",
+          "url": "https://sfl.pku.edu.cn/tzgg/f4c7723d0c694963ada00854041687b5.htm",
+          "final_url": "https://sfl.pku.edu.cn/tzgg/f4c7723d0c694963ada00854041687b5.htm",
+          "article_heading": "陈士林先生讣告",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "06d2d6acdf393d873eeb9692644415782bea75993aec590a9c9b02f8b8e530d0",
+          "fetched_at": "2026-10-11T03:16:20.863834+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://sfl.pku.edu.cn/images/2026-09/26f7a729a8364893ad00f629d57371aa.png",
+        "https://sfl.pku.edu.cn/docs/2026-09/c4c1c85ca6c84474a2d9db658759af60.pdf",
+        "https://sfl.pku.edu.cn/docs/2026-09/aee115134f294bb9a64d703d2f25563f.pdf",
+        "https://sfl.pku.edu.cn/images/2026-09/c840ab57371447b993daab509203e12f.png",
+        "https://sfl.pku.edu.cn/images/2026-09/d1633a49c8fb47ef8436c490e01db51e.png"
+      ]
+    },
+    {
+      "url": "https://chinese.pku.edu.cn/xwgg/xwdt/index.htm",
+      "final_url": "https://chinese.pku.edu.cn/xwgg/xwdt/index.htm",
+      "list_html_sha256": "6f7902769ca427701846201850cda95adb2719fb076c6572704aa000b44f50be",
+      "fetched_at": "2026-10-11T03:13:48.754282+00:00",
+      "publisher_evidence": {
+        "text": "北京大学中国语言文学系",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "新闻动态",
+        "locator": ".gp-subRight-con .articleTitle02 span"
+      },
+      "channel_path": [
+        "北京大学",
+        "中国语言文学系",
+        "新闻动态"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "《中国古典学》第九卷目录、提要及编后记",
+          "url": "https://chinese.pku.edu.cn/xsyj/xsqk/0a63cc291e6046c8887f72367a7eb7c0.htm",
+          "final_url": "https://chinese.pku.edu.cn/xsyj/xsqk/0a63cc291e6046c8887f72367a7eb7c0.htm",
+          "article_heading": "《中国古典学》第九卷目录、提要及编后记",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > aside:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > h3:nth-of-type(1)",
+          "html_sha256": "5df4090c6b578206b5678c13566581d1ec7b45b309a85b0db61274d547446476",
+          "fetched_at": "2026-10-11T03:17:55.414334+00:00"
+        },
+        {
+          "title": "《语言学论丛》2026年第3期目录及提要（总第82期）",
+          "url": "https://chinese.pku.edu.cn/xsyj/xsqk/43789a2556ee4d2db7a8cfbc3d0128f1.htm",
+          "final_url": "https://chinese.pku.edu.cn/xsyj/xsqk/43789a2556ee4d2db7a8cfbc3d0128f1.htm",
+          "article_heading": "《语言学论丛》2026年第3期目录及提要（总第82期）",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > aside:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > h3:nth-of-type(1)",
+          "html_sha256": "890e256cf1f910ac98c987144c3d62ce9583fdb9363cc9b1a913b33394f579d0",
+          "fetched_at": "2026-10-11T03:17:56.476860+00:00"
+        },
+        {
+          "title": "北京大学中国语言文学系举办2026年开学典礼",
+          "url": "https://chinese.pku.edu.cn/xwgg/xwdt/0308a708ae344a029fa88e51529a70fc.htm",
+          "final_url": "https://chinese.pku.edu.cn/xwgg/xwdt/0308a708ae344a029fa88e51529a70fc.htm",
+          "article_heading": "北京大学中国语言文学系举办2026年开学典礼",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > aside:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > h3:nth-of-type(1)",
+          "html_sha256": "3a21daefbc2fd68ab31178a0c5007deec085a837323eee9156af1f7b1109b61f",
+          "fetched_at": "2026-10-11T03:17:57.318503+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://law.nju.edu.cn/rcpy/bkjy.htm",
+      "final_url": "https://law.nju.edu.cn/rcpy/bkjy.htm",
+      "list_html_sha256": "451613bb95160f24d5deb0017ed975d4af4aac2facc8cebf56e3768121d55d6d",
+      "fetched_at": "2026-10-11T06:13:43.160514+00:00",
+      "publisher_evidence": {
+        "text": "本科教育-南京大学法学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "本科教育",
+        "locator": ".n_right .position h5"
+      },
+      "channel_path": [
+        "南京大学",
+        "南京大学法学院",
+        "本科教育"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "2026级社会科学实验班大类本科新生导师名单公布",
+          "url": "https://law.nju.edu.cn/info/1052/27011.htm",
+          "final_url": "https://law.nju.edu.cn/info/1052/27011.htm",
+          "article_heading": "2026级社会科学实验班大类本科新生导师名单公布-南京大学法学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "61e7605c3d4e435f7380ae68a27d77c43b6962e25fdcab0c12b8473f31cf2d8c",
+          "fetched_at": "2026-10-11T06:17:36.472972+00:00"
+        },
+        {
+          "title": "法学为本、涉外赋能、实务立身、面向未来！法学（涉外法治人才实验班）2026年重磅招生",
+          "url": "https://law.nju.edu.cn/info/1052/25081.htm",
+          "final_url": "https://law.nju.edu.cn/info/1052/25081.htm",
+          "article_heading": "法学为本、涉外赋能、实务立身、面向未来！法学（涉外法治人才实验班）2026年重磅招生-南京大学法学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "58d01e223cd61c18331964211988032a54dac8be140a7f5decf9049db273501b",
+          "fetched_at": "2026-10-11T06:17:38.057253+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://law.nju.edu.cn/__local/6/4B/98/A773E47610A49C673CE03B12F0E_88458567_843AA.jpg",
+        "https://law.nju.edu.cn/__local/D/7C/48/A7A74748A6C2D0B6672037911EF_0918AAAC_488A9.jpg",
+        "https://law.nju.edu.cn/__local/A/C7/7C/53161EF1EC259196441100B6E08_1AE4FDA6_41648.jpg",
+        "https://law.nju.edu.cn/__local/B/2D/B8/6B9999671DA4E91202DCCAE5637_755CE71F_1D88F.jpg",
+        "https://law.nju.edu.cn/__local/A/82/67/4F00CA7F7B4BAAEA87CB5E810F5_4E67C381_8F09B.jpg",
+        "https://law.nju.edu.cn/__local/7/24/3E/0FFCDE17AFD145F14AB7D4E28F6_B1CBAF22_81699.jpg",
+        "https://law.nju.edu.cn/__local/2/23/CB/44BA09809C7D4146054755A02A2_56B66774_63141.png",
+        "https://law.nju.edu.cn/__local/D/7B/F2/E5E405A7CD3EEB03B69636F5396_FDECEBC7_206F1.jpg",
+        "https://law.nju.edu.cn/__local/2/D8/B4/C27B47C79BA12C3E478D72EA55E_9442191E_476EB.jpg"
+      ]
+    },
+    {
+      "url": "https://law.nju.edu.cn/xsyj/xshd.htm",
+      "final_url": "https://law.nju.edu.cn/xsyj/xshd.htm",
+      "list_html_sha256": "cc9382d14e0c0a87b36255595212ed9e2342922347b3cdaffebd76b0e63746ff",
+      "fetched_at": "2026-10-11T06:13:44.613953+00:00",
+      "publisher_evidence": {
+        "text": "学术活动-南京大学法学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学术活动",
+        "locator": ".n_right .position h5"
+      },
+      "channel_path": [
+        "南京大学",
+        "南京大学法学院",
+        "学术活动"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "通过设置标准解释宪法——德国联邦宪法法院的独特范式",
+          "url": "https://law.nju.edu.cn/info/2261/27681.htm",
+          "final_url": "https://law.nju.edu.cn/info/2261/27681.htm",
+          "article_heading": "通过设置标准解释宪法——德国联邦宪法法院的独特范式-南京大学法学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "417ea6112d9f3698646f3c25bb9e9d05661727d0e7d57201e0caba52741e9a3f",
+          "fetched_at": "2026-10-11T06:17:41.557045+00:00"
+        },
+        {
+          "title": "法学院学术系列讲座之二百六十期海报",
+          "url": "https://law.nju.edu.cn/info/2261/27501.htm",
+          "final_url": "https://law.nju.edu.cn/info/2261/27501.htm",
+          "article_heading": "法学院学术系列讲座之二百六十期海报-南京大学法学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "dab009f9bfea32908c81f4ac1ac4fe4350cdee37b5806e3b5e9dd6ff57f15a20",
+          "fetched_at": "2026-10-11T06:17:43.103846+00:00"
+        },
+        {
+          "title": "南京大学法学院名家论坛讲座之一百六十九期海报",
+          "url": "https://law.nju.edu.cn/info/2261/27471.htm",
+          "final_url": "https://law.nju.edu.cn/info/2261/27471.htm",
+          "article_heading": "南京大学法学院名家论坛讲座之一百六十九期海报-南京大学法学院",
+          "heading_selector": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "62519f66dc896036380f5f6d2ea8b9035894e7ee1c28f7390330d5db67393298",
+          "fetched_at": "2026-10-11T06:17:44.859684+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://law.nju.edu.cn/__local/9/18/62/44F78325EE698D20132A1282900_C16623AB_923D9.jpg",
+        "https://law.nju.edu.cn/__local/4/B2/9B/D59C702D05CDDCB5B036670B218_15E13483_3AAAE.jpg",
+        "https://law.nju.edu.cn/__local/E/A0/1E/1DA0A925177D067C5BF93221131_6F170E17_37D41.jpg",
+        "https://law.nju.edu.cn/__local/7/68/B5/A103E98843DB40690591471B571_A6BA0C24_35187.jpg",
+        "https://law.nju.edu.cn/__local/6/E2/1C/7B70A90317D36BA143E7625E367_4695ED6F_371D5.jpg",
+        "https://law.nju.edu.cn/__local/6/21/E6/D1DB5502262993A0D761185813E_643C6EB9_5DDC7.jpg",
+        "https://law.nju.edu.cn/__local/B/50/78/6F9DF83C20C0A1028ACE7A8D84F_70AA7DF9_66296.jpg",
+        "https://law.nju.edu.cn/__local/9/C0/12/C01544E9E2A7F9F99FD03C60498_67F14EB5_5018F.jpg",
+        "https://law.nju.edu.cn/__local/0/76/31/598C244E532A9D34EEE316FF75E_A9507B0A_416D6.jpg",
+        "https://law.nju.edu.cn/__local/2/33/8A/578F2B70BD5B02882FBBA17B1E6_FC6705BE_353A7.jpg",
+        "https://law.nju.edu.cn/__local/1/48/DC/CFB9F37AE11D03E2E4DC3F606AE_D95B775F_74A80.jpg",
+        "https://law.nju.edu.cn/__local/8/3D/5C/A7FCC81A6CA880AB24B377EFB56_0F74DC7C_2CE52.jpg",
+        "https://law.nju.edu.cn/__local/1/2E/39/F77F90402C6C8BD570AF641C61C_D6233A0A_3612C.jpg",
+        "https://law.nju.edu.cn/__local/9/DB/95/1C0EB8A399F6E82BFB67698C8AD_BD27B233_84767.jpg",
+        "https://law.nju.edu.cn/__local/2/50/20/8878EF72FF13CAECB5E5DA36BA7_9FE890D4_37BA2.jpg"
+      ]
+    },
+    {
+      "url": "https://cs.whu.edu.cn/xwdt/xyxw.htm",
+      "final_url": "https://cs.whu.edu.cn/xwdt/xyxw.htm",
+      "list_html_sha256": "0e6548f7f51da7c6dc71c20e599309400be8ee6dc7a37077602c5a9b2e5af50d",
+      "fetched_at": "2026-10-11T06:17:02.482320+00:00",
+      "publisher_evidence": {
+        "text": "学院新闻-武汉大学计算机学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "学院新闻",
+        "locator": ".article-content h3.column"
+      },
+      "channel_path": [
+        "武汉大学",
+        "武汉大学计算机学院",
+        "学院新闻"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "计启新程 筑梦珞珈——计算机学院召开2026级本科新生见面会暨新生第一课",
+          "url": "https://cs.whu.edu.cn/info/1054/66521.htm",
+          "final_url": "https://cs.whu.edu.cn/info/1054/66521.htm",
+          "article_heading": "计启新程 筑梦珞珈——计算机学院召开2026级本科新生见面会暨新生第一课-武汉大学计算机学院",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "957a089444ff6173e9a79ac6b6f233a1d6477d11d9d233fe1d66dc01c5473038",
+          "fetched_at": "2026-10-11T06:19:02.559720+00:00"
+        },
+        {
+          "title": "计算机学院召开本科生党支部支委培训会",
+          "url": "https://cs.whu.edu.cn/info/1054/66471.htm",
+          "final_url": "https://cs.whu.edu.cn/info/1054/66471.htm",
+          "article_heading": "计算机学院召开本科生党支部支委培训会-武汉大学计算机学院",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "266b366b53874474406a39d0c05d6ce1147d6239af239b001845b33eff2286c0",
+          "fetched_at": "2026-10-11T06:19:03.703342+00:00"
+        },
+        {
+          "title": "2026年多模态与人工智能国际学术会议（ICMAI 2026）在武汉大学圆满召开",
+          "url": "https://cs.whu.edu.cn/info/1054/66161.htm",
+          "final_url": "https://cs.whu.edu.cn/info/1054/66161.htm",
+          "article_heading": "2026年多模态与人工智能国际学术会议（ICMAI 2026）在武汉大学圆满召开-武汉大学计算机学院",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "72ea09a00fe1c09b3ccc14c72809e68e63f69800e8a0ef43cb8d16eec6b0c311",
+          "fetched_at": "2026-10-11T06:19:05.023304+00:00"
+        }
+      ],
+      "public_attachment_urls": [
+        "https://cs.whu.edu.cn/__local/8/FE/E6/54CDC5525AAF5182AEDB4DE89E3_7E5C8C09_2398DB.jpg",
+        "https://cs.whu.edu.cn/__local/C/77/D0/587758BE9CA51277F8430324873_3C6A49F6_556AF.jpg",
+        "https://cs.whu.edu.cn/__local/9/3F/69/D16B5F02C847AEE9D1FEC5642AD_836906F4_42B08.jpg",
+        "https://cs.whu.edu.cn/__local/C/FB/4C/89DDB90DD7D6677CC18F639648E_9AB176F0_28968.jpg",
+        "https://cs.whu.edu.cn/__local/7/65/CC/57C0A9E404F56C33576EB3DE969_8E9F16B6_29339.jpg",
+        "https://cs.whu.edu.cn/__local/D/76/3D/367857009747A90BFBDBC6246F3_C1552AF9_30757.jpg",
+        "https://cs.whu.edu.cn/__local/4/99/E5/EE12495CE33B743432A16B61DFC_612E5A2D_4C0ED.jpg",
+        "https://cs.whu.edu.cn/__local/6/29/87/25C7CEE93204B3DA09168262BEC_C7D788CB_4A6E9.jpg",
+        "https://cs.whu.edu.cn/__local/F/0A/A4/9BFD8A72FC53D3F32A25A1882A4_1EF12BC6_4D391.jpg",
+        "https://cs.whu.edu.cn/__local/1/69/33/591957843637F0CC54236400CEB_414FCA4E_27BFA.jpg",
+        "https://cs.whu.edu.cn/__local/9/2C/B1/34A754017BF378DF1257B81F7F6_6D92ABC1_25D80.jpg",
+        "https://cs.whu.edu.cn/__local/0/7C/6E/DEE85D804CAA9A02F83A6461ADE_E7F35714_239A42.jpg",
+        "https://cs.whu.edu.cn/__local/1/38/F1/090FF894D3FEEA761C9E11D0756_AB72900E_AAC78.png",
+        "https://cs.whu.edu.cn/__local/A/DB/14/3BC14A3B8F51037434A015E25C6_BAC33FB6_A9215.png",
+        "https://cs.whu.edu.cn/__local/3/46/39/BCAFC95E90887885044D9D569C7_B4641BE3_383103.jpg",
+        "https://cs.whu.edu.cn/__local/A/2C/EC/61AF0165BF3BDE4AA8665327738_1B390F0C_3DE9B2.jpg"
+      ]
+    },
+    {
+      "url": "https://cs.whu.edu.cn/xwdt/tzgg.htm",
+      "final_url": "https://cs.whu.edu.cn/xwdt/tzgg.htm",
+      "list_html_sha256": "d63e126d4171f8d9971c4fc28ce80f0e64821ee6850a700cd83c367ee738534c",
+      "fetched_at": "2026-10-11T06:17:03.812217+00:00",
+      "publisher_evidence": {
+        "text": "通知公告-武汉大学计算机学院",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": ".article-content h3.column"
+      },
+      "channel_path": [
+        "武汉大学",
+        "武汉大学计算机学院",
+        "通知公告"
+      ],
+      "reviewed_articles": [
+        {
+          "title": "计算机学院2027年推荐免试研究生拟录取名单公示",
+          "url": "https://cs.whu.edu.cn/info/1055/66731.htm",
+          "final_url": "https://cs.whu.edu.cn/info/1055/66731.htm",
+          "article_heading": "计算机学院2027年推荐免试研究生拟录取名单公示-武汉大学计算机学院",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "b6847444740e3e7150f37fbddba7b1b67f5e67ba239fbb0ce94d73fca2e0af96",
+          "fetched_at": "2026-10-11T06:19:06.282887+00:00"
+        },
+        {
+          "title": "关于给予艾家欣等87名研究生全院通报表扬的决定",
+          "url": "https://cs.whu.edu.cn/info/1055/66601.htm",
+          "final_url": "https://cs.whu.edu.cn/info/1055/66601.htm",
+          "article_heading": "关于给予艾家欣等87名研究生全院通报表扬的决定-武汉大学计算机学院",
+          "heading_selector": "html:nth-of-type(1) > body:nth-of-type(1) > title:nth-of-type(1)",
+          "html_sha256": "37fe4516cf6c0daf91dbdb839055de64311e90cc8a60803333672df7cfa8992f",
+          "fetched_at": "2026-10-11T06:19:09.889720+00:00"
+        }
+      ],
+      "public_attachment_urls": []
+    },
+    {
+      "url": "https://www.cqu.edu.cn/tzgg.htm",
+      "final_url": "https://www.cqu.edu.cn/tzgg.htm",
+      "channel_path": [
+        "重庆大学",
+        "重庆大学",
+        "通知公告"
+      ],
+      "publisher_evidence": {
+        "text": "通知公告-重庆大学",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": ".cur a:last-child"
+      },
+      "list_html_sha256": "9b216af3a04ad0d38670c78eca13d56ceaab35c93faad33c972bf7ef1e6664e5",
+      "official_entry_path": [
+        {
+          "from_url": "https://www.cqu.edu.cn/",
+          "to_url": "https://www.cqu.edu.cn/tzgg.htm",
+          "link_text": "通知公告",
+          "literal_href": "tzgg.htm"
+        }
+      ],
+      "evidence_mode": "retained_complete_official_read",
+      "reviewed_articles": [
+        {
+          "title": "重庆大学关于公开招聘医学院院长的公告",
+          "url": "https://www.cqu.edu.cn/info/1631/69201.htm",
+          "final_url": "https://www.cqu.edu.cn/info/1631/69201.htm",
+          "article_heading": "重庆大学关于公开招聘医学院院长的公告-重庆大学",
+          "html_sha256": "11485158c4ce2a651a3fcff65a1b521d4dad37ef6d5f4c9d13f61b8bd63c8744"
+        },
+        {
+          "title": "关于举办第十一届海峡两岸口译大赛重庆大学校选赛的通知",
+          "url": "https://www.cqu.edu.cn/info/1631/68771.htm",
+          "final_url": "https://www.cqu.edu.cn/info/1631/68771.htm",
+          "article_heading": "关于举办第十一届海峡两岸口译大赛重庆大学校选赛的通知-重庆大学",
+          "html_sha256": "2a620f8205b46dc9d991dec90b4cec1a7059ca190e0cb361cb72083c9e228572"
+        },
+        {
+          "title": "关于公布2026“外研社·国才杯”全国大学生外语能力大赛获奖名单的通知",
+          "url": "https://www.cqu.edu.cn/info/1631/68761.htm",
+          "final_url": "https://www.cqu.edu.cn/info/1631/68761.htm",
+          "article_heading": "关于公布2026“外研社·国才杯”全国大学生外语能力大赛获奖名单的通知-重庆大学",
+          "html_sha256": "3cc2de9cc914a34d2899289403ae0d423facc00fb5b962053a79d5cf6417b7e7"
+        }
+      ]
+    }
+  ]
+}

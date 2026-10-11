@@ -1,0 +1,1362 @@
+{
+  "mode": "retained_official_source_rule_replay",
+  "actual_model_requests": 0,
+  "actual_http_requests": 0,
+  "summary": {
+    "sources": 26,
+    "passed": 24
+  },
+  "limitation": "Not a fresh discovery or pagination/read stability experiment; no user data changed.",
+  "sources": [
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 1,
+      "name": "高校专项",
+      "list_url": "https://zsb.hust.edu.cn/",
+      "list_hash": "8c3f35419fe6aeac3ab3f0751745fcd0eaa084b847faa1b93fd7e4372e753791",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "高校专项",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(4)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(4) > h2:nth-of-type(1) > button:nth-of-type(1) > div:nth-of-type(1) > h4:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 2,
+        "required_matches": 2,
+        "sample_count": 5,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1012/2032.htm",
+          "title": "高水平运动队招生田径、武术、乒乓球项目入...",
+          "final_url": "https://zsb.hust.edu.cn/info/1012/2032.htm",
+          "content_hash": "8ec6165de2e4aaacfa42ffddb9e62b3c1cafc4a98dd1ad22c3bd3beab6ff714a",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1012/2033.htm",
+          "title": "高水平运动队招生篮球项目入围资格名单公示",
+          "final_url": "https://zsb.hust.edu.cn/info/1012/2033.htm",
+          "content_hash": "acc2dd8d4818ea7379577580b75e9cbde9e96628a20a4a65aa6a02dce4b06423",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1012/2034.htm",
+          "title": "华中科技大学2023年高水平运动队招生初审合格名单...",
+          "final_url": "https://zsb.hust.edu.cn/info/1012/2034.htm",
+          "content_hash": "c713b3f1763e869e87565e3b9d77d1ce46e619843e768f381928dd7d6b6bc774",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1012/2035.htm",
+          "title": "华中科技大学2023年高水平运动队招生篮球项目运动...",
+          "final_url": "https://zsb.hust.edu.cn/info/1012/2035.htm",
+          "content_hash": "be4fac93271e0132c5ae7a884ed4b7370463274c4deb1ccf9e30578f4ff19271",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1012/2036.htm",
+          "title": "华中科技大学2023年高水平运动队招生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1012/2036.htm",
+          "content_hash": "66b9b59ec68b90b4e9b5efa3e01ae0e61e999cf68616a85443b535ee78354a4f",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 2,
+      "name": "运动训练",
+      "list_url": "https://zsb.hust.edu.cn/",
+      "list_hash": "8c3f35419fe6aeac3ab3f0751745fcd0eaa084b847faa1b93fd7e4372e753791",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "运动训练",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(6)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(6) > h2:nth-of-type(1) > button:nth-of-type(1) > div:nth-of-type(1) > h4:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 2,
+        "required_matches": 2,
+        "sample_count": 5,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1011/3063.htm",
+          "title": "华中科技大学2026年运动训练专业一志愿拟录取考生...",
+          "final_url": "https://zsb.hust.edu.cn/info/1011/3063.htm",
+          "content_hash": "c8b1bf1fa8b4bac379b23616db1124e00e2ff543fb4362a26ca3b967d42e83cd",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1011/3068.htm",
+          "title": "华中科技大学2026年运动训练专业二志愿拟录取考生...",
+          "final_url": "https://zsb.hust.edu.cn/info/1011/3068.htm",
+          "content_hash": "005bc44a6f38e145c39bdcd751e41b36f75b87c5c1cc772bdf43658f412f2c9f",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1011/3024.htm",
+          "title": "华中科技大学2026年保送录取优秀运动员预录取名单...",
+          "final_url": "https://zsb.hust.edu.cn/info/1011/3024.htm",
+          "content_hash": "a6301c92a53d9b28651f21499d8e6085e0ae308e8776ea06c16d2e6b8a307363",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1011/3019.htm",
+          "title": "华中科技大学2026年保送录取优秀运动员招生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1011/3019.htm",
+          "content_hash": "b4d7d5195204f9481e46e424e6225944fa1ca3864e7f4165ab2a151caf7ee42f",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1011/3020.htm",
+          "title": "华中科技大学2026年运动训练专业招生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1011/3020.htm",
+          "content_hash": "948684422be069cffbf645fedd7b2446ea63257ea3d049316df9c38417efef22",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 3,
+      "name": "保送生",
+      "list_url": "https://zsb.hust.edu.cn/",
+      "list_hash": "8c3f35419fe6aeac3ab3f0751745fcd0eaa084b847faa1b93fd7e4372e753791",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "保送生",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > h2:nth-of-type(1) > button:nth-of-type(1) > div:nth-of-type(1) > h4:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 2,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1010/3022.htm",
+          "title": "华中科技大学2026年外语类保送生预录取名单公示",
+          "final_url": "https://zsb.hust.edu.cn/info/1010/3022.htm",
+          "content_hash": "3bb7f687d897591285844ecad79c9eb54244d3b651f5c308f4efad14267fafea",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1010/3016.htm",
+          "title": "华中科技大学2026年外语类保送生测试通知",
+          "final_url": "https://zsb.hust.edu.cn/info/1010/3016.htm",
+          "content_hash": "542cee34ec7765a5bf7bdad1d05844460694472f0309c8cc46153bd12b9b9109",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1010/3014.htm",
+          "title": "华中科技大学2026年外语类保送生招生初审通过名单...",
+          "final_url": "https://zsb.hust.edu.cn/info/1010/3014.htm",
+          "content_hash": "ff583402190a9eea99ce0fbf53c3f6eecf19346ba893a4aa98ec24f93ff60601",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 4,
+      "name": "普通类型",
+      "list_url": "https://zsb.hust.edu.cn/",
+      "list_hash": "8c3f35419fe6aeac3ab3f0751745fcd0eaa084b847faa1b93fd7e4372e753791",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "普通类型",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > h2:nth-of-type(1) > button:nth-of-type(1) > div:nth-of-type(1) > h4:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 2,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1006/3075.htm",
+          "title": "华中科技大学2026年艺术类专业招生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1006/3075.htm",
+          "content_hash": "587ce7677d02c82f631e479aac926754b7174fecc46871fe88c26b89254b3765",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1006/3065.htm",
+          "title": "华中科技大学2026年普通本科招生章程",
+          "final_url": "https://zsb.hust.edu.cn/info/1006/3065.htm",
+          "content_hash": "fef0d599a75ba7af6d2db1c1b706511eb2d40ce95651f66bcdba7f5c8df48f84",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1006/3045.htm",
+          "title": "华中科技大学2026年依据澳门“四校联考”成绩招收...",
+          "final_url": "https://zsb.hust.edu.cn/info/1006/3045.htm",
+          "content_hash": "e7e7c2b5c22abaae26dac95915541ab10e2ec5e8032550d80275eba0b43b8647",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 5,
+      "name": "强基计划",
+      "list_url": "https://zsb.hust.edu.cn/",
+      "list_hash": "8c3f35419fe6aeac3ab3f0751745fcd0eaa084b847faa1b93fd7e4372e753791",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "强基计划",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > h2:nth-of-type(1) > button:nth-of-type(1) > div:nth-of-type(1) > h4:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1009/3092.htm",
+          "title": "华中科技大学2026年强基计划录取结果公布",
+          "final_url": "https://zsb.hust.edu.cn/info/1009/3092.htm",
+          "content_hash": "0e7542b6983a838d7111ab61ca6ecd353891c85eeb269d5ceb68640a16f2f743",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1009/3087.htm",
+          "title": "强基计划第一类报考条件考生入围校考标准",
+          "final_url": "https://zsb.hust.edu.cn/info/1009/3087.htm",
+          "content_hash": "33dfd2c30f6426130989865534998f9c6a06be7c15bcfc647dd016811a16ef83",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1009/3089.htm",
+          "title": "华中科技大学2026年强基计划入围校考名单结果通知",
+          "final_url": "https://zsb.hust.edu.cn/info/1009/3089.htm",
+          "content_hash": "cec526ccc4d83ae56484b9281fcffc5f796c7f9f19d4032dae3fb09e327e6691",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 6,
+      "name": "艺术类",
+      "list_url": "https://zsb.hust.edu.cn/",
+      "list_hash": "8c3f35419fe6aeac3ab3f0751745fcd0eaa084b847faa1b93fd7e4372e753791",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "艺术类",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(7)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(7) > h2:nth-of-type(1) > button:nth-of-type(1) > div:nth-of-type(1) > h4:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1013/3077.htm",
+          "title": "华中科技大学2026年艺术类专业招生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1013/3077.htm",
+          "content_hash": "7b5c9af5002adbd99b0e85c6b746221f96b7fc358690f2a9be78f0e568f08ad8",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1013/2878.htm",
+          "title": "华中科技大学2025年艺术类专业招生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1013/2878.htm",
+          "content_hash": "197453c3c02073fcd9895b3bae58f54d245306500af32f9448d76d92cb83bb0c",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1013/2093.htm",
+          "title": "华中科技大学2024年艺术类专业招生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1013/2093.htm",
+          "content_hash": "a1da89a7ccc98d9edfe7d0a6a891635696ebc0c4150076a651f76b3d2dc6090c",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 7,
+      "name": "招生政策",
+      "list_url": "https://zsb.hust.edu.cn/bkzn/zszc.htm",
+      "list_hash": "ac5bebc918d07875fca2543b99a7994d0e92f23e3d33ac41b9e36cc4f152241e",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "招生政策",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1006/3075.htm",
+          "title": "华中科技大学2026年艺术类专业招生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1006/3075.htm",
+          "content_hash": "587ce7677d02c82f631e479aac926754b7174fecc46871fe88c26b89254b3765",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1006/3065.htm",
+          "title": "华中科技大学2026年普通本科招生章程",
+          "final_url": "https://zsb.hust.edu.cn/info/1006/3065.htm",
+          "content_hash": "fef0d599a75ba7af6d2db1c1b706511eb2d40ce95651f66bcdba7f5c8df48f84",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1006/3045.htm",
+          "title": "华中科技大学2026年依据澳门“四校联考”成绩招收澳门学生简章",
+          "final_url": "https://zsb.hust.edu.cn/info/1006/3045.htm",
+          "content_hash": "e7e7c2b5c22abaae26dac95915541ab10e2ec5e8032550d80275eba0b43b8647",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 8,
+      "name": "通知公告",
+      "list_url": "https://zsb.hust.edu.cn/bkzn/tzgg.htm",
+      "list_hash": "03867a1990a9379c282d8486b5662fa985eca6a0783e8130e17b9ce10acfc0a0",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "通知公告",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1055/3095.htm",
+          "title": "华中科技大学2026年本科录取查询（陆续更新）",
+          "final_url": "https://zsb.hust.edu.cn/info/1055/3095.htm",
+          "content_hash": "445e4ab2c45b7927b29a1ff2e0a13f9b1999f39cd3ae27074cd6d19641a9e5bc",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1055/3094.htm",
+          "title": "华中科技大学2026年依据澳门“四校联考”成绩免试招收澳门学生预录取名单公示",
+          "final_url": "https://zsb.hust.edu.cn/info/1055/3094.htm",
+          "content_hash": "0bb978dd2e5bf7980628695c3eb359f23fd033277994bad5d263b960b08ca0af",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1055/3090.htm",
+          "title": "华中科技大学2026年强基计划录取结果公布",
+          "final_url": "https://zsb.hust.edu.cn/info/1055/3090.htm",
+          "content_hash": "df09428b08b44aa1feeb3f8b6bb744d82c0a3902b941c21ead5d711d6f9d501a",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 9,
+      "name": "港澳台招生",
+      "list_url": "https://zsb.hust.edu.cn/bkzn/gatzs.htm",
+      "list_hash": "06ba06570e9665344e4b0a4fa5823e524e03c9c3ad85a17c39e8f7f54b8dda8c",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "港澳台招生",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zsb.hust.edu.cn/info/1016/3093.htm",
+          "title": "华中科技大学2026年依据澳门“四校联考”成绩免试招收澳门学生预录取名单公示",
+          "final_url": "https://zsb.hust.edu.cn/info/1016/3093.htm",
+          "content_hash": "40f7f65342857484ee5b89451f4b8eba3ee70c3dfc7548f3585434f2c28f8de7",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1016/3061.htm",
+          "title": "华中科技大学2026年依据台湾地区大学入学考试学科能力测试成绩招收台湾高中毕业生预录取名单公示",
+          "final_url": "https://zsb.hust.edu.cn/info/1016/3061.htm",
+          "content_hash": "1f5f478e98e9860832b32259bbf3f22da9c12166fc5b4db4a05385ef17ad86c6",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://zsb.hust.edu.cn/info/1016/3047.htm",
+          "title": "华中科技大学2026年依据台湾“学测”成绩招收台湾高中毕业生初审合格名单公示及面试考核安排",
+          "final_url": "https://zsb.hust.edu.cn/info/1016/3047.htm",
+          "content_hash": "22c487e25c9f7a9d500d1086d9d5519b1e7306bedbbd24011ffaed903efcc0a6",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v1-hust",
+      "source_id": 10,
+      "name": "校园动态",
+      "list_url": "https://zsb.hust.edu.cn/zjhkd/xydt.htm",
+      "list_hash": "4ba83b5e0a06f6ae338a9ae68c1fc81f3fd52b9f183538eb5838ed31fffc701a",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "校园动态",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > section:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://news.hust.edu.cn/info/1002/59355.htm",
+          "title": "一团队一学子获评2025年度“中国大学生自强之星”",
+          "final_url": "https://news.hust.edu.cn/info/1002/59355.htm",
+          "content_hash": "97934e9df26751b559c66ffc734d01dc568cdeac4233573ea527612a00f471b7",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.hust.edu.cn/info/1002/59296.htm",
+          "title": "校党委书记刘波：以育人实绩  答好“教育强国、高校何为”时代命题",
+          "final_url": "https://news.hust.edu.cn/info/1002/59296.htm",
+          "content_hash": "66ba74970342bb3a38e697fd4d42e827a0e6806ec26f34daca259e45d21bdaed",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.hust.edu.cn/info/1002/59259.htm",
+          "title": "生源质量稳步提升 2026年本科招生录取工作完成",
+          "final_url": "https://news.hust.edu.cn/info/1002/59259.htm",
+          "content_hash": "417a894e802889b21db358f7e6c06225dae5d512d9df6e6dbee5018d3e4f1392",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 1,
+      "name": "招生信息",
+      "list_url": "https://aoff.whu.edu.cn/zsxx1/tzgg.htm",
+      "list_hash": "70a9d4d3b16c26e1bb8a27a8c7f8a68b4a13dc9ba6f1ce6eacc8e40a0efa55de",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "招生信息",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > section:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > section:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h5:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://aoff.whu.edu.cn/info/1066/27092.htm",
+          "title": "武汉大学2026年强基计划测试入围考生缴费通知",
+          "final_url": "https://aoff.whu.edu.cn/info/1066/27092.htm",
+          "content_hash": "0a259e89d62d7ce88ddb9773e1d72706ccc5d3977b76e7d95ce4f473de3607f2",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://aoff.whu.edu.cn/info/1066/27072.htm",
+          "title": "武汉大学2026年强基计划考核测试方案",
+          "final_url": "https://aoff.whu.edu.cn/info/1066/27072.htm",
+          "content_hash": "b39f257eb44d8be97ca942c3945d4b1f356066411fc3121d1c5baee40f06ff94",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://aoff.whu.edu.cn/info/1066/27022.htm",
+          "title": "武汉大学2026年强基计划考核测试确认通知",
+          "final_url": "https://aoff.whu.edu.cn/info/1066/27022.htm",
+          "content_hash": "ab8e6f949ae3ba7623c67ac955944a7b1b093114da15e8debc6eaed2d8f4ca8e",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 2,
+      "name": "招生信息",
+      "list_url": "https://aoff.whu.edu.cn/zsxx1/zsz.htm",
+      "list_hash": "41b7e3b749c884ef854965e61cc8ba3ff3327aaf194086e6162c2bcfaf5b762b",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "招生信息",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > section:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > section:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h5:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://aoff.whu.edu.cn/info/1067/27052.htm",
+          "title": "武汉大学2026年联合招收华侨港澳台学生简章",
+          "final_url": "https://aoff.whu.edu.cn/info/1067/27052.htm",
+          "content_hash": "72837aa760c0d029c1ac06d355bb373762148f8a0e39a76c84fc71c9ffc31811",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://aoff.whu.edu.cn/info/1067/26992.htm",
+          "title": "武汉大学全日制普通本科招生章程 （2026年修订）",
+          "final_url": "https://aoff.whu.edu.cn/info/1067/26992.htm",
+          "content_hash": "04d1bf549280a5b60332550c119041fce78f0a646bd41012c3be1ecc0ac3c7fb",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://aoff.whu.edu.cn/info/1067/26982.htm",
+          "title": "武汉大学2026年依据澳门“四校联考”成绩免试招收澳门学生简章",
+          "final_url": "https://aoff.whu.edu.cn/info/1067/26982.htm",
+          "content_hash": "bc8156d239fabc170de169448b632639ac7ca5010ca68f4cd13ae9633ad02595",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 3,
+      "name": "武汉大学2026年招收攻读博士学位研究生章程",
+      "list_url": "https://wdyz.whu.edu.cn/",
+      "list_hash": "86e56dc876a38d2069dff1762da38a929aa16735720ac8f27811f03b2246bee7",
+      "scope_errors": [
+        "column_identity_or_scope_unconfirmed"
+      ],
+      "observed_region": {},
+      "passed": false,
+      "article_checks": {},
+      "article_samples": []
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 4,
+      "name": "武汉大学2025年面向香港、澳门、台湾地区招收研究生简章",
+      "list_url": "https://wdyz.whu.edu.cn/",
+      "list_hash": "86e56dc876a38d2069dff1762da38a929aa16735720ac8f27811f03b2246bee7",
+      "scope_errors": [
+        "column_identity_or_scope_unconfirmed"
+      ],
+      "observed_region": {},
+      "passed": false,
+      "article_checks": {},
+      "article_samples": []
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 5,
+      "name": "通知公告",
+      "list_url": "https://www.whu.edu.cn/tzgg.htm",
+      "list_hash": "84c8c8068673298121e37a53877517196a09050e95b98feb60d2d5377cd1afb0",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "通知公告",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 2,
+        "required_matches": 2,
+        "sample_count": 4,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://www.whu.edu.cn/new2024/tzggnr.jsp?urltype=news.NewsContentUrl&wbnewsid=275814&wbtreeid=5231",
+          "title": "关于实行冬季作息时间的通知",
+          "final_url": "https://www.whu.edu.cn/new2024/tzggnr.jsp?urltype=news.NewsContentUrl&wbnewsid=275814&wbtreeid=5231",
+          "content_hash": "9afee5081c7d7058d36ac818073cb32928eb27cd2a29e97d21b6f22e300d08bc",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://www.whu.edu.cn/new2024/tzggnr.jsp?urltype=news.NewsContentUrl&wbnewsid=275554&wbtreeid=5231",
+          "title": "关于报送2027年度自筹经费小型维修项目计划的通知",
+          "final_url": "https://www.whu.edu.cn/new2024/tzggnr.jsp?urltype=news.NewsContentUrl&wbnewsid=275554&wbtreeid=5231",
+          "content_hash": "9afee5081c7d7058d36ac818073cb32928eb27cd2a29e97d21b6f22e300d08bc",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://www.whu.edu.cn/info/5231/275164.htm",
+          "title": "珞珈讲坛第545讲预告",
+          "final_url": "https://www.whu.edu.cn/info/5231/275164.htm",
+          "content_hash": "89fdd9ca23af32bae7afbbc942710e55f1d5c08dcb292aba15fed61452769475",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.whu.edu.cn/info/5231/274024.htm",
+          "title": "珞珈讲坛第544讲预告",
+          "final_url": "https://www.whu.edu.cn/info/5231/274024.htm",
+          "content_hash": "6add02fc5acf8cd220231e7ce07a5593926077807cce09087862fc78746ce17f",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 6,
+      "name": "珞珈人物",
+      "list_url": "https://news.whu.edu.cn/",
+      "list_hash": "1bb470eadf099250ff282bb30cf5ef8fd842f44d54a8e913a203abc18fd2c6f7",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "珞珈人物",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(6) > div:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://news.whu.edu.cn/info/1005/483927.htm",
+          "title": "陈传夫：悼念彭先生",
+          "final_url": "https://news.whu.edu.cn/info/1005/483927.htm",
+          "content_hash": "810cb07dd634011c54997750b2268ba0f845af228dff5f73b1381e4712c1fade",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.whu.edu.cn/info/1005/483847.htm",
+          "title": "悼恩师彭斐章先生：青苍不老珞珈松",
+          "final_url": "https://news.whu.edu.cn/info/1005/483847.htm",
+          "content_hash": "1d86d9cbabeb63b93dfaccd338db721ce37f12e442883b7378cb37f402e79307",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.whu.edu.cn/info/1005/463917.htm",
+          "title": "何鑫：扎根基层练真本领，以青春铸国之重器",
+          "final_url": "https://news.whu.edu.cn/info/1005/463917.htm",
+          "content_hash": "ccbe0a05eec6582b5597611ea1132ca285becaf7f3fd1a36d69cd3a9881896a1",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 7,
+      "name": "学术动态",
+      "list_url": "https://news.whu.edu.cn/",
+      "list_hash": "1bb470eadf099250ff282bb30cf5ef8fd842f44d54a8e913a203abc18fd2c6f7",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "学术动态",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://news.whu.edu.cn/info/1015/504757.htm",
+          "title": "高智团队在国际小型无人机大赛中获多个奖项",
+          "final_url": "https://news.whu.edu.cn/info/1015/504757.htm",
+          "content_hash": "57a52eba5e69803c2a633366b743bd474587ca4c6e45c7c27c97571ce4675cfb",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.whu.edu.cn/info/1015/504767.htm",
+          "title": "“武汉一号”卫星助力国际团队在国际野火大赛夺冠",
+          "final_url": "https://news.whu.edu.cn/info/1015/504767.htm",
+          "content_hash": "011a8a17d978fbea18364bf50397d653fdcd835fbce5d1807759461f1086d6a0",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.whu.edu.cn/info/1015/504717.htm",
+          "title": "张竹珍/张丽华团队揭示皮脂腺更新与分化及其维持皮肤屏障稳态的机制",
+          "final_url": "https://news.whu.edu.cn/info/1015/504717.htm",
+          "content_hash": "13a82ed4c8a66b51adca433fded56fc4f461b97c138f81c884941a60be7308de",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 8,
+      "name": "推免工作",
+      "list_url": "https://uc.whu.edu.cn/xs/xjxl/tmgz.htm",
+      "list_hash": "a2d21b06a72711cf8d65358e7f629a80c65d18f00c66302a26fd92f77faa8cd5",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "推免工作",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(2)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://uc.whu.edu.cn/info/1646/128091.htm",
+          "title": "我校2026年普通本科招生录取工作圆满收官",
+          "final_url": "https://uc.whu.edu.cn/info/1646/128091.htm",
+          "content_hash": "f04b97549bed2aa11a95a40315ac389559afd59ad491204a4de640bdb6d8aa37",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://uc.whu.edu.cn/info/1646/128061.htm",
+          "title": "校领导调研我校2026年普通本科招生录取工作",
+          "final_url": "https://uc.whu.edu.cn/info/1646/128061.htm",
+          "content_hash": "c1537febb300cd459c5113d048be816dbc0ca429839257389dc9e19bac85df07",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://uc.whu.edu.cn/info/1521/127981.htm",
+          "title": "校企协同赋能数智人才培养——信息管理学院探索“通关式”实践育人新模式",
+          "final_url": "https://uc.whu.edu.cn/info/1521/127981.htm",
+          "content_hash": "05243213a066b5ac2778dfc9923418f55b7a37ff7d0294838f4fed69554fe65f",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v8-whu",
+      "source_id": 9,
+      "name": "高教动态",
+      "list_url": "https://uc.whu.edu.cn/js/gjdt.htm",
+      "list_hash": "df74f5ae1d3fd40abd3f17a070fd00e42f4b9c7b74eb124da3d42755f5c10f66",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "高教动态",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(2)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://uc.whu.edu.cn/info/1646/128091.htm",
+          "title": "我校2026年普通本科招生录取工作圆满收官",
+          "final_url": "https://uc.whu.edu.cn/info/1646/128091.htm",
+          "content_hash": "f04b97549bed2aa11a95a40315ac389559afd59ad491204a4de640bdb6d8aa37",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://uc.whu.edu.cn/info/1646/128061.htm",
+          "title": "校领导调研我校2026年普通本科招生录取工作",
+          "final_url": "https://uc.whu.edu.cn/info/1646/128061.htm",
+          "content_hash": "c1537febb300cd459c5113d048be816dbc0ca429839257389dc9e19bac85df07",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://uc.whu.edu.cn/info/1521/127981.htm",
+          "title": "校企协同赋能数智人才培养——信息管理学院探索“通关式”实践育人新模式",
+          "final_url": "https://uc.whu.edu.cn/info/1521/127981.htm",
+          "content_hash": "05243213a066b5ac2778dfc9923418f55b7a37ff7d0294838f4fed69554fe65f",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-cqu",
+      "source_id": 1,
+      "name": "校园广角",
+      "list_url": "https://news.cqu.edu.cn/",
+      "list_hash": "bd35d0b0cdd95089f7c50170ec897acfd6be24a6b3be6682d30c3e9e7dbecf8f",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "校园广角",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(2)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(2) > h4:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 2,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://news.cqu.edu.cn/info/1006/1269691.htm",
+          "title": "重庆大学建筑城规学院召开2026年研究生代表大会",
+          "final_url": "https://news.cqu.edu.cn/info/1006/1269691.htm",
+          "content_hash": "013034b67f9efacec6f55c3dcfe872c8bcd8fca746f58050eb809a2eb44c6133",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.cqu.edu.cn/info/1002/1269671.htm",
+          "title": "图书馆举办“光影铸魂，书香致远——《长征》红色...",
+          "final_url": "https://news.cqu.edu.cn/info/1002/1269671.htm",
+          "content_hash": "f5539c3e1648267a50dd518cf525dd8743854c22a6e866629d923b5fc63344fa",
+          "matched": false,
+          "reason": "article_identity_or_body_mismatch"
+        },
+        {
+          "url": "https://news.cqu.edu.cn/info/1002/1269661.htm",
+          "title": "“简牍中的反腐倡廉”主题展览启幕",
+          "final_url": "https://news.cqu.edu.cn/info/1002/1269661.htm",
+          "content_hash": "289a2219fe791fe090380c38885f525c81447b60e1231a89edce14dbc99bc342",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-cqu",
+      "source_id": 2,
+      "name": "校园新闻",
+      "list_url": "https://news.cqu.edu.cn/",
+      "list_hash": "bd35d0b0cdd95089f7c50170ec897acfd6be24a6b3be6682d30c3e9e7dbecf8f",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "校园新闻",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > h4:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://news.cqu.edu.cn/info/1002/1268481.htm",
+          "title": "“忧思与经世：思想的情感动力”中国近代文论工作坊在重庆大学举行",
+          "final_url": "https://news.cqu.edu.cn/info/1002/1268481.htm",
+          "content_hash": "ad94d3751001fd6eac27af32af2eb04713313e76bc585f04e6cdd7eff31d726f",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.cqu.edu.cn/info/1002/1268521.htm",
+          "title": "马克思主义学院思政课教师刘倩副教授接受《人民日报》教师节采访",
+          "final_url": "https://news.cqu.edu.cn/info/1002/1268521.htm",
+          "content_hash": "5059f4fc9b2eefe8d1101baa59ac73b443c51a96a554ace97b791e157126fd28",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://news.cqu.edu.cn/info/1002/1268531.htm",
+          "title": "马克思主义学院院长冯颜利教授在《人民日报》（理论版）发表文章",
+          "final_url": "https://news.cqu.edu.cn/info/1002/1268531.htm",
+          "content_hash": "7ac191b20600d62c10327f9da78ed5cbae440d362c12a2a738a16661eff5eddb",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-cqu",
+      "source_id": 3,
+      "name": "通知公告",
+      "list_url": "https://www.cqu.edu.cn/tzgg.htm",
+      "list_hash": "9b216af3a04ad0d38670c78eca13d56ceaab35c93faad33c972bf7ef1e6664e5",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "通知公告",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://www.cqu.edu.cn/info/1631/69201.htm",
+          "title": "重庆大学关于公开招聘医学院院长的公告",
+          "final_url": "https://www.cqu.edu.cn/info/1631/69201.htm",
+          "content_hash": "11485158c4ce2a651a3fcff65a1b521d4dad37ef6d5f4c9d13f61b8bd63c8744",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/1631/68771.htm",
+          "title": "关于举办第十一届海峡两岸口译大赛重庆大学校选赛的通知",
+          "final_url": "https://www.cqu.edu.cn/info/1631/68771.htm",
+          "content_hash": "2a620f8205b46dc9d991dec90b4cec1a7059ca190e0cb361cb72083c9e228572",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/1631/68761.htm",
+          "title": "关于公布2026“外研社·国才杯”全国大学生外语能力大赛获奖名单的通知",
+          "final_url": "https://www.cqu.edu.cn/info/1631/68761.htm",
+          "content_hash": "3cc2de9cc914a34d2899289403ae0d423facc00fb5b962053a79d5cf6417b7e7",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-cqu",
+      "source_id": 4,
+      "name": "报告讲座",
+      "list_url": "https://www.cqu.edu.cn/bgjz.htm",
+      "list_hash": "70557a0560aaf62d1cb423e6dcae125e2b302cac51ec353f92d4a46d05890980",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "报告讲座",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://www.cqu.edu.cn/info/5101/69081.htm",
+          "title": "中科院物理所李明教授学术讲座",
+          "final_url": "https://www.cqu.edu.cn/info/5101/69081.htm",
+          "content_hash": "b9093a3ac1b1cc477d56bfd5a17056e0a5d9dbf4d9614a8da94a0344bd33eb33",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/5101/68901.htm",
+          "title": "浙江大学吴志岩教授学术讲座",
+          "final_url": "https://www.cqu.edu.cn/info/5101/68901.htm",
+          "content_hash": "2ac9d35e654731fa419df74badbf1d275c1f19b1fac3525e7e6e4c1fbd76e793",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/5101/68751.htm",
+          "title": "香港浸会大学黄旭教授学术讲座",
+          "final_url": "https://www.cqu.edu.cn/info/5101/68751.htm",
+          "content_hash": "3e945dcb0cc95bd8c2d3ab92df171aab6ee6ba670a5d4746718a7df35a8bec85",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-cqu",
+      "source_id": 5,
+      "name": "科研动态",
+      "list_url": "https://www.cqu.edu.cn/kydt.htm",
+      "list_hash": "35b0ce61d1c4fc8f2dd844cebe7316d2a7db5127b38cbcefb1524ea9f3098750",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "科研动态",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://www.cqu.edu.cn/info/1611/69071.htm",
+          "title": "第六届长江经济带景观与生态论坛在重庆大学举行",
+          "final_url": "https://www.cqu.edu.cn/info/1611/69071.htm",
+          "content_hash": "95cdcc7012d82a0f2a31075e2a89ad061f8dd92f8c68345f35205f4aa63678ed",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/1611/68931.htm",
+          "title": "中国航天科技集团于登云院士走进重庆大学作专题学术报告",
+          "final_url": "https://www.cqu.edu.cn/info/1611/68931.htm",
+          "content_hash": "86b2d74790137a325be99b0712d280a3c7c2544b47ce6315e8d769dcf752a11f",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/1611/68631.htm",
+          "title": "重庆大学许东辉教授课题组在准晶非常规交错磁性研究中取得重要进展",
+          "final_url": "https://www.cqu.edu.cn/info/1611/68631.htm",
+          "content_hash": "a3674ba371e257b5254b0ed388ee02289726d411d1dd873412e824520afdafb6",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-cqu",
+      "source_id": 6,
+      "name": "综合新闻",
+      "list_url": "https://www.cqu.edu.cn/zdxw/zhxw.htm",
+      "list_hash": "a147cb37fe00d78277db52f6a20371a8b1b3368509451db5a93b51bdda01edd4",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "综合新闻",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 3,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://www.cqu.edu.cn/info/1111/68541.htm",
+          "title": "重庆大学召开新学期教师干部大会",
+          "final_url": "https://www.cqu.edu.cn/info/1111/68541.htm",
+          "content_hash": "3488ce1aaeb46d6b4d2a44f6765487847a100a2bd0fee03f387ebdeea68cc14a",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/1111/69191.htm",
+          "title": "石河子大学来校交流",
+          "final_url": "https://www.cqu.edu.cn/info/1111/69191.htm",
+          "content_hash": "3a35f5285d3fe96937c9c1b015d4915d1245c37d3a15b14dbab058b7f8ffe37d",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/1111/69171.htm",
+          "title": "重庆大学牵头建设的IEEE Embodied AI Technical Committee 荣获IEEE Most Active SMC Technical Committee Award",
+          "final_url": "https://www.cqu.edu.cn/info/1111/69171.htm",
+          "content_hash": "4f80a92513aa6e7aaaa56b771496da1b87d63857da67a8d0030ef47db05beac3",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    },
+    {
+      "run": "candidate-v11-cqu",
+      "source_id": 7,
+      "name": "焦点新闻",
+      "list_url": "https://www.cqu.edu.cn/zdxw/jdxw.htm",
+      "list_hash": "8956e4797a767d3dde2473fdd3bd95011fc1961e635c5a5bbb79facf46a61faa",
+      "scope_errors": [],
+      "observed_region": {
+        "name": "焦点新闻",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+      },
+      "passed": true,
+      "article_checks": {
+        "matched_count": 2,
+        "required_matches": 2,
+        "sample_count": 3,
+        "status": "full"
+      },
+      "article_samples": [
+        {
+          "url": "https://zjg.cqu.edu.cn/",
+          "title": "树立和践行正确政绩观学习教育",
+          "final_url": "https://zjg.cqu.edu.cn/",
+          "matched": false,
+          "reason": "unavailable",
+          "error_code": "retained_body_missing"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/1101/68681.htm",
+          "title": "砥砺拓新  积健为雄 | 校长刘昌胜在2026级新生开学典礼上的讲话",
+          "final_url": "https://www.cqu.edu.cn/info/1101/68681.htm",
+          "content_hash": "d3d209d53cca5263c0a9ca27e0d7c6e6fca02c0ff2fd78f11f540c008de8f6da",
+          "matched": true,
+          "reason": "matched"
+        },
+        {
+          "url": "https://www.cqu.edu.cn/info/1101/68501.htm",
+          "title": "重庆大学召开树立和践行正确政绩观学习教育总结会议",
+          "final_url": "https://www.cqu.edu.cn/info/1101/68501.htm",
+          "content_hash": "deeaf9a98e577add6010218196ccc66cbda1a2f37419f5b1bf328b7e2169c8ea",
+          "matched": true,
+          "reason": "matched"
+        }
+      ]
+    }
+  ],
+  "independent_limited_references": [
+    {
+      "url": "http://yz.xjtu.edu.cn/index/tzgg.htm",
+      "channel_path": [
+        "西安交通大学",
+        "西安交通大学研究生招生信息网",
+        "通知公告"
+      ],
+      "publisher_evidence": {
+        "text": "通知公告-西安交通大学研究生招生信息网",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "通知公告",
+        "locator": ".list-right .list-title a"
+      },
+      "list_html_sha256": "bb8b6c9df551a5860aeb7da1e6593f8e273699a8ff8eaa59ed2a75a86d42519a",
+      "official_entry_path": [
+        {
+          "from_url": "https://www.xjtu.edu.cn/",
+          "to_url": "https://www.xjtu.edu.cn/index/zsw.htm",
+          "link_text": "招生网",
+          "literal_href": "index/zsw.htm"
+        },
+        {
+          "from_url": "https://www.xjtu.edu.cn/index/zsw.htm",
+          "to_url": "http://yz.xjtu.edu.cn/",
+          "link_text": "研究生招生",
+          "literal_href": "http://yz.xjtu.edu.cn/"
+        },
+        {
+          "from_url": "http://yz.xjtu.edu.cn/",
+          "to_url": "http://yz.xjtu.edu.cn/index/tzgg.htm",
+          "link_text": "MORE",
+          "literal_href": "index/tzgg.htm"
+        }
+      ],
+      "confirmed": false,
+      "unsuccessful_attempts": [
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1083/4418.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1083/4415.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1083/4417.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/xjtutjms_2027.pdf",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1083/4400.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1083/4307.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1083/4370.htm",
+          "reason": "no_retained_complete_body"
+        }
+      ]
+    },
+    {
+      "url": "http://yz.xjtu.edu.cn/index/bszs.htm",
+      "channel_path": [
+        "西安交通大学",
+        "西安交通大学研究生招生信息网",
+        "博士招生"
+      ],
+      "publisher_evidence": {
+        "text": "博士招生-西安交通大学研究生招生信息网",
+        "locator": "title"
+      },
+      "column_evidence": {
+        "text": "博士招生",
+        "locator": ".list-right .list-title a"
+      },
+      "list_html_sha256": "cd2f6068530e6584294644bb7882aca71832a2630fd4cc9d45ebf3c4e4b2395e",
+      "official_entry_path": [
+        {
+          "from_url": "https://www.xjtu.edu.cn/",
+          "to_url": "https://www.xjtu.edu.cn/index/zsw.htm",
+          "link_text": "招生网",
+          "literal_href": "index/zsw.htm"
+        },
+        {
+          "from_url": "https://www.xjtu.edu.cn/index/zsw.htm",
+          "to_url": "http://yz.xjtu.edu.cn/",
+          "link_text": "研究生招生",
+          "literal_href": "http://yz.xjtu.edu.cn/"
+        },
+        {
+          "from_url": "http://yz.xjtu.edu.cn/",
+          "to_url": "http://yz.xjtu.edu.cn/index/bszs.htm",
+          "link_text": "MORE",
+          "literal_href": "index/bszs.htm"
+        }
+      ],
+      "confirmed": false,
+      "unsuccessful_attempts": [
+        {
+          "url": "https://yzbm.xjtu.edu.cn/logon",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4285.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "https://yzbm.xjtu.edu.cn/zsml/bszsml/detailtk/bfo8@yEtRpW1EyxsEKg7eQ==",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4287.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4356.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4351.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4352.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4333.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4371.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4372.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4368.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4366.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4365.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4362.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4361.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4343.htm",
+          "reason": "no_retained_complete_body"
+        },
+        {
+          "url": "http://yz.xjtu.edu.cn/info/1084/4342.htm",
+          "reason": "no_retained_complete_body"
+        }
+      ]
+    }
+  ]
+}

@@ -35,7 +35,7 @@ def cache_lookup(request):
         from backend.scraper.acquisition import classify_result
         raw = browser_dispatch(FetchRequest.from_dict(pending['request']))
         result = raw if raw.outcome in ('busy', 'unavailable', 'network_error', 'needs_manual') else classify_result(request, raw)
-        if result.ok:
+        if result.replayable:
             cache_store(request, result)
         return result
     entry = (handle.get('checkpoint', {}).get('completed_fetches') or {}).get(request_key(request))
@@ -46,14 +46,14 @@ def cache_lookup(request):
         if path.stat().st_size > 12 * 1024 * 1024:
             return None
         result = FetchResult.from_dict(json.loads(path.read_text(encoding='utf-8')))
-        return result if result.ok else None
+        return result if result.replayable else None
     except (OSError, ValueError, TypeError):
         return None
 
 
 def cache_store(request, result):
     handle = tasks.current_execution()
-    if not handle or not result.ok:
+    if not handle or not result.replayable:
         return
     key = request_key(request)
     root = evidence_root()
@@ -117,7 +117,7 @@ def browser_dispatch(request):
                     error_code='browser_deadline', message='浏览器读取超过本次时间预算')
     if not pending.get('submitted'):
         permit, wait = reserve_origin(request.url, handle['worker_id'], token=execution_id,
-                                      ttl=request.timeout_seconds + 40)
+                                      ttl=request.timeout_seconds + 40, transport='browser')
         if not permit:
             tasks.defer(capability='browser', phase='origin_wait', checkpoint=data,
                         delay=min(900, wait), reason='官网访问正在排队', error_code='origin_busy')
@@ -137,6 +137,11 @@ def browser_dispatch(request):
         from backend.scraper.acquisition import classify_result
         result = classify_result(request, result)
     if result.outcome == 'needs_manual':
+        if request.purpose == 'article' and request.policy.get('exploration'):
+            # Sampling continues to the next actual notification when this one
+            # requires an account or human verification. It is not proof that
+            # the entire column is inaccessible and must not block other samples.
+            return result
         tasks.checkpoint(data)
         from urllib.parse import urlsplit
         parsed = urlsplit(request.url)

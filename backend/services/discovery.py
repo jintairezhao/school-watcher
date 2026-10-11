@@ -46,7 +46,7 @@ def run_discovery_in_background(school, session_obj, app=None):
             session_obj.complete({
                 'departments': candidates, 'pending_pages': pending,
                 'coverage_verified': result['accepted'],
-                'message': f'本轮检查结束：{len(candidates)} 个可适配栏目，{pending} 个入口待继续核对。尚未完成 {result["match_threshold"]}% 验收。',
+                'message': f'本批检查结束：发现 {len(candidates)} 个待验证栏目，已保存 {pending} 个待处理入口。栏目通过实际试抓后即可使用。',
             })
         except Timeout:
             session_obj.fail('这所学校已有来源检查正在运行，可在官网来源结构页查看进度')

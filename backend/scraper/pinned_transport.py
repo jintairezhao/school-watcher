@@ -103,7 +103,13 @@ def pinned_request(method, url, *, addresses=None, trust_env=True, **kwargs):
         except (requests.ConnectionError, requests.Timeout) as exc:
             session.close()
             last_error = exc
-            if method not in ('GET', 'HEAD'):
+            # Moving to another IP after a read timeout/disconnect would repeat
+            # an already-sent request outside the durable retry budget.
+            from urllib3.exceptions import MaxRetryError, NewConnectionError
+            reason = exc.args[0] if exc.args else None
+            reason = reason.reason if isinstance(reason, MaxRetryError) else reason
+            unsent = isinstance(exc, requests.ConnectTimeout) or isinstance(reason, NewConnectionError)
+            if method not in ('GET', 'HEAD') or not unsent:
                 raise
         except BaseException:
             session.close()
