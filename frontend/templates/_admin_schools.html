@@ -47,6 +47,32 @@
     {% endif %}
 </div>
 
+<!-- 学校添加与编辑共用弹窗；与本功能块一起渲染，避免按钮与字段分离。 -->
+<dialog class="modal" id="schoolModal" aria-labelledby="modalTitle" style="position:fixed;inset:0;margin:auto;padding:0;width:calc(100% - 32px);max-width:480px;max-height:calc(100dvh - 32px);">
+    <form id="schoolForm" onsubmit="event.preventDefault(); saveSchool();">
+        <div class="modal-header">
+            <h3 id="modalTitle">添加学校</h3>
+            <button type="button" class="modal-close" onclick="closeModal()" aria-label="关闭学校编辑">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editSchoolId">
+            <div class="form-group">
+                <label for="schoolName">学校名称 *</label>
+                <input type="text" id="schoolName" class="form-input" required maxlength="200" placeholder="填写学校全称" autofocus>
+            </div>
+            <div class="form-group">
+                <label for="schoolUrl">学校官网 URL *</label>
+                <input type="url" id="schoolUrl" class="form-input" required maxlength="1000" placeholder="https://www.example.edu.cn/">
+            </div>
+            <label><input type="checkbox" id="schoolEnabled" checked> 上架这所学校</label>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal()">取消</button>
+            <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+    </form>
+</dialog>
+
 <!-- 部门管理区域 -->
 <div id="deptSection" style="display:none;">
     <hr style="margin: 24px 0;">
@@ -139,7 +165,7 @@ function showAddSchool() {
     document.getElementById('schoolUrl').dataset.autoFilled = 'false';
     document.getElementById('schoolUrl').style.borderColor = '';
     document.getElementById('schoolEnabled').checked = true;
-    document.getElementById('schoolModal').style.display = 'flex';
+    document.getElementById('schoolModal').showModal();
 }
 
 function editSchool(id, name, url, enabled) {
@@ -150,11 +176,11 @@ function editSchool(id, name, url, enabled) {
     document.getElementById('schoolUrl').dataset.autoFilled = 'false';
     document.getElementById('schoolUrl').style.borderColor = '';
     document.getElementById('schoolEnabled').checked = enabled;
-    document.getElementById('schoolModal').style.display = 'flex';
+    document.getElementById('schoolModal').showModal();
 }
 
 function closeModal() {
-    document.getElementById('schoolModal').style.display = 'none';
+    document.getElementById('schoolModal').close();
 }
 
 async function saveSchool() {
@@ -449,6 +475,9 @@ async function saveDept() {
 // 通用事件
 // ============================================================
 document.addEventListener('click', function(e) {
+    if (e.target === document.getElementById('schoolModal')) {
+        closeModal();
+    }
     if (e.target.classList.contains('modal-overlay')) {
         e.target.style.display = 'none';
     }

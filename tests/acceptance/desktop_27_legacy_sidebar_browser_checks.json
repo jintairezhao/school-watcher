@@ -1,0 +1,379 @@
+{
+  "date": "2026-10-11",
+  "release_target": "2.7",
+  "school": "上海交通大学",
+  "method": "Real Edge against a second private SQLite backup of existing user data, with TESTING and DESKTOP_MODE enabled. The omitted full starter catalog and missing SJTU runtime catalog reproduce the installed application conditions; the compact public display-only resource provides strictly matched legacy paths.",
+  "status": "two_viewport_sidebar_and_source_ID_filter_verified",
+  "actual_api_requests": 0,
+  "actual_official_HTTP_requests": 0,
+  "actual_model_dispatches": 0,
+  "AI_profile_or_key_fields_read": false,
+  "notice_content_or_user_identity_in_public_record": false,
+  "full_starter_catalog_missing_in_test": true,
+  "SJTU_runtime_catalog_missing_in_original_data": true,
+  "compact_display_resource_bytes": 121956,
+  "compact_display_resource_sha256": "24abf81b816a9b1594ec7be2d49fb38c490c2093a1e90a6e43e39b95abf1d9ef",
+  "code_hashes": {
+    "backend/services/starter_catalog.py": "d1fcb042eee61427436c3e5c564793d184e5072e366a121bcfde5a8edd49cc95",
+    "backend/services/inbox.py": "99f044897d78444defa6ea172716191bdc7ef719f560a0f63a0e49a3cced6665",
+    "backend/services/source_placements.py": "a47a6be156550d52e07cbbd24e73ccc202e0037146f669251aa948236ed9830a",
+    "frontend/templates/_inbox_sources.html": "74c6efd204c41a09ceda420e4e4d251271f9a3663f72b940506417fc3aad169d",
+    "config/legacy-source-display-paths.json": "24abf81b816a9b1594ec7be2d49fb38c490c2093a1e90a6e43e39b95abf1d9ef"
+  },
+  "source_metadata_checks": [
+    {
+      "source_id": 315,
+      "name": "招生信息",
+      "department_group": "心理学院",
+      "official_list_url": "https://psychology.sjtu.edu.cn/zsxx.html",
+      "kind": "column",
+      "school_and_name_group_URL_identity_strict_match": true,
+      "list_selector_strict_match": true,
+      "actual_and_public_list_selector_sha256": "c8ccbccfc30d91c6f598a68407c297df65db345da8e9379f064fd8577364f3d4",
+      "actual_display_path_evidence": [
+        {
+          "group": "院系设置",
+          "label": "人才培养 / 招生信息",
+          "nodes": [
+            {
+              "key": "11fcd3ba49381e71d9c81d3e",
+              "name": "心理学院"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": 316,
+      "name": "研究生招生",
+      "department_group": "物理与天文学院",
+      "official_list_url": "https://www.physics.sjtu.edu.cn/yjszs.html",
+      "kind": "column",
+      "school_and_name_group_URL_identity_strict_match": true,
+      "list_selector_strict_match": true,
+      "actual_and_public_list_selector_sha256": "c6b9afe0f655460a6f1bb530ef35d898132f29acb9a53841a194ac85ca7666b6",
+      "actual_display_path_evidence": [
+        {
+          "group": "院系设置",
+          "label": "研究生招生",
+          "nodes": [
+            {
+              "key": "f85fd63302c2aa667a72cc70",
+              "name": "物理与天文学院"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": 322,
+      "name": "学生培养",
+      "department_group": "心理学院",
+      "official_list_url": "https://psychology.sjtu.edu.cn/pyfa.html",
+      "kind": "column",
+      "school_and_name_group_URL_identity_strict_match": true,
+      "list_selector_strict_match": true,
+      "actual_and_public_list_selector_sha256": "c8ccbccfc30d91c6f598a68407c297df65db345da8e9379f064fd8577364f3d4",
+      "actual_display_path_evidence": [
+        {
+          "group": "院系设置",
+          "label": "学生培养",
+          "nodes": [
+            {
+              "key": "11fcd3ba49381e71d9c81d3e",
+              "name": "心理学院"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": 355,
+      "name": "通知公告",
+      "department_group": "物理与天文学院",
+      "official_list_url": "https://www.physics.sjtu.edu.cn/",
+      "kind": "column",
+      "school_and_name_group_URL_identity_strict_match": true,
+      "list_selector_strict_match": true,
+      "actual_and_public_list_selector_sha256": "e445d4aa3a22af19f2c0eb309b558da629cd9ff5bf9d049a2583e0defab49727",
+      "actual_display_path_evidence": [
+        {
+          "group": "院系设置",
+          "label": "通知公告",
+          "nodes": [
+            {
+              "key": "f85fd63302c2aa667a72cc70",
+              "name": "物理与天文学院"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": 358,
+      "name": "通知公告",
+      "department_group": "心理学院",
+      "official_list_url": "https://psychology.sjtu.edu.cn/tzgg.html",
+      "kind": "column",
+      "school_and_name_group_URL_identity_strict_match": true,
+      "list_selector_strict_match": true,
+      "actual_and_public_list_selector_sha256": "c8ccbccfc30d91c6f598a68407c297df65db345da8e9379f064fd8577364f3d4",
+      "actual_display_path_evidence": [
+        {
+          "group": "院系设置",
+          "label": "新闻动态 / 通知公告",
+          "nodes": [
+            {
+              "key": "11fcd3ba49381e71d9c81d3e",
+              "name": "心理学院"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": 372,
+      "name": "新闻资讯",
+      "department_group": "心理学院",
+      "official_list_url": "https://psychology.sjtu.edu.cn/",
+      "kind": "column",
+      "school_and_name_group_URL_identity_strict_match": true,
+      "list_selector_strict_match": true,
+      "actual_and_public_list_selector_sha256": "d083d59eb273dd57d5452555d6f856dfdf199f99582a1bc1e1dfd3432df51955",
+      "actual_display_path_evidence": [
+        {
+          "group": "院系设置",
+          "label": "新闻资讯",
+          "nodes": [
+            {
+              "key": "11fcd3ba49381e71d9c81d3e",
+              "name": "心理学院"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "viewport_checks": [
+    {
+      "viewport_width": 1440,
+      "sidebar_width": 300,
+      "actual_group": "院系设置",
+      "actual_units_and_columns": [
+        {
+          "unit_name": "心理学院",
+          "group": "院系设置",
+          "columns": [
+            {
+              "id": 315,
+              "label": "人才培养 / 招生信息"
+            },
+            {
+              "id": 322,
+              "label": "学生培养"
+            },
+            {
+              "id": 358,
+              "label": "新闻动态 / 通知公告"
+            },
+            {
+              "id": 372,
+              "label": "新闻资讯"
+            }
+          ]
+        },
+        {
+          "unit_name": "物理与天文学院",
+          "group": "院系设置",
+          "columns": [
+            {
+              "id": 316,
+              "label": "研究生招生"
+            },
+            {
+              "id": 355,
+              "label": "通知公告"
+            }
+          ]
+        }
+      ],
+      "source_ID_filter_after_actual_clicks": [
+        316
+      ],
+      "actual_click_filter_passed": true,
+      "sidebar_within_viewport": true,
+      "horizontal_overflow": false,
+      "sidebar_only_screenshot_sha256": "942c467c7eb4b82f578a756c8fc02e5ef7ac7b621dd3fbf7e76c8bc3cb9ddb3e",
+      "screenshot_manual_visual_review": "Psychology four columns and physics two columns visible as real labels; no URL-shaped fake unit nodes inside these departments. Only the sidebar was captured; images remain private."
+    },
+    {
+      "viewport_width": 390,
+      "sidebar_width": 340,
+      "actual_group": "院系设置",
+      "actual_units_and_columns": [
+        {
+          "unit_name": "心理学院",
+          "group": "院系设置",
+          "columns": [
+            {
+              "id": 315,
+              "label": "人才培养 / 招生信息"
+            },
+            {
+              "id": 322,
+              "label": "学生培养"
+            },
+            {
+              "id": 358,
+              "label": "新闻动态 / 通知公告"
+            },
+            {
+              "id": 372,
+              "label": "新闻资讯"
+            }
+          ]
+        },
+        {
+          "unit_name": "物理与天文学院",
+          "group": "院系设置",
+          "columns": [
+            {
+              "id": 316,
+              "label": "研究生招生"
+            },
+            {
+              "id": 355,
+              "label": "通知公告"
+            }
+          ]
+        }
+      ],
+      "source_ID_filter_after_actual_clicks": [
+        316
+      ],
+      "actual_click_filter_passed": true,
+      "sidebar_within_viewport": true,
+      "horizontal_overflow": false,
+      "sidebar_only_screenshot_sha256": "0cdfcaef7f129f3eb838e49908a83e92b052f51109b8b1de1bac7ca666f9f706",
+      "screenshot_manual_visual_review": "Psychology four columns and physics two columns visible as real labels; no URL-shaped fake unit nodes inside these departments. Only the sidebar was captured; images remain private."
+    }
+  ],
+  "server_render_filter_checks": [
+    {
+      "selected_source_ids": [
+        315
+      ],
+      "rendered_notice_count": 16,
+      "every_rendered_notice_has_selected_actual_source_membership": true,
+      "template": "index.html"
+    },
+    {
+      "selected_source_ids": [],
+      "rendered_notice_count": 40,
+      "every_rendered_notice_has_selected_actual_source_membership": null,
+      "template": "_inbox_workspace.html"
+    },
+    {
+      "selected_source_ids": [
+        316
+      ],
+      "rendered_notice_count": 30,
+      "every_rendered_notice_has_selected_actual_source_membership": true,
+      "template": "_inbox_workspace.html"
+    },
+    {
+      "selected_source_ids": [
+        315
+      ],
+      "rendered_notice_count": 16,
+      "every_rendered_notice_has_selected_actual_source_membership": true,
+      "template": "index.html"
+    },
+    {
+      "selected_source_ids": [],
+      "rendered_notice_count": 40,
+      "every_rendered_notice_has_selected_actual_source_membership": null,
+      "template": "_inbox_workspace.html"
+    },
+    {
+      "selected_source_ids": [
+        316
+      ],
+      "rendered_notice_count": 30,
+      "every_rendered_notice_has_selected_actual_source_membership": true,
+      "template": "_inbox_workspace.html"
+    }
+  ],
+  "blocked_or_dispatched_official_requests": 0,
+  "browser_page_errors": 0,
+  "automatic_copy_only_mutating_requests_mocked": [
+    {
+      "path": "/api/inbox/sync",
+      "method": "POST"
+    },
+    {
+      "path": "/api/inbox/sync",
+      "method": "POST"
+    }
+  ],
+  "guarded_SQL_mutations": 0,
+  "new_collection_tasks_in_copy": 0,
+  "original_live_database_used_by_UI": false,
+  "baseline_copy_file_unchanged": true,
+  "protected_source_notice_subscription_read_saved_progress_and_paid_ledger_tables": 17,
+  "baseline_copy_17_table_logical_hashes_unchanged": true,
+  "UI_copy_17_table_logical_hashes_unchanged": true,
+  "five_legacy_school_projection_checks": [
+    {
+      "school_name": "中国石油大学（北京）克拉玛依校区",
+      "strict_matched_existing_source_count": 25,
+      "matched_sources_projected": true,
+      "group_labels": [
+        "院系设置",
+        "组织机构"
+      ]
+    },
+    {
+      "school_name": "中国石油大学（北京）",
+      "strict_matched_existing_source_count": 23,
+      "matched_sources_projected": true,
+      "group_labels": [
+        "院系设置",
+        "组织机构"
+      ]
+    },
+    {
+      "school_name": "华中科技大学",
+      "strict_matched_existing_source_count": 47,
+      "matched_sources_projected": true,
+      "group_labels": [
+        "院系设置",
+        "组织机构"
+      ]
+    },
+    {
+      "school_name": "电子科技大学",
+      "strict_matched_existing_source_count": 6,
+      "matched_sources_projected": true,
+      "group_labels": [
+        "学院部门"
+      ]
+    },
+    {
+      "school_name": "上海交通大学",
+      "strict_matched_existing_source_count": 79,
+      "matched_sources_projected": true,
+      "group_labels": [
+        "院系设置",
+        "学校机构设置"
+      ]
+    }
+  ],
+  "private_record_sha256": "bb7748b25912f4774e25d886b577cd370234cd7bef5d83faac3d3ea996c9ffc6",
+  "limitations": [
+    "This validates existing-source sidebar presentation and actual source-ID filtering only. It is not a new discovery, official website/model API, browser website navigation or continuous-update acceptance.",
+    "AI model-binding lookup is mocked to avoid reading credential fields. Automatic local POST /api/inbox/sync is mocked so collection queues and user state remain unchanged. Sidebar tree construction, HTML rendering, browser expansion, GET filtering and actual notice-source membership checks execute normally.",
+    "The other five-school results are strict legacy-configuration projection checks, not five-school interactive browser or fresh collection tests.",
+    "User database copies, full private reports and sidebar screenshots remain in ignored private storage and are not committed."
+  ]
+}

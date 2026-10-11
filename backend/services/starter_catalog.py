@@ -1,5 +1,6 @@
 """Public school configuration only: never subscriptions, notices or credentials."""
 from functools import lru_cache
+import hashlib
 import json
 from pathlib import Path
 
@@ -78,12 +79,35 @@ def install():
 
 
 def placements(school_url, source):
-    """Display the bundled classification until a local discovery publishes newer paths."""
+    """Restore exact legacy display paths, without installing school/source seeds.
+
+    Frozen builds exclude the full developer catalogue. Its display-only
+    compatibility resource carries no extraction rules and is only consulted
+    for a source already stored locally. The list-region hash distinguishes
+    multiple real columns sharing an address; names/URLs alone cannot do so.
+    Published local paths have already taken precedence in the caller.
+    """
+    identity = (source.name, source.group_name or '', canonical_url(source.list_url or ''),
+                hashlib.sha256((getattr(source, 'list_selector', '') or '').encode()).hexdigest())
     for school in catalog()['schools']:
         if canonical_url(school['url']) != canonical_url(school_url):
             continue
         for entry in school['departments']:
-            if (entry['name'], entry['group_name'], canonical_url(entry['list_url'] or '')) == (
-                    source.name, source.group_name or '', canonical_url(source.list_url or '')):
+            if (entry['name'], entry['group_name'], canonical_url(entry['list_url'] or ''),
+                    hashlib.sha256((entry.get('list_selector') or '').encode()).hexdigest()) == identity:
+                return entry.get('placements', [])
+    path = current_app.config.get('LEGACY_SOURCE_DISPLAY_PATHS_PATH',
+        ROOT_DIR / 'config' / 'legacy-source-display-paths.json')
+    if not Path(path).is_file():
+        return []
+    display = _read(str(path))
+    if display.get('format_version') != 1 or display.get('purpose') != 'legacy_display_paths_only':
+        return []
+    for school in display.get('schools', []):
+        if canonical_url(school['url']) != canonical_url(school_url):
+            continue
+        for entry in school['sources']:
+            if (entry['name'], entry['group_name'], canonical_url(entry['list_url'] or ''),
+                    entry['list_selector_sha256']) == identity:
                 return entry.get('placements', [])
     return []

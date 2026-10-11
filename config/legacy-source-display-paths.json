@@ -1,0 +1,3623 @@
+{
+  "format_version": 1,
+  "purpose": "legacy_display_paths_only",
+  "origin": "desktop-schools.json:2026-09-27",
+  "origin_sha256": "1f72519f4fd05a217c94aa202593afa150d31c2532d10af215bc53d3dfb3d517",
+  "schools": [
+    {
+      "url": "https://www.cupk.edu.cn/",
+      "sources": [
+        {
+          "name": "教务部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/jwb/tzgg/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "99bccadb759385196f55dedb",
+                  "name": "教务部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教务部-教学运行",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/jwb/jxyx/tzgg/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "教学运行",
+              "nodes": [
+                {
+                  "key": "99bccadb759385196f55dedb",
+                  "name": "教务部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教务部-国际教育",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/jwb/gjjy/tzgg/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "国际教育",
+              "nodes": [
+                {
+                  "key": "99bccadb759385196f55dedb",
+                  "name": "教务部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教务部-教学研究",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/jwb/jxyj/tzgg/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "教学研究",
+              "nodes": [
+                {
+                  "key": "99bccadb759385196f55dedb",
+                  "name": "教务部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生部-招生",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/yjsb/tzgg/zs/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "招生",
+              "nodes": [
+                {
+                  "key": "121bf8ee83c8155cac07b988",
+                  "name": "研究生部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生部-培养",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/yjsb/tzgg/py/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "培养",
+              "nodes": [
+                {
+                  "key": "121bf8ee83c8155cac07b988",
+                  "name": "研究生部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学生工作与安全保卫部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/xgybw/tzgg/tzgg/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "3833b63b73b01ce469eb3a1d",
+                  "name": "学生工作与安全保卫部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/yjsb/tzgg/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "121bf8ee83c8155cac07b988",
+                  "name": "研究生部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教务部-创新创业学院",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/cxcy/tzgg/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "99bccadb759385196f55dedb",
+                  "name": "教务部"
+                },
+                {
+                  "key": "917e054c903ea40e9d5703c0",
+                  "name": "创新创业学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "地球科学与工程学院",
+          "list_url": "https://www.cupk.edu.cn/syxy/tzgg/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "36d25cb02c7d80af99b70a8a",
+                  "name": "地球科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人文学院",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/wlxy/tzgg/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "1c3658725ddb9e4138b3e9e5",
+                  "name": "人文学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "工商管理学院",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/gsxy/tzgg/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "8f2e666c1a4129e75f90bb94",
+                  "name": "工商管理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "石油工程学院",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/sgxy/tzgg/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "18b083ebfc9779eb32836497",
+                  "name": "石油工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "机电工程学院",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/jdxy/tzgg/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "e0976f2846d6c24a5ff770ed",
+                  "name": "机电工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新能源与材料学院",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/xcxy/tzgg/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "40b7dcb234c8507167691e37",
+                  "name": "新能源与材料学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "马克思主义学院",
+          "group_name": "院系设置",
+          "list_url": "http://www.cupk.edu.cn/smxy/tzgg/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "259ba0fb865d0d2eacf73619",
+                  "name": "马克思主义学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科技与信息部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/xxglb/tzgg/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "4e045eb532f47b2646c6b2cf",
+                  "name": "科技与信息部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "数理与人工智能学院",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/szxy/",
+          "list_selector_sha256": "603bc428936a8e00f685bf4272238848e75ee6aab455e40e5326ecd437d17e9b",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "d0aab85be3706dec50c58fed",
+                  "name": "数理与人工智能学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "组织人事部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/rsb/rcxm/tzgg/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "392beee25f728fa30e3396bc",
+                  "name": "组织人事部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "党群工作部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/dwxcb/",
+          "list_selector_sha256": "ce95340401faf49a3edfbf15eecff09f8ff0ba27aa1e8fd8def663060f129bbc",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "e6b6304c3e3988c10395f913",
+                  "name": "党群工作部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "纪检监察部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/jwjc/tzgg/tzgg/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "fd460441b28a01dbf496a9ea",
+                  "name": "纪检监察部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "合作发展部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/hzfzb/tzgg/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "33e90de7cf9b39b12f91736f",
+                  "name": "合作发展部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "财务部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/cwb/xwdt/",
+          "list_selector_sha256": "e91eb3d4c2fece4568cdc44d8e17c4cfd1dceb3df3eeb9d8bacf44f3253c152d",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "1d0ccaf062fca5d89e666081",
+                  "name": "财务部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科技与信息部-图书馆",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/library/",
+          "list_selector_sha256": "a297dcbf59edc65cfdb6dc01700c64a28bc44334fb2831b1f2de3e8482796ed5",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "4e045eb532f47b2646c6b2cf",
+                  "name": "科技与信息部"
+                },
+                {
+                  "key": "318c50f2ccb096ba81c6a5db",
+                  "name": "图书馆"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教务部-新闻动态",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/jwb/xwdt/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "新闻动态",
+              "nodes": [
+                {
+                  "key": "99bccadb759385196f55dedb",
+                  "name": "教务部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教务部-毕业设计",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/jwb/sjjx/bysj/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "毕业设计",
+              "nodes": [
+                {
+                  "key": "99bccadb759385196f55dedb",
+                  "name": "教务部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教务部-培养方案",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/jwb/zlgl/pyfa/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "培养方案",
+              "nodes": [
+                {
+                  "key": "99bccadb759385196f55dedb",
+                  "name": "教务部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生部-办事指南",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/yjsb/bszn/xj/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "办事指南",
+              "nodes": [
+                {
+                  "key": "121bf8ee83c8155cac07b988",
+                  "name": "研究生部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生部-新闻动态",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/yjsb/xwdt/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "新闻动态",
+              "nodes": [
+                {
+                  "key": "121bf8ee83c8155cac07b988",
+                  "name": "研究生部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科技与信息部-通知公告",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/xxglb/zsxb/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "4e045eb532f47b2646c6b2cf",
+                  "name": "科技与信息部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科技与信息部-科研项目",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/xxglb/kxyj/kyxm/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "科研项目",
+              "nodes": [
+                {
+                  "key": "4e045eb532f47b2646c6b2cf",
+                  "name": "科技与信息部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科技与信息部-科研成果",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/xxglb/kxyj/kycg/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "科研成果",
+              "nodes": [
+                {
+                  "key": "4e045eb532f47b2646c6b2cf",
+                  "name": "科技与信息部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科技与信息部-科研服务",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/xxglb/xzzq/kxyj/xmgll/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "科研服务",
+              "nodes": [
+                {
+                  "key": "4e045eb532f47b2646c6b2cf",
+                  "name": "科技与信息部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "合作发展部-新闻动态",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/hzfzb/xwdt/",
+          "list_selector_sha256": "ee485314cea795e370ab90a1d8a939ece9db69a16e2028fce4bf7b25f65eefc1",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "新闻动态",
+              "nodes": [
+                {
+                  "key": "33e90de7cf9b39b12f91736f",
+                  "name": "合作发展部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "校园管理部-询价公告",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/cxgl/zcgl/xjgg/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "询价公告",
+              "nodes": [
+                {
+                  "key": "e1d5839d12f052c554c39997",
+                  "name": "校园管理部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "校园管理部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/cxgl/",
+          "list_selector_sha256": "9f2dcc024b167828312bd41f25316e5df6680c3ebfbb1355f9237876f42bb246",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "e1d5839d12f052c554c39997",
+                  "name": "校园管理部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "综合办公室",
+          "group_name": "组织机构",
+          "list_url": "https://www.cupk.edu.cn/zhb/",
+          "list_selector_sha256": "3ca4deea9e7f65d438d8cf9f95bfa52e8e85c3510beb20fd1efc0e3c21fc2bc5",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "1693aa72f3271e8f99b42f04",
+                  "name": "综合办公室"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "石油工程学院-学生工作",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/sgxy/xsgz/tzgg/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学生工作",
+              "nodes": [
+                {
+                  "key": "18b083ebfc9779eb32836497",
+                  "name": "石油工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "机电工程学院-学生工作",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/jdxy/xsgz/tzgg1/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学生工作",
+              "nodes": [
+                {
+                  "key": "e0976f2846d6c24a5ff770ed",
+                  "name": "机电工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人文学院-学生工作",
+          "group_name": "院系设置",
+          "list_url": "https://www.cupk.edu.cn/wlxy/tzttr/",
+          "list_selector_sha256": "e2974305a324882557e4a41c184745b4df83db67099b5d66037333ccab610919",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学生工作",
+              "nodes": [
+                {
+                  "key": "1c3658725ddb9e4138b3e9e5",
+                  "name": "人文学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "院内新闻",
+          "group_name": "地球科学与工程学院",
+          "list_url": "https://www.cupk.edu.cn/syxy/ynxw/",
+          "list_selector_sha256": "2098f15993f0a731376c4cc4563f24e6ce3d2f73096f11d2eea2ecc733544e85",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "院内新闻",
+              "nodes": [
+                {
+                  "key": "36d25cb02c7d80af99b70a8a",
+                  "name": "地球科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "组织人事部",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/rsb/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "392beee25f728fa30e3396bc",
+                  "name": "组织人事部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "纪检监察部",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/jwjc/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "fd460441b28a01dbf496a9ea",
+                  "name": "纪检监察部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "财务部",
+          "group_name": "",
+          "list_url": "https://www.cupk.edu.cn/cwb/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "1d0ccaf062fca5d89e666081",
+                  "name": "财务部"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://www.cup.edu.cn/",
+      "sources": [
+        {
+          "name": "机械工程学院",
+          "group_name": "院系设置",
+          "list_url": "http://www.cup.edu.cn/mte/tzgg/index.htm",
+          "list_selector_sha256": "b5b0ff59ea1a27044c6dfe54cdd795d932c376882e812329ed8cbfc555699e58",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "a861a73c90d952cb3cfde99c",
+                  "name": "机械工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "安全与海洋工程学院",
+          "group_name": "院系设置",
+          "list_url": "http://www.cup.edu.cn/safety/tzgg/index.htm",
+          "list_selector_sha256": "b5b0ff59ea1a27044c6dfe54cdd795d932c376882e812329ed8cbfc555699e58",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "464ed8ac58a4d47612062a6a",
+                  "name": "安全与海洋工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "石油工程学院",
+          "group_name": "院系设置",
+          "list_url": "http://www.cup.edu.cn/oil/tzgg/index.htm",
+          "list_selector_sha256": "7a8da68bfb5f8e758b84d570b07c71b05641cfd414a4d47e58216377046e8aa3",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "b4121ffa30e557a6873a6fcd",
+                  "name": "石油工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "地球科学学院",
+          "group_name": "院系设置",
+          "list_url": "http://www.cup.edu.cn/geosci",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "dc2bdda0111e80ab5bec030d",
+                  "name": "地球科学学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "理学院",
+          "group_name": "院系设置",
+          "list_url": "http://www.cup.edu.cn/science/tzgg/index.htm",
+          "list_selector_sha256": "7a8da68bfb5f8e758b84d570b07c71b05641cfd414a4d47e58216377046e8aa3",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "2fab3df6995a3f514e37310a",
+                  "name": "理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "外国语学院",
+          "group_name": "院系设置",
+          "list_url": "http://www.cup.edu.cn/dfl/tzgg3/index.htm",
+          "list_selector_sha256": "406731c5c42ff12ef6c0400188473b8ea60a8e9f8a49c6b52c58ba65a8dd4b22",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "dc973cbb5543d3fd4f5f766a",
+                  "name": "外国语学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教育学院",
+          "group_name": "院系设置",
+          "list_url": "https://www.cup.edu.cn/tiyubu/news/index.htm",
+          "list_selector_sha256": "406731c5c42ff12ef6c0400188473b8ea60a8e9f8a49c6b52c58ba65a8dd4b22",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "f17101bdaacb1b6bee12c132",
+                  "name": "教育学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "海南研究院",
+          "group_name": "科学研究",
+          "list_url": "https://www.cup.edu.cn/hnyjy/tzgg2/index.htm",
+          "list_selector_sha256": "b5b0ff59ea1a27044c6dfe54cdd795d932c376882e812329ed8cbfc555699e58",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "1c5c7d6d4b0e8c2108ccb448",
+                  "name": "海南研究院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "党委宣传部",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/dwxcb/tzgg/index.htm",
+          "list_selector_sha256": "406731c5c42ff12ef6c0400188473b8ea60a8e9f8a49c6b52c58ba65a8dd4b22",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "e46ba84724b28382e329aafa",
+                  "name": "党委宣传部"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生院",
+          "group_name": "组织机构",
+          "list_url": "https://grs.cup.edu.cn/",
+          "list_selector_sha256": "9576e5cde95f5a39c86255b1b396a622e0426a097ec66f1b6e812fdd58a0e006",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "08544d33826fa523f83e6b15",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科学技术研究院",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/kjc/news/index.htm",
+          "list_selector_sha256": "e51aee9504df392629fc42fe639cd1b0b7fefe22cd8708dc9f6d1cd0d01b4b93",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "ace708a71cc59576d92bb037",
+                  "name": "科学技术研究院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "国际合作与交流处",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/international/tzgg/index.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "e3bb02fe5543c5499d747854",
+                  "name": "国际合作与交流处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "财务处",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/cwc/tzgg/index.htm",
+          "list_selector_sha256": "22f688dd3de0f3b8a1348f3d0f44f949223effdafcc24923932812139cefa427",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "a40ba8d5dcfe5e32c4f1c06d",
+                  "name": "财务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "国有资产管理处",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/gyzcglc/notices/index.htm",
+          "list_selector_sha256": "0d306d66d45a44c9a5a106a7837a9c8e42a794abdc53afd06fb7d75130ba2447",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "c26ea986099f337feead919f",
+                  "name": "国有资产管理处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "基建处",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/jjc/tzgg/index.htm",
+          "list_selector_sha256": "7a8da68bfb5f8e758b84d570b07c71b05641cfd414a4d47e58216377046e8aa3",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "3d563260836c02f4b06dbf95",
+                  "name": "基建处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "离退休工作处",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/ltx/tzgg/index.htm",
+          "list_selector_sha256": "7a8da68bfb5f8e758b84d570b07c71b05641cfd414a4d47e58216377046e8aa3",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "3f363f6aab1afd869bb3a3d9",
+                  "name": "离退休工作处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人事处",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/rsc/tzgg/rsgl/index.htm",
+          "list_selector_sha256": "1662646b65db445389f67fd608d3999c99d01c8dd5a9ac5dc23a375a134b053d",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "62f1cf5a09378df0a9a4f2ee",
+                  "name": "人事处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "图书馆",
+          "group_name": "组织机构",
+          "list_url": "https://library.cup.edu.cn/tzgg/xwdt/index.htm",
+          "list_selector_sha256": "33c7fa66e037652bb0a798fc90dabcdd86ac7823e3771545700e88347b2c7b6f",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "7decd17027de62096ff481a0",
+                  "name": "图书馆"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "档案馆",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/dag/ggl/index.htm",
+          "list_selector_sha256": "7a8da68bfb5f8e758b84d570b07c71b05641cfd414a4d47e58216377046e8aa3",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "d9ffc2367e500e8955ae20a3",
+                  "name": "档案馆"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "创新创业教育学院",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/ciee/",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "10b11d40837aa0853e94c821",
+                  "name": "创新创业教育学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "油气田开发工程系",
+          "group_name": "院系设置",
+          "list_url": "https://www.cup.edu.cn/oil/sysjs/systzgg/index.htm",
+          "list_selector_sha256": "7a8da68bfb5f8e758b84d570b07c71b05641cfd414a4d47e58216377046e8aa3",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "油气田开发工程系",
+              "nodes": [
+                {
+                  "key": "b4121ffa30e557a6873a6fcd",
+                  "name": "石油工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生院-下载专区",
+          "group_name": "组织机构",
+          "list_url": "https://grs.cup.edu.cn/I20/index.jhtml",
+          "list_selector_sha256": "7d53fe35ccc686f58df092e8f979abf4b4e4fe64f20a0c6681aa61d6455e2de2",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "下载专区",
+              "nodes": [
+                {
+                  "key": "08544d33826fa523f83e6b15",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科学技术研究院-科研获奖",
+          "group_name": "组织机构",
+          "list_url": "https://www.cup.edu.cn/kjc/xzzqgb/cgglxz/index.htm",
+          "list_selector_sha256": "8cf66d3aa3b4ea16c0ae1d99c98968622bd581bafef87e8c3fc083cc41ccec13",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "科研获奖",
+              "nodes": [
+                {
+                  "key": "ace708a71cc59576d92bb037",
+                  "name": "科学技术研究院"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://www.hust.edu.cn/",
+      "sources": [
+        {
+          "name": "数学与统计学院",
+          "group_name": "院系设置",
+          "list_url": "http://maths.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "d9dc4b91a03a82fd0b829805",
+                  "name": "数学与统计学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "化学与化工学院",
+          "group_name": "院系设置",
+          "list_url": "http://chem.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "9b04b1e149f291e32536f79a",
+                  "name": "化学与化工学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "生命科学与技术学院",
+          "group_name": "院系设置",
+          "list_url": "http://life.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "539de5fa1400230bcd13a705510e895a59bbae8c0b854bcd51e9023cd0e2414b",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "2c2295f0453bedafe72142a8",
+                  "name": "生命科学与技术学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "机械科学与工程学院",
+          "group_name": "院系设置",
+          "list_url": "http://mse.hust.edu.cn/sylm/tzgg.htm",
+          "list_selector_sha256": "408eafc9bdf53aaec5e1271c961ccabcd724d3175078b529c84bafca87870499",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "7927eea32159ce43df855fd7",
+                  "name": "机械科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "材料科学与工程学院",
+          "group_name": "院系设置",
+          "list_url": "http://news.hust.edu.cn/",
+          "list_selector_sha256": "a167daf3a6e9e5862f3219f1df3198484790747695ea9bdd773781c95d59891f",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "31524e692a32f61d6de3c6e9",
+                  "name": "材料科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "中欧清洁与可再生能源学院",
+          "group_name": "院系设置",
+          "list_url": "http://icare.hust.edu.cn/English/News.htm",
+          "list_selector_sha256": "fa67cc9e23c506fdb8be1a0e64e8c53b93b0a44bd152080eeaf452e719494816",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "4e8c68d1ae77a9baf02eac06",
+                  "name": "中欧清洁与可再生能源学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "电气与电子工程学院",
+          "group_name": "院系设置",
+          "list_url": "http://seee.hust.edu.cn/llxx/tzgg.htm",
+          "list_selector_sha256": "f2e110ac15708d2d0be43c205f956f58d569e8ee7da9e91c8c91bb3caa528049",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "87b3f5ef241e166e92e4dbe2",
+                  "name": "电气与电子工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "船舶与海洋工程学院",
+          "group_name": "院系设置",
+          "list_url": "http://ch.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "a4d6a6c7e0acdc5be374aea5252ef17f952a38f374fe8ff2749048e1ada16bc8",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "7dab5c7ba03ee7ac6c395314",
+                  "name": "船舶与海洋工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "光学与电子信息学院",
+          "group_name": "院系设置",
+          "list_url": "http://oei.hust.edu.cn/dqgz/tzgg.htm",
+          "list_selector_sha256": "61de5d618e27386d392d3f9198ba44b575e0e8c8ef0e4339953b3fb2c7010615",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "f58d07e1f6c5de51528ed56a",
+                  "name": "光学与电子信息学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "工程科学学院",
+          "group_name": "院系设置",
+          "list_url": "http://ses.hust.edu.cn/xwzx/xytz.htm",
+          "list_selector_sha256": "3f5339bb1de28c3c0c87b7f97364ed6060efb4fac493c5c1310492f6f285eecf",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "f85f887608d82ab65061cf83",
+                  "name": "工程科学学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "集成电路学院",
+          "group_name": "院系设置",
+          "list_url": "http://ic.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "0bb67419fec7851db40edbe1",
+                  "name": "集成电路学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "计算机科学与技术学院",
+          "group_name": "院系设置",
+          "list_url": "http://www.cs.hust.edu.cn/sylm/tzgg/xz.htm",
+          "list_selector_sha256": "408eafc9bdf53aaec5e1271c961ccabcd724d3175078b529c84bafca87870499",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "5aed2bf6d4be6472331d7283",
+                  "name": "计算机科学与技术学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "航空航天学院",
+          "group_name": "院系设置",
+          "list_url": "http://ae.hust.edu.cn/rcpy1/yjsjy1/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "041eb69a7f7be7d62495343b",
+                  "name": "航空航天学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "建筑与城市规划学院",
+          "group_name": "院系设置",
+          "list_url": "http://aup.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "d46a66c9ff32c6e834eccdb4f5e5b888ea17dd7a45e95dc1b8271f95d5e7afd8",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "452d2970ee61a84651755235",
+                  "name": "建筑与城市规划学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "土木与水利工程学院",
+          "group_name": "院系设置",
+          "list_url": "http://civil.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "c91ea119f6d80c4f1ea3d438dae116f9468daf39c6f898d0cb9d94098d2626ab",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "91e4f6aa0bff0e21c765a06c",
+                  "name": "土木与水利工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "保卫部（处）",
+          "group_name": "组织机构",
+          "list_url": "http://guard.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "f6b5dad8516db5e23540c56f439cb2e462dffdbd79c831f8f798861c74ddf4b0",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "102863c415616f5d5b68dfa6",
+                  "name": "保卫部（处）"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人事处",
+          "group_name": "组织机构",
+          "list_url": "http://hr.hust.edu.cn/",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "487b2e0f360232aa4f3561f8",
+                  "name": "人事处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生院",
+          "group_name": "组织机构",
+          "list_url": "http://gs.hust.edu.cn/tzgg/kcjksap.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "0f55d6f6d80188c1eb26e657",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "创新研究院",
+          "group_name": "组织机构",
+          "list_url": "http://ii.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "2148afe596c044ef8e25459d1f38820a2b8f4b7655a9e8958911aaaa6b9879fa",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "ed5381f95127f62935b86b07",
+                  "name": "创新研究院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "分析测试中心",
+          "group_name": "组织机构",
+          "list_url": "http://atc.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "e7ea5b520f639cb3c47d7863",
+                  "name": "分析测试中心"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科学技术发展院",
+          "group_name": "组织机构",
+          "list_url": "http://kfy.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "55ba40906d24e9cd1fcc217d",
+                  "name": "科学技术发展院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "财务处",
+          "group_name": "组织机构",
+          "list_url": "http://fiscal.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "74e59bcea46d62fd06ce12b3428968457fbff663d386ea72b370e64b3891b395",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "ecd886fd564a3d7ee07c9ba4",
+                  "name": "财务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "审计处",
+          "group_name": "组织机构",
+          "list_url": "http://audit.hust.edu.cn/",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "2dd9e0b3d8e8e8801b1ed75a",
+                  "name": "审计处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "总务后勤处",
+          "group_name": "组织机构",
+          "list_url": "http://hq.hust.edu.cn/zzjg/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "076a39bf6b7df311b56d476e",
+                  "name": "总务后勤处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人文社会科学处 Updated",
+          "group_name": "组织机构",
+          "list_url": "http://wenkechu.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "c91ea119f6d80c4f1ea3d438dae116f9468daf39c6f898d0cb9d94098d2626ab",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "人文社会科学处 Updated",
+              "nodes": [
+                {
+                  "key": "efec6632d3fb5aacf4906517",
+                  "name": "人文社会科学处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "校医院 Updated",
+          "group_name": "组织机构",
+          "list_url": "http://hospital.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "d46a66c9ff32c6e834eccdb4f5e5b888ea17dd7a45e95dc1b8271f95d5e7afd8",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "校医院 Updated",
+              "nodes": [
+                {
+                  "key": "cd2bc7c527c99f2fc70e7ac6",
+                  "name": "校医院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "工程实践创新中心",
+          "group_name": "组织机构",
+          "list_url": "http://cpi.hust.edu.cn/sy/tzgg.htm",
+          "list_selector_sha256": "61de5d618e27386d392d3f9198ba44b575e0e8c8ef0e4339953b3fb2c7010615",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "898ade3145a76515134aa4f8",
+                  "name": "工程实践创新中心"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "未来技术学院 Updated",
+          "group_name": "院系设置",
+          "list_url": "http://sft.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "15e49be42d3cbb8d70d7cdb1d65a97953b390250927789d969583627bf69e910",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "未来技术学院 Updated",
+              "nodes": [
+                {
+                  "key": "0e00b87409589a5029df97c2",
+                  "name": "未来技术学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "网络空间安全学院",
+          "group_name": "院系设置",
+          "list_url": "http://cse.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "4b88f0c59ed19d54b223eb25db70d3e266cf6966f52ed9e79df74936fde1af54",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "d958405df1ff5fa3e8d96bb4",
+                  "name": "网络空间安全学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "基建与规划处",
+          "group_name": "组织机构",
+          "list_url": "http://jjc.hust.edu.cn/index.htm",
+          "list_selector_sha256": "b0f202bdc436c30d4f23226f3c8711deb6de117bda78e72e5844e88409c5d166",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "d570b17b12f3e323eb96666c",
+                  "name": "基建与规划处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人文社会科学处",
+          "group_name": "组织机构",
+          "list_url": "http://wenkechu.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "efec6632d3fb5aacf4906517",
+                  "name": "人文社会科学处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "档案馆",
+          "group_name": "组织机构",
+          "list_url": "http://ar.hust.edu.cn/tzgg/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "cf8c2b1d22e5291f8d4c9000",
+                  "name": "档案馆"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "校医院",
+          "group_name": "组织机构",
+          "list_url": "http://hospital.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "组织机构",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "cd2bc7c527c99f2fc70e7ac6",
+                  "name": "校医院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "未来技术学院",
+          "group_name": "院系设置",
+          "list_url": "http://sft.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "0e00b87409589a5029df97c2",
+                  "name": "未来技术学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "软件学院",
+          "group_name": "院系设置",
+          "list_url": "http://sse.hust.edu.cn/",
+          "list_selector_sha256": "494bf76fc9445a3c8b53f0a1f6d0598309d0d2ae34f64d2faeb9a05cda3843e8",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "6b9c61ea306f4cf1ea8dc77e",
+                  "name": "软件学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "设计学院",
+          "group_name": "院系设置",
+          "list_url": "http://design.hust.edu.cn/xyxw/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "dbf5138de34ddae9e622a7da",
+                  "name": "设计学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "管理学院",
+          "group_name": "院系设置",
+          "list_url": "http://cm.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "cf6b2682cd6b05852e39f79c",
+                  "name": "管理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "经济学院",
+          "group_name": "院系设置",
+          "list_url": "http://eco.hust.edu.cn/tzgg/xytz1.htm",
+          "list_selector_sha256": "6764733fcfca9c43613a84d9114d1dbaae472576cda5403bd7b5b7279f94da65",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "563cf0688e899744addc9f4c",
+                  "name": "经济学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "公共管理学院",
+          "group_name": "院系设置",
+          "list_url": "http://cpa.hust.edu.cn/qyxx/tzgg.htm",
+          "list_selector_sha256": "825ddd30bdb6de34d9059d276b62c3fda943e522660cf912181a9a80fb5f2393",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "0870e8db071d7c5e6fb662ab",
+                  "name": "公共管理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人文学院",
+          "group_name": "院系设置",
+          "list_url": "http://humanity.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "5d8672e12d39a1fc353cdbaf",
+                  "name": "人文学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "哲学学院",
+          "group_name": "院系设置",
+          "list_url": "http://phil.hust.edu.cn/tzgg/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "eac4c6255cd521e17f000fcf",
+                  "name": "哲学学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "法学院",
+          "group_name": "院系设置",
+          "list_url": "http://law.hust.edu.cn/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "4f0dd747eb81847e13519732",
+                  "name": "法学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "社会学院",
+          "group_name": "院系设置",
+          "list_url": "http://soci.hust.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "803cafd87ee5edc83195efb2",
+                  "name": "社会学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "马克思主义学院",
+          "group_name": "院系设置",
+          "list_url": "http://politics.hust.edu.cn/yjsjy/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "07f30aa606466ad19de9c487",
+                  "name": "马克思主义学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "外国语学院",
+          "group_name": "院系设置",
+          "list_url": "http://sfl.hust.edu.cn/bksjy/tzgg.htm",
+          "list_selector_sha256": "a4d6a6c7e0acdc5be374aea5252ef17f952a38f374fe8ff2749048e1ada16bc8",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "57c490e8ec71193a7bd1deed",
+                  "name": "外国语学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教育科学研究院",
+          "group_name": "院系设置",
+          "list_url": "http://jky.hust.edu.cn/tzgg/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "4d62d786e423c2437a12c1cc",
+                  "name": "教育科学研究院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "护理学院",
+          "group_name": "院系设置",
+          "list_url": "http://huli.tjmu.edu.cn/index/tzgg.htm",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "d7218d124426541652f3ad9e",
+                  "name": "护理学院"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://www.uestc.edu.cn/",
+      "sources": [
+        {
+          "name": "信息与通信工程学院",
+          "group_name": "学院部门",
+          "list_url": "http://www.sice.uestc.edu.cn/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "学院部门",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "bb1292cc6568fded25157cfd",
+                  "name": "信息与通信工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "格拉斯哥海南学院",
+          "group_name": "学院部门",
+          "list_url": "https://gla-hn.uestc.edu.cn/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "学院部门",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "2e75959f4b2fedf1c101014f",
+                  "name": "格拉斯哥海南学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "电子科技大学广东电子信息工程研究院",
+          "group_name": "学院部门",
+          "list_url": "http://www.dgieie.cn/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "学院部门",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "482df42d4bea67ed64fc91eb",
+                  "name": "电子科技大学广东电子信息工程研究院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人文社科高等研究院",
+          "group_name": "学院部门",
+          "list_url": "https://aihss.uestc.edu.cn/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "学院部门",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "73906209f7973dab46e51bb5",
+                  "name": "人文社科高等研究院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "电子科技大学绛溪研究院",
+          "group_name": "学院部门",
+          "list_url": "https://jxyjy.uestc.edu.cn/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "学院部门",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "734fdb761727f2213448b80c",
+                  "name": "电子科技大学绛溪研究院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "中国-古巴神经技术与脑器交互“一带一路”联合实验室",
+          "group_name": "学院部门",
+          "list_url": "https://bac.uestc.edu.cn/",
+          "list_selector_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "placements": [
+            {
+              "group": "学院部门",
+              "label": "本部门通知",
+              "nodes": [
+                {
+                  "key": "122d0acc724908fa832f1e8f",
+                  "name": "中国-古巴神经技术与脑器交互“一带一路”联合实验室"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://www.sjtu.edu.cn/",
+      "sources": [
+        {
+          "name": "最新动态",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/",
+          "list_selector_sha256": "85a2aa80d84f943e31c01553e3140bfd4ba2af9a79fc78ffe8a4400eee5b2929",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "最新动态",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/",
+          "list_selector_sha256": "652aeff01c9eb0ee68b7fed51aa15f0c64093fe905af546b5b5e919ea340cb3b",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "国际化培养 / 学生风采",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/gjhpy",
+          "list_selector_sha256": "b193bc2e1d943ca2e262f872da5defb3d3c45ab537c14332343c5bc7c0993b54",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "国际化培养 / 学生风采",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "招生工作",
+          "group_name": "药学院",
+          "list_url": "https://pharm.sjtu.edu.cn/zsgz.html",
+          "list_selector_sha256": "323224b69cde44980acf863f782f53684c4cfbce0b75c8fa9ad052587afc1aeb",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "人才培养 / 招生工作",
+              "nodes": [
+                {
+                  "key": "a6dd051130ad048c878b1bb0",
+                  "name": "药学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "招生资讯",
+          "group_name": "设计学院",
+          "list_url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56",
+          "list_selector_sha256": "2a81dea92990078c5b1856de32b0b7716b8270eb50d9523efe48ffb57aa9bbf2",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "招生资讯",
+              "nodes": [
+                {
+                  "key": "97befd1801d7ae91bf19697f",
+                  "name": "设计学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "招生信息",
+          "group_name": "心理学院",
+          "list_url": "https://psychology.sjtu.edu.cn/zsxx.html",
+          "list_selector_sha256": "c8ccbccfc30d91c6f598a68407c297df65db345da8e9379f064fd8577364f3d4",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "人才培养 / 招生信息",
+              "nodes": [
+                {
+                  "key": "11fcd3ba49381e71d9c81d3e",
+                  "name": "心理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生招生",
+          "group_name": "物理与天文学院",
+          "list_url": "https://www.physics.sjtu.edu.cn/yjszs.html",
+          "list_selector_sha256": "c6b9afe0f655460a6f1bb530ef35d898132f29acb9a53841a194ac85ca7666b6",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "研究生招生",
+              "nodes": [
+                {
+                  "key": "f85fd63302c2aa667a72cc70",
+                  "name": "物理与天文学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "招生工作",
+          "group_name": "电气工程学院",
+          "list_url": "https://see.sjtu.edu.cn/zsgz_tzgg.html",
+          "list_selector_sha256": "f1cc888ac293161da6395c17864050df5ca359421b9a2193903e0f412ce0829a",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "人才培养 / 招生工作",
+              "nodes": [
+                {
+                  "key": "d98506b879e475e1335e050b",
+                  "name": "电气工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学生培养",
+          "group_name": "心理学院",
+          "list_url": "https://psychology.sjtu.edu.cn/pyfa.html",
+          "list_selector_sha256": "c8ccbccfc30d91c6f598a68407c297df65db345da8e9379f064fd8577364f3d4",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学生培养",
+              "nodes": [
+                {
+                  "key": "11fcd3ba49381e71d9c81d3e",
+                  "name": "心理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教学新闻",
+          "group_name": "机械与动力工程学院",
+          "list_url": "https://me.sjtu.edu.cn/bkjx/",
+          "list_selector_sha256": "2e3eeec6ba004da3e6b92d1a446a657c6381939cd562c0930863b7b5aa307fc7",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "教学新闻",
+              "nodes": [
+                {
+                  "key": "c807fabc74f4c3b97be1d439",
+                  "name": "机械与动力工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生培养",
+          "group_name": "船舶海洋与建筑工程学院",
+          "list_url": "https://naoce.sjtu.edu.cn/dabiangonggao.html",
+          "list_selector_sha256": "e9beeddb3e38a7e6a0d62e2a2c8e73abebe27547aceac9867b7d332fb1220c40",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "研究生培养",
+              "nodes": [
+                {
+                  "key": "cc9c145048c880c4b778f30f",
+                  "name": "船舶海洋与建筑工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "面向学生的通知",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/index/mxxsdtz.htm",
+          "list_selector_sha256": "bd766ab3584263ee3c6d1a5ca7c9e9146242c9e16a4b02f106483cda2bc01a40",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "面向学生的通知",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "本科生",
+          "group_name": "电气工程学院",
+          "list_url": "https://see.sjtu.edu.cn/bks_tzgg.html",
+          "list_selector_sha256": "136a428f77a66e4179694cfda56efd62b6f8a0d407c32b06ac505232ca787de6",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "本科生",
+              "nodes": [
+                {
+                  "key": "d98506b879e475e1335e050b",
+                  "name": "电气工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教学质量",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "list_selector_sha256": "03b9f035881a077aff35cbef527ec17999815f54abdc0294026e8910f0fd7814",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "教学质量",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "教学运行",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "list_selector_sha256": "4acd2a12b953842a3c9ba556560a5475b9c20885ba1ff12453aa35ae46adee21",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "教学运行",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究生工作",
+          "group_name": "集成电路学院（信息与电子工程学院）",
+          "list_url": "https://icisee.sjtu.edu.cn/rcpy.html",
+          "list_selector_sha256": "47516b4aea4d9486b1c369e49bda41736e50a48f33acb41d60e2f2954711a0c8",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "研究生工作",
+              "nodes": [
+                {
+                  "key": "1df29b9109b6ab49737eff4b",
+                  "name": "集成电路学院（信息与电子工程学院）"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "药学院",
+          "list_url": "https://pharm.sjtu.edu.cn/xssw.html",
+          "list_selector_sha256": "323224b69cde44980acf863f782f53684c4cfbce0b75c8fa9ad052587afc1aeb",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学生园地 / 通知公告",
+              "nodes": [
+                {
+                  "key": "a6dd051130ad048c878b1bb0",
+                  "name": "药学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "中英国际低碳学院",
+          "list_url": "https://lcc.sjtu.edu.cn/Data/List/TongZhiGongGao",
+          "list_selector_sha256": "009cf8845ab9aeb92c5811e2ad8f4827f7390e47415c2e3b99db697667752215",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "ad5f8f5605c7d4cdef47d9fc",
+                  "name": "中英国际低碳学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "药学工坊",
+          "group_name": "药学院",
+          "list_url": "https://pharm.sjtu.edu.cn/",
+          "list_selector_sha256": "88fea667e49123fc9ff95c4e729fc36097d70f1eedace15c2a38e155401baf5c",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "药学工坊",
+              "nodes": [
+                {
+                  "key": "a6dd051130ad048c878b1bb0",
+                  "name": "药学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "培养",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/news/pydt",
+          "list_selector_sha256": "ef3f74ea52d7143e89e01bff644e43b8febc8d71bd0b509164fc67927f67fb9a",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "培养",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "培养信息",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/announcement/train",
+          "list_selector_sha256": "61cfe8eee356810771e063ad4354d15a31ae0684ab1237838a15eb718a15a1cd",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "培养信息",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学位",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/news/xwdt",
+          "list_selector_sha256": "ef3f74ea52d7143e89e01bff644e43b8febc8d71bd0b509164fc67927f67fb9a",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "学位",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学位学科",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/announcement/degree",
+          "list_selector_sha256": "61cfe8eee356810771e063ad4354d15a31ae0684ab1237838a15eb718a15a1cd",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "学位学科",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学院公告",
+          "group_name": "设计学院",
+          "list_url": "https://designschool.sjtu.edu.cn/dynamic/notice",
+          "list_selector_sha256": "2a81dea92990078c5b1856de32b0b7716b8270eb50d9523efe48ffb57aa9bbf2",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学院公告",
+              "nodes": [
+                {
+                  "key": "97befd1801d7ae91bf19697f",
+                  "name": "设计学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "最新动态",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/news",
+          "list_selector_sha256": "ef3f74ea52d7143e89e01bff644e43b8febc8d71bd0b509164fc67927f67fb9a",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "最新动态",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "航空航天学院",
+          "list_url": "https://www.aero.sjtu.edu.cn/announcements?fl=224",
+          "list_selector_sha256": "91b7a5427b2a86b0c78c2e82102843eaf235366ebb6533373290522e4746b1f0",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "招生报考 / 通知公告",
+              "nodes": [
+                {
+                  "key": "66961477f9fe670b5213589f",
+                  "name": "航空航天学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "工作信息",
+          "group_name": "研究生院",
+          "list_url": "https://www.gs.sjtu.edu.cn/announcement/work",
+          "list_selector_sha256": "61cfe8eee356810771e063ad4354d15a31ae0684ab1237838a15eb718a15a1cd",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "工作信息",
+              "nodes": [
+                {
+                  "key": "61abec2e64436f8de55684d0",
+                  "name": "研究生院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "环境科学与工程学院",
+          "list_url": "https://sese.sjtu.edu.cn/announcement/20",
+          "list_selector_sha256": "1e64919121886fab1a1fba75ee5ad933fbf156e9200c47a516350ba87087f143",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "人才培养 / 研究生培养 / 通知公告",
+              "nodes": [
+                {
+                  "key": "307a245d6df309d8c7361b5c",
+                  "name": "环境科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "巴黎卓越工程师学院",
+          "list_url": "https://speit.sjtu.edu.cn/about/notice",
+          "list_selector_sha256": "169487b08edafb33a3a9623ce08827c8372b2805d21ec8b68faaebc1c7454ec9",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "6e2e29515d60a34c57574025",
+                  "name": "巴黎卓越工程师学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "公告信息",
+          "group_name": "安泰经济与管理学院",
+          "list_url": "https://www.acem.sjtu.edu.cn/intl/notice.html",
+          "list_selector_sha256": "debf3179b2d33f0880022e1141c3cc51526ef6b3117d1083eccbf4580c4729e2",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "公告信息",
+              "nodes": [
+                {
+                  "key": "fde87f9b44e459632ebc80e6",
+                  "name": "安泰经济与管理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻公告",
+          "group_name": "船舶海洋与建筑工程学院",
+          "list_url": "https://naoce.sjtu.edu.cn/xw_gg.html",
+          "list_selector_sha256": "e9beeddb3e38a7e6a0d62e2a2c8e73abebe27547aceac9867b7d332fb1220c40",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "校友专栏 / 新闻公告",
+              "nodes": [
+                {
+                  "key": "cc9c145048c880c4b778f30f",
+                  "name": "船舶海洋与建筑工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学院研究生教学网 / 通知公告",
+          "group_name": "机械与动力工程学院",
+          "list_url": "https://me.sjtu.edu.cn/YanJS/indexnotice.html",
+          "list_selector_sha256": "ec7dbe9da21ed7f634023e1158f45eb3c8d7a580ecf91699058f286b75a65d16",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学院研究生教学网 / 通知公告",
+              "nodes": [
+                {
+                  "key": "c807fabc74f4c3b97be1d439",
+                  "name": "机械与动力工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学院本科生教学网 / 新闻通告 / 通知公告",
+          "group_name": "机械与动力工程学院",
+          "list_url": "https://me.sjtu.edu.cn/bkjx/tg_tzgg.html",
+          "list_selector_sha256": "46b599f14d8ab81fda7289397e7c7a311ac8857b954dfd9630dad7f8a291b699",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学院本科生教学网 / 新闻通告 / 通知公告",
+              "nodes": [
+                {
+                  "key": "c807fabc74f4c3b97be1d439",
+                  "name": "机械与动力工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "环境科学与工程学院",
+          "list_url": "https://sese.sjtu.edu.cn/announcement",
+          "list_selector_sha256": "1e64919121886fab1a1fba75ee5ad933fbf156e9200c47a516350ba87087f143",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "307a245d6df309d8c7361b5c",
+                  "name": "环境科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "安泰经济与管理学院",
+          "list_url": "https://www.acem.sjtu.edu.cn/party/notice.html",
+          "list_selector_sha256": "debf3179b2d33f0880022e1141c3cc51526ef6b3117d1083eccbf4580c4729e2",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "党建工作 / 通知公告",
+              "nodes": [
+                {
+                  "key": "fde87f9b44e459632ebc80e6",
+                  "name": "安泰经济与管理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "农业与生物学院",
+          "list_url": "https://www.agri.sjtu.edu.cn/announcement",
+          "list_selector_sha256": "5fd0a235b20d52d0a7c2ceeeb78c4bfa17104e36f99936d2c0c61e3d27f9ac8a",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "b18fe8c5b397db7f7865eadd",
+                  "name": "农业与生物学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知通告",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg/tztg.htm",
+          "list_selector_sha256": "bd766ab3584263ee3c6d1a5ca7c9e9146242c9e16a4b02f106483cda2bc01a40",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "通知通告",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "公告",
+          "group_name": "机械与动力工程学院",
+          "list_url": "https://me.sjtu.edu.cn/YanJS/",
+          "list_selector_sha256": "7c5e89f739e67b78a5220d92f4fca9b59bfa7f4d9f5bd55b74d9540c6e611ec9",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "公告",
+              "nodes": [
+                {
+                  "key": "c807fabc74f4c3b97be1d439",
+                  "name": "机械与动力工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "药学院",
+          "list_url": "https://pharm.sjtu.edu.cn/notice.html",
+          "list_selector_sha256": "323224b69cde44980acf863f782f53684c4cfbce0b75c8fa9ad052587afc1aeb",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学院动态 / 通知公告",
+              "nodes": [
+                {
+                  "key": "a6dd051130ad048c878b1bb0",
+                  "name": "药学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "电气工程学院",
+          "list_url": "https://see.sjtu.edu.cn/",
+          "list_selector_sha256": "4064f3c4bafe3b6d5c47960e699ffbeac620775dd54e033c7211c394abac5f45",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "d98506b879e475e1335e050b",
+                  "name": "电气工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "化学化工学院",
+          "list_url": "https://scce.sjtu.edu.cn/",
+          "list_selector_sha256": "e29598c4fa06695d3ef3688e0a18b0faf89ba89373da8178ab937fbf22e6bdf1",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "0fd2918304b0acca05642cae",
+                  "name": "化学化工学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "物理与天文学院",
+          "list_url": "https://www.physics.sjtu.edu.cn/",
+          "list_selector_sha256": "e445d4aa3a22af19f2c0eb309b558da629cd9ff5bf9d049a2583e0defab49727",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "f85fd63302c2aa667a72cc70",
+                  "name": "物理与天文学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "自动化与感知学院",
+          "list_url": "https://sais.sjtu.edu.cn/",
+          "list_selector_sha256": "4e14c5c59da2dee91e77a67208ba30e4b12d60ea09611ae0bf2c800309fbec34",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "86dd2368ac06ba0861abc7ef",
+                  "name": "自动化与感知学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知通告",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "list_selector_sha256": "16b65ed95572f96050d800e6d18786cb770c994839cbaab854ed81de772d0425",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "通知通告",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "心理学院",
+          "list_url": "https://psychology.sjtu.edu.cn/tzgg.html",
+          "list_selector_sha256": "c8ccbccfc30d91c6f598a68407c297df65db345da8e9379f064fd8577364f3d4",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻动态 / 通知公告",
+              "nodes": [
+                {
+                  "key": "11fcd3ba49381e71d9c81d3e",
+                  "name": "心理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "外国语学院",
+          "list_url": "https://sfl.sjtu.edu.cn/",
+          "list_selector_sha256": "e07d482056003d9520d5836670611df4afd70d0e5d1779b614605bb1cac802cd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "e1d4d5f1057e0094b2f31609",
+                  "name": "外国语学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "通知公告",
+          "group_name": "材料科学与工程学院",
+          "list_url": "https://smse.sjtu.edu.cn/",
+          "list_selector_sha256": "eee9517eed96022cecd1cf0fae68053c5df1f5924e4a6f2d446098b75406880d",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "通知公告",
+              "nodes": [
+                {
+                  "key": "e22cbfe513fd84f7185158fa",
+                  "name": "材料科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "公告",
+          "group_name": "安泰经济与管理学院",
+          "list_url": "https://www.acem.sjtu.edu.cn/",
+          "list_selector_sha256": "2d9130ebfd8d860088265b7066e07576d6400c0225e7ce4cc0ba34d8945c9fbd",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "公告",
+              "nodes": [
+                {
+                  "key": "fde87f9b44e459632ebc80e6",
+                  "name": "安泰经济与管理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科研探索",
+          "group_name": "环境科学与工程学院",
+          "list_url": "https://sese.sjtu.edu.cn/",
+          "list_selector_sha256": "1bc8c0cb7c173893de557bb6b6c1cd57548c5fca248a8222a8a9656d69e4ebd1",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "科研探索",
+              "nodes": [
+                {
+                  "key": "307a245d6df309d8c7361b5c",
+                  "name": "环境科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学术活动",
+          "group_name": "环境科学与工程学院",
+          "list_url": "https://sese.sjtu.edu.cn/",
+          "list_selector_sha256": "1232922d6f6c980c5397bf4b7114771a4b88798dd12f4e1825b5b4aca7aa6569",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学术活动",
+              "nodes": [
+                {
+                  "key": "307a245d6df309d8c7361b5c",
+                  "name": "环境科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学术品牌",
+          "group_name": "教育学院",
+          "list_url": "https://soe.sjtu.edu.cn/",
+          "list_selector_sha256": "50f2b02a37e21bfaa4bb127db050c664b48a83b9d4a079087ca143e6b47a4de5",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学术品牌",
+              "nodes": [
+                {
+                  "key": "50da5a6096a3ec1a690dbc40",
+                  "name": "教育学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科研动态",
+          "group_name": "药学院",
+          "list_url": "https://pharm.sjtu.edu.cn/",
+          "list_selector_sha256": "15d9569e30fc7d6f33fd16966f2e68e0dfc495d23f0ac572c06ea19b3a8b1c37",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "科研动态",
+              "nodes": [
+                {
+                  "key": "a6dd051130ad048c878b1bb0",
+                  "name": "药学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻资讯",
+          "group_name": "电气工程学院",
+          "list_url": "https://see.sjtu.edu.cn/",
+          "list_selector_sha256": "0e933f2642ab9c0b7d7b346e64f2c9daa2b3c43dbb83ca859b9762df26239866",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻资讯",
+              "nodes": [
+                {
+                  "key": "d98506b879e475e1335e050b",
+                  "name": "电气工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻信息",
+          "group_name": "安泰经济与管理学院",
+          "list_url": "https://www.acem.sjtu.edu.cn/intl/news.html",
+          "list_selector_sha256": "debf3179b2d33f0880022e1141c3cc51526ef6b3117d1083eccbf4580c4729e2",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻信息",
+              "nodes": [
+                {
+                  "key": "fde87f9b44e459632ebc80e6",
+                  "name": "安泰经济与管理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "科研动态",
+          "group_name": "人工智能学院",
+          "list_url": "https://soai.sjtu.edu.cn/",
+          "list_selector_sha256": "24b602c71ec1415476af8bc5ee25eb09b290c4d2a3d242c28a5529f9a179102f",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "科研动态",
+              "nodes": [
+                {
+                  "key": "1bfb6350d7e3b7bb609df3e9",
+                  "name": "人工智能学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "综合新闻",
+          "group_name": "药学院",
+          "list_url": "https://pharm.sjtu.edu.cn/",
+          "list_selector_sha256": "e551257497a6ce9b4db70b0da1d526c48054f26881960da1a45e8b0f437e5455",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "综合新闻",
+              "nodes": [
+                {
+                  "key": "a6dd051130ad048c878b1bb0",
+                  "name": "药学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻动态",
+          "group_name": "化学化工学院",
+          "list_url": "https://scce.sjtu.edu.cn/",
+          "list_selector_sha256": "c6a72d040563f11c800188c418ab76e80473735e6af3c167e48d73ba0b270885",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻动态",
+              "nodes": [
+                {
+                  "key": "0fd2918304b0acca05642cae",
+                  "name": "化学化工学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻资讯",
+          "group_name": "心理学院",
+          "list_url": "https://psychology.sjtu.edu.cn/",
+          "list_selector_sha256": "d083d59eb273dd57d5452555d6f856dfdf199f99582a1bc1e1dfd3432df51955",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻资讯",
+              "nodes": [
+                {
+                  "key": "11fcd3ba49381e71d9c81d3e",
+                  "name": "心理学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻中心",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "list_selector_sha256": "78ab25caaa37c8b90503cc4fe679bc35c293c2884f6b609c93dbce8b46e7ffa6",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "新闻中心",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "环院新闻",
+          "group_name": "环境科学与工程学院",
+          "list_url": "https://sese.sjtu.edu.cn/",
+          "list_selector_sha256": "45669e9c81638b3350f3ff0ff636be9bfc2f3d2a513f25cf83758eb448b4df47",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "环院新闻",
+              "nodes": [
+                {
+                  "key": "307a245d6df309d8c7361b5c",
+                  "name": "环境科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "媒体聚焦",
+          "group_name": "生命科学技术学院",
+          "list_url": "https://life.sjtu.edu.cn/",
+          "list_selector_sha256": "35011aa5a1190990bbe0432da1ba77ffc55ea3268e977a2cc095741aad55ca81",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "媒体聚焦",
+              "nodes": [
+                {
+                  "key": "8ed27cb8c69dfdceb9fe0885",
+                  "name": "生命科学技术学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻中心",
+          "group_name": "自动化与感知学院",
+          "list_url": "https://sais.sjtu.edu.cn/",
+          "list_selector_sha256": "910c328d55df93f766063a4369fe63ea1580c644597bd55e3f456e5bdbc90432",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻中心",
+              "nodes": [
+                {
+                  "key": "86dd2368ac06ba0861abc7ef",
+                  "name": "自动化与感知学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学院新闻",
+          "group_name": "船舶海洋与建筑工程学院",
+          "list_url": "https://naoce.sjtu.edu.cn/",
+          "list_selector_sha256": "e9beeddb3e38a7e6a0d62e2a2c8e73abebe27547aceac9867b7d332fb1220c40",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学院新闻",
+              "nodes": [
+                {
+                  "key": "cc9c145048c880c4b778f30f",
+                  "name": "船舶海洋与建筑工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "学院动态 News",
+          "group_name": "计算机学院（网络空间安全学院、密码学院）",
+          "list_url": "https://www.cs.sjtu.edu.cn/",
+          "list_selector_sha256": "9378d304ccd8c7884c13a4ffb2a6b5824ca74200e31a739d1dd96bdaab34652c",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "学院动态 News",
+              "nodes": [
+                {
+                  "key": "a444b80ad9a7c406ad7b0cd4",
+                  "name": "计算机学院（网络空间安全学院、密码学院）"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻",
+          "group_name": "机械与动力工程学院",
+          "list_url": "https://me.sjtu.edu.cn/YanJS/",
+          "list_selector_sha256": "583ee05059e549437420d747d679456f28f9b3b0c92f3dbceb1508a42e8cbdd4",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻",
+              "nodes": [
+                {
+                  "key": "c807fabc74f4c3b97be1d439",
+                  "name": "机械与动力工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻中心 NEWS",
+          "group_name": "机械与动力工程学院",
+          "list_url": "https://me.sjtu.edu.cn/",
+          "list_selector_sha256": "c624074ce14356f0539ce50f74416f8af1ea298b9a4d4a09faff225aa431cec7",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻中心 NEWS",
+              "nodes": [
+                {
+                  "key": "c807fabc74f4c3b97be1d439",
+                  "name": "机械与动力工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "媒体聚焦 MEDIUM",
+          "group_name": "机械与动力工程学院",
+          "list_url": "https://me.sjtu.edu.cn/",
+          "list_selector_sha256": "31033a231e5e7f5b5ae78c601455484cc17fbe153ce5c2012038be520d0a92d4",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "媒体聚焦 MEDIUM",
+              "nodes": [
+                {
+                  "key": "c807fabc74f4c3b97be1d439",
+                  "name": "机械与动力工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "新闻动态 News updates",
+          "group_name": "航空航天学院",
+          "list_url": "https://www.aero.sjtu.edu.cn/",
+          "list_selector_sha256": "cdd6f9628a02c83b9f27cd629a94cdadbf90da79a343325f202b9700faa85b87",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "新闻动态 News updates",
+              "nodes": [
+                {
+                  "key": "66961477f9fe670b5213589f",
+                  "name": "航空航天学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "探索发现 EXPLORATIONS",
+          "group_name": "机械与动力工程学院",
+          "list_url": "https://me.sjtu.edu.cn/",
+          "list_selector_sha256": "0c3a73760e9b8a551c2dc12436e4e5598046b5987c68615bf228b8026071c805",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "探索发现 EXPLORATIONS",
+              "nodes": [
+                {
+                  "key": "c807fabc74f4c3b97be1d439",
+                  "name": "机械与动力工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "外院快讯",
+          "group_name": "外国语学院",
+          "list_url": "https://sfl.sjtu.edu.cn/",
+          "list_selector_sha256": "a7306122ecaffab008e58d90be1e13960d2c5b06218260f505c2898d8a8fd020",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "外院快讯",
+              "nodes": [
+                {
+                  "key": "e1d4d5f1057e0094b2f31609",
+                  "name": "外国语学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "党建风采",
+          "group_name": "药学院",
+          "list_url": "https://pharm.sjtu.edu.cn/",
+          "list_selector_sha256": "f623af8e2a64b72dc003e06f5727d696876d340f621d01ec22d53d65ae6186ff",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "党建风采",
+              "nodes": [
+                {
+                  "key": "a6dd051130ad048c878b1bb0",
+                  "name": "药学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "注册学务",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "list_selector_sha256": "85b29fa7cc99881c84b303e86af2ee2589d71887a85f841b96da6fe0e23de794",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "注册学务",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "语言文字",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "list_selector_sha256": "eecedc8d847f636df21ed2abe614284f2a6585a88e5cdcb28c6b1b893a341680",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "语言文字",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "研究办",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "list_selector_sha256": "866ad70999d88d60acaca36781a615f9d6885da81351015624791ba779486aeb",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "研究办",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "综合办",
+          "group_name": "教务处",
+          "list_url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "list_selector_sha256": "018ef928d5e6a479216fdba021b02ccd4c6dad305d7f87653b17a7dfd8254b71",
+          "placements": [
+            {
+              "group": "学校机构设置",
+              "label": "综合办",
+              "nodes": [
+                {
+                  "key": "785afaea5c04b5c99b8a2a09",
+                  "name": "教务处"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "聚焦专栏",
+          "group_name": "人文学院",
+          "list_url": "https://shss.sjtu.edu.cn/Web/Home",
+          "list_selector_sha256": "4b5d9c7cd655a2cbcd8effe6d2253bcc020e111856cd4c7ccacc2d96ccb289a6",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "聚焦专栏",
+              "nodes": [
+                {
+                  "key": "50f2dc3817baa578ced29477",
+                  "name": "人文学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "国院睿思",
+          "group_name": "国际与公共事务学院",
+          "list_url": "https://www.sipa.sjtu.edu.cn/",
+          "list_selector_sha256": "0307891705b04653d27b118d1236f3a25baacca13a9c289c2480632019ddf630",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "国院睿思",
+              "nodes": [
+                {
+                  "key": "24e9cac81b06a1140f9569e1",
+                  "name": "国际与公共事务学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "招聘信息",
+          "group_name": "材料科学与工程学院",
+          "list_url": "https://smse.sjtu.edu.cn/",
+          "list_selector_sha256": "81022a1a54a7e687dadea3852aaf986f4507df07b317e60484e89ce5c1807fae",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "招聘信息",
+              "nodes": [
+                {
+                  "key": "e22cbfe513fd84f7185158fa",
+                  "name": "材料科学与工程学院"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "人才招聘",
+          "group_name": "化学化工学院",
+          "list_url": "https://scce.sjtu.edu.cn/",
+          "list_selector_sha256": "c182c3d445601cf4b422cd1198e0f04c8c4dbcdc19ff9cc5df4a3f4fb0981534",
+          "placements": [
+            {
+              "group": "院系设置",
+              "label": "人才招聘",
+              "nodes": [
+                {
+                  "key": "0fd2918304b0acca05642cae",
+                  "name": "化学化工学院"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
