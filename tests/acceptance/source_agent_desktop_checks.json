@@ -1,6 +1,6 @@
 {
   "version": "2.6",
-  "build_scope": "local_windows_x64_v15",
+  "build_scope": "local_windows_x64_v16",
   "runtime_checks": {
     "version": "2.6",
     "status": "passed",
@@ -23,26 +23,27 @@
     "waits_for_previous_process": true,
     "missing_original_installation_refused": true
   },
+  "upgrade_scope": "v15 isolated installer fixtures; installer code unchanged in v16",
   "sizes": {
     "version": "2.6",
     "artifacts": [
       {
         "name": "School-Watcher-2.6-windows-x64-portable.zip",
-        "bytes": 84967325,
+        "bytes": 84970232,
         "mb": 84.97,
         "mib": 81.03,
-        "mb_exact": 84.967325,
-        "mib_exact": 81.03115558624268
+        "mb_exact": 84.970232,
+        "mib_exact": 81.03392791748047
       },
       {
         "name": "School-Watcher-2.6-windows-x64-setup.exe",
-        "bytes": 66085795,
-        "mb": 66.09,
+        "bytes": 66079447,
+        "mb": 66.08,
         "mib": 63.02,
         "soft_target_bytes": 100000000,
         "above_soft_target": false,
-        "mb_exact": 66.085795,
-        "mib_exact": 63.024325370788574
+        "mb_exact": 66.079447,
+        "mib_exact": 63.01827144622803
       }
     ]
   },

@@ -11,8 +11,8 @@
     "validation"
   ],
   "actual_sidebar_gap_detected": true,
-  "sidebar_projection_fixed_after_measurement": "v15",
-  "sidebar_projection_status": "Verified separately against original retained run databases and real Edge interactions; see source_agent_sidebar_projection_checks.json and source_agent_final_regression.json. AI/discovery/acquisition/budget/validation code was not tuned from these holdout results.",
+  "sidebar_projection_fixed_after_measurement": "v16",
+  "sidebar_projection_status": "Final v16 separately verifies existing publisher projection and preserves legacy root/child source groups. Original v14 Agent measurements remain unchanged; see source_agent_sidebar_projection_checks.json and source_agent_final_regression.json.",
   "runs": [
     {
       "run": "baseline-nankai",

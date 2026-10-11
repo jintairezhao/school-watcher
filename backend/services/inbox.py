@@ -45,6 +45,25 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
     groups = {}
     publishers = None
 
+    def legacy_owner(dept):
+        candidates = [item for item in known if item.school_id == dept.school_id
+                      and any(dept.name.startswith(item.name + separator) for separator in ('-', '－', '—'))
+                      and _within_unit(getattr(dept, 'list_url', ''), getattr(item, 'list_url', ''),
+                                       getattr(getattr(dept, 'school', None), 'url', ''))]
+        if candidates:
+            longest = max(len(item.name) for item in candidates)
+            candidates = [item for item in candidates if len(item.name) == longest]
+        return candidates[0] if len(candidates) == 1 else dept
+
+    # Older configurations can store the unit's own notices as a column row.
+    # Resolve its existing, unambiguous children before projecting that row, so
+    # website fallback cannot split its own notices away from those children.
+    legacy_owners = {dept.id: legacy_owner(dept) for dept in known
+        if getattr(dept, 'kind', '') not in ('unit', 'group')
+        and dept.id not in parents and dept.id not in directory_ids
+        and dept.name.upper() != 'DAILY NEWS'}
+    legacy_parent_ids = {owner.id for ident, owner in legacy_owners.items() if ident != owner.id}
+
     def put(group, nodes, column, *, official=False, directory=False):
         # A column can sit directly in a navigation group, with no department
         # between them. Render the column as a leaf instead of inventing a unit.
@@ -108,14 +127,7 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
                     put(group, chain, {'department': dept, 'label': label, 'position': position,
                         'unavailable': not bool(dept.list_url)}, directory=True)
             continue
-        candidates = [item for item in known if item.school_id == dept.school_id
-                      and any(dept.name.startswith(item.name + separator) for separator in ('-', '－', '—'))
-                      and _within_unit(getattr(dept, 'list_url', ''), getattr(item, 'list_url', ''),
-                                       getattr(getattr(dept, 'school', None), 'url', ''))]
-        if candidates:
-            longest = max(len(item.name) for item in candidates)
-            candidates = [item for item in candidates if len(item.name) == longest]
-        owner = candidates[0] if len(candidates) == 1 else dept
+        owner = legacy_owners.get(dept.id) or legacy_owner(dept)
         is_child = owner.id != dept.id
         label = dept.name[len(owner.name) + 1:].strip() if is_child else dept.name
         paths = placements.get(dept.id) or (placements.get(owner.id) if is_child else None)
@@ -128,7 +140,7 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
             # saved website identity (or its actual address) for the publisher
             # layer; never infer a department from the column or group name.
             # Keep reliable legacy unit-column relationships ahead of this.
-            if not is_child:
+            if not is_child and dept.id not in legacy_parent_ids:
                 if publishers is None:
                     publishers = channels_for(departments)
                 publisher = publishers.get(dept.id)

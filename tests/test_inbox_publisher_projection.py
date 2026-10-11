@@ -135,6 +135,28 @@ class InboxPublisherProjectionTests(unittest.TestCase):
         self.assertEqual(unknown['name'], 'xxgk.nankai.edu.cn')
         self.assertEqual(unknown['columns'][0]['label'], '信息公开制度')
 
+    def test_legacy_owner_own_source_and_columns_keep_one_unit_in_real_app_context(self):
+        school = School(id=1, name='旧配置回归学校', url='https://legacy.example/')
+        db.session.add(school)
+        rows = [Department(id=ident, school_id=school.id, name=name,
+            list_url=url, group_name='组织机构') for ident, name, url in (
+                (200, '研究生院', 'https://legacy.example/graduate/'),
+                (201, '研究生院-招生通知', 'https://legacy.example/graduate/admission/'),
+                (202, '研究生院-学位通知', 'https://legacy.example/graduate/degree/'))]
+        db.session.add_all(rows); db.session.commit()
+        descriptors, tree = self.checked_tree(rows)
+        self.assertEqual(len(tree['组织机构']), 1)
+        unit = tree['组织机构'][0]
+        self.assertEqual((unit['key'], unit['name'], unit['expandable']), ('200', '研究生院', True))
+        self.assertEqual({column['department'].id for column in unit['columns']}, {200, 201, 202})
+        self.assertEqual({column['label'] for column in unit['columns']}, {'本部门通知', '招生通知', '学位通知'})
+        # Known descendants preserve the owner's identity even in a restricted
+        # subscription, without adding the unselected descendant sources.
+        with self.app.test_request_context('/'):
+            restricted = source_hierarchy([rows[0]], rows)['组织机构']
+        self.assertEqual([unit['key'] for unit in restricted], ['200'])
+        self.assertEqual([column['department'].id for column in restricted[0]['columns']], [200])
+
 
 if __name__ == '__main__':
     unittest.main()

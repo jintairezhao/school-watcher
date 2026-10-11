@@ -2,8 +2,8 @@
   "date": "2026-10-11",
   "purpose": "Actual existing left-sidebar projection before/after from the two completed holdout run databases and their published official evidence catalogs.",
   "method": "Run actual channels_for and inbox.source_hierarchy and render the existing _inbox_sources.html source_tree_view macro. SQLite connections use mode=ro. Provider/model and HTTP/discovery dispatch are guarded. The original v14 holdout acquisition/API results are not rerun.",
-  "frozen_after_code_version": "v15",
-  "frozen_after_snapshot_sha256": "24df88c7b868a9d8bd1d11602430d7ae14a4697ddf175b711f026fb6c3c5b738",
+  "frozen_after_code_version": "v16",
+  "frozen_after_snapshot_sha256": "6f732eff88b5f6cbcfd6b782d2f008ceff2b4b34a28c9714c6c1e50ac74522f4",
   "additional_api_requests": 0,
   "additional_official_requests": 0,
   "installed_sources_reviewed": 10,
@@ -71,7 +71,7 @@
         }
       },
       "after": {
-        "code_version": "v15",
+        "code_version": "v16",
         "status": "all_installed_sources_render_under_saved_evidence_publisher",
         "rendered_group_labels": [
           "南开大学",
@@ -117,10 +117,11 @@
         },
         "code_hashes": {
           "backend/services/source_channels.py": "3c1dcf0c67c703ad46e3a29a7512a065b0511241bc28eb55412dcaea5aa27353",
-          "backend/services/inbox.py": "caeb90b2d9006eb0deb00d7c04a9e2fc699c2feb990e4451d27eb4a24056c071",
+          "backend/services/inbox.py": "99f044897d78444defa6ea172716191bdc7ef719f560a0f63a0e49a3cced6665",
           "backend/services/source_placements.py": "a47a6be156550d52e07cbbd24e73ccc202e0037146f669251aa948236ed9830a",
           "frontend/templates/_inbox_sources.html": "74c6efd204c41a09ceda420e4e4d251271f9a3663f72b940506417fc3aad169d"
-        }
+        },
+        "final_record": "v16-nankai-sidebar-projection-review.json"
       },
       "source_checks": [
         {
@@ -259,8 +260,16 @@
         {
           "record": "v15-nankai-sidebar-projection-review.json",
           "record_sha256": "d2fcb2850dde2f7a4141d190715a7c17f40a6e76f5ffff3fb7dadab255fcbd4e"
+        },
+        {
+          "record": "v16-nankai-sidebar-projection-review.json",
+          "record_sha256": "173fb22156f9dbe042e7a015f60c798714a108fd33fe068d1ad50d784806c08b"
         }
-      ]
+      ],
+      "intermediate_verified_projection_code_versions": [
+        "v15"
+      ],
+      "after_actual_tree_equal_to_v15_review": true
     },
     {
       "run": "candidate-v14-sdu",
@@ -353,7 +362,7 @@
         }
       },
       "after": {
-        "code_version": "v15",
+        "code_version": "v16",
         "status": "all_installed_sources_render_under_saved_evidence_publisher",
         "rendered_group_labels": [
           "山东大学",
@@ -430,10 +439,11 @@
         },
         "code_hashes": {
           "backend/services/source_channels.py": "3c1dcf0c67c703ad46e3a29a7512a065b0511241bc28eb55412dcaea5aa27353",
-          "backend/services/inbox.py": "caeb90b2d9006eb0deb00d7c04a9e2fc699c2feb990e4451d27eb4a24056c071",
+          "backend/services/inbox.py": "99f044897d78444defa6ea172716191bdc7ef719f560a0f63a0e49a3cced6665",
           "backend/services/source_placements.py": "a47a6be156550d52e07cbbd24e73ccc202e0037146f669251aa948236ed9830a",
           "frontend/templates/_inbox_sources.html": "74c6efd204c41a09ceda420e4e4d251271f9a3663f72b940506417fc3aad169d"
-        }
+        },
+        "final_record": "v16-sdu-sidebar-projection-review.json"
       },
       "source_checks": [
         {
@@ -721,8 +731,16 @@
         {
           "record": "v15-sdu-sidebar-projection-review.json",
           "record_sha256": "375289eb4138aac7e973175341ffe3fa163ee11b6962ac3405821bc7691456a8"
+        },
+        {
+          "record": "v16-sdu-sidebar-projection-review.json",
+          "record_sha256": "31303574d8c75f9682b0b54aabdd6f98c6b38b93af00d3d1b9f50eac40614659"
         }
-      ]
+      ],
+      "intermediate_verified_projection_code_versions": [
+        "v15"
+      ],
+      "after_actual_tree_equal_to_v15_review": true
     }
   ]
 }
