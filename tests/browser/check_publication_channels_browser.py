@@ -66,7 +66,9 @@ with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Browsing 
             db.session.add_all([shared, teaching, library, hidden])
             db.session.flush()
             secondary_url = 'https://xsc.seu.edu.cn/student/award-copy.htm'
+            library_publication_url = 'https://lib.seu.edu.cn/open/holiday-2026.htm'
             record_source(shared, student, article_url=secondary_url)
+            record_source(library, single, article_url=library_publication_url)
             db.session.add(UserRead(user_id=fixture.user.id, announcement_id=shared.id))
             db.session.add(UserAnnouncementState(user_id=fixture.user.id, announcement_id=shared.id, starred=True))
             db.session.commit()
@@ -124,14 +126,42 @@ with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Browsing 
             page.locator('[data-notice-link]').click()
             page.locator('.article-sources summary').click()
             expect(page.locator('.article-sources li')).to_have_count(2)
+            expect(page.locator(f'.article-sources a[href="{shared.url}"]')).to_have_text('此处刊载原文')
             expect(page.locator(f'.article-sources a[href="{secondary_url}"]')).to_have_text('此处刊载原文')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.screenshot(path=str(output / f'publications-{width}-{theme}.png'), full_page=True)
 
+            def check_single_source(saved=False):
+                header = page.locator('.reader-document .reading-header')
+                expect(header.locator('.reading-meta .reader-source')).to_have_count(1)
+                breadcrumb = header.locator('.reader-source').inner_text()
+                assert '图书馆' in breadcrumb and '开放时间' in breadcrumb
+                assert header.inner_text().count(breadcrumb) == 1
+                expect(header.locator('details.article-sources, .article-sources summary, .publication-name')).to_have_count(0)
+                expect(header.locator('.article-sources a')).to_have_count(3)
+                channel = header.locator('.article-sources [data-channel-link]')
+                expect(channel).to_be_visible()
+                channel_url = urlsplit(channel.get_attribute('href'))
+                channel_params = parse_qs(channel_url.query)
+                assert channel_url.path == '/' and channel_url.fragment == 'sources'
+                assert channel_params['school'] == [str(school_id)]
+                assert channel_params['dept'] == [str(single.id)]
+                assert channel_params['period'] == ['all']
+                assert channel_params.get('view', ['inbox']) == ['saved' if saved else 'inbox']
+                expect(header.get_by_role('link', name='此处刊载原文', exact=True)).to_have_attribute('href', library_publication_url)
+                expect(header.get_by_role('link', name='官网栏目', exact=True)).to_have_attribute('href', single.list_url)
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+
+            # The shared reading header stays concise in all three reading surfaces.
+            for reading_mode, target in (
+                    ('inbox', f'/?school={school_id}&period=all&selected={library.id}'),
+                    ('standalone', f'/announcement/{library.id}?source={single.id}'),
+                    ('focus', f'/?school={school_id}&period=all&selected={library.id}&view=focus')):
+                page.goto('http://localhost' + target)
+                check_single_source()
+                page.screenshot(path=str(output / f'single-{reading_mode}-{width}-{theme}.png'), full_page=True)
+
             # One source still has a visible channel action; leaving focus mode reveals its list.
-            page.goto(f'http://localhost/?school={school_id}&period=all&selected={library.id}&view=focus')
-            expect(page.locator('.article-sources')).to_have_attribute('open', '')
-            expect(page.locator('.article-sources [data-channel-link]')).to_be_visible()
             page.locator('.article-sources [data-channel-link]').click()
             expect(page.locator('#sourcePanel')).to_be_visible()
             expect(page.locator(f'[data-department][value="{single.id}"]')).to_be_visible()
@@ -167,9 +197,24 @@ with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Browsing 
             expect(page.locator('#sourcePanel')).to_be_visible()
             expect(page.locator('a[href^="/channels"]')).to_have_count(0)
             expect(page.locator('[data-notice-link]')).to_have_count(1)
+
+            # A single-source action keeps the saved mailbox, rather than broadening it.
+            db.session.add(UserAnnouncementState(user_id=fixture.user.id, announcement_id=library.id, starred=True))
+            db.session.commit()
+            page.goto(f'http://localhost/?school={school_id}&period=all&selected={library.id}&view=saved')
+            check_single_source(saved=True)
+            page.locator('.article-sources [data-channel-link]').click()
+            expect(page.locator('#sourcePanel')).to_be_visible()
+            expect(page.locator(f'[data-department][value="{single.id}"]')).to_be_checked()
+            assert parse_qs(urlsplit(page.url).query).get('view') == ['saved']
+            page.locator('[data-close-sources]').click()
+            expect(page.locator('[data-notice-link]')).to_have_count(1)
+            expect(page.locator('[data-notice-link]')).to_contain_text(library.title)
             assert not errors and not external, (errors, external)
             results.append({'width': width, 'theme': theme, 'distinct_publishers': True,
                             'multiple_publications': True, 'single_source_navigation': True,
+                            'single_source_not_repeated': ['inbox', 'focus', 'standalone'],
+                            'actual_publication_links': True, 'single_source_saved_scope': True,
                             'saved_scope_preserved': True, 'sidebar_only': True, 'overflow': False})
             page.close()
         finally:
