@@ -38,7 +38,7 @@
         field('discoveryMessage').textContent = data.message;
         field('discoveryProgress').hidden = !data.busy;
         field('discoveryActivity').textContent = data.state === 'pausing' ? '正在暂停' : data.state === 'paused' ? '已暂停'
-            : data.state === 'budget_paused' ? '进度已保存' : data.state === 'queued' ? '排队中' : data.state === 'retry_wait' ? '等待重试' : data.busy ? '进行中' : '';
+            : ['budget_paused', 'ai_connection', 'ai_result'].includes(data.state) ? '进度已保存' : data.state === 'queued' ? '排队中' : data.state === 'retry_wait' ? '等待重试' : data.busy ? '进行中' : '';
         const pause = field('discoveryPause');
         if (pause) {
             pause.hidden = !data.can_pause && !data.can_resume && data.state !== 'pausing';
@@ -47,9 +47,7 @@
         }
         field('discoveryCounts').textContent = '已收录 ' + (data.article_count ?? 0) + ' 条通知 · 已接入 ' + (data.verified_source_count ?? 0) + ' 个信息来源';
         if (field('discoveryValue')) field('discoveryValue').textContent = data.value_summary || '优先寻找升学、奖助、实习就业、竞赛和校园办事信息。';
-        if (field('discoveryStages')) field('discoveryStages').textContent = data.budget_paused
-            ? '未完成的入口已保留，调整额度后从原进度继续'
-            : (data.processing_count ?? 0) > 0 ? '正在处理 ' + data.processing_count + ' 个后台任务' : '本轮后台处理已结束';
+        if (field('discoveryStages')) field('discoveryStages').textContent = data.stage_message || '';
         if (field('discoveryChanges')) field('discoveryChanges').textContent = data.changes && Object.keys(data.changes).length
             ? '本轮检查：结构未变 ' + (data.changes.unchanged ?? 0) + ' 个 · 有变化 ' + (data.changes.changed ?? 0) + ' 个 · 新入口 ' + (data.changes.new ?? 0) + ' 个' : '';
         if (field('discoveryAI')) field('discoveryAI').textContent = data.ai_message || '';
@@ -90,7 +88,7 @@
             const elapsed = Math.max(0, Math.floor((Date.now() - Date.parse(data.updated_at)) / 1000));
             if (elapsed > 30) field('discoveryActivity').textContent = elapsed + ' 秒前更新';
         }
-        return data.active || data.state === 'waiting' || data.state === 'idle';
+        return data.active || ['waiting', 'idle', 'ai_connection', 'ai_result'].includes(data.state);
     }
     async function refresh(method, action) {
         if (busy) return;

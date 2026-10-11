@@ -27,7 +27,8 @@ def fetch_page(url, *, purpose='directory', source_id='', readiness_selector='')
     network = next(({'public_ip': note.split(':', 1)[1]} for note in notes
                     if isinstance(note, str) and note.startswith('public_dns_ipv4:')), None)
     return {'url': result.final_url, 'status': result.status,
-            'html': result.html if result.ok or result.outcome == 'needs_adapter' else '',
+            'html': result.html if result.ok or (result.outcome == 'needs_adapter'
+                    and result.error_code != 'dynamic_material_incomplete') else '',
             'error': result.message or result.error_code, 'outcome': result.outcome,
             'result': result, 'transport': result.transport, 'network': network, 'network_notes': notes}
 
@@ -60,7 +61,8 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
                 retryable=response.get('outcome') == 'network_error',
                 retry_after=getattr(result, 'retry_after', None), status_code=response.get('status'),
                 final_url=final, error=response.get('error') or 'empty_response',
-                health='dynamic_content' if response.get('outcome') in ('requires_render', 'needs_manual') else 'unreachable')
+                health='dynamic_content' if response.get('outcome') in ('requires_render', 'needs_manual')
+                    or getattr(result, 'error_code', '') == 'dynamic_material_incomplete' else 'unreachable')
             return
         content_hash = hashlib.sha256(html.encode()).hexdigest()
         if (has_fragment_route(url) or has_fragment_route(final)) and response.get('transport') != 'browser':
@@ -121,7 +123,7 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
                                             'locator': column['column_link_locator'], 'decision': decision, 'publication_route': True})
         if focus in ('layered', 'valuable'):
             from .layered import route_structure
-            route_structure(parsed, page, html, site['root_url'], bool(feed), policy=focus)
+            route_structure(parsed, page, html, site['root_url'], bool(feed), policy=focus, publication=feed)
         from backend.services.discovery_changes import compare, put
         change = compare(page, parsed, feed, html, final) if focus in ('layered', 'valuable') else None
         assert_current_parser()

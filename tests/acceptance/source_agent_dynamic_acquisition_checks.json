@@ -1,0 +1,249 @@
+{
+  "date": "2026-10-11",
+  "purpose": "Sanitized evidence for on-demand rendering and complete asynchronous publication material; not a school discovery or article-validation acceptance claim.",
+  "official_url": "https://rdzs.ruc.edu.cn/",
+  "privacy": "No raw HTML, HTTP headers, response payloads, cookies, keys, user database content or machine paths are included.",
+  "root_causes": [
+    "Static navigation and convincing dated notification labels caused the HTTP async shell to be called usable while all destinations were placeholders.",
+    "DOMContentLoaded returned before native public data requests populated publication regions.",
+    "The first fix waited for dated cards but omitted remaining column-header destinations; it stopped after three of five asynchronous regions completed.",
+    "Old cached HTTP observations could replay the shell instead of dispatching a rendered read; failed partial DOMs could be cached as completed material."
+  ],
+  "limits": {
+    "global_concurrency": 2,
+    "host_concurrency": 1,
+    "host_start_interval_seconds": 1,
+    "browser_total_seconds": 45,
+    "html_max_bytes": 3145728
+  },
+  "isolation": {
+    "model_requests": 0,
+    "user_database_reads": 0,
+    "user_database_writes": 0,
+    "source_task_or_budget_changes": 0,
+    "configured_credentials_read": false,
+    "network_policy": "Independent limiter; official host only, public-address validation; images/fonts/media blocked. Native scripts/CSS/XHR allowed. No access-control bypass.",
+    "production_execution": "Production classify_result, coordinator fetch/render, BrowserRuntime submit/navigate/content-wait; only browser launch channel and official-host network admission were isolated.",
+    "repeat_reads": "One diagnostic HTTP+Edge comparison, one initial production failure, one final production verification following that new failure; both production reads reused the same retained HTTP."
+  },
+  "observations": {
+    "initial_real_HTTP": {
+      "bytes": 33887,
+      "sha256": "a8219baa863da5b0e835b23126297cbe9b225c7cb449c0cbd242899bde0ceaab",
+      "real_long_links": 0,
+      "root_placeholder_long_links": 16,
+      "status": 200,
+      "old_outcome": "usable"
+    },
+    "initial_real_Edge_DOMContentLoaded": {
+      "bytes": 34430,
+      "sha256": "a7a9a2f0699ed08e0ddab4de6c0dccf59ed68b69b79f84f779522f78f4bf14ab",
+      "real_long_links": 0,
+      "root_placeholder_long_links": 16,
+      "elapsed_seconds": 19.57
+    },
+    "initial_real_Edge_complete": {
+      "bytes": 35381,
+      "sha256": "cfc59df5232448ff64909ee858849b532ca8677d3ad40374f5b7ac3364c9a2d8",
+      "real_long_links": 29,
+      "root_placeholder_long_links": 0
+    },
+    "first_production_attempt_failed": {
+      "passed": false,
+      "program_outcome": "usable",
+      "final_material": {
+        "bytes": 35021,
+        "sha256": "52e96710408a9f8050d4f6be8b0dc623eaff7d1969ae5618f0be5b91e1cd206d",
+        "real_long_links": 21,
+        "root_placeholder_long_links": 2
+      },
+      "browser_elapsed_seconds": 21.387,
+      "actual_resource_requests_including_document": 21,
+      "HTTP_initial_reads": 0,
+      "reason": "Only 21 actual long-link occurrences arrived; two column-header links were still root placeholders. This attempt is retained as failed evidence."
+    },
+    "retained_real_DOM_reclassification_no_network": {
+      "scope": "Retained actual official DOM replay only, no new network, no AI",
+      "model_requests": 0,
+      "HTTP_requests": 0,
+      "cases": [
+        {
+          "case": "old_HTTP",
+          "sha256": "a8219baa863da5b0e835b23126297cbe9b225c7cb449c0cbd242899bde0ceaab",
+          "bytes": 33887,
+          "outcome": "requires_render",
+          "error_code": "dynamic_material_pending",
+          "evidence": [
+            "observed_dynamic_request",
+            "placeholder_publication_targets:13",
+            "placeholder_column_targets:5",
+            "loading_regions:0"
+          ]
+        },
+        {
+          "case": "production_premature_partial",
+          "sha256": "52e96710408a9f8050d4f6be8b0dc623eaff7d1969ae5618f0be5b91e1cd206d",
+          "bytes": 35021,
+          "outcome": "needs_adapter",
+          "error_code": "dynamic_material_incomplete",
+          "evidence": [
+            "observed_dynamic_request",
+            "placeholder_publication_targets:0",
+            "placeholder_column_targets:2",
+            "loading_regions:0"
+          ]
+        },
+        {
+          "case": "prior_complete_real_DOM",
+          "sha256": "cfc59df5232448ff64909ee858849b532ca8677d3ad40374f5b7ac3364c9a2d8",
+          "bytes": 35381,
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        }
+      ],
+      "partial_blocked_complete_usable": true
+    },
+    "final_production_read": {
+      "passed": true,
+      "cached_HTTP_reclassified": {
+        "outcome": "requires_render",
+        "error_code": "dynamic_material_pending",
+        "evidence": [
+          "observed_dynamic_request",
+          "placeholder_publication_targets:13",
+          "placeholder_column_targets:5",
+          "loading_regions:0"
+        ]
+      },
+      "result": {
+        "outcome": "usable",
+        "error_code": "",
+        "status": 200,
+        "transport": "browser",
+        "final_url": "https://rdzs.ruc.edu.cn/",
+        "evidence": [
+          "visible_directory_content"
+        ],
+        "timings": {
+          "total_ms": 23806
+        }
+      },
+      "final_material": {
+        "bytes": 35381,
+        "sha256": "227e00b63d0153ebb8aecb2151bea0a909ae8d554918f172a5681bf6ca7b7332",
+        "real_long_links": 29,
+        "root_placeholder_long_links": 0
+      },
+      "observed_long_link_occurrences": 29,
+      "distinct_title_URL_pairs": 27,
+      "all_29_occurrences_match_prior_real_DOM": true,
+      "valid_column_header_destinations": 5,
+      "browser_elapsed_seconds": 24.333,
+      "browser_document_navigations": 1,
+      "HTTP_initial_reads": 0,
+      "actual_resource_requests_including_document": 23,
+      "browser_dispatches": 1,
+      "completed_cache_stores": 1,
+      "measured_peak_network_concurrency": 1,
+      "minimum_request_start_interval_seconds": 1.000579799991101,
+      "observed_intermediate_outcomes": [
+        "needs_adapter",
+        "usable"
+      ],
+      "audit_correction": {
+        "initial_passed_flag": false,
+        "reason": "The verifier incorrectly required 29 DISTINCT title/URL pairs. Actual DOM has 29 occurrences and 27 distinct pairs because 2 pinned items appear in two regions. Correct comparison preserves occurrence counts. No new network execution."
+      },
+      "source_hashes_at_real_read": {
+        "backend/scraper/acquisition/classifier.py": "900cfc7f694f6c153b91acbecfc45e97e8125e0e6b54165fc87c23d6768fab10",
+        "backend/browser_service/runtime.py": "d10b041f893c8d89165766628871222477ebc4e1a5089adc75dc324c58880c32",
+        "backend/scraper/acquisition/contracts.py": "4779612ce9c54e8482efba23f3d377484a20872274577214ec1d279778dd1e35",
+        "backend/scraper/acquisition/coordinator.py": "525dda701b90ac82d098a8ee9c4660e8a862807f931cd52de85ca0764c606142",
+        "backend/scraper/discovery/inventory_crawler.py": "9152d458c3f49d65646361a1a296291d1bf2387806b798c3cb6cb34746dfb930",
+        "backend/services/source_validation.py": "f287f248cd15a037dbfe51646165c764fb5ce78c0019a6a3a9b86779edd3df61"
+      }
+    }
+  },
+  "controlled_checks": [
+    {
+      "kind": "mock_or_local_fixture_regression",
+      "command": ".venv/Scripts/python.exe -X utf8 -m pytest tests/test_dynamic_material_acquisition.py tests/test_acquisition.py tests/test_browser_runtime.py tests/test_http_transport.py tests/test_acquisition_callers.py tests/test_source_validation.py tests/test_discovery_fetch_policy.py tests/test_fetch_evidence_resume.py -q --disable-warnings",
+      "passed_tests": 150,
+      "passed_subtests": 22,
+      "seconds": 11.85,
+      "coverage": "Static/async pages, attachments/empty lists, access/challenges/login, cache reclassification, partial-DOM isolation, article identity conflicts and retry policy. No real school read or model request in these tests."
+    },
+    {
+      "kind": "real_Edge_local_async_fixtures",
+      "selection": "tests/test_browser_runtime_real.py -k \"static_navigation or failed_xhr or loaded_cards\"",
+      "passed_tests": 3,
+      "seconds": 6.29,
+      "coverage": "Delayed native XHR, independently delayed column destination, failed XHR with explicit incomplete material. All navigation is to a temporary loopback fixture."
+    },
+    {
+      "kind": "post_integration_mock_or_local_fixture_regression",
+      "command": ".venv/Scripts/python.exe -X utf8 -m pytest tests/test_acquisition_callers.py tests/test_discovery_fetch_policy.py -q --disable-warnings",
+      "passed_tests": 29,
+      "passed_subtests": 3,
+      "seconds": 7.36,
+      "coverage": "After integrating the publication=feed argument, caller/discovery regressions still pass. This set overlaps the 150-test set and is not added to it as distinct tests."
+    }
+  ],
+  "measured_parameters": [
+    {
+      "parameter": "Browser total deadline",
+      "value": "45 seconds",
+      "status": "measured_and_retained",
+      "evidence": "Final real read completed in 24.333 seconds without increasing the deadline; local failed load returned typed incomplete material at its configured 1-second test deadline."
+    },
+    {
+      "parameter": "On-demand dynamic rendering",
+      "status": "measured_after_fix",
+      "evidence": "Retained real HTTP triggers browser; intermediate partial DOM remains incomplete; final 29 occurrences and all five column destinations are available."
+    },
+    {
+      "parameter": "Global/host read concurrency and host interval",
+      "value": "2/1 and at least 1 second",
+      "status": "measured_and_retained",
+      "evidence": "Isolated official run peak 1 and minimum start interval 1.000579799991101 seconds; no competing same-host task during this read."
+    },
+    {
+      "parameter": "HTML response bound",
+      "value": "3 MiB",
+      "status": "retained_with_targeted_regressions",
+      "evidence": "The measured final HTML is 35,381 bytes. This sample does not establish behavior for every large dynamic page."
+    },
+    {
+      "parameter": "90-second comparison or all-university dynamic coverage",
+      "status": "not_verified",
+      "evidence": "Neither was attempted; no universal claim about 985 universities follows from this page."
+    },
+    {
+      "parameter": "AI accuracy/cost and full RUC source connection",
+      "status": "not_verified_in_this_check",
+      "evidence": "No model request or new source installation was executed; department ownership, column rules, article correspondence and daily updates are separate acceptance work."
+    }
+  ],
+  "limitations": [
+    "29 is the observed occurrence count on this exact page, not a universal completion threshold in program code.",
+    "Two pinned articles appear in two regions, leaving 27 distinct title/address pairs; each actual region occurrence is preserved in the comparison.",
+    "Column heading images with empty alternative text still require semantic observation; this check does not infer department names from image filenames.",
+    "When native data access fails, material stays incomplete and is not supplied to AI as a complete page. Access restrictions are not bypassed.",
+    "No full browser or local model was newly bundled; installer size is measured separately."
+  ],
+  "delivery_source_hashes": {
+    "backend/scraper/acquisition/classifier.py": "900cfc7f694f6c153b91acbecfc45e97e8125e0e6b54165fc87c23d6768fab10",
+    "backend/scraper/acquisition/contracts.py": "4779612ce9c54e8482efba23f3d377484a20872274577214ec1d279778dd1e35",
+    "backend/scraper/acquisition/coordinator.py": "525dda701b90ac82d098a8ee9c4660e8a862807f931cd52de85ca0764c606142",
+    "backend/browser_service/runtime.py": "d10b041f893c8d89165766628871222477ebc4e1a5089adc75dc324c58880c32",
+    "backend/scraper/discovery/inventory_crawler.py": "7085845df25067813d8da09ead27536194a6a8dcab12835325ac9ac2357aa0ea",
+    "backend/services/source_validation.py": "f287f248cd15a037dbfe51646165c764fb5ce78c0019a6a3a9b86779edd3df61",
+    "tests/test_dynamic_material_acquisition.py": "b61144b915d13d96d4c561a86f255f4e67631e44bb8041a1eeb17566266d5529",
+    "tests/test_browser_runtime.py": "bd1065e14383d1f49bafb505b84105116d6866f2aa20d9a4b56611c3baafbda4",
+    "tests/test_browser_runtime_real.py": "186e0801645768594e4a6ebfa5e033aa9ade16326aac0eb08e1d16b26898c89d",
+    "tests/fixtures/acquisition/dynamic-publication-template.html": "819fec55a3e54b32280eeab8b0323dac5f2a9ae2a001251f7e80fc0804c392b1"
+  }
+}

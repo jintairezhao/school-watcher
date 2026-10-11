@@ -396,6 +396,11 @@ def handoff(handle, deferred):
         if changed.rowcount:
             _release_source(handle)
         db.session.commit()
+        if changed.rowcount and deferred.state == 'waiting' and deferred.phase == 'ai_connection':
+            # A successful test can finish just before this handoff commits.
+            # Reconcile that persisted evidence without making a provider call.
+            from backend.ai.connection_recovery import resume_connection_tasks
+            resume_connection_tasks(data.get('ai_connection_binding') or {})
     return bool(changed.rowcount)
 
 

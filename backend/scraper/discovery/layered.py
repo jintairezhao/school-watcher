@@ -5,7 +5,7 @@ retains exhaustive institutional traversal. Neither invents links or ownership.
 """
 import hashlib
 import json
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 
@@ -37,30 +37,71 @@ def prepare(inventory, key, policy='layered'):
         return True
 
 
-def route_structure(parsed, page, html='', root_url='', has_publications=False, *, policy='layered'):
+def route_structure(parsed, page, html='', root_url='', has_publications=False, *, policy='layered', publication=None):
     """Restrict expansion by page role, not department names or student keywords."""
     if policy == 'valuable':
         parsed['navigation_policy'] = VALUE_POLICY
+    actual_url = next((node.get('url') for node in parsed['nodes']
+                       if node.get('relation') == 'page_identity' and node.get('url')),
+                      page.get('final_url') or page['url'])
+    soup = BeautifulSoup(html, 'lxml') if html else None
+    base = soup.find('base', href=True) if soup else None
+    base_url = urljoin(actual_url, base['href']) if base else actual_url
+    from .frontier import article_addresses, observed_label, utility_route
+    known_articles = article_addresses(publication)
     terminal = page['kind'] == 'channel' and has_publications
+    if html and terminal:
+        from .frontier import old_publications, local_navigation
+        if publication is None:
+            from .structure import publication_evidence
+            publication = publication_evidence(html, actual_url)
+            known_articles = article_addresses(publication)
+        if old_publications(publication):
+            from .structure import locator, document_reference, ARTICLE, SKIP, SERVICE
+            from backend.services.source_inventory import resolve_page_link
+            for node in soup.select('a[href]'):
+                if not local_navigation(node):
+                    continue
+                label = observed_label(node)
+                if label in SKIP - {'首页', '返回首页', '网站首页'} or SERVICE.search(label):
+                    continue
+                try:
+                    target = resolve_page_link(base_url, node['href'])
+                except ValueError:
+                    continue
+                if (not target or target in {canonical_url(page['url']), canonical_url(actual_url)}
+                        or urlsplit(target).hostname != urlsplit(actual_url).hostname
+                        or target in known_articles or utility_route(target, label)
+                        or document_reference(target, label) or ARTICLE.search(target)):
+                    continue
+                position = locator(node)
+                link = next((link for link in parsed['links'] if link.get('url') == target
+                             and link.get('locator') == position), None)
+                if link is None:
+                    link = {'url': target, 'label': label, 'kind': 'navigation',
+                            'path': json.loads(page['path_json']), 'locator': position}
+                    parsed['links'].append(link)
+                # Cheap reading is not a classification or ownership verdict.
+                # AI and the original scope/body validator judge its real page.
+                link.update(decision='follow', probe_only=True)
     if html and not terminal:
-        from .structure import locator, document_reference, ARTICLE, SKIP
+        from .structure import locator, document_reference, ARTICLE, SKIP, SERVICE
         from backend.services.source_inventory import resolve_page_link
         from backend.scraper.http_client import same_school_url
-        soup = BeautifulSoup(html, 'lxml')
         known = {link.get('url') for link in parsed['links']}
         if page['kind'] in ('root', 'unit', 'gateway'):
             # Language splash pages are literal website entrances. Following a
             # same-host link needs no model and grants no new domain ownership.
             for node in soup.select('a[href]'):
-                label = node.get_text(' ', strip=True)
+                label = observed_label(node)
                 if label not in LANGUAGE_ENTRANCES:
                     continue
                 try:
-                    target = resolve_page_link(page['url'], node['href'])
+                    target = resolve_page_link(base_url, node['href'])
                 except ValueError:
                     continue
-                if (not target or target == canonical_url(page['url'])
-                        or urlsplit(target).hostname != urlsplit(page['url']).hostname
+                if (not target or target in {canonical_url(page['url']), canonical_url(actual_url)}
+                        or urlsplit(target).hostname != urlsplit(actual_url).hostname
                         or document_reference(target, label) or ARTICLE.search(target)):
                     continue
                 from .structure import node_key
@@ -80,22 +121,29 @@ def route_structure(parsed, page, html='', root_url='', has_publications=False, 
             # Many university templates use div menus instead of semantic nav.
             # Include visible cards; article URLs, utilities and files are still
             # excluded below and the model receives only a small link batch.
-            selector += ', [class*=nav] a[href], [class*=menu] a[href], [id*=nav] a[href], [id*=menu] a[href], main a[href]'
+            selector += ', [class*=nav] a[href], [class*=menu] a[href], [id*=nav] a[href], [id*=menu] a[href], main a[href], section a[href], [class*=card] a[href], [class*=banner] a[href], [class*=topic] a[href]'
         if page['kind'] == 'directory':
             selector += ', main a[href], article a[href]'
         for node in soup.select(selector):
-            label = node.get_text(' ', strip=True)
+            from .frontier import local_navigation
+            label = observed_label(node)
+            probe = (policy == 'valuable' and local_navigation(node)
+                     and (node.find('img') is not None or not label))
             try:
-                url = resolve_page_link(page['url'], node.get('href'))
+                url = resolve_page_link(base_url, node.get('href'))
             except ValueError:
                 continue
-            if (not url or url in known or label in SKIP or not 2 <= len(label) <= 40
+            if (not url or url in {canonical_url(page['url']), canonical_url(actual_url)}
+                    or url in known or label in SKIP or SERVICE.search(label)
+                    or (not probe and not 2 <= len(label) <= 40)
                     or not same_school_url(url, root_url or page['url'])
+                    or url in known_articles or utility_route(url, label)
                     or document_reference(url, label) or ARTICLE.search(url)):
                 continue
             known.add(url)
             parsed['links'].append({'url': url, 'label': label, 'kind': 'navigation',
-                'path': json.loads(page['path_json']), 'locator': locator(node), 'decision': 'navigation_pending'})
+                'path': json.loads(page['path_json']), 'locator': locator(node),
+                'decision': 'follow' if probe else 'navigation_pending', **({'probe_only': True} if probe else {})})
     unverified = {n.get('locator') for n in parsed['nodes'] if n['relation'] == 'linked_navigation_unverified'}
     for link in parsed['links']:
         if (not terminal and page['kind'] in ('unit', 'gateway')
@@ -107,6 +155,8 @@ def route_structure(parsed, page, html='', root_url='', has_publications=False, 
                 if node.get('locator') == link.get('locator') and node['relation'] in ('navigation_entry', 'linked_navigation_unverified'):
                     node['relation'] = 'website_entrance'
         if link['decision'] not in ('follow', 'official_external_link'):
+            continue
+        if link.get('probe_only'):
             continue
         if terminal and not link.get('publication_route'):
             # More/index links discovered from a publication block may still be

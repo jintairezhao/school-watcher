@@ -82,6 +82,24 @@ class SourceAgentTests(unittest.TestCase):
         feedback = validation_feedback(column, ['column_identity_or_scope_unconfirmed'], execution=measured)
         self.assertEqual(feedback['execution'], measured)
 
+    def test_tab_feedback_keeps_each_real_heading_and_its_actual_local_group(self):
+        from backend.services.source_agent import selector_observation, validation_feedback
+        from bs4 import BeautifulSoup
+        html = ('<section id="first"><ul><li><span class="tab">通知公告</span></li></ul>'
+                '<div id="panel"><ul><li>真实通知</li></ul></div></section>'
+                '<section id="second"><ul><li><span class="tab">硕士招生</span></li></ul></section>')
+        config = {'container_selector': '#panel', 'heading_selector': '.tab', 'list_selector': '#panel li'}
+        observation = selector_observation(config, html)
+        self.assertEqual(observation['heading_count'], 2)
+        rows = observation['heading_matches']
+        soup = BeautifulSoup(html, 'lxml')
+        self.assertEqual([soup.select_one(row['locator']).get_text() for row in rows], ['通知公告', '硕士招生'])
+        self.assertEqual([row['within_declared_container'] for row in rows], [False, False])
+        self.assertEqual(soup.select_one(rows[0]['common_group_locator'])['id'], 'first')
+        self.assertEqual(rows[1]['common_group_locator'], '')
+        self.assertEqual(validation_feedback(config, ['column_identity_or_scope_unconfirmed'],
+                                            execution=observation)['execution'], observation)
+
     def test_a_feedback_round_does_not_reuse_the_prior_region_checkpoint(self):
         from backend.services import tasks
         from backend.services.source_agent import recognize_column, validation_feedback

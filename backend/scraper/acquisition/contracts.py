@@ -63,6 +63,10 @@ class FetchResult:
         # These are completed observations, not successful sources. Retaining
         # them inside the same task prevents each queue handoff from rereading
         # the same denied or unrecognized sample before reaching later samples.
+        if self.error_code in ('dynamic_material_pending', 'dynamic_material_incomplete'):
+            # A failed async load is an unfinished observation, not a completed
+            # document to reuse forever after the site's next recovery attempt.
+            return False
         return self.ok or bool(self.status and self.html and self.outcome in (
             'needs_adapter', 'denied', 'needs_manual'))
 

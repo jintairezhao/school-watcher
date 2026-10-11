@@ -41,6 +41,22 @@ class RealBrowserFixtureTests(unittest.IsolatedAsyncioTestCase):
             return web.Response(content_type='text/html', text='''<div id="app"></div><script>
                 if(location.hash==='#/notice')setTimeout(()=>{document.querySelector('#app').innerHTML=
                 '<ul class="notices"><li><a href="#/article/42">前端路由中的学校课程安排通知</a></li></ul>'},100);</script>''')
+        async def partial(request):
+            template = (Path(__file__).parent / 'fixtures/acquisition/dynamic-publication-template.html').read_text(encoding='utf8')
+            endpoint = '/api/failure' if request.path.endswith('failure') else '/api/slow'
+            finish = "document.querySelector('.more').href='/notices'"
+            if request.path.endswith('staged'):
+                finish = 'setTimeout(()=>{' + finish + '},350)'
+            script = ("fetch('" + endpoint + "').then(r=>{if(!r.ok)throw Error('unavailable');return r.json()})"
+                      ".then(d=>{document.querySelector('.cards').innerHTML=d.html;"
+                      + finish + '})')
+            return web.Response(content_type='text/html', text=template.replace(
+                "fetch('/public/cards').then(response => response.json()).then(renderCards)", script))
+        async def slow(request):
+            await asyncio.sleep(.35)
+            return web.json_response({'html': '<li><a href="/article/42">异步补全后的真实招生通知</a><span>2026-10-11</span></li>'})
+        async def failure(request):
+            return web.Response(status=503, text='Unavailable')
         app.router.add_get('/delayed', delayed)
         app.router.add_get('/challenge', challenge)
         app.router.add_get('/denied', denied)
@@ -48,6 +64,11 @@ class RealBrowserFixtureTests(unittest.IsolatedAsyncioTestCase):
         app.router.add_get('/api/list', api)
         app.router.add_get('/xhr', xhr)
         app.router.add_get('/spa', spa)
+        app.router.add_get('/partial', partial)
+        app.router.add_get('/partial-staged', partial)
+        app.router.add_get('/partial-failure', partial)
+        app.router.add_get('/api/slow', slow)
+        app.router.add_get('/api/failure', failure)
         self.server = TestServer(app)
         await self.server.start_server()
         self.base = str(self.server.make_url('')).rstrip('/')
@@ -74,9 +95,9 @@ class RealBrowserFixtureTests(unittest.IsolatedAsyncioTestCase):
         await self.playwright.stop()
         await self.server.close()
 
-    async def fetch(self, path, **values):
+    async def fetch(self, path, *, timeout_seconds=2, **values):
         request = FetchRequest(url=self.base + path, purpose='list', request_id=path,
-            timeout_seconds=2, **values)
+            timeout_seconds=timeout_seconds, **values)
         await self.runtime.submit(request.to_dict())
         await self.runtime.executions[path].task
         value = self.runtime.get_execution(path)
@@ -114,6 +135,27 @@ class RealBrowserFixtureTests(unittest.IsolatedAsyncioTestCase):
         result = await self.fetch('/spa#/notice', readiness_selector='.notices')
         self.assertEqual(result.outcome, 'usable')
         self.assertEqual(result.final_url, self.base + '/spa#/notice')
+
+    async def test_static_navigation_does_not_end_wait_for_async_publication_targets(self):
+        result = await self.fetch('/partial')
+        self.assertEqual(result.outcome, 'usable')
+        self.assertIn('/article/42', result.html)
+        self.assertNotIn('本科招生报名工作安排通知', result.html)
+        self.assertGreaterEqual(result.timings['total_ms'], 300)
+
+    async def test_failed_xhr_preserves_incomplete_material_with_explicit_result(self):
+        result = await self.fetch('/partial-failure', timeout_seconds=1)
+        self.assertEqual(result.outcome, 'needs_adapter')
+        self.assertEqual(result.error_code, 'dynamic_material_incomplete')
+        self.assertIn('render_wait_exhausted', result.evidence)
+        self.assertIn('本科招生报名工作安排通知', result.html)
+        self.assertLess(result.timings['total_ms'], 1500)
+
+    async def test_loaded_cards_do_not_end_wait_before_column_destination_arrives(self):
+        result = await self.fetch('/partial-staged', policy={'dynamic_material_observed': True})
+        self.assertEqual(result.outcome, 'usable')
+        self.assertIn('href="/notices"', result.html)
+        self.assertGreaterEqual(result.timings['total_ms'], 650)
 
     @unittest.skipIf(os.name == 'nt', 'Linux Xvfb/TigerVNC acceptance')
     async def test_linux_manual_display_revocation_and_context_reuse(self):

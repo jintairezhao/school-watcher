@@ -351,11 +351,21 @@ class BrowserRuntime:
             response = final_document[0] or response
             headers = await response.all_headers() if response else {}
             await admission.cooldown(page.url, headers, response.status if response else 200)
+            material = {}
+            if wait_for_content:
+                from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
+                final_verdict = classify_result(FetchRequest.from_dict(payload), FetchResult(
+                    final_url=page.url, html=html, status=response.status if response else 200,
+                    transport='browser', headers=headers))
+                if final_verdict.error_code == 'dynamic_material_incomplete':
+                    material = {'outcome': final_verdict.outcome, 'error_code': final_verdict.error_code,
+                                'message': final_verdict.message,
+                                'evidence': [*final_verdict.evidence, 'render_wait_exhausted']}
             return {'url': payload['url'], 'final_url': page.url,
                 'status_code': response.status if response else 200,
                 'headers': headers, 'html': html,
                 'transport': 'browser', 'timings': {'total_ms': round((time.monotonic() - start) * 1000)},
-                'evidence': []}
+                'evidence': [], **material}
         except Exception:
             if id(session.context) in self.admission_errors:
                 busy = self.admission_errors[id(session.context)]

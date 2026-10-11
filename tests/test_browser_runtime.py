@@ -13,6 +13,7 @@ from aiohttp.test_utils import TestClient, TestServer
 
 
 HTML = '<html><body><main><h1>通知公告</h1><a href="/2026/notice.htm">关于新学期课程安排的重要通知</a><time>2026-09-23</time></main></body></html>'
+DYNAMIC_PENDING = (Path(__file__).parent / 'fixtures/acquisition/dynamic-publication-template.html').read_text(encoding='utf8')
 
 
 class FakePage:
@@ -117,6 +118,29 @@ class BrowserRuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.done('job-1'))['state'], 'done')
         self.assertEqual(self.browsers[0].contexts[0].visits, ['https://example.edu/notices'])
         self.assertTrue(self.browsers[0].contexts[0].pages[0].closed)
+
+    async def test_dated_placeholder_dom_keeps_waiting_for_actual_targets(self):
+        reads = []
+        async def content(page):
+            reads.append(True)
+            return DYNAMIC_PENDING if len(reads) < 3 else HTML
+        with patch.object(FakePage, 'content', content):
+            await self.runtime.submit(self.payload())
+            value = await self.done('job-1')
+        self.assertEqual(value['state'], 'done')
+        self.assertGreaterEqual(len(reads), 3)
+        self.assertIn('课程安排', value['result']['html'])
+        self.assertNotIn('本科招生报名', value['result']['html'])
+
+    async def test_render_deadline_returns_typed_incomplete_material_not_success(self):
+        async def content(page): return DYNAMIC_PENDING
+        with patch.object(FakePage, 'content', content):
+            await self.runtime.submit(dict(self.payload(), timeout_seconds=1))
+            value = await self.done('job-1')
+        self.assertEqual(value['state'], 'done')
+        self.assertEqual(value['result']['outcome'], 'needs_adapter')
+        self.assertEqual(value['result']['error_code'], 'dynamic_material_incomplete')
+        self.assertIn('render_wait_exhausted', value['result']['evidence'])
 
     async def test_idempotency_key_cannot_change_request(self):
         await self.runtime.submit(self.payload())

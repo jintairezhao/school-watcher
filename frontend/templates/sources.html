@@ -16,7 +16,7 @@
         </div>
         <p id="discoveryError" role="alert" hidden></p>
         <details class="discovery-details"><summary>查看自动处理进度</summary>
-        <p id="discoveryStages" class="text-muted">正在处理 {{ discovery.processing_count }} 个后台任务</p>
+        <p id="discoveryStages" class="text-muted">{{ discovery.stage_message|default('') }}</p>
         <p id="discoveryChanges" class="text-muted"></p>
         <p id="discoveryAI" class="text-muted">{{ discovery.ai_message }}</p>
         <p id="discoveryAIUsage" class="text-muted" hidden></p>

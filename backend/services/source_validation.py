@@ -27,7 +27,7 @@ def sample_failure_kind(samples):
         if code in restricted or reason in restricted or reason == 'needs_manual':
             kinds.append('access_restricted')
         elif reason == 'article_title_abbreviated' or code in ('http_404', 'http_410', 'response_too_large', 'non_html_resource',
-                      'invalid_pdf', 'unsupported_content_encoding'):
+                      'invalid_pdf', 'unsupported_content_encoding', 'dynamic_material_pending', 'dynamic_material_incomplete'):
             kinds.append('material_incomplete')
         else:
             kinds.append('rule_error')

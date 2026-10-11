@@ -1,0 +1,259 @@
+{
+  "version": "2.9",
+  "baseline_commit": "ba57184",
+  "scope": "fixes informed by actual RUC failures; targeted public-page and retained-material checks",
+  "new_actual_model_requests": 0,
+  "new_actual_model_tokens": 0,
+  "model_budget_changed": false,
+  "original_user_database_written": false,
+  "fresh_full_school_AI_comparison_completed": false,
+  "material_comparison": [
+    {
+      "page": "中国人民大学研究生招生",
+      "url": "https://pgs.ruc.edu.cn/",
+      "sha256": "4deb0f19e7129e928023e827415ec5d6fe302d3d6e5b33c1f141ac5c53cb3bbc",
+      "html_bytes": 31423,
+      "before": {
+        "material_batches": 2,
+        "evidence_records": 7,
+        "payload_bytes": [
+          10501,
+          10920
+        ],
+        "observed_hrefs_retained": 64,
+        "publication_hrefs_verified": 41
+      },
+      "after": {
+        "material_batches": 2,
+        "evidence_records": 7,
+        "payload_bytes": [
+          12721,
+          13244
+        ],
+        "observed_hrefs_retained": 64,
+        "publication_hrefs_verified": 41
+      },
+      "unique_original_tab_headings_verified": [
+        "通知公告",
+        "简章目录",
+        "报名初试",
+        "复试录取",
+        "硕士生招生",
+        "博士生招生",
+        "港澳台招生",
+        "留学生招生"
+      ],
+      "ownership_and_body_validation": "unchanged; original 8 scope errors still rejected"
+    },
+    {
+      "page": "山东大学首页",
+      "url": "https://www.sdu.edu.cn/",
+      "sha256": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+      "html_bytes": 113924,
+      "before": {
+        "material_batches": 26,
+        "evidence_records": 89,
+        "payload_bytes": [
+          3605,
+          3563,
+          3596,
+          4943,
+          5725,
+          5796,
+          6642,
+          7018,
+          7004,
+          6974,
+          5268,
+          3237,
+          5107,
+          11988,
+          4546,
+          4583,
+          5120,
+          4698,
+          2043,
+          2911,
+          11543,
+          8585,
+          12908,
+          1465,
+          3699,
+          2455
+        ],
+        "observed_hrefs_retained": 122,
+        "publication_hrefs_verified": 61
+      },
+      "after": {
+        "material_batches": 4,
+        "evidence_records": 9,
+        "payload_bytes": [
+          16985,
+          15286,
+          16760,
+          8514
+        ],
+        "observed_hrefs_retained": 122,
+        "publication_hrefs_verified": 61
+      }
+    }
+  ],
+  "focused_navigation_replay": {
+    "scope": "Pure retained HTML route extraction replay; not installed sources, true costs or coverage acceptance.",
+    "HTTP_calls": 0,
+    "API_calls": 0,
+    "pages": [
+      {
+        "url": "https://www.ruc.edu.cn/",
+        "sha256": "46c222df7a5c288542a4a3deba64590816ab537f8b4fe415186d10c41e7bf6ab",
+        "kind": "root",
+        "before_links": 277,
+        "after_links": 276,
+        "new_probes": [
+          {
+            "url": "https://www.ruc.edu.cn/tansuorenda.html",
+            "label": "",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > a:nth-of-type(1)"
+          },
+          {
+            "url": "https://news.ruc.edu.cn/wodexiburiji.html",
+            "label": "我的西部日记",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)"
+          }
+        ],
+        "production_material_limit": null
+      },
+      {
+        "url": "https://pgs.ruc.edu.cn/",
+        "sha256": "38e7e99f57f6ff9df91a30c5244d33c59f23c98c40d8d64314824d5015993036",
+        "kind": "channel",
+        "before_links": 104,
+        "after_links": 104,
+        "new_probes": [],
+        "production_material_limit": null
+      },
+      {
+        "url": "https://rdzs.ruc.edu.cn/",
+        "sha256": "e7641d41f0e4eeb5ad715c3477c7eec8db5bcc627ff2cdee7921d6b36501caf7",
+        "kind": "channel",
+        "before_links": 24,
+        "after_links": 24,
+        "new_probes": [
+          {
+            "url": "https://rdzs.ruc.edu.cn/zsw/customNewsList.html?id=b0dacaa0a1fa4ec6a9fc93d901ee7ed9",
+            "label": "保送生",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)"
+          },
+          {
+            "url": "https://rdzs.ruc.edu.cn/zsw/customNewsList.html?id=66b8f5bec8774b6f8f259896ade30c1d",
+            "label": "强基计划",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(2)"
+          },
+          {
+            "url": "https://rdzs.ruc.edu.cn/zsw/customNewsList.html?id=1e987625529849f2aeba5493189fe982",
+            "label": "高校专项及国家专项",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(3)"
+          },
+          {
+            "url": "https://rdzs.ruc.edu.cn/zsw/customNewsList.html?id=864aa0ed5cba49a0a96f924f9b745dc1",
+            "label": "艺术类",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(5)"
+          },
+          {
+            "url": "https://rdzs.ruc.edu.cn/zsw/customNewsList.html?id=3583f6c92466488ab1a003bea3a329fe",
+            "label": "人大新声",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > a:nth-of-type(2)"
+          }
+        ],
+        "production_material_limit": "Retained pre-fix HTTP template shell; production must render first. These raw-parser probe counts are not production coverage."
+      },
+      {
+        "url": "https://news.ruc.edu.cn/",
+        "sha256": "8c6eff2dac828318e0ad4a9ec8bde19c2057592bea56c04d1b4c87ddce54dd41",
+        "kind": "channel",
+        "before_links": 55,
+        "after_links": 55,
+        "new_probes": [],
+        "production_material_limit": null
+      },
+      {
+        "url": "https://grs.ruc.edu.cn/xxfb/xwdt.htm",
+        "sha256": "3cfd0ef8bb71a4a2e84a4db8286b235a12cd21d2df8acdb12f96001e6b6c22ad",
+        "kind": "channel",
+        "before_links": 56,
+        "after_links": 56,
+        "new_probes": [],
+        "production_material_limit": null
+      },
+      {
+        "url": "https://irm.ruc.edu.cn/xydt/index.htm",
+        "sha256": "4e2a24f39e4eb64d1bc3044e7ab19b65ab494e92f1c4bc3ceae84e5bd68da1e7",
+        "kind": "channel",
+        "before_links": 90,
+        "after_links": 90,
+        "new_probes": [],
+        "production_material_limit": null
+      },
+      {
+        "url": "https://www.ruc.edu.cn/zuzhijigou.html",
+        "sha256": "1ae0ec5f43ea1ccd5032ab578a712adb93b83fd8e952660e6a788f8c512b05e0",
+        "kind": "directory",
+        "before_links": 283,
+        "after_links": 283,
+        "new_probes": [
+          {
+            "url": "https://www.ruc.edu.cn/",
+            "label": "",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)"
+          }
+        ],
+        "production_material_limit": null
+      }
+    ],
+    "parameter": {
+      "frontier_exploration_interval": 5,
+      "status": "Trial; controlled fairness tested, whole-school optimum unverified."
+    }
+  },
+  "dynamic_acquisition": {
+    "record": "source_agent_dynamic_acquisition_checks.json",
+    "scope": "one real rendered page, not complete source onboarding or original-body acceptance"
+  },
+  "material_upgrade": {
+    "record": "source_agent_material_upgrade_checks.json",
+    "scope": "retained HTML and isolated ledger replay; not a new paid-provider recovery result"
+  },
+  "finance_user_example": {
+    "URLs": [
+      "http://sf.ruc.edu.cn/",
+      "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm"
+    ],
+    "actual_HTTP_results": [
+      502,
+      502
+    ],
+    "automatic_onboarding_verified": false,
+    "note": "Screenshot-informed behavior can be checked separately; two failed reads do not verify the live route."
+  },
+  "existing_RUC_round": {
+    "actual_requests": 25,
+    "known_actual_tokens": 50246,
+    "unknown_reserved_tokens": 148984,
+    "verified_source_count_at_observation": 6,
+    "note": "No new round or release of unknown paid reservation; not a new-implementation source-count result."
+  },
+  "remaining": [
+    "same-budget full-school actual API comparison",
+    "real finance topic-to-current-publication route",
+    "production-optimal exploration cadence and connection pause threshold",
+    "previous multi-school source/body coverage and long-term behavior gaps"
+  ],
+  "isolated_regression": {
+    "command": "python -m unittest discover -s tests -p test_*.py",
+    "seconds": 193.142,
+    "tests_run": 1345,
+    "passed": 1321,
+    "successful": true,
+    "skipped": 24
+  }
+}

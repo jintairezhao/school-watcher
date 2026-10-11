@@ -70,6 +70,30 @@ def navigation_progress(inventory, site_key, school_id, branch_url):
     return result
 
 
+def unknown_navigation_execution(checkpoint):
+    """Read the original paid request; a lost response is never a new decision."""
+    from backend.ai.models import AIExecution
+    from backend.ai.connection_recovery import resumed_execution_id
+    from backend.database.db import db
+    plan = (checkpoint or {}).get('route_pending_decision') or {}
+    if not plan.get('fingerprint'):
+        return None
+    execution_id = resumed_execution_id('routes:' + plan['fingerprint'], checkpoint=checkpoint)
+    row = db.session.get(AIExecution, execution_id, populate_existing=True)
+    if row and row.request_sent and (row.status == 'uncertain' or
+            row.status in ('failed', 'partial') and not (row.usage or {}).get('known')):
+        return row
+    return None
+
+
+def pause_unknown_navigation(checkpoint):
+    from backend.services import tasks
+    if unknown_navigation_execution(checkpoint):
+        tasks.defer(capability='directory', state='waiting', phase='ai_result',
+                    checkpoint=checkpoint, error_code='ai_result_unknown',
+                    reason='模型请求结果或用量尚未确认，进度已保存')
+
+
 def process_navigation(payload):
     from flask import current_app
     from filelock import FileLock, Timeout
@@ -80,6 +104,7 @@ def process_navigation(payload):
     from .structure import extract_structure
     from backend.services.discovery_control import pause_if_requested
     pause_if_requested()
+    pause_unknown_navigation((tasks.current_execution() or {}).get('checkpoint') or {})
     parent = db.session.get(BackgroundTask, payload['parent_task_id'])
     if not parent or parent.generation != payload['parent_generation'] or (parent.result or {}).get('automatic_discovery_disabled'):
         return {'status': 'stale'}
@@ -135,7 +160,7 @@ def process_navigation(payload):
                 from .structure import publication_evidence, add_publication_structure
                 feed = publication_evidence(html, page['url'])
                 add_publication_structure(parsed, feed)
-                route_structure(parsed, page, html, site['root_url'], bool(feed), policy=page['discovery_policy'])
+                route_structure(parsed, page, html, site['root_url'], bool(feed), policy=page['discovery_policy'], publication=feed)
                 if page['discovery_policy'] == 'valuable':
                     # A later bounded round resumes undecided links instead of
                     # buying the same first 16 classifications again. Freeze
@@ -270,6 +295,11 @@ def process_navigation(payload):
         if result.get('error_code') == 'budget_exhausted':
             tasks.defer(capability='directory', phase='ai_budget', state='waiting', error_code='budget_exhausted',
                         checkpoint=tasks.current_execution().get('checkpoint'), reason='本轮 AI 额度已用完，进度已保存')
+        pause_unknown_navigation((tasks.current_execution() or {}).get('checkpoint') or {})
+        if result.get('error_code') == 'provider_connection_paused':
+            from backend.ai.configuration import get_model_binding
+            from backend.ai.connection_recovery import defer_connection
+            defer_connection(get_model_binding('directory'), checkpoint=tasks.current_execution().get('checkpoint'))
         if result.get('status') == 'pending':
             tasks.defer(capability='directory', phase='ai_resource', delay=result.get('next_delay') or 1,
                         reason='逐项识别已保存，等待处理剩余材料')

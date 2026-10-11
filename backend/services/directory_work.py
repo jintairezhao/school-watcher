@@ -13,11 +13,13 @@ MATERIAL_BYTES = DEFAULTS['evidence_max_bytes']
 MAX_ATTEMPTS = 3
 RETRY_DELAYS = (30, 120)
 BLOCKING_CODES = {'authentication_failed', 'budget_exhausted', 'not_configured', 'configuration_changed',
-                  'configuration_invalid', 'profile_disabled', 'restored_requires_review', 'not_found', 'material_requires_recovery'}
+                  'configuration_invalid', 'profile_disabled', 'restored_requires_review', 'not_found', 'material_requires_recovery',
+                  'provider_connection_paused'}
 
 
 def describe_error(code):
     names = {'connect_timeout': '连接模型服务超时', 'read_timeout': '模型服务连续 120 秒没有返回数据',
+        'provider_connection_paused': '模型连接连续失败，进度已保存；连接测试成功后继续',
         'connection_lost': '模型响应途中断开', 'stream_incomplete': '模型响应未完整结束',
         'response_deadline': '模型调用达到 10 分钟上限', 'incomplete_model_output': '模型输出被截断',
         'invalid_json': '模型返回的格式不完整', 'output_validation_failed': '模型结果未通过格式或证据检查',
@@ -328,6 +330,20 @@ def run_batch(school_id, generation, group_key, mode, evidence, binding, *, exis
     from backend.ai.configuration import AIConfigError
     from backend.ai.skill_loader import SkillValidationError
     rows = prepare(school_id, generation, group_key, mode, evidence)
+    from backend.services import tasks
+    from backend.ai.connection_recovery import unsent_pause
+    checkpoint = (tasks.current_execution() or {}).get('checkpoint') or {}
+    resumed_binding = checkpoint.get('ai_connection_binding')
+    if checkpoint.get('ai_connection_resume') and resumed_binding and all(
+            resumed_binding.get(key) == binding.get(key) for key in ('id', 'provider', 'model')):
+        for row in rows:
+            if row.state == 'paused' and row.error_code == 'provider_connection_paused':
+                previous = db.session.get(AIExecution, row.execution_id) if row.execution_id else None
+                if previous is None or unsent_pause(previous):
+                    if previous is not None:
+                        row.attempts = max(0, row.attempts - 1)
+                    row.state, row.error_code, row.next_run_at = 'pending', '', None
+        db.session.commit()
     now = datetime.utcnow()
     key = 'proposals' if mode == 'extraction' else 'results'
     pending = [r for r in rows if r.state != 'succeeded']
@@ -390,6 +406,7 @@ def run_batch(school_id, generation, group_key, mode, evidence, binding, *, exis
                 except (AIConfigError, SkillValidationError) as exc:
                     for row in selected:
                         row.attempts -= 1
+                    db.session.flush()
                     result = {'status': 'failed', 'error_code': getattr(exc, 'code', 'material_requires_recovery')}
         if not selected:
             result = None
@@ -403,6 +420,9 @@ def run_batch(school_id, generation, group_key, mode, evidence, binding, *, exis
             if row.state != 'running' or row.execution_id != saved[1] or row.material_hash != saved[2] or row.material_hash != fingerprint(evidence):
                 continue
             current_result = True
+            actual_execution = (result.get('provenance') or {}).get('execution_id')
+            if actual_execution:
+                row.execution_id = actual_execution
             if row.candidate_id in accepted:
                 row.result_json, row.state, row.error_code = accepted[row.candidate_id], 'succeeded', ''
             elif result.get('status') == 'pending':

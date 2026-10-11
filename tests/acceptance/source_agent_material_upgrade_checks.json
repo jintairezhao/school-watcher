@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-11",
+  "purpose": "Observation-material review and controlled recovery checks across column material/prompt upgrades; no real model request or user database was used.",
+  "source_agent_sha256": "6bb2cfc343c9d2939fbfa3ff9161a64eda2108f8db95b069f9fb7b7caa991823",
+  "material_review": {
+    "kind": "retained_actual_official_HTML_replay",
+    "official_reads": 0,
+    "model_requests": 0,
+    "pages": [
+      {
+        "url": "https://pgs.ruc.edu.cn/",
+        "HTML_sha256": "4deb0f19e7129e928023e827415ec5d6fe302d3d6e5b33c1f141ac5c53cb3bbc",
+        "HTML_bytes": 31423,
+        "before_material_batches": 2,
+        "after_material_batches": 2,
+        "after_payload_bytes": [12721, 13244],
+        "observed_hrefs_retained": 64,
+        "publication_hrefs_verified": 41,
+        "unique_original_tab_heading_locations_verified": 8,
+        "original_invalid_cross_group_selectors_still_rejected": true
+      },
+      {
+        "url": "https://www.sdu.edu.cn/",
+        "HTML_sha256": "f62e7153f4c391b5d877a3c0b05aa415848a10b277567767bed4f62fd9a439b8",
+        "HTML_bytes": 113924,
+        "before_material_batches": 26,
+        "after_material_batches": 4,
+        "after_payload_bytes": [16985, 15286, 16760, 8514],
+        "observed_hrefs_retained": 122,
+        "publication_hrefs_verified": 61
+      }
+    ],
+    "envelope_max_bytes": 24576,
+    "ownership_claim": "Heading metadata describes actual original DOM locations and common containing regions. It does not infer department ownership or assign every nearby list to a tab."
+  },
+  "upgrade_failure_before_fix": {
+    "kind": "retained_PGS_material_and_controlled_checkpoint_replay",
+    "PGS_old_and_new_materials_differ_only_in_heading_locations": true,
+    "old_material_digest": "b3477a1a6cb8c69769acac2e0acabe7de84fda3c816ee64a5fedece761fdf37a",
+    "new_material_digest": "15ee166bc317d87dd60c8df35c1528cf22592305bf0b4785aef2b2d3c0d8b3b2",
+    "pending_result": "execution_conflict prevented retrieval of the original completed execution",
+    "settled_result": "A metadata-only change reset the completed cursor and lost retained candidate columns and decision IDs in recognition state.",
+    "actual_model_requests": 0
+  },
+  "recovery_after_fix": {
+    "kind": "temporary_database_execution_rows_and_budgets_with_retained_actual_HTML",
+    "real_paid_request_rows": false,
+    "model_requests": 0,
+    "official_reads": 0,
+    "original_user_database_access": false,
+    "new_regressions": 15,
+    "behaviors_verified": [
+      "Read the original durable execution ID before compiling changed materials or binding a new model.",
+      "Adopt a complete success only when original evidence input digest, skill digest, binding, school and URL match and its full column output validates. Normal program scope/title/body verification still follows.",
+      "Unknown outcomes and usage remain waiting without issuing a new ID; a success with unknown usage is consumed only once.",
+      "Active reserved/sending requests return to the pending queue after 10 seconds and can settle between claims; existing worker recovery handles stale executions.",
+      "Preserve cursor, candidate columns and original paid IDs for an exact heading-metadata-only upgrade.",
+      "Changed partitions reuse only exact completed evidence boundaries; one completed fragment cannot declare an enlarged region complete.",
+      "Missing original evidence or conflicting input retains the execution and progress without adopting its output or purchasing a replacement.",
+      "Column-mode partial output is not adopted as a complete set of rules.",
+      "Known-unsent failures require strict zero usage, request_sent exactly false, no reservation and no output. Provider pauses reuse the shared unsent_pause predicate.",
+      "Cached preflight pauses enter the connection handoff with cursor and decision counts unchanged.",
+      "Store the actual execution ID from runtime provenance, including resumed execution IDs."
+    ],
+    "budget_guards": "The controlled school ledger remained at 40 used requests and retained its original used/reserved tokens, request reservations and active counts; limits were not raised."
+  },
+  "focused_regression": {
+    "command": ".venv/Scripts/python.exe -X utf8 -m pytest tests/test_column_material_upgrade.py tests/test_column_unknown_checkpoint.py tests/test_source_agent.py tests/test_column_regions.py tests/test_ai_connection_tasks.py -q --disable-warnings",
+    "passed_tests": 58,
+    "seconds": 13.12
+  },
+  "independent_review": {
+    "passed_tests": 49,
+    "selection": "column_material_upgrade, column_unknown_checkpoint, ai_connection_tasks, source_navigation_recovery",
+    "confirmed_original_failure_reproductions_fixed": [
+      "Inconsistent zero-fee evidence preserves pending work with execution_conflict and zero dispatches.",
+      "Already consumed success with unknown usage pauses with ai_result_unknown and leaves one copy of its columns.",
+      "Cached provider pause enters ai_connection while cursor remains zero."
+    ],
+    "additional_confirmed_blockers": 0,
+    "counting_note": "This independent test set overlaps the 58-test set and is not added as distinct coverage."
+  },
+  "limitations": [
+    "These controlled recovery checks do not prove real API performance or full RUC school discovery coverage.",
+    "Legacy success rows without recoverable original input remain explicitly paused; a missing input is not reconstructed by guessing or replacing the original paid request.",
+    "Original-site replay checks validate retained observations, not current fresh website behavior."
+  ]
+}

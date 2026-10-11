@@ -76,6 +76,36 @@ class ColumnRegionTests(unittest.TestCase):
                '<time>2026-10-01</time></li></ul></header>'
         self.assert_coverage(html)
 
+    def test_article_titles_do_not_split_one_complete_publication_region(self):
+        html = '<main><section><h2>通知公告</h2><ul class="news-list">' + ''.join(
+            f'<li><h4 class="title"><a href="/info/{i}.htm">关于学生事务安排的通知{i}</a></h4>'
+            '<time>2026-10-01</time></li>' for i in range(24)) + '</ul></section></main>'
+        parts = self.assert_coverage(html)
+        self.assertEqual(len(parts), 1)
+        self.assertEqual(len(parts[0]['evidence']), 1)
+        self.assertIn('<h2>通知公告</h2>', parts[0]['evidence'][0]['html'])
+
+    def test_tab_titles_have_unique_original_locations_and_real_containing_groups(self):
+        html = '<main>' + ''.join(
+            '<section class="publication-group"><ul class="ul-tab"><li><div><span>' + name
+            + '</span><a href="/list/' + str(i) + '/">更多</a></div></li></ul>'
+            '<div class="tab-show"><ul><li><a href="/info/' + str(i)
+            + '.htm">学生通知</a><time>2026-10-01</time></li></ul></div></section>'
+            for i, name in enumerate(('通知公告', '硕士招生'))) + '</main>'
+        parts = self.assert_coverage(html)
+        original = BeautifulSoup(html, 'lxml')
+        headings = [row for part in parts for item in part['evidence']
+                    for row in item.get('heading_locations', [])]
+        self.assertEqual({row['heading'] for row in headings}, {'通知公告', '硕士招生'})
+        for row in headings:
+            heading = original.select(row['selector'])
+            self.assertEqual(len(heading), 1)
+            self.assertEqual(heading[0].get_text(' ', strip=True), row['heading'])
+            groups = original.select(row['containing_region_selector'])
+            self.assertEqual(len(groups), 1)
+            self.assertIn(heading[0], groups[0].descendants)
+            self.assertEqual(len(groups[0].select('div.tab-show')), 1)
+
     def test_feedback_region_is_first_but_other_regions_are_preserved(self):
         html = '<main>' + ''.join('<section id="column' + str(i) + '"><h2>栏目' + str(i)
             + '</h2><ul><li><a href="/info/' + str(i) + '.htm">学生通知</a></li></ul></section>' for i in range(20)) + '</main>'

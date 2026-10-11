@@ -111,8 +111,18 @@ def fetch(request: FetchRequest, *, http_transport=None, browser_transport=None)
             # classification. A fixed CMS recognizer must not inherit an old
             # "unrecognized" verdict and pay to read or identify it again.
             # Explicit network/access failures retain their typed error codes.
-            return classify_result(request, observed)
-    result = _fetch(request, http_transport=http_transport, browser_transport=browser_transport)
+            result = classify_result(request, observed)
+            if result.outcome != 'requires_render' or not request.browser_allowed:
+                return result
+            # The retained HTTP observation may have been called complete by an
+            # older classifier. Reuse it and read the missing rendered material,
+            # instead of either repeating HTTP or permanently replaying the shell.
+            result = _render(request, replace(request, url=observed.final_url or request.url), result,
+                             browser_transport=browser_transport)
+        else:
+            result = _fetch(request, http_transport=http_transport, browser_transport=browser_transport)
+    else:
+        result = _fetch(request, http_transport=http_transport, browser_transport=browser_transport)
     store = _cache_store.get()
     if result.replayable and store is not None:
         _assert_execution()
@@ -152,12 +162,20 @@ def _fetch(request: FetchRequest, *, http_transport=None, browser_transport=None
         raw = http(replace(request, url=target, timeout_seconds=remaining))
     effective = replace(request, url=raw.final_url or request.url)
     result = classify_result(effective, raw)
+    return _render(request, effective, result, browser_transport=browser_transport)
+
+
+def _render(request, effective, result, *, browser_transport=None):
     if result.outcome != 'requires_render':
         return result
     if not request.browser_allowed:
         return result
     from backend.services.discovery_policy import get_policy
     render_request = replace(effective, timeout_seconds=min(request.timeout_seconds, get_policy()['browser_total_seconds']))
+    if result.error_code == 'dynamic_material_pending':
+        # Once missing destinations were observed, a partially populated DOM
+        # must not become "complete" merely because only one placeholder remains.
+        render_request = replace(render_request, policy=dict(render_request.policy, dynamic_material_observed=True))
     dispatch = _browser_dispatch.get()
     _assert_execution()
     if dispatch is not None:

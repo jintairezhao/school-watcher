@@ -28,6 +28,10 @@ def ai_available():
 def _ai_message(task, data, available):
     if data.get('ai_state') == 'disabled':
         return '本校已关闭 AI 识别，仍会自动查找和更新公开通知'
+    if data.get('ai_error_code') == 'provider_connection_paused':
+        return 'AI 连接暂不可用，进度已保存；已接入的栏目继续更新'
+    if data.get('ai_error_code') == 'ai_result_unknown':
+        return 'AI 返回结果尚未确认，进度已保存；已接入的栏目继续更新'
     if not available:
         return 'AI 尚未开启，仍会自动查找和更新公开通知'
     if data.get('ai_error_code') == 'budget_exhausted':
@@ -108,6 +112,15 @@ def status(school):
                         for job in ([task] if task else []) + jobs)
     if budget_paused:
         data.update(ai_state='budget_paused', ai_error_code='budget_exhausted')
+    waiting_ai = [job for job in ([task] if task else []) + jobs if job.state == 'waiting'
+                  and (job.phase in ('ai_connection', 'ai_result') or
+                       job.error_code in ('provider_connection_paused', 'ai_result_unknown'))]
+    ai_wait_state = ''
+    if waiting_ai and data.get('ai_state') != 'disabled':
+        unknown = any(job.phase == 'ai_result' or job.error_code == 'ai_result_unknown' for job in waiting_ai)
+        ai_wait_state = 'ai_result' if unknown else 'ai_connection'
+        data.update(ai_state='result_unknown' if unknown else 'connection_paused',
+                    ai_error_code='ai_result_unknown' if unknown else 'provider_connection_paused')
     from backend.services.announcement_sources import source_expression
     article_count = Announcement.query.filter(source_expression(school_ids=[school.id])).count()
     from backend.database.student_information_models import StudentAssessment
@@ -170,10 +183,15 @@ def status(school):
         message = '本轮查找未完成，可以重试；已接入的栏目仍可使用' if count else '本轮查找未完成，可以重试'
     elif state == 'done' or count:
         message = f'已找到 {article_count} 条通知，后续自动更新' if article_count else '本轮暂未读到公开通知，学校已保留'
-    if budget_paused and not pause:
+    if budget_paused and not pause and not ai_wait_state:
         message = '额度已用完，进度已保存；已接入的栏目继续更新'
         if not busy and not any(t.state == 'pending' for t in live) and not (task and task.state == 'pending'):
             state, active = 'budget_paused', False
+    if ai_wait_state and not pause and not any(t.state in ('pending', 'running')
+                                               for t in ([task] if task else []) + live):
+        # A saved wait needs no running worker and must not suggest a fresh run.
+        state, active = ai_wait_state, False
+        message = _ai_message(task, data, True)
     gaps = []
     recovery_jobs = []
     for job in jobs:
@@ -182,7 +200,7 @@ def status(school):
         result = job.result or {}
         if result.get('recovery_rules') and job.state in ('done', 'failed'):
             recovery_jobs.append(job)
-        if job.kind == 'navigation_review' and result.get('status') == 'needs_recovery':
+        if job.kind == 'navigation_review' and result.get('status') == 'needs_recovery' and job not in waiting_ai:
             gaps.append({'name': job.payload.get('page', {}).get('label', ''),
                 'url': job.payload.get('page', {}).get('url', ''),
                 'reason': '部分入口用途尚待判断，已保留官网路径，可稍后重新查找'})
@@ -199,9 +217,9 @@ def status(school):
         gaps.insert(0, {'name': school.name, 'url': school.url, 'reason': data['entry_failure']['reason']})
     if data.get('failed_pages'):
         gaps.append({'reason': f"有 {data['failed_pages']} 个官网入口暂未读取成功"})
-    if not active and not pause and not budget_paused and article_count and gaps:
+    if not active and not pause and not budget_paused and not ai_wait_state and article_count and gaps:
         message = f'已找到 {article_count} 条通知，部分官网页面暂不可读'
-    if recovery_jobs and not active and not pause and not budget_paused and state != 'failed':
+    if recovery_jobs and not active and not pause and not budget_paused and not ai_wait_state and state != 'failed':
         state = 'retry_wait'
         message = ('已接通的栏目继续更新，部分来源进度已保存，后台稍后恢复'
                    if count else '部分来源暂时不可读取，进度已保存，后台稍后恢复')
@@ -218,9 +236,20 @@ def status(school):
     if official_units:
         departments = official_units
     available = ai_available()
+    if pause:
+        stage_message = '进度已保存，继续后从这里接着查找' if state == 'paused' else message
+    elif ai_wait_state:
+        stage_message = ('AI 识别进度已保存，其他信息仍在处理' if busy else
+                         'AI 识别进度已保存，其他信息等待处理' if active else
+                         '已保留本次处理记录，未重复调用 AI' if ai_wait_state == 'ai_result' else
+                         '进度已保存，等待 AI 连接恢复')
+    elif budget_paused:
+        stage_message = '未完成的入口已保留，调整额度后从原进度继续'
+    else:
+        stage_message = f'正在处理 {len(live)} 个后台任务' if live else '本轮后台处理已结束'
     review_count = SourceProposal.query.filter_by(school_id=school.id, state='needs_review').count()
     from backend.ai.school_budget import school_usage
-    return {'state': state, 'message': message, 'phase': data.get('phase', 'fetch'),
+    return {'state': state, 'message': message, 'stage_message': stage_message, 'phase': data.get('phase', 'fetch'),
         'busy': busy, 'active': active, 'retry_at': retry_at,
         'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
         'failed_pages': data.get('failed_pages', 0), 'current_label': data.get('current_label', '') if busy else '',
@@ -246,5 +275,6 @@ def status(school):
         'can_pause': bool(task and not pause and (task.state in ('pending', 'running', 'waiting') or any(
             t.kind in ('onboard', 'navigation_review', 'student_assessment') for t in live))),
         'can_resume': state == 'paused',
-        'can_retry': not active and state not in ('paused', 'budget_paused') and (state != 'waiting' or task.phase == 'ai_setup'),
+        'can_retry': not active and not ai_wait_state and state not in ('paused', 'budget_paused')
+                     and (state != 'waiting' or bool(task and task.phase == 'ai_setup')),
         'task_id': task.id if task else None}

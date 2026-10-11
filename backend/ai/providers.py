@@ -4,8 +4,12 @@ import codecs
 import json
 import time
 import requests
+from urllib3.exceptions import (ConnectTimeoutError, NameResolutionError, NewConnectionError,
+                                ProtocolError, ReadTimeoutError, SSLError)
 
 STREAM_TOTAL_SECONDS = 600
+CONNECTION_ERROR_CODES = frozenset({'dns_resolution_failed', 'connect_failed', 'connect_timeout',
+    'connection_lost', 'read_timeout', 'network_result_unknown', 'response_deadline'})
 
 ENDPOINTS = {
     'deepseek': {'default': 'https://api.deepseek.com/chat/completions'},
@@ -55,6 +59,34 @@ def _usage(payload):
     return {'known': True, 'input_tokens': inp, 'output_tokens': out, 'total_tokens': inp + out}
 
 
+def _transport_evidence(exc):
+    """Inspect typed causes only; exception messages can contain credentials/URLs."""
+    pending, chain, seen = [exc], [], set()
+    while pending and len(chain) < 16:
+        current = pending.pop()
+        if not isinstance(current, BaseException) or id(current) in seen:
+            continue
+        seen.add(id(current))
+        chain.append(current)
+        pending.extend(value for value in (current.__cause__, current.__context__,
+            getattr(current, 'reason', None), *current.args) if isinstance(value, BaseException))
+    for cls, code in ((requests.ReadTimeout, 'read_timeout'), (ReadTimeoutError, 'read_timeout'),
+                      (ProtocolError, 'connection_lost')):
+        if any(isinstance(error, cls) for error in chain):
+            return code, cls.__name__, False
+    for cls, code in ((NameResolutionError, 'dns_resolution_failed'),
+                      (NewConnectionError, 'connect_failed'),
+                      (requests.ConnectTimeout, 'connect_timeout'),
+                      (ConnectTimeoutError, 'connect_timeout')):
+        if any(isinstance(error, cls) for error in chain):
+            return code, cls.__name__, True
+    for cls in (requests.exceptions.SSLError, SSLError, requests.ConnectionError,
+                requests.Timeout, requests.RequestException):
+        if isinstance(exc, cls) or any(isinstance(error, cls) for error in chain):
+            return 'connection_lost', cls.__name__, False
+    return 'connection_lost', 'RequestException', False
+
+
 def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on_content=None, on_progress=None):
     """A fresh session avoids shared credentials/proxies and SDK retry behavior."""
     url = endpoint_for(profile['provider'], profile['region'])
@@ -80,17 +112,20 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
     session.trust_env = False
     started = time.monotonic()
     request_id = None
+    request_phase, response_received, exception_type = 'dispatch_started', False, None
     content, usage, received = '', {'known': False}, 0
     def diagnostics():
         return {'elapsed_seconds': round(time.monotonic() - started, 3), 'received_bytes': received,
-                'streaming': streaming}
+                'streaming': streaming, 'request_phase': request_phase,
+                **({'exception_type': exception_type} if exception_type else {})}
     def failure(code):
-        return ProviderError(code, uncertain=True, retryable=True, request_id=request_id,
+        return ProviderError(code, uncertain=True, retryable=False, request_id=request_id,
                              content=content, usage=usage, diagnostics=diagnostics())
     try:
         with session.post(url, headers={'Authorization': 'Bearer ' + api_key,
                           'Content-Type': 'application/json'}, json=body,
                           timeout=(8, 120 if streaming else 60), allow_redirects=False, stream=True) as response:
+            response_received, request_phase = True, 'response_headers'
             request_id = response.headers.get('x-request-id') or response.headers.get('x-dashscope-request-id')
             if 300 <= response.status_code < 400:
                 raise ProviderError('redirect_rejected', request_id=request_id)
@@ -104,6 +139,7 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
                 raise ProviderError('provider_unavailable', uncertain=True, request_id=request_id)
             if response.status_code != 200:
                 raise ProviderError('request_rejected', request_id=request_id)
+            request_phase = 'response_body'
             if streaming:
                 # Bound each socket read by the remaining total allowance. This
                 # also bounds a read that begins just before the total deadline.
@@ -179,6 +215,7 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
             data = bytearray()
             for chunk in response.iter_content(chunk_size=16384):
                 data.extend(chunk)
+                received += len(chunk)
                 if len(data) > 2_000_000 or time.monotonic() - started > 90:
                     raise ProviderError('response_limit', uncertain=True, request_id=request_id)
             try:
@@ -193,21 +230,24 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
                 if not isinstance(content, str):
                     raise ValueError('non-text content')
                 return ProviderResult(content=content, finish_reason=choice.get('finish_reason') or '',
-                                      usage=_usage(payload), request_id=payload.get('request_id') or payload.get('id') or request_id)
+                                      usage=_usage(payload), request_id=payload.get('request_id') or payload.get('id') or request_id,
+                                      diagnostics=diagnostics())
             except (KeyError, IndexError, TypeError, ValueError):
                 raise ProviderError('invalid_response', uncertain=True, request_id=request_id) from None
-    except requests.ConnectTimeout:
-        raise ProviderError('connect_timeout', retryable=True) from None
-    except requests.ReadTimeout:
-        if streaming:
-            raise failure('response_deadline' if time.monotonic() - started >= STREAM_TOTAL_SECONDS else 'read_timeout') from None
-        raise ProviderError('network_result_unknown', uncertain=True, request_id=request_id) from None
-    except (requests.ConnectionError, requests.RequestException) as exc:
-        if streaming:
-            # requests wraps urllib3's idle-read timeout in ConnectionError.
-            code = 'read_timeout' if 'ReadTimeout' in type(exc.__context__).__name__ or 'Read timed out' in str(exc) else 'connection_lost'
-            raise failure('response_deadline' if time.monotonic() - started >= STREAM_TOTAL_SECONDS else code) from None
-        raise ProviderError('network_result_unknown', uncertain=True, request_id=request_id) from None
+    except requests.RequestException as exc:
+        code, exception_type, proven_before_request = _transport_evidence(exc)
+        if proven_before_request and not response_received:
+            request_phase = 'before_http_request'
+            raise ProviderError(code, retryable=True,
+                usage={'known': True, 'input_tokens': 0, 'output_tokens': 0, 'total_tokens': 0},
+                diagnostics=diagnostics()) from None
+        # Even no received bytes and a very short elapsed time cannot prove
+        # that the server did not receive/charge the request.
+        if proven_before_request:
+            code = 'connection_lost'
+        if streaming and time.monotonic() - started >= STREAM_TOTAL_SECONDS:
+            code = 'response_deadline'
+        raise failure(code if streaming else 'network_result_unknown') from None
     except UnicodeDecodeError:
         raise failure('invalid_stream_encoding') from None
     finally:

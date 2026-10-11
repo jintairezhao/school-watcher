@@ -291,12 +291,22 @@ def _call(row_id, mode, evidence, stage):
     db.session.expire_all()
     row = db.session.get(AnnouncementSummary, row_id)
     if result.get('status') != 'succeeded':
+        if result.get('error_code') == 'provider_connection_paused':
+            _connection_wait(row)
         status = result.get('status')
         message = result.get('error') or '摘要暂时无法生成，请查看实例 AI 配置与调用记录'
         state = 'uncertain' if status in ('uncertain', 'pending') else 'failed'
         _failure(row, result.get('error_code') or 'ai_failed', message, state)
         return None
     return result
+
+
+def _connection_wait(row):
+    from backend.ai.connection_recovery import defer_connection, PAUSED, REASON
+    row.state, row.error_code, row.error = 'pending', PAUSED, REASON
+    binding, summary_id = dict(row.binding), row.id
+    db.session.commit()
+    defer_connection(binding, checkpoint={'summary_id': summary_id})
 
 
 def generate_summary(summary_id):
@@ -393,6 +403,8 @@ def generate_summary(summary_id):
     except Exception as exc:
         db.session.rollback()
         row = db.session.get(AnnouncementSummary, summary_id)
+        if getattr(exc, 'code', '') == 'provider_connection_paused':
+            _connection_wait(row)
         if getattr(exc, 'code', '') == 'concurrency_limit':
             row.state = 'pending'
             db.session.commit()

@@ -355,6 +355,15 @@ def run(proposal_id, *, inventory=None):
                     'extraction', evidence, binding, existing_attempts=prior_attempts)
                 detail['manifest_started'] = True
             except AIConfigError as exc:
+                if exc.code == 'provider_connection_paused':
+                    detail.update(status='failed', manifest_started=True,
+                                  result={'status': 'failed', 'error_code': exc.code})
+                    event.detail_json = g._json(detail); db.session.commit()
+                    set_workflow(proposal, 'checking', ai_status=exc.code, reason='模型连接连续失败，已有材料和进度已保存')
+                    if tasks.current_execution():
+                        from backend.ai.connection_recovery import defer_connection
+                        defer_connection(binding)
+                    return {'status': 'waiting', 'error_code': exc.code, 'changed': changed}
                 if exc.code == 'budget_exhausted' and tasks.current_execution():
                     set_workflow(proposal, 'checking', ai_status='budget_exhausted', reason='本轮 AI 额度已用完，进度已保存')
                     tasks.defer(capability='directory', phase='ai_budget', state='waiting',
@@ -370,6 +379,13 @@ def run(proposal_id, *, inventory=None):
         else:
             result = detail['result']
         if result.get('status') not in ('succeeded', 'partial'):
+            if result.get('error_code') == 'provider_connection_paused':
+                set_workflow(proposal, 'checking', ai_status='provider_connection_paused',
+                             reason='模型连接连续失败，已有材料和进度已保存')
+                if tasks.current_execution():
+                    from backend.ai.connection_recovery import defer_connection
+                    defer_connection(binding)
+                return {'status': 'waiting', 'error_code': 'provider_connection_paused', 'changed': changed}
             if result.get('error_code') == 'budget_exhausted' and tasks.current_execution():
                 set_workflow(proposal, 'checking', ai_status='budget_exhausted', reason='本轮 AI 额度已用完，进度已保存')
                 tasks.defer(capability='directory', phase='ai_budget', state='waiting',

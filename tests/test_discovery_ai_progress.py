@@ -68,6 +68,112 @@ class DiscoveryAIProgressTests(unittest.TestCase):
         self.assertFalse(progress['can_retry'])
         self.assertFalse(progress['active'])
 
+    def waiting_ai(self, phase, code, *, kind='navigation_review'):
+        from datetime import datetime, timedelta
+        job = self.child('waiting-ai', {})
+        job.kind = kind
+        if kind == 'student_assessment':
+            job.payload = dict(job.payload, automatic_source=True)
+        job.state, job.phase, job.error_code = 'waiting', phase, code
+        job.queued_at = self.parent.queued_at = datetime.utcnow() - timedelta(hours=1)
+        db.session.commit()
+        return job
+
+    def test_connection_wait_preserves_progress_even_without_worker_or_enabled_ai(self):
+        self.waiting_ai('ai_connection', 'provider_connection_paused')
+        from backend.services.onboarding_progress import status
+        with patch('backend.services.onboarding_progress.ai_available', return_value=False):
+            progress = status(self.school)
+        self.assertEqual(progress['state'], 'ai_connection')
+        self.assertEqual(progress['ai_state'], 'connection_paused')
+        self.assertIn('AI 连接暂不可用', progress['ai_message'])
+        self.assertIn('进度已保存', progress['message'])
+        self.assertIn('等待 AI 连接恢复', progress['stage_message'])
+        self.assertFalse(progress['active'])
+        self.assertFalse(progress['busy'])
+        self.assertFalse(progress['can_retry'])
+        self.assertFalse(progress['needs_verification'])
+
+    def test_unknown_result_is_waiting_not_failed_or_automatic_retry(self):
+        job = self.waiting_ai('ai_result', 'ai_result_unknown')
+        job.result = {'status': 'needs_recovery', 'error_code': 'connection_lost'}
+        job.checkpoint = {'discovery_progress': {'ai_state': 'uncertain'}}
+        db.session.commit()
+        progress = self.progress()
+        self.assertEqual(progress['state'], 'ai_result')
+        self.assertEqual(progress['ai_state'], 'result_unknown')
+        self.assertIn('AI 返回结果尚未确认', progress['message'])
+        self.assertIn('进度已保存', progress['ai_message'])
+        self.assertIn('未重复调用', progress['stage_message'])
+        self.assertFalse(progress['active'])
+        self.assertFalse(progress['can_retry'])
+
+    def test_ai_wait_does_not_hide_actual_website_work(self):
+        self.waiting_ai('ai_connection', 'provider_connection_paused')
+        job = tasks.enqueue('onboard', 'reading-site', {'school_id': self.school.id})
+        job.state = 'running'
+        db.session.commit()
+        progress = self.progress()
+        self.assertEqual(progress['state'], 'running')
+        self.assertIn('正在读取官网通知', progress['message'])
+        self.assertIn('AI 连接暂不可用', progress['ai_message'])
+        self.assertIn('其他信息仍在处理', progress['stage_message'])
+        self.assertTrue(progress['active'])
+        self.assertTrue(progress['busy'])
+
+    def test_automatic_assessment_connection_wait_is_visible(self):
+        self.waiting_ai('ai_connection', 'provider_connection_paused', kind='student_assessment')
+        progress = self.progress()
+        self.assertEqual(progress['state'], 'ai_connection')
+        self.assertIn('进度已保存', progress['message'])
+        self.assertFalse(progress['can_retry'])
+
+    def test_parent_connection_wait_without_children_is_saved(self):
+        self.parent.state, self.parent.phase = 'waiting', 'ai_connection'
+        self.parent.error_code = 'provider_connection_paused'
+        db.session.commit()
+        progress = self.progress()
+        self.assertEqual(progress['state'], 'ai_connection')
+        self.assertFalse(progress['active'])
+        self.assertFalse(progress['can_retry'])
+
+    def test_waiting_page_and_poll_show_same_saved_state_without_mutating_progress(self):
+        from bs4 import BeautifulSoup
+        from backend.database.models import User
+        job = self.waiting_ai('ai_result', 'ai_result_unknown')
+        job.checkpoint = {'route_cursor': 7, 'route_pending_decision': {'fingerprint': 'paid-original'}}
+        db.session.commit()
+        checkpoint, generation = job.checkpoint, job.generation
+        client = self.fixture.app.test_client()
+        with client.session_transaction() as session:
+            session['user_id'] = User.query.filter_by(username='reader').one().id
+        with patch('backend.services.onboarding_progress.ai_available', return_value=True), \
+             patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Progress reads must not call AI')):
+            page = client.get(f'/subscriptions/{self.school.id}')
+            poll = client.get(f'/api/subscriptions/{self.school.id}/discovery')
+        self.assertEqual((page.status_code, poll.status_code), (200, 200))
+        html = BeautifulSoup(page.text, 'html.parser')
+        self.assertEqual(html.select_one('#discoveryMessage').text, poll.json['message'])
+        self.assertEqual(html.select_one('#discoveryStages').text, poll.json['stage_message'])
+        self.assertIn('未重复调用', html.select_one('#discoveryStages').text)
+        self.assertIn('hidden', html.select_one('#discoveryRetry').attrs)
+        self.assertIn('hidden', html.select_one('#discoveryProgress').attrs)
+        db.session.refresh(job)
+        self.assertEqual((job.state, job.phase, job.generation, job.checkpoint),
+                         ('waiting', 'ai_result', generation, checkpoint))
+
+    def test_budget_wait_keeps_running_website_work_visible(self):
+        self.waiting_ai('ai_budget', 'budget_exhausted')
+        job = tasks.enqueue('onboard', 'reading-site', {'school_id': self.school.id})
+        job.state = 'running'
+        db.session.commit()
+        progress = self.progress()
+        self.assertEqual(progress['state'], 'running')
+        self.assertIn('额度已用完，进度已保存', progress['message'])
+        self.assertIn('已接入的栏目继续更新', progress['message'])
+        self.assertTrue(progress['active'])
+        self.assertTrue(progress['busy'])
+
     def test_access_limited_source_reports_saved_background_recovery(self):
         from datetime import datetime, timedelta
         job = tasks.enqueue('onboard', 'restricted', {'school_id': self.school.id,

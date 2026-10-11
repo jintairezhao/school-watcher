@@ -308,11 +308,17 @@ def process(payload):
         execution = 'student-value:' + digest([policy_digest(), batch, binding['id'], binding['version']])
         response = run_skill('student-information', 'assess', batch, 'directory', execution, binding=binding)
     except AIConfigError as exc:
+        if exc.code == 'provider_connection_paused' and handle:
+            from backend.ai.connection_recovery import defer_connection
+            defer_connection(binding, checkpoint=checkpoint)
         if exc.code == 'concurrency_limit' and handle:
             tasks.defer(capability='directory', delay=10, reason='等待 AI 空闲', checkpoint=checkpoint)
         if automatic and exc.code in ('not_configured', 'profile_disabled', 'restored_requires_review'):
             return {'state': 'skipped', 'reason': 'ai_disabled', 'error_code': exc.code}
         return {'state': 'unknown', 'error_code': exc.code}
+    if response.get('error_code') == 'provider_connection_paused' and handle:
+        from backend.ai.connection_recovery import defer_connection
+        defer_connection(binding, checkpoint=checkpoint)
     if response['status'] == 'pending' and handle:
         tasks.defer(capability='directory', delay=10, reason='等待已提交的价值判断', checkpoint=checkpoint)
     if response['status'] != 'succeeded':
@@ -371,9 +377,15 @@ def _process_listing(payload):
         execution = 'student-listing:' + digest([policy_digest(), evidence, _binding_ref(binding)])
         response = run_skill('student-information', 'assess', evidence, 'directory', execution, binding=binding)
     except AIConfigError as exc:
+        if exc.code == 'provider_connection_paused' and handle:
+            from backend.ai.connection_recovery import defer_connection
+            defer_connection(binding)
         if exc.code == 'concurrency_limit' and handle:
             tasks.defer(capability='directory', delay=10, reason='等待 AI 空闲')
         return {'state': 'unknown', 'error_code': exc.code}
+    if response.get('error_code') == 'provider_connection_paused' and handle:
+        from backend.ai.connection_recovery import defer_connection
+        defer_connection(binding)
     if response['status'] == 'pending' and handle:
         tasks.defer(capability='directory', delay=10, reason='等待已提交的信息价值判断')
     if response['status'] != 'succeeded':

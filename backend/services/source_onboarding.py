@@ -42,14 +42,15 @@ def queue_columns(school_id, inventory, key):
         by_url.setdefault(address, []).append(candidate)
     jobs = []
     for page in report['pages']:
-        if page['kind'] == 'directory':
-            # Institution rosters establish ownership, not publication columns.
-            continue
         url = canonical_url(page.get('final_url') or page['url'])
         configs = by_url.get(url, [])
         previous_url = canonical_url(page['url'])
         existing = Department.query.filter(Department.school_id == school_id,
                     Department.list_url.in_({url, previous_url})).all()
+        if page['kind'] == 'directory' and not configs and not any(d.list_selector for d in existing):
+            # A plain roster is not publication work. Mixed directory pages
+            # with actual lists still require the same scope and body checks.
+            continue
         if page['state'] != 'fetched' or not (configs or page['kind'] == 'channel' or any(d.list_selector for d in existing)):
             continue
         if not configs and not same_school_url(url, report['site']['root_url']):
@@ -304,6 +305,13 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
     fetcher = fetcher or _read
     handle = tasks.current_execution()
     checkpoint = dict((handle or {}).get('checkpoint') or {})
+    from backend.services.source_agent import recover_unknown_column_checkpoint, pause_unknown_column
+    checkpoint, unknown_recovered = recover_unknown_column_checkpoint(checkpoint)
+    if unknown_recovered and handle:
+        tasks.checkpoint(checkpoint)
+    if pause_unknown_column(checkpoint):
+        return {'state': 'waiting', 'department_ids': [], 'error_code': 'ai_result_unknown',
+                'continuation_required': True, 'reason': '模型请求结果或用量尚未确认，进度已保存'}
     reference = checkpoint.get('onboarding_page') or payload.get('snapshot')
     html = ''
     if reference:
@@ -311,6 +319,18 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
             html = read_snapshot(reference)
         except (ValueError, OSError):
             pass
+        if html:
+            # Old workers could save a dated, convincing async template as
+            # usable. Recheck it before honoring a completed parser checkpoint.
+            from backend.scraper.acquisition import FetchRequest, FetchResult
+            from backend.scraper.acquisition.classifier import classify_result
+            snapshot_url = canonical_url(reference['url'])
+            observed = classify_result(FetchRequest(url=snapshot_url, purpose='directory'),
+                FetchResult(final_url=snapshot_url, status=200, html=str(html),
+                            transport=reference.get('transport') or 'http'))
+            if observed.error_code in ('dynamic_material_pending', 'dynamic_material_incomplete'):
+                html = ''
+                url = snapshot_url
     if not html:
         db.session.commit()
         html = fetcher(url, 'directory')
@@ -319,6 +339,8 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
             return {'state': 'unsupported', 'department_ids': [], 'reason': '网页跳转到了未确认的外部网站'}
         url = final
         reference = _snapshot(html, url, role='list')
+        if getattr(html, 'result', None):
+            reference['transport'] = html.result.transport
     else:
         url = canonical_url(reference['url'])
     if handle:
@@ -651,6 +673,27 @@ def resume_rule_discovery():
     from datetime import timedelta
     from backend.services.discovery_control import requested
     now = datetime.utcnow()
+    from backend.services.source_agent import recover_unknown_column_checkpoint
+    from backend.scraper.discovery.ai_navigation import unknown_navigation_execution
+    for task in BackgroundTask.query.filter(BackgroundTask.kind.in_(('onboard', 'navigation_review')),
+            BackgroundTask.state.in_(('done', 'failed', 'pending', 'waiting'))).all():
+        if requested(task):
+            continue
+        if task.kind == 'onboard':
+            checkpoint, recovered = recover_unknown_column_checkpoint(task.checkpoint)
+        else:
+            checkpoint = dict(task.checkpoint or {})
+            recovered = not (task.state == 'waiting' and task.phase == 'ai_result') and bool(
+                unknown_navigation_execution(checkpoint))
+        if recovered:
+            # This upgrade is a saved-work pause, never a new task generation,
+            # fee allowance, read or model dispatch.
+            task.checkpoint = checkpoint
+            task.state, task.phase = 'waiting', 'ai_result'
+            task.error_code = 'ai_result_unknown'
+            task.error = '模型请求结果尚未确认，进度已保存'
+            task.finished_at = task.token = task.worker_id = task.lease_until = None
+            task.updated_at = now
     # The old mixed cache limit could exhaust all retries before the next page.
     # Preserve generation/checkpoints so existing column children remain valid.
     for task in BackgroundTask.query.filter(

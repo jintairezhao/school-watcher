@@ -278,9 +278,32 @@ class Inventory:
                          f"WHEN kind='channel' THEN {column_rank + 3} ELSE {skeleton_rank + 3} END,"
                          f'coalesce({college},20),coalesce(student_priority(kind,label,path_json),20),depth,priority,url')
             while True:
-                row = c.execute("SELECT * FROM pages WHERE site_key=? AND state='pending' "
-                                "AND (retry_at IS NULL OR retry_at<=?) "
-                                + condition + 'ORDER BY ' + order + ' LIMIT 1', (key, now())).fetchone()
+                selection = ("SELECT rowid AS frontier_rowid,* FROM pages WHERE site_key=? AND state='pending' "
+                             "AND (retry_at IS NULL OR retry_at<=?) " + condition + 'ORDER BY ' + order)
+                if focus == 'valuable':
+                    from backend.scraper.discovery.frontier import choose_route
+                    from backend.services.discovery_policy import get_policy
+                    candidates = [dict(page) for page in c.execute(selection, (key, now()))]
+                    edges = [dict(edge) for edge in c.execute(
+                        "SELECT e.parent_url,e.target_url,e.content_hash,e.decision FROM edges e "
+                        "JOIN pages target ON target.site_key=e.site_key AND target.url=e.target_url "
+                        "JOIN pages parent ON parent.site_key=e.site_key AND parent.url=e.parent_url "
+                        "WHERE e.site_key=? AND target.state='pending' AND parent.state='fetched' "
+                        "AND e.content_hash=parent.content_hash AND parent.feed_json IS NOT NULL "
+                        "AND e.decision IN ('follow','official_external_link')", (key,))]
+                    parents = {page['url']: dict(page) for page in c.execute(
+                        "SELECT url,final_url,content_hash,state,feed_json FROM pages parent "
+                        "WHERE parent.site_key=? AND parent.state='fetched' AND parent.feed_json IS NOT NULL "
+                        "AND EXISTS (SELECT 1 FROM edges e JOIN pages target ON "
+                        "target.site_key=e.site_key AND target.url=e.target_url "
+                        "WHERE e.site_key=parent.site_key AND e.parent_url=parent.url "
+                        "AND e.content_hash=parent.content_hash AND target.state='pending' "
+                        "AND e.decision IN ('follow','official_external_link'))", (key,))}
+                    claims = c.execute('SELECT coalesce(sum(attempts),0) FROM pages WHERE site_key=?', (key,)).fetchone()[0]
+                    row = choose_route(candidates, edges=edges, parents=parents, claim_count=claims,
+                                       interval=get_policy()['frontier_exploration_interval'])
+                else:
+                    row = c.execute(selection + ' LIMIT 1', (key, now())).fetchone()
                 if row is None:
                     return None
                 decisions = {r[0] for r in c.execute(
@@ -292,6 +315,8 @@ class Inventory:
                     c.execute("UPDATE pages SET state='reference_only' WHERE site_key=? AND url=?", (key, row['url']))
                     continue
                 break
+            row = dict(row)
+            row.pop('frontier_rowid', None)
             c.execute("UPDATE pages SET state='running',attempts=attempts+1 WHERE site_key=? AND url=?",
                       (key, row['url']))
             c.execute("UPDATE sites SET state='running',updated_at=? WHERE site_key=?", (now(), key))

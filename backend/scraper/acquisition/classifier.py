@@ -1,7 +1,7 @@
 """Judge page content before parsing; transport success is not content success."""
 from dataclasses import replace
 import re
-from urllib.parse import urlsplit, urljoin
+from urllib.parse import urlsplit, urljoin, urlunsplit
 
 from bs4 import BeautifulSoup
 
@@ -30,6 +30,58 @@ _DATE = re.compile(r'(?:20\d{2}[-年./]\d{1,2}[-月./]\d{1,2}|\d{1,2}[-/]\d{1,2}
 _ARTICLE = ', '.join(['article'] + [f'[class~="{name}" i]' for name in (
     'v_news_content', 'wp_articlecontent', 'article-content', 'article_content', 'TRS_Editor')]
     + [f'[id="{name}" i]' for name in ('vsb_content', 'vsb_content_2')])
+_DYNAMIC_REQUEST = re.compile(
+    r'\bfetch\s*\(|\bXMLHttpRequest\b|(?:\$|jQuery|axios)\s*\.\s*(?:ajax|getJSON|get|post)\s*\('
+    r'|\basync[A-Z_]\w*\s*\(')
+_TEMPLATE_DATE = re.compile(r'\d{1,2}\s*月\s*\d{1,2}(?:\s*日)?')
+_MORE_LABEL = re.compile(r'(?:read\s*more|more|更多(?:通知|资讯)?|查看(?:更多|全部)|全部)', re.I)
+
+
+def _unfinished_dynamic_material(soup, page_url, script_text, *, previously_observed=False):
+    """Observe an async loader *and* unfinished targets, never scripts alone.
+
+    A server can ship convincing dates/titles whose hrefs are still template
+    defaults. Ordinary navigation or an already populated widget does not make
+    those publication regions complete, either over HTTP or after DOMContentLoaded.
+    """
+    if not _DYNAMIC_REQUEST.search(script_text):
+        return ()
+
+    def identity(url):
+        parts = urlsplit(url)
+        fragment = parts.fragment if parts.fragment.startswith(('/', '!/')) else ''
+        return urlunsplit((parts.scheme, parts.netloc, parts.path or '/', parts.query, fragment))
+
+    current = identity(page_url)
+    placeholders = []
+    column_placeholders = []
+    for anchor in soup.select('a[href]'):
+        label = anchor.get_text(' ', strip=True) or anchor.get('title', '')
+        more = _MORE_LABEL.fullmatch(label)
+        if (len(label) < 4 and not more) or any(parent.name in ('nav', 'header', 'footer')
+                                 or parent.get('role') == 'navigation' for parent in anchor.parents
+                                 if hasattr(parent, 'get')):
+            continue
+        href = anchor.get('href', '').strip()
+        target = identity(urljoin(page_url, href))
+        parts = urlsplit(target)
+        placeholder = (not href or href in ('#', 'javascript:;', 'javascript:void(0)')
+                       or target == current or parts.path == '/' and not parts.query and not parts.fragment)
+        nearby = anchor.parent.get_text(' ', strip=True) if anchor.parent else label
+        if placeholder and (_DATE.search(nearby) or _TEMPLATE_DATE.search(nearby)):
+            placeholders.append(anchor)
+        elif placeholder and more and anchor.parent and anchor.parent.select_one(
+                'h1,h2,h3,h4,h5,h6,[role="heading"],img'):
+            # A column header may name itself with an image. Its "more" link
+            # is still a missing destination even after another widget's cards
+            # have arrived; animation visibility does not supply that address.
+            column_placeholders.append(anchor)
+    loading = [node for node in soup.select('[aria-busy="true"],[data-loading="true"]') if _visible(node)]
+    if len(placeholders) + len(column_placeholders) < (1 if previously_observed else 2) and not loading:
+        return ()
+    return ('observed_dynamic_request', f'placeholder_publication_targets:{len(placeholders)}',
+            f'placeholder_column_targets:{len(column_placeholders)}',
+            f'loading_regions:{len(loading)}')
 
 
 def _decision(raw, outcome, code='', message='', evidence=()):
@@ -96,6 +148,7 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
     html = raw.html or ''
     lower = html[:300000].lower()
     soup = BeautifulSoup(html, 'lxml')
+    script_text = '\n'.join(node.get_text() for node in soup.select('script:not([src])'))
     for node in soup.select('script, style, template, noscript'):
         node.decompose()
     visible = soup.get_text(' ', strip=True)
@@ -173,6 +226,15 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
             return _decision(raw, 'requires_render', 'readiness_missing',
                              '目标内容尚未出现，需要浏览器渲染', ('readiness_selector_missing',))
         return _decision(raw, 'needs_adapter', 'readiness_missing', '未找到配置要求的目标内容，需要核对来源规则')
+    if request.purpose != 'article':
+        incomplete = _unfinished_dynamic_material(soup, raw.final_url or request.url, script_text,
+                                                   previously_observed=request.policy.get('dynamic_material_observed') is True)
+        if incomplete:
+            rendered = raw.transport == 'browser'
+            return _decision(raw, 'needs_adapter' if rendered else 'requires_render',
+                             'dynamic_material_incomplete' if rendered else 'dynamic_material_pending',
+                             '动态栏目内容尚未加载完整，已保留读取结果，稍后重试' if rendered else
+                             '静态页面含未完成的动态栏目，需要补充渲染后的真实入口', incomplete)
     if request.purpose == 'article':
         if any(len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
                or has_public_body_resource([node], raw.final_url) for node in soup.select(_ARTICLE)):

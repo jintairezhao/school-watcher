@@ -19,6 +19,52 @@ class AIBudgetError(AIConfigError):
     pass
 
 
+def _connection_paused(binding):
+    """A durable failure streak is cleared only by a successful connection test.
+
+    Read billing metadata, never prompts or responses. Version boundaries do
+    not combine streaks, but an already-tripped version survives enable/disable
+    toggles. A later valid connection test is the persisted recovery evidence.
+    """
+    from backend.services.discovery_policy import get_policy
+    threshold = max(1, int(get_policy()['ai_connection_failure_threshold']))
+    history = AIExecution.query.filter(
+        AIExecution.profile_id == (binding['id'] or None),
+        AIExecution.provider == binding['provider'], AIExecution.model == binding['model'],
+        AIExecution.request_sent.is_(True), AIExecution.finished_at.isnot(None),
+        ~AIExecution.status.in_(('reserved', 'sending')))
+    if not binding['id']:
+        # A legacy key fingerprint has no enable toggle or profile test path.
+        history = history.filter(AIExecution.config_version == str(binding['version']))
+    recovery = next((row for row in history.filter(
+        AIExecution.skill_id == 'connection-test', AIExecution.status == 'succeeded')
+        .with_entities(AIExecution.finished_at, AIExecution.config_version, AIExecution.usage, AIExecution.diagnostics)
+        .order_by(AIExecution.finished_at.desc()).yield_per(50) if (row.usage or {}).get('known') and (
+            (row.diagnostics or {}).get('connection_test_verified') is True or (
+                'connection_test_verified' not in (row.diagnostics or {}) and
+                row.config_version == str(binding['version'])))), None)
+    if recovery:
+        history = history.filter(AIExecution.finished_at > recovery.finished_at)
+    streaks = {}
+    for row in history.with_entities(AIExecution.config_version, AIExecution.error_code).order_by(
+            AIExecution.finished_at.desc(), AIExecution.created_at.desc(), AIExecution.execution_id.desc()).yield_per(100):
+        # An old in-flight call cannot re-pause a newly tested configuration.
+        if recovery and row.config_version.isdecimal() and recovery.config_version.isdecimal() and (
+                int(row.config_version) < int(recovery.config_version)):
+            continue
+        version = row.config_version
+        streaks[version] = streaks.get(version, 0) + 1 if row.error_code in providers.CONNECTION_ERROR_CODES else 0
+        if streaks[version] >= threshold:
+            return True
+    return False
+
+
+def _check_connection(binding, skill_id):
+    if skill_id != 'connection-test' and _connection_paused(binding):
+        raise AIConfigError('模型连接连续失败，进度已保存；请成功测试此配置后继续',
+                            'provider_connection_paused')
+
+
 def _result(row):
     return {'status': 'pending' if row.status in ('reserved', 'sending') else row.status,
             'output': row.output, 'usage': row.usage or {}, 'error_code': row.error_code,
@@ -154,6 +200,9 @@ def _reserve(execution_id, purpose, binding, skill_id, skill_version, skill_dige
                 if key == school_key and request_limit and current.used_requests + current.reserved_requests >= request_limit:
                     raise AIBudgetError('额度已用完，进度已保存', 'budget_exhausted')
                 raise AIBudgetError('AI 同时执行数已达上限，请等待空闲资源', 'concurrency_limit')
+        # The budget writes serialize this decision with other processes'
+        # settlements. A pause rolls the entire reservation back unchanged.
+        _check_connection(binding, skill_id)
         db.session.commit()
         return row, True
     except IntegrityError:
@@ -234,6 +283,8 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
              output_tokens=None, partial_validator=None, school_id=None):
     if not isinstance(execution_id, str) or not 1 <= len(execution_id) <= 240:
         raise AIConfigError('无效的执行标识')
+    from backend.ai.connection_recovery import resumed_execution_id
+    execution_id = resumed_execution_id(execution_id)
     existing = db.session.get(AIExecution, execution_id)
     if existing:
         if (existing.input_digest != input_digest or existing.skill_digest != skill_digest
@@ -244,6 +295,7 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
         result = _result(existing)
         db.session.commit()
         return result
+    _check_connection(binding, skill_id)
     credential_for(binding, allow_untested=allow_untested)
     # UTF-8 byte count is a conservative token reservation, never a provider invoice.
     reservation = len(canonical(messages).encode()) + int(output_tokens or binding['max_output_tokens'])
@@ -291,6 +343,11 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
         if claimed.rowcount != 1:
             db.session.rollback()
             return _result(db.session.get(AIExecution, execution_id, populate_existing=True))
+        # Keep settlement's execution-then-budget lock order. A failure after
+        # reserve must fence dispatch; rollback also undoes this unsent claim.
+        db.session.execute(update(AIBudget).where(AIBudget.key == row.budget_keys[0])
+                           .values(updated_at=AIBudget.updated_at))
+        _check_connection(binding, skill_id)
         for budget_key in row.budget_keys:
             db.session.execute(update(AIBudget).where(AIBudget.key == budget_key).values(
                 reserved_requests=AIBudget.reserved_requests - 1,
@@ -420,14 +477,23 @@ def test_connection(profile_id):
                       messages=messages, validator=check, allow_untested=True, output_tokens=256)
     success = result['status'] == 'succeeded' and result['usage'].get('known')
     code = 'ok' if success else result['error_code'] or 'usage_unavailable'
-    db.session.execute(update(AIProfile).where(AIProfile.id == profile_id, AIProfile.version == version).values(
+    applied = db.session.execute(update(AIProfile).where(AIProfile.id == profile_id, AIProfile.version == version).values(
         tested_version=version if success else None, enabled=bool(success), last_test_code=code))
+    if success:
+        success = applied.rowcount == 1
+        execution = db.session.get(AIExecution, result['provenance']['execution_id'])
+        execution.diagnostics = dict(execution.diagnostics or {}, connection_test_verified=success)
+        if not success:
+            code = 'configuration_changed'
     if success:
         from backend.database.models import AppConfig
         flag = AppConfig.query.filter_by(key='ai_restore_review_required').first()
         if flag:
             flag.value = '0'
     db.session.commit()
+    if success:
+        from backend.ai.connection_recovery import resume_connection_tasks
+        resume_connection_tasks(binding)
     return {**result, 'tested': bool(success), 'test_code': code}
 
 

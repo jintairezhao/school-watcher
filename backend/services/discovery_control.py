@@ -134,6 +134,16 @@ def control(school_id, action):
         raise ValueError('不支持的发现操作')
     task.updated_at = now
     db.session.commit()
+    if action == 'resume':
+        from backend.ai.connection_recovery import PAUSED, REASON, resume_connection_tasks
+        connections = []
+        for item in [task, *pending_children]:
+            if item.state == 'waiting' and item.phase == 'ai_connection':
+                item.error_code, item.error = PAUSED, REASON
+                connections.append((item.checkpoint or {}).get('ai_connection_binding') or {})
+        db.session.commit()
+        for binding in connections:
+            resume_connection_tasks(binding)
 
 
 def pause_if_requested():

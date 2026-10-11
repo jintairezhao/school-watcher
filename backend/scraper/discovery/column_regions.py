@@ -47,9 +47,49 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
             continue
 
     envelope = {'school_id': school_id, 'candidates': [{'candidate_id': 'page', 'url': url}]}
-    region_selector = 'ul,ol,table,h2,h3,h4,h5,h6,[role=tab],.title,.tit,.hd'
+    heading_selector = 'h1,h2,h3,h4,h5,h6,[role=tab],.title,.tit,.hd'
     region_limit = policy['navigation_batch_size']
     contexts = {}
+
+    def tab_list(node):
+        return node.get('role') == 'tablist' or any(
+            re.search(r'(?:^|[-_])tabs?(?:$|[-_])', name, re.I)
+            for name in node.get('class', []))
+
+    def in_article_list(node):
+        return any(parent.name in ('ul', 'ol', 'table') and not tab_list(parent)
+                   for parent in node.parents if isinstance(parent, Tag))
+
+    # An article's h4/.title is a list item title, not a new publication
+    # region. Keep its whole list with the actual column heading whenever the
+    # byte limit permits it. Tab labels use the actual label node, excluding
+    # their adjacent "more" link.
+    heading_nodes = [node for node in soup.select(heading_selector) if not in_article_list(node)]
+    for tabs in soup.find_all(['ul', 'ol']):
+        if not tab_list(tabs):
+            continue
+        for item in tabs.find_all('li', recursive=False):
+            labels = [node for node in item.select('span')
+                      if not node.find_parent('a') and node.get_text(' ', strip=True)
+                      and not node.find('span')]
+            heading_nodes.extend(labels)
+    heading_nodes = list({id(node): node for node in heading_nodes}.values())
+    heading_rows = {}
+
+    def heading_location(node):
+        key = id(node)
+        if key not in heading_rows:
+            row = {'selector': locator(node), 'heading': node.get_text(' ', strip=True)[:200]}
+            for parent in node.parents:
+                if not isinstance(parent, Tag) or parent.name in ('[document]', 'html', 'body'):
+                    break
+                if publication_signal(parent):
+                    # This is an observed common DOM ancestor, not an assertion
+                    # that every publication in it belongs to this heading.
+                    row['containing_region_selector'] = locator(parent)
+                    break
+            heading_rows[key] = row
+        return heading_rows[key]
 
     def material(items):
         return dict(envelope, evidence=items)
@@ -85,6 +125,10 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
         root = '' if node is soup else locator(node)
         result = {'evidence_id': 'page', 'url': url, 'html': str(node) if html is None else html,
                   'page_title': title, 'page_headings': headings, 'original_root_selector': root}
+        if html is None:
+            contained = {id(child) for child in node.descendants if isinstance(child, Tag)} | {id(node)}
+            result['heading_locations'] = [heading_location(heading) for heading in heading_nodes
+                                           if id(heading) in contained]
         if root:
             result['region_context'] = context(node)
             result['ancestor_context'] = [{'selector': locator(parent), 'tag': parent.name,
@@ -95,7 +139,18 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
         return result
 
     def regions(node):
-        return len(node.select(region_selector)) if isinstance(node, Tag) else 0
+        if not isinstance(node, Tag):
+            return 0
+        lists = ([node] if node.name in ('ul', 'ol', 'table') else []) + node.select('ul,ol,table')
+        roots = {id(candidate) for candidate in lists if candidate.select('a[href]')}
+        count = sum(not any(id(parent) in roots for parent in candidate.parents)
+                    for candidate in lists if id(candidate) in roots)
+        # Non-list layouts still retain their observed region headings. Never
+        # count article headings nested in an already counted publication list.
+        if not count:
+            contained = {id(child) for child in node.descendants if isinstance(child, Tag)} | {id(node)}
+            count = sum(id(heading) in contained for heading in heading_nodes)
+        return count
 
     def text_parts(node, text):
         # A single huge text node must not hide a later, lone notice link. Text
