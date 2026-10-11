@@ -96,8 +96,19 @@ def is_challenge_shell(html: str) -> bool:
 def _classify_page(html, url='https://example.edu.cn/'):
     from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
     raw = getattr(html, 'result', None)
-    return classify_result(FetchRequest(url, purpose='list'), FetchResult(url, status=200,
-        html=str(html), transport=getattr(raw, 'transport', 'http')))
+    # A readable error/partial DOM is not evidence that acquisition succeeded.
+    # Keep its transport verdict rather than rebuilding it as HTTP 200 text.
+    if isinstance(raw, FetchResult) and not raw.ok:
+        return raw
+    return classify_result(FetchRequest(url, purpose='list'),
+                           raw if isinstance(raw, FetchResult) else FetchResult(url, status=200, html=str(html)))
+
+
+def _repairable_result(result):
+    from backend.services.source_validation import sample_failure_kind
+    if result.outcome not in ('usable', 'needs_adapter') or result.status >= 400:
+        return False
+    return sample_failure_kind([{'reason': result.outcome, 'error_code': result.error_code}]) == 'rule_error'
 
 
 def queue_parser_repair(department, html=None):
@@ -120,8 +131,8 @@ def queue_parser_repair(department, html=None):
     if not any(department.id in {d.id for d in subscribed_sources(school, sub.department_ids)} for sub in scopes):
         return None
     if html is not None:
-        outcome = _classify_page(html, getattr(html, 'final_url', department.list_url)).outcome
-        if outcome in ('empty', 'requires_render', 'needs_manual', 'denied') or not str(html).strip():
+        result = _classify_page(html, getattr(html, 'final_url', department.list_url))
+        if not _repairable_result(result) or not str(html).strip():
             return None
     previous = canonical_url(department.list_url)
     url = canonical_url(getattr(html, 'final_url', previous))
@@ -192,13 +203,14 @@ def _quick_stats(html: str, department):
 
 def evaluate_and_repair(department, html: str) -> dict:
     """Healthy/empty pages stay quiet; actual rule breakage repairs one page."""
-    outcome = _classify_page(html, department.list_url).outcome
-    if outcome in ('requires_render', 'needs_manual', 'denied') or not html.strip():
-        mark_needs_review(department, '官网暂时限制自动访问，等待访问恢复；已有消息仍保留')
-        return {'action': 'browser_needed'}
-    if outcome == 'empty':
+    result = _classify_page(html, department.list_url)
+    if result.outcome == 'empty':
         clear_review(department)
         return {'action': 'healthy', 'matched': 0, 'junk': 0}
+    if not _repairable_result(result) or not html.strip():
+        mark_needs_review(department, result.message or '官网暂未返回可读取的完整内容，等待恢复；已有消息仍保留')
+        return {'action': 'browser_needed' if result.outcome in ('requires_render', 'needs_manual', 'denied')
+                else 'fetch_pending', 'outcome': result.outcome, 'error_code': result.error_code}
     try:
         stats = _quick_stats(html, department)
     except Exception:

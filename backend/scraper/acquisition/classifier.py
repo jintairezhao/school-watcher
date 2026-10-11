@@ -1,7 +1,7 @@
 """Judge page content before parsing; transport success is not content success."""
 from dataclasses import replace
 import re
-from urllib.parse import urlsplit, urljoin, urlunsplit
+from urllib.parse import urlsplit, urljoin, urlunsplit, unquote
 
 from bs4 import BeautifulSoup
 
@@ -37,14 +37,15 @@ _TEMPLATE_DATE = re.compile(r'\d{1,2}\s*月\s*\d{1,2}(?:\s*日)?')
 _MORE_LABEL = re.compile(r'(?:read\s*more|more|更多(?:通知|资讯)?|查看(?:更多|全部)|全部)', re.I)
 
 
-def _unfinished_dynamic_material(soup, page_url, script_text, *, previously_observed=False):
+def _unfinished_dynamic_material(soup, page_url, script_text, *, previously_observed=False, targeted=False):
     """Observe an async loader *and* unfinished targets, never scripts alone.
 
     A server can ship convincing dates/titles whose hrefs are still template
     defaults. Ordinary navigation or an already populated widget does not make
     those publication regions complete, either over HTTP or after DOMContentLoaded.
     """
-    if not _DYNAMIC_REQUEST.search(script_text):
+    current_loader = bool(_DYNAMIC_REQUEST.search(script_text))
+    if not current_loader and not previously_observed:
         return ()
 
     def identity(url):
@@ -55,7 +56,13 @@ def _unfinished_dynamic_material(soup, page_url, script_text, *, previously_obse
     current = identity(page_url)
     placeholders = []
     column_placeholders = []
-    for anchor in soup.select('a[href]'):
+    anchors = list(soup.select('a[href]'))
+    if soup.name == 'a' and soup.has_attr('href'):
+        anchors.insert(0, soup)
+    document = soup
+    for parent in soup.parents:
+        document = parent
+    for anchor in anchors:
         label = anchor.get_text(' ', strip=True) or anchor.get('title', '')
         more = _MORE_LABEL.fullmatch(label)
         if (len(label) < 4 and not more) or any(parent.name in ('nav', 'header', 'footer')
@@ -63,10 +70,19 @@ def _unfinished_dynamic_material(soup, page_url, script_text, *, previously_obse
                                  if hasattr(parent, 'get')):
             continue
         href = anchor.get('href', '').strip()
-        target = identity(urljoin(page_url, href))
-        parts = urlsplit(target)
+        resolved = urljoin(page_url, href)
+        target = identity(resolved)
+        parts = urlsplit(resolved)
+        # A real in-page publication destination is not a template placeholder.
+        # Resolve it against the original document even when only a configured
+        # region is being checked; the matching body can sit outside that list.
+        fragment = unquote(parts.fragment)
+        real_fragment = (fragment and not fragment.startswith(('/', '!/')) and target == current and
+                         (document.find(id=fragment) is not None or
+                          document.find('a', attrs={'name': fragment}) is not None))
         placeholder = (not href or href in ('#', 'javascript:;', 'javascript:void(0)')
                        or target == current or parts.path == '/' and not parts.query and not parts.fragment)
+        placeholder = placeholder and not real_fragment
         nearby = anchor.parent.get_text(' ', strip=True) if anchor.parent else label
         if placeholder and (_DATE.search(nearby) or _TEMPLATE_DATE.search(nearby)):
             placeholders.append(anchor)
@@ -76,10 +92,14 @@ def _unfinished_dynamic_material(soup, page_url, script_text, *, previously_obse
             # is still a missing destination even after another widget's cards
             # have arrived; animation visibility does not supply that address.
             column_placeholders.append(anchor)
-    loading = [node for node in soup.select('[aria-busy="true"],[data-loading="true"]') if _visible(node)]
-    if len(placeholders) + len(column_placeholders) < (1 if previously_observed else 2) and not loading:
+    loading_nodes = list(soup.select('[aria-busy="true"],[data-loading="true"]'))
+    if soup.get('aria-busy') == 'true' or soup.get('data-loading') == 'true':
+        loading_nodes.insert(0, soup)
+    loading = [node for node in loading_nodes if _visible(node)]
+    if len(placeholders) + len(column_placeholders) < (1 if previously_observed or targeted else 2) and not loading:
         return ()
-    return ('observed_dynamic_request', f'placeholder_publication_targets:{len(placeholders)}',
+    return ('observed_dynamic_request' if current_loader else 'retained_dynamic_observation',
+            f'placeholder_publication_targets:{len(placeholders)}',
             f'placeholder_column_targets:{len(column_placeholders)}',
             f'loading_regions:{len(loading)}')
 
@@ -87,6 +107,14 @@ def _unfinished_dynamic_material(soup, page_url, script_text, *, previously_obse
 def _decision(raw, outcome, code='', message='', evidence=()):
     return replace(raw, outcome=outcome, error_code=code, message=message,
                    evidence=tuple(raw.evidence) + tuple(evidence))
+
+
+def _dynamic_material_decision(raw, evidence):
+    rendered = raw.transport == 'browser'
+    return _decision(raw, 'needs_adapter' if rendered else 'requires_render',
+                     'dynamic_material_incomplete' if rendered else 'dynamic_material_pending',
+                     '动态栏目内容尚未加载完整，已保留读取结果，稍后重试' if rendered else
+                     '静态页面含未完成的动态栏目，需要补充渲染后的真实入口', evidence)
 
 
 def _visible(node):
@@ -215,6 +243,16 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
             ready = soup.select(request.readiness_selector)
         except Exception:
             return _decision(raw, 'needs_adapter', 'invalid_readiness_selector', '来源的内容识别规则需要核对')
+        if request.purpose != 'article':
+            # A selected target can be present but still contain template links.
+            # Inspect the target itself, not an unrelated page-wide widget.
+            for node in ready:
+                if not _visible(node):
+                    continue
+                incomplete = _unfinished_dynamic_material(node, raw.final_url or request.url, script_text,
+                    previously_observed=request.policy.get('dynamic_material_observed') is True, targeted=True)
+                if incomplete:
+                    return _dynamic_material_decision(raw, incomplete)
         if any(_visible(node) and (node.get_text(' ', strip=True) or node.select_one('img[src], a[href]')
                 or request.purpose == 'article' and has_public_body_resource([node], raw.final_url)) for node in ready):
             return _decision(raw, 'usable', evidence=('readiness_selector',))
@@ -230,11 +268,7 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
         incomplete = _unfinished_dynamic_material(soup, raw.final_url or request.url, script_text,
                                                    previously_observed=request.policy.get('dynamic_material_observed') is True)
         if incomplete:
-            rendered = raw.transport == 'browser'
-            return _decision(raw, 'needs_adapter' if rendered else 'requires_render',
-                             'dynamic_material_incomplete' if rendered else 'dynamic_material_pending',
-                             '动态栏目内容尚未加载完整，已保留读取结果，稍后重试' if rendered else
-                             '静态页面含未完成的动态栏目，需要补充渲染后的真实入口', incomplete)
+            return _dynamic_material_decision(raw, incomplete)
     if request.purpose == 'article':
         if any(len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
                or has_public_body_resource([node], raw.final_url) for node in soup.select(_ARTICLE)):

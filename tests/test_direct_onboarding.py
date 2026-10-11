@@ -125,7 +125,8 @@ class DirectOnboardingTests(unittest.TestCase):
         retry_unconnected_columns(self.school_id, 'refresh-1')
         handle = tasks.claim(capabilities=['http'])
         self.assertIsNotNone(handle)
-        with tasks.execution_scope(handle), patch('backend.services.source_onboarding._read', side_effect=self.fetch):
+        with tasks.execution_scope(handle), patch('backend.services.source_onboarding._read',
+                side_effect=lambda url, purpose, **kwargs: self.fetch(url, purpose)):
             result = dispatch(handle['kind'], handle['payload'])
         tasks.finish(handle, result)
         self.assertEqual(result['state'], 'connected')
@@ -442,7 +443,8 @@ class DirectOnboardingTests(unittest.TestCase):
             self.assertEqual(BackgroundTask.query.filter_by(kind='onboard').count(), 1)
             self.assertEqual(SourceProposal.query.count(), 0)
             handle = tasks.claim(capabilities=['http'])
-            with tasks.execution_scope(handle), patch('backend.services.source_onboarding._read', side_effect=self.fetch):
+            with tasks.execution_scope(handle), patch('backend.services.source_onboarding._read',
+                    side_effect=lambda url, purpose, **kwargs: self.fetch(url, purpose)):
                 result = dispatch(handle['kind'], handle['payload'])
             tasks.finish(handle, result)
         self.assertEqual(result['state'], 'connected')
@@ -459,7 +461,7 @@ class DirectOnboardingTests(unittest.TestCase):
         def fetch(url, purpose):
             return '<html><h1>栏目暂未开放</h1></html>' if url == bad else self.fetch(url, purpose)
         results = []
-        with patch('backend.services.source_onboarding._read', side_effect=fetch):
+        with patch('backend.services.source_onboarding._read', side_effect=lambda url, purpose, **kwargs: fetch(url, purpose)):
             for _ in range(2):
                 handle = tasks.claim(capabilities=['http'])
                 with tasks.execution_scope(handle):

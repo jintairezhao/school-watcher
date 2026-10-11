@@ -49,8 +49,85 @@ class DynamicMaterialAcquisitionTests(unittest.TestCase):
 
     def test_verified_target_does_not_wait_for_another_widget(self):
         html = '<section id="target"><a href="/article/1">真实公开通知</a></section>' + PENDING
-        result = classify_result(FetchRequest(URL, purpose='list', readiness_selector='#target'), self.raw(html))
-        self.assertEqual(result.outcome, 'usable')
+        for observed in (False, True):
+            with self.subTest(previously_observed=observed):
+                result = classify_result(FetchRequest(URL, purpose='list', readiness_selector='#target',
+                    policy={'dynamic_material_observed': observed}), self.raw(html))
+                self.assertEqual(result.outcome, 'usable')
+
+    def test_retained_dynamic_observation_survives_loader_script_removal(self):
+        html = ('<section id="notices"><li><a href="#">新学期课程安排通知</a>'
+                '<time>2026-09-23</time></li><li><a href="#">奖学金材料提交通知</a>'
+                '<time>2026-09-24</time></li></section>')
+        for purpose in ('directory', 'list'):
+            with self.subTest(purpose=purpose):
+                request = FetchRequest(URL, purpose=purpose, policy={'dynamic_material_observed': True})
+                result = classify_result(request, self.raw(html, transport='browser'))
+                self.assertEqual(result.error_code, 'dynamic_material_incomplete')
+                self.assertFalse(result.replayable)
+                ready = html.replace('href="#"', 'href="/article/42"')
+                self.assertTrue(classify_result(request, self.raw(ready, transport='browser')).ok)
+
+    def test_readiness_target_itself_must_finish_loading(self):
+        html = ('<section id="notices"><li><a href="#">新学期课程安排通知</a>'
+                '<time>2026-09-23</time></li><li><a href="#">奖学金材料提交通知</a>'
+                '<time>2026-09-24</time></li></section><script>fetch("/notices.json")</script>')
+        for purpose in ('directory', 'list'):
+            with self.subTest(purpose=purpose):
+                request = FetchRequest(URL, purpose=purpose, readiness_selector='#notices')
+                self.assertEqual(classify_result(request, self.raw(html)).error_code, 'dynamic_material_pending')
+                self.assertEqual(classify_result(request, self.raw(html, transport='browser')).error_code,
+                                 'dynamic_material_incomplete')
+
+    def test_each_selected_row_and_selected_anchor_must_have_its_real_destination(self):
+        html = ('<ul id="notices"><li><a href="/article/1">已接通的公开通知</a>'
+                '<time>2026-09-23</time></li><li><a href="#">尚未加载的奖学金通知</a>'
+                '<time>2026-09-24</time></li></ul><script>fetch("/notices.json")</script>')
+        for selector in ('#notices', '#notices li', '#notices a'):
+            with self.subTest(selector=selector):
+                request = FetchRequest(URL, purpose='list', readiness_selector=selector)
+                result = classify_result(request, self.raw(html, transport='browser'))
+                self.assertEqual(result.error_code, 'dynamic_material_incomplete')
+                self.assertIn('placeholder_publication_targets:1', result.evidence)
+                self.assertTrue(classify_result(request, self.raw(html.replace('href="#"',
+                    'href="/article/2"'), transport='browser')).ok)
+
+    def test_selected_loading_container_remains_incomplete_after_script_removal(self):
+        html = '<section id="notices" aria-busy="true">正在加载通知</section>'
+        request = FetchRequest(URL, purpose='list', readiness_selector='#notices',
+            policy={'dynamic_material_observed': True})
+        result = classify_result(request, self.raw(html, transport='browser'))
+        self.assertEqual(result.error_code, 'dynamic_material_incomplete')
+        self.assertIn('loading_regions:1', result.evidence)
+        self.assertIn('retained_dynamic_observation', result.evidence)
+
+    def test_observed_dynamic_page_can_publish_real_in_document_fragment_targets(self):
+        html = ('<ul id="notices"><li><a href="#notice-one">新学期课程安排通知</a>'
+                '<time>2026-09-23</time></li><li><a href="#notice-two">奖学金材料提交通知</a>'
+                '<time>2026-09-24</time></li></ul><article id="notice-one">课程安排正文</article>'
+                '<article id="notice-two">奖学金通知正文</article>')
+        for selector in ('', '#notices', '#notices a'):
+            with self.subTest(selector=selector):
+                result = classify_result(FetchRequest(URL, purpose='list', readiness_selector=selector,
+                    policy={'dynamic_material_observed': True}), self.raw(html, transport='browser'))
+                self.assertEqual(result.outcome, 'usable')
+
+    def test_removed_loader_does_not_change_static_single_notice_or_explicit_empty(self):
+        policy = {'dynamic_material_observed': True}
+        single = '<ul><li><a href="/article/1">新学期课程安排通知</a><time>2026-09-23</time></li></ul>'
+        for purpose in ('directory', 'list'):
+            with self.subTest(purpose=purpose):
+                request = FetchRequest(URL, purpose=purpose, policy=policy)
+                self.assertEqual(classify_result(request, self.raw(single, transport='browser')).outcome, 'usable')
+                self.assertEqual(classify_result(request, self.raw('<h2>通知公告</h2><p>暂无通知</p>',
+                    transport='browser')).outcome, 'empty')
+
+    def test_article_attachment_target_ignores_unfinished_list_after_script_removal(self):
+        html = ('<article id="body"><a href="/notice.pdf">通知附件</a></article>'
+                '<aside aria-busy="true"><a href="#">尚未加载的通知</a><time>2026-09-23</time></aside>')
+        request = FetchRequest(URL, purpose='article', readiness_selector='#body',
+            policy={'dynamic_material_observed': True})
+        self.assertEqual(classify_result(request, self.raw(html, transport='browser')).outcome, 'usable')
 
     def test_actual_empty_and_attachment_article_remain_distinct(self):
         empty = '<h2>通知公告</h2><p>暂无通知</p><script>fetch("/stats")</script>'

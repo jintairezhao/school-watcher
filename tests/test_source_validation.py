@@ -10,8 +10,296 @@ from tests import test_direct_onboarding as fixture_module
 
 HTML, TITLES, URL, ai_column = fixture_module.HTML, fixture_module.TITLES, fixture_module.URL, fixture_module.ai_column
 
+# Literal titles, dates, URLs and short body fragments from the Finance college
+# observations retained on 2026-10-11. The surrounding DOM is reduced to the
+# actual .articleTitle/.articleDetail structure; these are not live AI results.
+FINANCE_URL = 'http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm'
+FINANCE_NOTICES = (
+    ('线上专场 | 人大国际金融学院推免生接收工作宣讲', '2026-06-28',
+     'http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm',
+     '<p>为更好地回应全国优秀大学生的热情关注与咨询需求，方便更多同学深入了解我院办学特色，学院拟举办一场线上专场宣讲会，进一步介绍中国人民大学国家卓越金融人才培养基地的办学理念、培养模式与学科优势，助力同学们明晰升学方向、规划发展路径。诚邀广大同学积极参与。具体安排如下：</p>'
+     '<p>时间：2026年6月29日（星期一）18:30</p>'),
+    ('国际金融学院推免生接收工作宣讲通知', '2026-06-25',
+     'http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm',
+     '<p>为进一步宣介中国人民大学国家卓越金融人才培养基地的办学理念、培养模式与学科优势，助力全国优秀大学生明晰升学方向、规划发展路径，我院定于2026年6月28日（星期日）15:00举办专硕项目、直博项目宣讲活动。</p>'
+     '<p>诚邀有兴趣的优秀大学生通过线上或线下方式积极参与。线下地点为中国人民大学中关村校区明德法学楼0301；线上平台为腾讯会议，会议号：741-652-967。</p>'),
+    ('关于研究生新生资格复审通知', '2026-09-28',
+     'http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm',
+     '<p>根据学校相关工作安排，需对我院2026级硕士研究生新生进行入学资格复查。</p>'
+     '<p>以上材料由班级统一汇总后，请各班于10月10日11:00前交财金楼217复查。原件复查完后归还，复印件留存。</p>'
+     '<p><a download="资格审查汇总表.xlsx" href="../../../docs/2025-09/c647ddbfae9d4b1b92f6ffa9e120b782.xlsx">资格审查汇总表</a></p>'),
+)
+
 
 class SourceValidationTests(unittest.TestCase):
+    def finance_materials(self):
+        from backend.database.models import School
+        school = db.session.get(School, self.fixture.school_id)
+        school.url = 'http://sf.ruc.edu.cn/'
+        db.session.commit()
+        listing = ('<html><title>全部_中国人民大学财政金融学院</title><body>'
+                   '<section id="finance"><h2>全部</h2><ul>' + ''.join(
+            f'<li><a href="{address}">{title}</a><span>{date}</span></li>'
+            for title, date, address, _ in FINANCE_NOTICES) + '</ul></section></body></html>')
+        materials = {FINANCE_URL: listing}
+        materials.update({address: f'<html><title>{title}</title><body>'
+            f'<div class="articleTitle"><h3>{title}</h3><span>{date}</span></div>'
+            f'<div class="articleDetail">{body}</div></body></html>'
+            for title, date, address, body in FINANCE_NOTICES})
+        column = ai_column(name='全部', list_selector='#finance li', content_selector='.articleDetail',
+                           container_selector='#finance', heading_selector='#finance h2')
+        return column, materials
+
+    def test_default_reader_executes_finance_body_rule_after_unconfigured_initial_read(self):
+        from backend.scraper.acquisition import FetchResult
+        from backend.services.source_onboarding import onboard_page
+        column, materials = self.finance_materials()
+        reads = []
+        def raw(request):
+            reads.append((request.url, request.purpose, request.readiness_selector))
+            return FetchResult(request.url, status=200, html=materials[request.url])
+        with patch('backend.scraper.acquisition.coordinator.http_fetch', side_effect=raw), \
+             patch('backend.services.source_onboarding.recognize_column',
+                   side_effect=AssertionError('Supplied observed rules must be executed without AI')):
+            result = onboard_page({'school_id': self.fixture.school_id, 'url': FINANCE_URL,
+                                   'ai_assist': False, 'observed_columns': [column]})
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(reads[0], (FINANCE_URL, 'directory', ''))
+        self.assertEqual([selector for _, purpose, selector in reads if purpose == 'article'],
+                         ['.articleDetail'] * 3)
+        evidence = self.latest_validation()
+        self.assertEqual(evidence['articles']['matched_count'], 3)
+        self.assertTrue(all(sample['title_matched'] for sample in evidence['articles']['samples']))
+        self.assertEqual(Department.query.one().name, '全部')
+        self.assertEqual(Announcement.query.count(), 3)
+
+    def test_default_reader_executes_list_selector_for_actual_next_page(self):
+        from backend.scraper.acquisition import FetchResult
+        from backend.services.source_onboarding import onboard_page
+        first = HTML.replace('</section>', '<a href="?page=2" rel="next">下一页</a></section>')
+        later = HTML.replace('/info/', '/later/')
+        reads = []
+        def raw(request):
+            reads.append((request.url, request.purpose, request.readiness_selector))
+            html = first if request.url == URL else later if request.url == URL + '?page=2' else self.fixture.fetch(request.url, request.purpose)
+            return FetchResult(request.url, status=200, html=html)
+        with patch('backend.scraper.acquisition.coordinator.http_fetch', side_effect=raw):
+            result = onboard_page({'school_id': self.fixture.school_id, 'url': URL,
+                                   'ai_assist': False, 'observed_columns': [ai_column()]})
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(reads[0], (URL, 'directory', ''))
+        self.assertIn((URL + '?page=2', 'list', '#notices li'), reads)
+        self.assertEqual(self.latest_validation()['pagination']['state'], 'validated')
+
+    def test_configured_default_reader_still_rejects_missing_body_or_wrong_identity(self):
+        from backend.scraper.acquisition import FetchResult
+        from backend.services.source_onboarding import onboard_page
+        column, materials = self.finance_materials()
+        for case in ('missing_selector', 'wrong_identity'):
+            with self.subTest(case=case):
+                candidate = dict(column, content_selector='.missing' if case == 'missing_selector' else '.articleDetail')
+                def raw(request):
+                    html = materials[request.url]
+                    if case == 'wrong_identity' and request.purpose == 'article':
+                        html = html.replace(FINANCE_NOTICES[0][0], '其他学院的另一条真实通知')
+                    return FetchResult(request.url, status=200, html=html)
+                with patch('backend.scraper.acquisition.coordinator.http_fetch', side_effect=raw), \
+                     patch('backend.services.source_onboarding.recognize_column',
+                           side_effect=AssertionError('No paid repair in this regression')):
+                    result = onboard_page({'school_id': self.fixture.school_id, 'url': FINANCE_URL,
+                        'ai_assist': False, 'observed_columns': [candidate]})
+                self.assertEqual(result['state'], 'unsupported')
+                self.assertEqual(Department.query.count(), 0)
+                self.assertEqual(Announcement.query.count(), 0)
+                self.assertFalse(self.latest_validation()['articles']['passed'])
+
+    def test_matching_document_metadata_cannot_override_real_article_heading_conflict(self):
+        from backend.services.source_validation import article_samples
+        column, materials = self.finance_materials()
+        records = [{'title': title, 'date': date, 'url': address} for title, date, address, _ in FINANCE_NOTICES]
+        for metadata in ('title', 'og:title'):
+            with self.subTest(metadata=metadata):
+                def custom(address, purpose):
+                    html = materials[address]
+                    if address == FINANCE_NOTICES[0][2]:
+                        html = html.replace('<h3>' + FINANCE_NOTICES[0][0] + '</h3>', '<h3>其他学院的另一条真实通知</h3>')
+                        if metadata == 'og:title':
+                            html = html.replace('<title>' + FINANCE_NOTICES[0][0] + '</title>',
+                                '<meta property="og:title" content="' + FINANCE_NOTICES[0][0] + '">')
+                    return html
+                samples = article_samples(dict(column, list_url=FINANCE_URL), records, custom)
+                self.assertEqual(samples['matched_count'], 2)
+                self.assertFalse(samples['passed'])
+                self.assertEqual(samples['samples'][0]['reason'], 'article_identity_conflict')
+                self.assertFalse(samples['samples'][0]['title_matched'])
+
+    def test_plain_real_title_with_body_sections_and_site_slogan_still_matches(self):
+        from backend.services.source_validation import article_samples
+        title = TITLES[0]
+        for plain in ('div', 'p', 'span'):
+            with self.subTest(plain=plain):
+                html = (f'<title>{title}</title><h1 class="site-slogan">欢迎访问学校网站</h1>'
+                        f'<{plain}>{title}</{plain}><div class="article-body">'
+                        '<h2>申请条件</h2><p>请各学院组织同学按实际要求申请课程，材料通过审核后请及时办理。</p>'
+                        '<h3>办理时间</h3><p>学校将按通知公布的时间接收办理，请以正式通知为准。</p></div>')
+                result = article_samples({'list_url': URL, 'content_selector': '.article-body'},
+                    [{'title': title, 'url': URL + 'plain.htm'}], lambda *_: html)
+                self.assertTrue(result['passed'])
+                self.assertTrue(result['samples'][0]['title_matched'])
+
+    def test_abbreviated_finance_title_remains_limited_with_real_primary_heading(self):
+        from backend.services.source_validation import article_samples
+        column, materials = self.finance_materials()
+        records = [{'title': title[:17] + '...' if i == 0 else title, 'date': date, 'url': address}
+                   for i, (title, date, address, _) in enumerate(FINANCE_NOTICES)]
+        result = article_samples(dict(column, list_url=FINANCE_URL), records, lambda address, _: materials[address])
+        self.assertTrue(result['passed'])
+        self.assertEqual(result['matched_count'], 2)
+        self.assertEqual(result['status'], 'limited')
+        self.assertEqual(result['samples'][0]['reason'], 'article_title_abbreviated')
+
+    def test_metadata_prefix_cannot_mask_conflicting_visible_heading_for_abbreviated_list(self):
+        from backend.services.source_validation import article_samples
+        column, materials = self.finance_materials()
+        records = [{'title': title[:17] + '...' if i == 0 else title, 'date': date, 'url': address}
+                   for i, (title, date, address, _) in enumerate(FINANCE_NOTICES)]
+        def custom(address, _):
+            return materials[address].replace('<h3>' + FINANCE_NOTICES[0][0] + '</h3>',
+                                              '<h3>其他学院的另一条真实通知</h3>')
+        result = article_samples(dict(column, list_url=FINANCE_URL), records, custom)
+        self.assertEqual(result['matched_count'], 2)
+        self.assertFalse(result['passed'])
+        self.assertEqual(result['samples'][0]['reason'], 'article_identity_conflict')
+
+    def test_explicit_two_argument_reader_is_preserved_for_finance_samples(self):
+        from backend.services.source_onboarding import onboard_page
+        column, materials = self.finance_materials()
+        reads = []
+        def custom(address, purpose):
+            reads.append((address, purpose))
+            return materials[address]
+        with patch('backend.services.source_governance._fetch',
+                   side_effect=AssertionError('A supplied custom reader must not be replaced')):
+            result = onboard_page({'school_id': self.fixture.school_id, 'url': FINANCE_URL,
+                'ai_assist': False, 'observed_columns': [column]}, fetcher=custom)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(reads, [(FINANCE_URL, 'directory')] +
+                         [(row[2], 'article') for row in FINANCE_NOTICES])
+
+    def test_version_three_failed_finance_trial_recovers_without_new_ai_or_round(self):
+        import hashlib
+        from backend.services import tasks
+        from backend.services.source_governance import _snapshot
+        from backend.services.source_onboarding import onboard_page
+        from backend.scraper.acquisition import FetchResult
+        column, materials = self.finance_materials()
+        reference = _snapshot(materials[FINANCE_URL], FINANCE_URL, role='list')
+        job = tasks.enqueue('onboard', 'retained-finance-trial', {
+            'school_id': self.fixture.school_id, 'url': FINANCE_URL})
+        job.checkpoint = {'onboarding_page': reference, 'school_round': 'same-budget-round',
+            'column_regions': {'columns': [column], 'decision_ids': ['original-paid-decision']},
+            'column_validation': {
+                'page_hash': hashlib.sha256((FINANCE_URL + '\\0' + materials[FINANCE_URL]).encode()).hexdigest(),
+                'validation_version': 3, 'stage': 'done', 'department_ids': [], 'completed': [],
+                'new_count': 0, 'trial_columns': [column], 'trial_origin_stage': 'ai',
+                'trial_decision_ids': ['original-paid-decision'], 'trial_request_key': 'original-input',
+                'failures': [{'issue': {'codes': ['article_sample_mismatch']}}],
+                'result': {'state': 'unsupported'}, 'progress': {'stopped': True}}}
+        db.session.commit()
+        handle = tasks.claim(capabilities=['http'])
+        reads = []
+        def raw(request):
+            reads.append((request.url, request.purpose, request.readiness_selector))
+            return FetchResult(request.url, status=200, html=materials[request.url])
+        with tasks.execution_scope(handle), \
+             patch('backend.scraper.acquisition.coordinator.http_fetch', side_effect=raw), \
+             patch('backend.services.source_onboarding.publication_lists',
+                   side_effect=AssertionError('Retained paid trial must precede fresh recognition')), \
+             patch('backend.services.source_onboarding.recognize_column',
+                   side_effect=AssertionError('Retained paid trial must not be billed again')):
+            result = onboard_page(handle['payload'])
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(len(reads), 3)
+        self.assertTrue(all(purpose == 'article' and selector == '.articleDetail' for _, purpose, selector in reads))
+        self.assertEqual(handle['generation'], 1)
+        self.assertEqual(handle['checkpoint']['school_round'], 'same-budget-round')
+        self.assertEqual(handle['checkpoint']['onboarding_page'], reference)
+        self.assertEqual(handle['checkpoint']['column_regions']['decision_ids'], ['original-paid-decision'])
+        self.assertEqual(handle['checkpoint']['column_validation']['validation_version'], 4)
+        self.assertEqual(self.latest_validation()['articles']['matched_count'], 3)
+
+    def test_cached_unrecognized_body_is_reclassified_under_bound_rule(self):
+        from backend.services import tasks
+        from backend.services.task_fetch import cache_lookup, cache_store
+        from backend.scraper.acquisition import FetchRequest, FetchResult, execution_context
+        from backend.services.source_onboarding import _read
+        column, materials = self.finance_materials()
+        job = tasks.enqueue('onboard', 'retained-body-cache', {'school_id': self.fixture.school_id, 'url': FINANCE_URL})
+        handle = tasks.claim(capabilities=['http'])
+        address = FINANCE_NOTICES[0][2]
+        request = FetchRequest(address, purpose='article', readiness_selector='.articleDetail',
+                               policy={'exploration': True, 'follow_document_redirects': True})
+        with tasks.execution_scope(handle):
+            cache_store(request, FetchResult(address, status=200, html=materials[address],
+                outcome='needs_adapter', error_code='content_not_recognized'))
+            with execution_context(cache_lookup=cache_lookup, cache_store=cache_store), \
+                 patch('backend.scraper.acquisition.coordinator.http_fetch', side_effect=AssertionError('Cached DOM needs no new read')):
+                body = _read(address, 'article', config=column, exploration=True)
+        self.assertEqual(body.result.outcome, 'usable')
+        self.assertEqual(body.result.error_code, '')
+        self.assertIn('readiness_selector', body.result.evidence)
+
+    def test_default_trial_skips_one_browser_challenge_and_verifies_later_bodies(self):
+        from backend.services import tasks
+        from backend.services.task_fetch import browser_dispatch
+        from backend.scraper.acquisition import FetchResult, execution_context
+        from backend.database.models import VerificationSession
+        from backend.services.source_onboarding import onboard_page
+        column, materials = self.finance_materials()
+        job = tasks.enqueue('onboard', 'sample-challenge', {'school_id': self.fixture.school_id,
+            'url': FINANCE_URL, 'ai_assist': False, 'observed_columns': [column]}, capability='browser')
+        handle = tasks.claim(capabilities=['browser'])
+        def raw(request):
+            html = '<script>$_ts = {};</script>' if request.url == FINANCE_NOTICES[0][2] else materials[request.url]
+            return FetchResult(request.url, status=200, html=html)
+        with tasks.execution_scope(handle), execution_context(browser_dispatch=browser_dispatch), \
+             patch('backend.scraper.acquisition.coordinator.http_fetch', side_effect=raw), \
+             patch('backend.services.task_fetch.reserve_origin', return_value=(True, 0)), \
+             patch('backend.services.task_fetch.release_origin'), \
+             patch('backend.services.task_fetch.BrowserClient') as browser, \
+             patch('backend.services.tasks.require_verification',
+                   side_effect=AssertionError('A blocked sample must not hand the entire onboarding to the user')):
+            browser.return_value.submit.return_value = ('done', FetchResult(FINANCE_NOTICES[0][2],
+                status=200, html='<p>请输入验证码</p>', transport='browser'))
+            result = onboard_page(handle['payload'])
+        self.assertEqual(result['state'], 'connected')
+        samples = self.latest_validation()['articles']
+        self.assertEqual((samples['sample_count'], samples['matched_count']), (3, 2))
+        self.assertEqual(samples['samples'][0]['reason'], 'needs_manual')
+        self.assertEqual(VerificationSession.query.count(), 0)
+
+    def test_daily_configured_reader_preserves_manual_challenge_handoff(self):
+        from backend.services import tasks
+        from backend.services.task_fetch import browser_dispatch
+        from backend.scraper.acquisition import FetchResult, execution_context
+        from backend.database.models import VerificationSession
+        from backend.services.source_governance import _fetch
+        column, _ = self.finance_materials()
+        address = FINANCE_NOTICES[0][2]
+        tasks.enqueue('collect', 'daily-challenge', {'school_id': self.fixture.school_id}, capability='browser')
+        handle = tasks.claim(capabilities=['browser'])
+        with tasks.execution_scope(handle), execution_context(browser_dispatch=browser_dispatch), \
+             patch('backend.scraper.acquisition.coordinator.http_fetch',
+                   return_value=FetchResult(address, status=200, html='<script>$_ts = {};</script>')), \
+             patch('backend.services.task_fetch.reserve_origin', return_value=(True, 0)), \
+             patch('backend.services.task_fetch.release_origin'), \
+             patch('backend.services.task_fetch.BrowserClient') as browser:
+            browser.return_value.submit.return_value = ('done', FetchResult(address,
+                status=200, html='<p>请输入验证码</p>', transport='browser'))
+            with self.assertRaises(tasks.TaskDeferred):
+                _fetch(address, 'article', config=column)
+        self.assertEqual(VerificationSession.query.count(), 1)
+
     def test_access_restricted_samples_are_not_rule_mismatches(self):
         from backend.scraper.acquisition import FetchResult, FetchFailure
         from backend.services.source_validation import article_samples

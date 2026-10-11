@@ -4,6 +4,7 @@ Each page is independent durable work. Existing proposal workflows are reserved
 for legacy/admin edits; automatic onboarding never creates a review proposal.
 """
 from datetime import datetime
+from functools import partial
 import hashlib
 import json
 
@@ -182,9 +183,10 @@ def recognize_column(school_id, url, html, *, feedback=None):
     return recognize(school_id, url, html, feedback=feedback)
 
 
-def _read(url, purpose):
+def _read(url, purpose, *, config=None, exploration=None):
     from backend.services.source_governance import _fetch
-    return _fetch(url, purpose)
+    return (_fetch(url, purpose, config=config, exploration=exploration)
+            if config is not None or exploration is not None else _fetch(url, purpose))
 
 
 def _sample_matches(config, records, fetcher):
@@ -302,7 +304,8 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
     validate_public_url(url, resolve=False)
     if not same_school_url(url, root_url) and not payload.get('official_external'):
         return {'state': 'unsupported', 'department_ids': [], 'reason': '栏目地址尚未确认属于学校官网'}
-    fetcher = fetcher or _read
+    default_reader = fetcher is None
+    fetcher = _read if default_reader else fetcher
     handle = tasks.current_execution()
     checkpoint = dict((handle or {}).get('checkpoint') or {})
     from backend.services.source_agent import recover_unknown_column_checkpoint, pause_unknown_column
@@ -324,11 +327,13 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
             # usable. Recheck it before honoring a completed parser checkpoint.
             from backend.scraper.acquisition import FetchRequest, FetchResult
             from backend.scraper.acquisition.classifier import classify_result
+            from backend.scraper.selector_monitor import _repairable_result
             snapshot_url = canonical_url(reference['url'])
-            observed = classify_result(FetchRequest(url=snapshot_url, purpose='directory'),
-                FetchResult(final_url=snapshot_url, status=200, html=str(html),
-                            transport=reference.get('transport') or 'http'))
-            if observed.error_code in ('dynamic_material_pending', 'dynamic_material_incomplete'):
+            observed = FetchResult.from_dict(dict(reference, final_url=snapshot_url, html=str(html),
+                status=reference.get('status', 200), transport=reference.get('transport') or 'http'))
+            if observed.ok or _repairable_result(observed):
+                observed = classify_result(FetchRequest(url=snapshot_url, purpose='directory'), observed)
+            if not observed.ok and not _repairable_result(observed):
                 html = ''
                 url = snapshot_url
     if not html:
@@ -565,8 +570,12 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                 failed('列表包含非公开或无效的通知地址', ['invalid_publication_url'])
                 continue
             from backend.scraper.acquisition import FetchFailure
+            # Execute this candidate's actual list/body region while reading
+            # validation material. The initial page was read without a rule;
+            # custom readers retain their original two-argument contract.
+            validation_reader = partial(fetcher, config=config, exploration=True) if default_reader else fetcher
             try:
-                pagination = pagination_sample(config, records, html, reference, scope, fetcher)
+                pagination = pagination_sample(config, records, html, reference, scope, validation_reader)
             except FetchFailure as exc:
                 kind = sample_failure_kind([{'reason': exc.outcome, 'error_code': exc.result.error_code}])
                 if kind != 'rule_error':
@@ -584,7 +593,7 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                 failed('后续分页尚未通过实际读取验证', pagination['errors'], records)
                 continue
             try:
-                samples = article_samples(config, records + pagination.get('sample_records', []), fetcher)
+                samples = article_samples(config, records + pagination.get('sample_records', []), validation_reader)
                 validation['articles'] = samples
                 for sample in samples['samples']:
                     if sample.get('content_hash') and sample.get('matched'):

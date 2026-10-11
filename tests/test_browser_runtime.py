@@ -142,6 +142,230 @@ class BrowserRuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(value['result']['error_code'], 'dynamic_material_incomplete')
         self.assertIn('render_wait_exhausted', value['result']['evidence'])
 
+    async def test_partial_material_survives_slow_final_validation(self):
+        started = time.monotonic()
+        async def validator(url):
+            await valid_public(url)
+            if time.monotonic() - started > .8:
+                await asyncio.sleep(.2)
+        self.runtime.validator = validator
+        async def content(page): return DYNAMIC_PENDING
+        with patch.object(FakePage, 'content', content):
+            await self.runtime.submit(dict(self.payload(), timeout_seconds=1))
+            value = await self.done('job-1')
+        self.assertEqual(value['state'], 'done', value)
+        self.assertEqual(value['result']['error_code'], 'dynamic_material_incomplete')
+        self.assertEqual(value['result']['html'], DYNAMIC_PENDING)
+
+    async def test_partial_material_survives_bounded_cleanup_after_read_deadline(self):
+        async def content(page): return DYNAMIC_PENDING
+        async def close(page):
+            await asyncio.sleep(.2)
+            page.closed = True
+        with patch.object(FakePage, 'content', content), patch.object(FakePage, 'close', close):
+            await self.runtime.submit(dict(self.payload(), timeout_seconds=1))
+            value = await self.done('job-1')
+        self.assertEqual(value['state'], 'done', value)
+        self.assertEqual(value['result']['error_code'], 'dynamic_material_incomplete')
+        self.assertTrue(self.browsers[0].contexts[0].pages[0].closed)
+        self.assertFalse(self.runtime.admissions)
+
+    async def test_own_deadline_preserves_last_valid_partial_snapshot(self):
+        reads = 0
+        async def content(page):
+            nonlocal reads
+            reads += 1
+            if reads > 1:
+                await asyncio.sleep(2)
+            return DYNAMIC_PENDING
+        with patch.object(FakePage, 'content', content):
+            await self.runtime.submit(dict(self.payload(), timeout_seconds=1))
+            value = await self.done('job-1')
+        self.assertEqual(value['state'], 'done', value)
+        result = value['result']
+        self.assertEqual(result['error_code'], 'dynamic_material_incomplete')
+        self.assertEqual(result['html'], DYNAMIC_PENDING)
+        self.assertEqual(result['final_url'], self.payload()['url'])
+        self.assertIn('render_wait_exhausted', result['evidence'])
+
+    async def test_partial_snapshot_cannot_hide_cancel_invalid_navigation_or_oversize(self):
+        from backend.services.discovery_policy import get_policy
+        for outcome in ('cancel', 'invalid_navigation', 'new_navigation', 'oversize'):
+            with self.subTest(outcome=outcome):
+                started = asyncio.Event()
+                reads = 0
+                async def content(page):
+                    nonlocal reads
+                    reads += 1
+                    if reads > 1:
+                        started.set()
+                        if outcome == 'invalid_navigation':
+                            page.url = 'http://127.0.0.1/private'
+                        if outcome == 'new_navigation' and 'request' in page.listeners:
+                            class Request:
+                                frame = page.main_frame
+                                def is_navigation_request(self): return True
+                            page.listeners['request'](Request())
+                        if outcome == 'oversize':
+                            return DYNAMIC_PENDING * 3
+                        await asyncio.sleep(2)
+                    return DYNAMIC_PENDING
+                payload = dict(self.payload(outcome), timeout_seconds=1)
+                policy = dict(get_policy(), html_max_bytes=len(DYNAMIC_PENDING.encode('utf8')) * 2)
+                with patch.object(FakePage, 'content', content), \
+                     patch('backend.browser_service.runtime.get_policy', return_value=policy):
+                    await self.runtime.submit(payload)
+                    if outcome == 'cancel':
+                        await started.wait()
+                        self.runtime.executions[outcome].task.cancel()
+                        with self.assertRaises(asyncio.CancelledError):
+                            await self.done(outcome)
+                        self.assertIsNone(self.runtime.executions[outcome].result)
+                    else:
+                        value = await self.done(outcome)
+                        self.assertEqual(value['state'], 'failed', value)
+                        self.assertNotIn('result', value)
+                        if outcome == 'oversize':
+                            self.assertEqual(value['error']['code'], 'response_too_large')
+                self.assertFalse(self.runtime.admissions)
+
+    async def test_stalled_page_cleanup_still_releases_permit_and_discards_context(self):
+        from backend.browser_service.admission import OriginAdmission
+        releases = []
+        original = FakePage.goto
+        async def goto(page, url, **kwargs):
+            result = await original(page, url, **kwargs)
+            self.runtime.admissions[id(page.context)].tokens.add('a' * 64)
+            return result
+        async def close(page): await asyncio.Event().wait()
+        async def broker(admission, action, data):
+            if action == 'release': releases.append(data['token'])
+            return {'released': True}
+        started = time.monotonic()
+        with patch.dict('os.environ', {'WATCHER_ORIGIN_BROKER_URL': 'http://fixture.invalid'}), \
+             patch('backend.browser_service.runtime._CLEANUP_TIMEOUT_SECONDS', .03, create=True), \
+             patch.object(FakePage, 'goto', goto), patch.object(FakePage, 'close', close), \
+             patch.object(OriginAdmission, '_request', broker):
+            await self.runtime.submit(dict(self.payload(), timeout_seconds=1))
+            value = await self.done('job-1')
+        self.assertEqual(value['state'], 'done', value)
+        self.assertLess(time.monotonic() - started, .5)
+        self.assertEqual(releases, ['a' * 64])
+        self.assertTrue(self.browsers[0].contexts[0].closed)
+        self.assertFalse(self.runtime.admissions)
+        self.assertFalse(self.runtime.sessions)
+
+    async def test_cancellation_during_cleanup_is_not_a_success_and_isolates_page(self):
+        from backend.browser_service.admission import OriginAdmission
+        closing, releasing = asyncio.Event(), asyncio.Event()
+        releases = []
+        original = FakePage.goto
+        async def goto(page, url, **kwargs):
+            result = await original(page, url, **kwargs)
+            self.runtime.admissions[id(page.context)].tokens.add('a' * 64)
+            return result
+        async def broker(admission, action, data):
+            if action == 'release':
+                releases.append(data['token'])
+                if len(releases) == 1:
+                    releasing.set()
+                    await asyncio.Event().wait()
+            return {'released': True}
+        async def close(page):
+            closing.set()
+            await asyncio.Event().wait()
+        with patch.dict('os.environ', {'WATCHER_ORIGIN_BROKER_URL': 'http://fixture.invalid'}), \
+             patch.object(FakePage, 'goto', goto), patch.object(FakePage, 'close', close), \
+             patch.object(OriginAdmission, '_request', broker):
+            await self.runtime.submit(self.payload())
+            await asyncio.gather(closing.wait(), releasing.wait())
+            self.runtime.executions['job-1'].task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await self.done('job-1')
+        self.assertIsNone(self.runtime.executions['job-1'].result)
+        self.assertTrue(self.browsers[0].contexts[0].closed)
+        self.assertEqual(releases, ['a' * 64, 'a' * 64])
+        self.assertFalse(self.runtime.admissions)
+        self.assertFalse(self.runtime.sessions)
+
+    async def test_closing_page_cannot_start_unadmitted_http_or_socket_requests(self):
+        routes = []
+        class Route:
+            class request: url = 'https://example.edu/late-resource'
+            url = 'wss://example.edu/late-socket'
+            aborted = continued = False
+            async def abort(self, code): self.aborted = True
+            async def continue_(self): self.continued = True
+            async def close(self): self.aborted = True
+            def connect_to_server(self): self.continued = True
+        async def close(page):
+            for handler in (page.context.route_handler, page.context.socket_handler):
+                route = Route()
+                routes.append(route)
+                await handler(route)
+            page.closed = True
+        with patch.object(FakePage, 'close', close):
+            await self.runtime.submit(self.payload())
+            self.assertEqual((await self.done('job-1'))['state'], 'done')
+        self.assertTrue(all(route.aborted and not route.continued for route in routes))
+
+    async def test_guard_cannot_continue_a_resource_with_a_replaced_navigation_permit(self):
+        from backend.browser_service.admission import OriginAdmission
+        await self.runtime.submit(self.payload())
+        await self.done('job-1')
+        context = self.browsers[0].contexts[0]
+        class Route:
+            class request: url = 'https://example.edu/late-resource'
+            url = 'wss://example.edu/late-socket'
+            aborted = continued = False
+            async def abort(self, code): self.aborted = True
+            async def continue_(self): self.continued = True
+            async def close(self): self.aborted = True
+            def connect_to_server(self): self.continued = True
+        for handler in (context.route_handler, context.socket_handler):
+            entered, released = asyncio.Event(), asyncio.Event()
+            async def admit(url):
+                entered.set()
+                await released.wait()
+            old = OriginAdmission(self.payload())
+            old.admit = admit
+            self.runtime.admissions[id(context)] = old
+            route = Route()
+            task = asyncio.create_task(handler(route))
+            await entered.wait()
+            self.runtime.admissions[id(context)] = OriginAdmission(self.payload('replacement'))
+            released.set()
+            await task
+            self.assertTrue(route.aborted)
+            self.assertFalse(route.continued)
+
+    async def test_finished_origin_busy_retries_only_after_delay_and_poll_never_restarts(self):
+        from backend.browser_service.admission import OriginBusy
+        original = FakePage.goto
+        navigations = 0
+        async def once_busy(page, url, **kwargs):
+            nonlocal navigations
+            navigations += 1
+            response = await original(page, url, **kwargs)
+            if navigations == 1:
+                self.runtime.admission_errors[id(page.context)] = OriginBusy(2)
+            return response
+        with patch.object(FakePage, 'goto', once_busy):
+            await self.runtime.submit(self.payload())
+            first = await self.done('job-1')
+            self.assertEqual(first['result']['error_code'], 'origin_busy')
+            self.assertEqual((await self.runtime.submit(self.payload()))['result']['error_code'], 'origin_busy')
+            self.runtime.executions['job-1'].touched -= 2.1
+            self.assertEqual(self.runtime.get_execution('job-1')['result']['error_code'], 'origin_busy')
+            self.assertEqual(navigations, 1)
+            await asyncio.gather(self.runtime.submit(self.payload()), self.runtime.submit(self.payload()))
+            finished = await self.done('job-1')
+            self.assertEqual(finished['state'], 'done')
+            self.assertNotIn('error_code', finished['result'])
+            self.assertEqual(navigations, 2)
+            await self.runtime.submit(self.payload())
+            self.assertEqual(navigations, 2)
+
     async def test_idempotency_key_cannot_change_request(self):
         await self.runtime.submit(self.payload())
         with self.assertRaises(RuntimeFault) as caught:

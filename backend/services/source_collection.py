@@ -63,7 +63,7 @@ def collect_source(department):
     from backend.scraper.discovery.lightweight import discover_columns
     is_unit = department.kind in ('unit', 'group') or DepartmentDirectoryEntry.query.filter_by(parent_id=department.id).first() is not None
     if department.list_selector and not is_unit:
-        from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
+        from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending, _repairable_result
         from backend.scraper.acquisition import FetchFailure, FetchedHTML
         department._parser_repair_job = None
         try:
@@ -71,7 +71,7 @@ def collect_source(department):
         except ParserRepairPending as exc:
             return _repair_progress(exc.job)
         except FetchFailure as exc:
-            if exc.result.outcome != 'needs_adapter' or not exc.result.html:
+            if not _repairable_result(exc.result) or not exc.result.html:
                 raise
             job = queue_parser_repair(department, FetchedHTML(exc.result))
             if job is None:

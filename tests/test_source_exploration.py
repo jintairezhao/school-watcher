@@ -19,6 +19,190 @@ LIST = '<html><main><h1>通知公告</h1><ul>' + ''.join(
 
 
 class ExplorationTests(unittest.TestCase):
+    def legacy_call(self, status='uncertain', *, known=False, sent=True, applied=False, ledger=True, result=None):
+        from backend.ai.models import AIExecution
+        from backend.services.source_exploration import STEP_ACTION, save_event
+        ident = 'legacy-call-' + str(SourceReviewEvent.query.count())
+        usage = {'known': known, **({'total_tokens': 100 if sent else 0} if known else {})}
+        row = None
+        if ledger:
+            row = AIExecution(execution_id=ident, purpose='directory', config_version='1',
+                provider='openai', model='fixture', skill_id='university-source-onboarding',
+                skill_version='1', skill_digest='a' * 64, input_digest='b' * 64, mode='extraction',
+                status=status, usage=usage, request_sent=sent, reserved_tokens=0 if known else 9000,
+                output=(result or {}).get('output'), error_code='connection_lost')
+            db.session.add(row); db.session.commit()
+        detail = {'execution_id': ident, 'attempt': 1, 'revision': self.p.revision,
+            'status': 'uncertain', 'applied': applied, 'input': {'truncated': True},
+            'reservation': 9000, 'result': result or {'status': 'uncertain', 'error_code': 'connection_lost', 'usage': usage}}
+        event = save_event(self.p.id, STEP_ACTION, detail)
+        return row, event
+
+    def test_legacy_unknown_paid_execution_never_migrates_or_allocates_replacement(self):
+        from backend.database.source_governance_models import DiscoveryWorkItem
+        from backend.services.source_exploration import STEP_ACTION, run
+        original_bundle = self.p.evidence_json
+        for status, ledger, sent in (('uncertain', True, True), ('failed', True, True),
+                                     ('partial', True, True), ('succeeded', True, True),
+                                     ('uncertain', False, True), ('failed', True, False)):
+            with self.subTest(status=status, ledger=ledger, sent=sent):
+                self.p = g.propose_source(self.p.school_id, dict(self.config, name=f'{status}-{ledger}-{sent}'))
+                self.p.evidence_json = original_bundle; self.p.evidence_hash = g._hash(json.loads(original_bundle))
+                db.session.commit()
+                row, event = self.legacy_call(status, ledger=ledger, sent=sent)
+                before = event.detail_json
+                with patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+                     patch('backend.ai.runtime.run_skill', return_value=self.output('not_column')) as model:
+                    result = run(self.p.id)
+                    again = run(self.p.id)
+                model.assert_not_called()
+                self.assertEqual((result['error_code'], again['error_code']), ('ai_result_unknown', 'ai_result_unknown'))
+                self.assertEqual(event.detail_json, before)
+                self.assertEqual(SourceReviewEvent.query.filter_by(proposal_id=self.p.id, action=STEP_ACTION).count(), 1)
+                self.assertEqual(DiscoveryWorkItem.query.filter_by(school_id=self.p.school_id).count(), 0)
+                if row:
+                    self.assertEqual((row.status, row.request_sent, row.reserved_tokens, row.usage),
+                                     (status, sent, 9000, {'known': False}))
+
+    def test_already_migrated_unknown_event_still_blocks_new_manifest_dispatch(self):
+        from backend.services.source_exploration import STEP_ACTION, material, run, save_event
+        row, event = self.legacy_call(applied=True)
+        original = event.detail_json
+        manifest = save_event(self.p.id, STEP_ACTION, {'execution_id': 'manifest-journal:old:next',
+            'attempt': 2, 'revision': self.p.revision, 'input': material(self.p),
+            'manifest_started': True, 'applied': False, 'previous_event_id': event.id})
+        with patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+             patch('backend.ai.runtime.run_skill', return_value=self.output('not_column')) as model:
+            result = run(self.p.id)
+        model.assert_not_called()
+        self.assertEqual(result['error_code'], 'ai_result_unknown')
+        self.assertEqual(event.detail_json, original)
+        self.assertEqual(json.loads(manifest.detail_json)['execution_id'], 'manifest-journal:old:next')
+        self.assertEqual(row.reserved_tokens, 9000)
+
+    def test_unknown_legacy_call_waits_with_same_task_generation_and_checkpoint(self):
+        from backend.services import tasks
+        from backend.services.source_exploration import run
+        row, event = self.legacy_call()
+        job = tasks.enqueue('source_review', self.p.id, {'proposal_id': self.p.id}, capability='directory')
+        job.checkpoint = {'retained_cursor': 7, 'school_round': 'unchanged-round'}; db.session.commit()
+        handle = tasks.claim(capabilities=['directory'])
+        before = event.detail_json
+        with tasks.execution_scope(handle), \
+             patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+             patch('backend.ai.runtime.run_skill', return_value=self.output('not_column')) as model:
+            with self.assertRaises(tasks.TaskDeferred) as stopped:
+                run(self.p.id)
+        model.assert_not_called()
+        self.assertEqual((stopped.exception.state, stopped.exception.phase, stopped.exception.error_code),
+                         ('waiting', 'ai_result', 'ai_result_unknown'))
+        tasks.handoff(handle, stopped.exception)
+        self.assertEqual((job.generation, job.state), (1, 'waiting'))
+        self.assertEqual(job.checkpoint['retained_cursor'], 7)
+        self.assertEqual(job.checkpoint['school_round'], 'unchanged-round')
+        self.assertEqual(event.detail_json, before)
+        self.assertEqual((row.execution_id, row.reserved_tokens), (json.loads(before)['execution_id'], 9000))
+
+    def test_completed_legacy_result_with_unknown_usage_is_reused_without_paid_request(self):
+        from backend.services.source_exploration import run
+        result = dict(self.output(), usage={'known': False})
+        row, event = self.legacy_call('succeeded', result=result)
+        detail = json.loads(event.detail_json)
+        self.assertEqual(detail['status'], 'uncertain')
+        with patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+             patch('backend.ai.runtime.run_skill') as model, \
+             patch('backend.scraper.acquisition.fetch_or_raise', side_effect=self.transport):
+            result = run(self.p.id)
+        model.assert_not_called()
+        self.assertEqual(result['status'], 'validated')
+        self.assertEqual((row.execution_id, row.reserved_tokens, row.usage),
+                         (detail['execution_id'], 9000, {'known': False}))
+        self.assertEqual(json.loads(event.detail_json)['input'], {'truncated': True})
+
+    def test_settled_and_proven_unsent_legacy_failures_may_migrate_without_erasing_receipt(self):
+        from backend.services.source_exploration import STEP_ACTION, run
+        original_bundle = self.p.evidence_json
+        for sent in (False, True):
+            with self.subTest(sent=sent):
+                self.p = g.propose_source(self.p.school_id, dict(self.config, name=f'settled-{sent}'))
+                self.p.evidence_json = original_bundle
+                self.p.evidence_hash = g._hash(json.loads(original_bundle)); db.session.commit()
+                row, event = self.legacy_call('failed', known=True, sent=sent)
+                original_id = row.execution_id
+                with patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+                     patch('backend.ai.runtime.run_skill', return_value=self.output('not_column')) as model:
+                    actual = run(self.p.id)
+                self.assertEqual(actual['status'], 'not_a_column')
+                self.assertEqual(model.call_count, 1)
+                self.assertEqual((row.execution_id, row.status, row.request_sent, row.reserved_tokens, row.usage),
+                    (original_id, 'failed', sent, 0, {'known': True, 'total_tokens': 100 if sent else 0}))
+                saved = json.loads(event.detail_json)
+                self.assertEqual(saved['input'], {'truncated': True})
+                self.assertTrue(saved['recovered_by_manifest'])
+                journal = SourceReviewEvent.query.filter_by(proposal_id=self.p.id, action=STEP_ACTION).order_by(SourceReviewEvent.id).all()
+                self.assertEqual(len(journal), 2)
+                self.assertEqual(json.loads(journal[1].detail_json)['legacy_attempts'], 1)
+
+    def test_inflight_legacy_execution_waits_without_manifest_or_reservation_changes(self):
+        from backend.services.source_exploration import run
+        original_bundle = self.p.evidence_json
+        for status in ('reserved', 'sending'):
+            with self.subTest(status=status):
+                self.p = g.propose_source(self.p.school_id, dict(self.config, name=f'active-{status}'))
+                self.p.evidence_json = original_bundle
+                self.p.evidence_hash = g._hash(json.loads(original_bundle)); db.session.commit()
+                row, event = self.legacy_call(status)
+                before = event.detail_json
+                with patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+                     patch('backend.ai.runtime.run_skill') as model:
+                    actual = run(self.p.id)
+                model.assert_not_called()
+                self.assertEqual(actual['status'], 'pending')
+                self.assertEqual(event.detail_json, before)
+                self.assertEqual((row.status, row.reserved_tokens), (status, 9000))
+
+    def test_completed_unknown_usage_plan_failure_cannot_start_next_paid_decision(self):
+        from backend.services.source_exploration import run, STEP_ACTION
+        output = self.output()
+        output['output']['proposals'][0]['config']['list_selector'] = 'section.missing li'
+        row, event = self.legacy_call('succeeded', result=dict(output, usage={'known': False}))
+        with patch('backend.ai.configuration.get_model_binding', return_value={'version': 1}), \
+             patch('backend.ai.runtime.run_skill') as model:
+            actual = run(self.p.id)
+        model.assert_not_called()
+        self.assertEqual(actual['error_code'], 'ai_result_unknown')
+        saved = json.loads(event.detail_json)
+        self.assertTrue(saved['applied'])
+        self.assertEqual(saved['preflight']['matched'], 0)
+        self.assertEqual(saved['input'], {'truncated': True})
+        self.assertEqual(SourceReviewEvent.query.filter_by(proposal_id=self.p.id, action=STEP_ACTION).count(), 1)
+        self.assertEqual((row.status, row.reserved_tokens, row.usage), ('succeeded', 9000, {'known': False}))
+
+    def test_acquire_incomplete_dynamic_material_is_feedback_without_ai_document(self):
+        from backend.services.source_exploration import acquire, material
+        url = ROOT + 'notice/1.html'
+        failure = FetchResult(url, status=200, html='<main>动态未完成占位材料</main>',
+            outcome='needs_adapter', error_code='dynamic_material_incomplete', transport='browser',
+            evidence=['unresolved_dynamic_target:1'])
+        with patch('backend.services.source_governance._fetch', side_effect=FetchFailure(failure)):
+            actual = acquire(self.p, {'type': 'read_page', 'url': url, 'purpose': 'article'}, {url})
+        self.assertEqual(actual['error_code'], 'dynamic_material_incomplete')
+        self.assertFalse(json.loads(self.p.evidence_json).get('exploration_pages'))
+        self.assertFalse(any('动态未完成占位材料' in ref.get('html', '') for ref in material(self.p)['evidence']))
+
+    def test_acquire_readable_rule_failure_preserves_typed_snapshot(self):
+        from backend.services.source_exploration import acquire, material
+        url = ROOT + 'notice/1.html'
+        failure = FetchResult(url, status=200, html='<div>可供识别的真实正文材料</div>',
+            outcome='needs_adapter', error_code='content_not_recognized', transport='browser',
+            evidence=['observed_readiness_missing'])
+        with patch('backend.services.source_governance._fetch', side_effect=FetchFailure(failure)):
+            acquire(self.p, {'type': 'read_page', 'url': url, 'purpose': 'article'}, {url})
+        ref = json.loads(self.p.evidence_json)['exploration_pages'][0]
+        self.assertEqual((ref['outcome'], ref['status'], ref['transport'], ref['error_code'], ref['evidence']),
+            ('needs_adapter', 200, 'browser', 'content_not_recognized', ['observed_readiness_missing']))
+        self.assertTrue(any('可供识别的真实正文材料' in page.get('html', '') for page in material(self.p)['evidence']))
+
     def test_publisher_reference_uses_archived_full_snapshot_when_catalogue_html_was_pruned(self):
         from unittest.mock import MagicMock
         html = '<html><title>示例学院</title><a href="/">示例学院</a></html>'
@@ -79,9 +263,10 @@ class ExplorationTests(unittest.TestCase):
         html = LIST.replace('</main>', '<footer>旧截断之后的完整目录材料</footer></main>')
         bundle['list'] = g._snapshot(html, ROOT)
         self.p.evidence_json = g._json(bundle); db.session.commit()
-        old = save_event(self.p.id, STEP_ACTION, {'execution_id': 'old-paid-call', 'attempt': 1,
-            'revision': self.p.revision, 'status': 'uncertain', 'applied': False,
-            'input': {'truncated': True}, 'result': {'status': 'uncertain', 'error_code': 'response_limit'}})
+        old = save_event(self.p.id, STEP_ACTION, {'execution_id': 'old-unpaid-call', 'attempt': 1,
+            'revision': self.p.revision, 'status': 'failed', 'applied': False,
+            'input': {'truncated': True}, 'result': {'status': 'failed', 'error_code': 'interrupted_before_dispatch',
+                'request_sent': False, 'usage': {'known': True, 'total_tokens': 0}}})
         seen = []
         def model(*args, **kwargs):
             seen.append(args[2]); return self.output('not_column')
@@ -89,8 +274,8 @@ class ExplorationTests(unittest.TestCase):
              patch('backend.ai.runtime.run_skill', side_effect=model):
             g.run_source_skill_for_proposal(self.p.id)
         original = json.loads(old.detail_json)
-        self.assertEqual(original['status'], 'uncertain')
-        self.assertEqual(original['result']['error_code'], 'response_limit')
+        self.assertEqual(original['status'], 'failed')
+        self.assertEqual(original['result']['error_code'], 'interrupted_before_dispatch')
         self.assertEqual(original['input'], {'truncated': True})
         self.assertTrue(any('旧截断之后的完整目录材料' in ref.get('html', '') for request in seen for ref in request['evidence']))
         self.assertEqual(SourceReviewEvent.query.filter_by(proposal_id=self.p.id, action=STEP_ACTION).count(), 2)

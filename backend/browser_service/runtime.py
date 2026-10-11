@@ -16,6 +16,8 @@ from .display import PrivateDisplay
 from .admission import OriginAdmission, OriginBusy
 from backend.services.discovery_policy import get_policy
 
+_CLEANUP_TIMEOUT_SECONDS = 5
+
 
 class RuntimeFault(Exception):
     def __init__(self, code, message, status=400, retryable=False):
@@ -124,16 +126,25 @@ class BrowserRuntime:
             context.on('page', limit_pages)
         async def guard(route):
             url = route.request.url
+            admission = self.admissions.get(id(context))
+            if admission is None:
+                await route.abort('blockedbyclient')
+                return
             try:
                 await self.validator(url)
-                admission = self.admissions.get(id(context))
-                if admission:
-                    await admission.admit(url)
+                if self.admissions.get(id(context)) is not admission:
+                    await route.abort('blockedbyclient')
+                    return
+                await admission.admit(url)
             except OriginBusy as exc:
-                self.admission_errors[id(context)] = exc
+                if self.admissions.get(id(context)) is admission:
+                    self.admission_errors[id(context)] = exc
                 await route.abort('blockedbyclient')
                 return
             except (ValueError, OSError, ClientError, TimeoutError):
+                await route.abort('blockedbyclient')
+                return
+            if self.admissions.get(id(context)) is not admission:
                 await route.abort('blockedbyclient')
                 return
             await route.continue_()
@@ -141,16 +152,25 @@ class BrowserRuntime:
         # Official pages may use public WebSockets. Validate their HTTP-equivalent origin.
         async def guard_socket(route):
             url = route.url.replace('wss:', 'https:', 1).replace('ws:', 'http:', 1)
+            admission = self.admissions.get(id(context))
+            if admission is None:
+                await route.close()
+                return
             try:
                 await self.validator(url)
-                admission = self.admissions.get(id(context))
-                if admission:
-                    await admission.admit(url)
+                if self.admissions.get(id(context)) is not admission:
+                    await route.close()
+                    return
+                await admission.admit(url)
             except OriginBusy as exc:
-                self.admission_errors[id(context)] = exc
+                if self.admissions.get(id(context)) is admission:
+                    self.admission_errors[id(context)] = exc
                 await route.close()
                 return
             except (ValueError, OSError, ClientError, TimeoutError):
+                await route.close()
+                return
+            if self.admissions.get(id(context)) is not admission:
                 await route.close()
                 return
             route.connect_to_server()
@@ -226,17 +246,32 @@ class BrowserRuntime:
             raise RuntimeFault('invalid_url', '请输入可公开访问的官网地址') from exc
         payload['timeout_seconds'] = max(1, min(timeout, 90))
         fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
-        existing = self.executions.get(ident)
+        def cached_execution():
+            existing = self.executions.get(ident)
+            if existing:
+                if existing.fingerprint != fingerprint:
+                    raise RuntimeFault('request_conflict', '执行标识已用于其他请求', 409)
+                result = existing.result or {}
+                retry_busy = (existing.state == 'done' and result.get('outcome') == 'busy'
+                    and result.get('error_code') == 'origin_busy'
+                    and time.monotonic() >= existing.touched + max(1, min(900, float(result.get('retry_after') or 5))))
+                if not retry_busy:
+                    return existing
+            return None
+        existing = cached_execution()
         if existing:
-            if existing.fingerprint != fingerprint:
-                raise RuntimeFault('request_conflict', '执行标识已用于其他请求', 409)
             return existing.public()
         await self.sweep()
+        # sweep may await context cleanup. A concurrent submit can have already
+        # replaced an expired busy result with a new, still-running execution.
+        existing = cached_execution()
+        if existing:
+            return existing.public()
         if sum(e.state in ('queued', 'running') for e in self.executions.values()) >= self.concurrency:
             # Resource waiting remains in the durable worker queue and consumes
             # no navigation time budget or failure attempts.
             raise RuntimeFault('browser_busy', '浏览器资源使用中，请稍后重试', 503, True)
-        if len(self.executions) >= self.max_executions:
+        if len(self.executions) >= self.max_executions and ident not in self.executions:
             raise RuntimeFault('browser_busy', '浏览器任务已满，请稍后重试', 503, True)
         execution = Execution(fingerprint, payload)
         self.executions[ident] = execution
@@ -281,18 +316,91 @@ class BrowserRuntime:
     async def _navigate(self, session, payload, keep_page=False, wait_for_content=True):
         timeout = min(float(payload.get('timeout_seconds', get_policy()['browser_total_seconds'])),
                       float(get_policy()['browser_total_seconds']))
-        async with asyncio.timeout(timeout):
-            return await self._navigate_page(session, payload, keep_page, wait_for_content)
-
-    async def _navigate_page(self, session, payload, keep_page=False, wait_for_content=True):
         start = time.monotonic()
+        operation_id = secrets.token_hex(16)
+        self.operation_deadlines[operation_id] = start + timeout + 15
+        snapshot = {}
+        deadline = asyncio.timeout(timeout)
+        try:
+            try:
+                async with deadline:
+                    return await self._navigate_page(session, payload, keep_page, wait_for_content, snapshot)
+            except TimeoutError:
+                partial = snapshot.get('partial')
+                # Only this read deadline may preserve already validated material.
+                # Caller cancellation, redirects and explicit failures never do.
+                if (deadline.expired() and partial and session.page
+                        and session.page.url == partial['final_url']
+                        and id(session.context) not in self.admission_errors):
+                    return dict(partial, timings={'total_ms': round((time.monotonic() - start) * 1000)})
+                raise
+        finally:
+            try:
+                if session and not keep_page:
+                    await self._cleanup_navigation(session)
+            finally:
+                self.operation_deadlines.pop(operation_id, None)
+
+    async def _close_admission(self, admission):
+        cleanup_deadline = time.monotonic() + 2 * _CLEANUP_TIMEOUT_SECONDS
+        def remaining():
+            return max(0, min(_CLEANUP_TIMEOUT_SECONDS, cleanup_deadline - time.monotonic()))
+        try:
+            with suppress(Exception):
+                async with asyncio.timeout(remaining()):
+                    await admission.close()
+        except asyncio.CancelledError:
+            # Release is idempotent. Finish one bounded cleanup attempt, then
+            # propagate the caller's cancellation rather than publishing a result.
+            with suppress(Exception):
+                async with asyncio.timeout(remaining()):
+                    await admission.close()
+            raise
+        finally:
+            # Failed callbacks retain only expiring database leases, never an
+            # unbounded HTTP session or a page waiting on sequential callbacks.
+            admission.tokens.clear()
+            if admission.client:
+                with suppress(Exception):
+                    async with asyncio.timeout(remaining()):
+                        await admission.client.close()
+
+    async def _cleanup_navigation(self, session):
+        page, session.page = session.page, None
+        admission = self.admissions.pop(id(session.context), None)
+        self.admission_errors.pop(id(session.context), None)
+        async def close_page():
+            if page is None:
+                return
+            try:
+                async with asyncio.timeout(_CLEANUP_TIMEOUT_SECONDS):
+                    await page.close()
+            except (Exception, asyncio.CancelledError) as exc:
+                # A stuck page must not be reused by the next navigation.
+                if self.sessions.get(session.key) is session:
+                    self.sessions.pop(session.key)
+                try:
+                    async with asyncio.timeout(_CLEANUP_TIMEOUT_SECONDS):
+                        await self._close_session(session)
+                except asyncio.CancelledError:
+                    self.operation_deadlines['cleanup:' + session.key] = time.monotonic()
+                    raise
+                except Exception:
+                    # Existing supervision restarts a native browser that cannot
+                    # close even its context; durable task leases recover normally.
+                    self.operation_deadlines['cleanup:' + session.key] = time.monotonic()
+                if isinstance(exc, asyncio.CancelledError):
+                    raise
+        await asyncio.gather(close_page(), self._close_admission(admission) if admission else asyncio.sleep(0))
+
+    async def _navigate_page(self, session, payload, keep_page=False, wait_for_content=True, snapshot=None):
+        start = time.monotonic()
+        snapshot = snapshot if snapshot is not None else {}
         timeout = max(1, min(float(payload.get('timeout_seconds', get_policy()['browser_total_seconds'])),
                              float(get_policy()['browser_total_seconds'])) * 1000)
-        operation_id = secrets.token_hex(16)
-        self.operation_deadlines[operation_id] = start + timeout / 1000 + 15
         old_admission = self.admissions.pop(id(session.context), None)
         if old_admission:
-            await old_admission.close()
+            await self._close_admission(old_admission)
         self.admission_errors.pop(id(session.context), None)
         admission = OriginAdmission(payload, ttl=650 if keep_page else int(timeout / 1000) + 40)
         self.admissions[id(session.context)] = admission
@@ -301,10 +409,58 @@ class BrowserRuntime:
         page.set_default_timeout(timeout)
         page.set_default_navigation_timeout(timeout)
         final_document = [None]
+        verified_document = [None]
+        navigation = {'pending': False, 'revision': 0}
+        def invalidate_snapshot():
+            snapshot.pop('partial', None)
+            verified_document[0] = None
+        def observe_request(request):
+            if request.is_navigation_request() and request.frame == page.main_frame:
+                navigation.update(pending=True, revision=navigation['revision'] + 1)
+                invalidate_snapshot()
         def observe_document(response):
             if response.request.is_navigation_request() and response.frame == page.main_frame:
+                navigation.update(pending=False, revision=navigation['revision'] + 1)
+                invalidate_snapshot()
                 final_document[0] = response
+        page.on('request', observe_request)
         page.on('response', observe_document)
+        from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
+        request = FetchRequest.from_dict(payload)
+        def material_result(raw, verdict):
+            material = {}
+            if verdict and verdict.error_code == 'dynamic_material_incomplete':
+                material = {'outcome': verdict.outcome, 'error_code': verdict.error_code,
+                            'message': verdict.message,
+                            'evidence': [*verdict.evidence, 'render_wait_exhausted']}
+            return {'url': payload['url'], 'final_url': raw.final_url, 'status_code': raw.status,
+                'headers': raw.headers, 'html': raw.html, 'transport': 'browser',
+                'timings': {'total_ms': round((time.monotonic() - start) * 1000)}, 'evidence': [], **material}
+        async def read_material(*, validate=False):
+            if navigation['pending']:
+                return None
+            revision = navigation['revision']
+            document = final_document[0] or response
+            url = page.url
+            identity = (url, document)
+            if validate or verified_document[0] != identity:
+                await self.validator(url)
+                verified_document[0] = identity
+            html = await page.content()
+            if len(html.encode('utf-8')) > get_policy()['html_max_bytes']:
+                raise RuntimeFault('response_too_large', '官网页面超过3 MiB读取上限，已停止读取')
+            headers = await document.all_headers() if document else {}
+            if (page.url != url or (final_document[0] or response) is not document
+                    or navigation['revision'] != revision):
+                invalidate_snapshot()
+                return None
+            raw = FetchResult(final_url=url, html=html, status=document.status if document else 200,
+                              transport='browser', headers=headers)
+            verdict = classify_result(request, raw) if wait_for_content else None
+            snapshot.pop('partial', None)
+            if verdict and verdict.error_code == 'dynamic_material_incomplete':
+                snapshot['partial'] = material_result(raw, verdict)
+            return raw, verdict
         try:
             expected = payload.get('expected_response_url')
             if expected and wait_for_content:
@@ -321,20 +477,14 @@ class BrowserRuntime:
             if wait_for_content:
                 # Reuse the business-content validator while scripts settle. A challenge
                 # often already has plenty of text, so a body-length wait is insufficient.
-                from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
-                request = FetchRequest.from_dict(payload)
                 while time.monotonic() < start + timeout / 1000 - .1:
                     try:
-                        document = final_document[0] or response
-                        raw = FetchResult(final_url=page.url, html=await page.content(),
-                            status=document.status if document else 200, transport='browser',
-                            headers=await document.all_headers() if document else {})
-                        if len(raw.html.encode('utf-8')) > get_policy()['html_max_bytes']:
-                            raise RuntimeFault('response_too_large', '官网页面超过3 MiB读取上限，已停止读取')
-                        verdict = classify_result(request, raw)
-                        if verdict.ok or verdict.outcome in ('denied', 'network_error') or (
-                                verdict.outcome == 'needs_manual' and 'automatic_challenge' not in verdict.evidence):
-                            break
+                        reading = await read_material()
+                        if reading is not None:
+                            raw, verdict = reading
+                            if verdict.ok or verdict.outcome in ('denied', 'network_error') or (
+                                    verdict.outcome == 'needs_manual' and 'automatic_challenge' not in verdict.evidence):
+                                break
                     except Exception as exc:
                         # Main-frame reloads invalidate a read of its old JS context.
                         if 'Execution context was destroyed' not in str(exc) and 'navigating' not in str(exc):
@@ -344,28 +494,12 @@ class BrowserRuntime:
                 busy = self.admission_errors[id(session.context)]
                 return {'final_url': page.url, 'transport': 'browser', 'outcome': 'busy',
                         'error_code': 'origin_busy', 'retry_after': busy.retry_after, 'message': '官网访问正在排队'}
-            await self.validator(page.url)
-            html = await page.content()
-            if len(html.encode('utf-8')) > get_policy()['html_max_bytes']:
-                raise RuntimeFault('response_too_large', '官网页面超过3 MiB读取上限，已停止读取')
-            response = final_document[0] or response
-            headers = await response.all_headers() if response else {}
-            await admission.cooldown(page.url, headers, response.status if response else 200)
-            material = {}
-            if wait_for_content:
-                from backend.scraper.acquisition import FetchRequest, FetchResult, classify_result
-                final_verdict = classify_result(FetchRequest.from_dict(payload), FetchResult(
-                    final_url=page.url, html=html, status=response.status if response else 200,
-                    transport='browser', headers=headers))
-                if final_verdict.error_code == 'dynamic_material_incomplete':
-                    material = {'outcome': final_verdict.outcome, 'error_code': final_verdict.error_code,
-                                'message': final_verdict.message,
-                                'evidence': [*final_verdict.evidence, 'render_wait_exhausted']}
-            return {'url': payload['url'], 'final_url': page.url,
-                'status_code': response.status if response else 200,
-                'headers': headers, 'html': html,
-                'transport': 'browser', 'timings': {'total_ms': round((time.monotonic() - start) * 1000)},
-                'evidence': [], **material}
+            reading = await read_material(validate=True)
+            if reading is None:
+                raise RuntimeFault('browser_failed', '官网页面仍在跳转，稍后重试', retryable=True)
+            raw, verdict = reading
+            await admission.cooldown(raw.final_url, raw.headers, raw.status)
+            return material_result(raw, verdict)
         except Exception:
             if id(session.context) in self.admission_errors:
                 busy = self.admission_errors[id(session.context)]
@@ -373,14 +507,9 @@ class BrowserRuntime:
                         'error_code': 'origin_busy', 'retry_after': busy.retry_after, 'message': '官网访问正在排队'}
             raise
         finally:
-            self.operation_deadlines.pop(operation_id, None)
+            page.remove_listener('request', observe_request)
             page.remove_listener('response', observe_document)
             session.touched = time.monotonic()
-            if not keep_page:
-                await page.close()
-                session.page = None
-                await admission.close()
-                self.admissions.pop(id(session.context), None)
 
     async def open_manual(self, payload):
         ident, generation = payload.get('id'), payload.get('generation')

@@ -26,7 +26,11 @@ class FetchFailure(SourceAccessError):
         self.result = result
         self.outcome = result.outcome
         self.error_code = result.error_code
-        self.retryable = result.outcome in ('network_error', 'unavailable')
+        # A still-loading public document can recover on another bounded read.
+        # Keep its material verdict; it is neither a parser repair nor success.
+        self.retryable = (result.outcome in ('network_error', 'unavailable') or
+                          result.outcome in ('needs_adapter', 'requires_render') and
+                          result.error_code in ('dynamic_material_pending', 'dynamic_material_incomplete'))
         super().__init__(result.message or result.error_code or result.outcome)
 
 

@@ -1,0 +1,1713 @@
+{
+  "release": "2.10",
+  "scope": "Targeted real network route diagnosis, durable retry, actual default dynamic acquisition, retained body validation and isolated regressions; not full-school coverage acceptance.",
+  "fresh_model_requests": 0,
+  "actual_model_tokens": 0,
+  "user_database_modified": false,
+  "fee_limits_increased": false,
+  "unknown_paid_requests_reissued": false,
+  "finance_network_diagnosis": {
+    "inference": "Current optional environment proxy plus numeric pinned destination returns 502; pinned direct and diagnostic proxy-hostname paths return identical real official pages. Do not infer which endpoint produced the 502 from Server:none.",
+    "diagnostic_hostname_unpin_used_in_production_fix": false,
+    "dns_tcp_tls_checks": [
+      {
+        "operation": "production_public_dns",
+        "public_addresses": [
+          "2401:ec00:e001:410::141",
+          "106.120.213.245"
+        ]
+      },
+      {
+        "operation": "direct_tcp",
+        "host": "sf.ruc.edu.cn",
+        "port": 80,
+        "tcp_connected": true,
+        "seconds": 0.115
+      },
+      {
+        "operation": "direct_tcp_tls_verify",
+        "host": "sf.ruc.edu.cn",
+        "port": 443,
+        "tcp_connected": true,
+        "tls_verified": true,
+        "tls_version": "TLSv1.2",
+        "seconds": 0.305
+      }
+    ],
+    "three_route_observations": [
+      {
+        "route": "default_pinned",
+        "requested": "http://sf.ruc.edu.cn/",
+        "final_url": "http://sf.ruc.edu.cn/",
+        "status": 502,
+        "outcome": "network_error",
+        "error_code": "http_502",
+        "seconds": 1.7,
+        "evidence": [
+          "public_dns_ipv4:106.120.213.245"
+        ],
+        "headers": {
+          "server": "none",
+          "content-type": "text/html"
+        },
+        "timings": {
+          "http_ms": 1693,
+          "admission_wait_ms": 0
+        },
+        "html_utf8_bytes": 165,
+        "sha256": "c79699a487ee2ca3f59a9906a52a0a208a9fef58011668cc42e57d63930b7c63",
+        "title": "502 Bad Gateway",
+        "href_count": 0
+      },
+      {
+        "route": "default_pinned",
+        "requested": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+        "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+        "status": 502,
+        "outcome": "network_error",
+        "error_code": "http_502",
+        "seconds": 0.867,
+        "evidence": [
+          "public_dns_ipv4:106.120.213.245"
+        ],
+        "headers": {
+          "server": "none",
+          "content-type": "text/html"
+        },
+        "timings": {
+          "http_ms": 855,
+          "admission_wait_ms": 0
+        },
+        "html_utf8_bytes": 165,
+        "sha256": "c79699a487ee2ca3f59a9906a52a0a208a9fef58011668cc42e57d63930b7c63",
+        "title": "502 Bad Gateway",
+        "href_count": 0
+      },
+      {
+        "route": "direct_pinned",
+        "requested": "http://sf.ruc.edu.cn/",
+        "final_url": "http://sf.ruc.edu.cn/",
+        "status": 200,
+        "outcome": "usable",
+        "error_code": "",
+        "seconds": 0.345,
+        "evidence": [
+          "public_dns_ipv4:106.120.213.245",
+          "publication_link"
+        ],
+        "headers": {
+          "server": "none",
+          "content-type": "text/html"
+        },
+        "timings": {
+          "http_ms": 310,
+          "admission_wait_ms": 0
+        },
+        "html_utf8_bytes": 78181,
+        "sha256": "8fdfbe6182b21b977a46b68c64830b5e07832c5ad2af0b95609c5b67cfff1559",
+        "title": "中国人民大学财政金融学院",
+        "href_count": 251
+      },
+      {
+        "route": "direct_pinned",
+        "requested": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+        "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+        "status": 200,
+        "outcome": "usable",
+        "error_code": "",
+        "seconds": 0.21,
+        "evidence": [
+          "public_dns_ipv4:106.120.213.245",
+          "publication_link"
+        ],
+        "headers": {
+          "server": "none",
+          "content-type": "text/html"
+        },
+        "timings": {
+          "http_ms": 193,
+          "admission_wait_ms": 0
+        },
+        "html_utf8_bytes": 31304,
+        "sha256": "e39f9ce29a8363d4317403b9117dbb729ae6b1fc71e8440cbac0f97addb45a84",
+        "title": "全部_中国人民大学财政金融学院",
+        "href_count": 203
+      },
+      {
+        "route": "proxy_hostname",
+        "requested": "http://sf.ruc.edu.cn/",
+        "final_url": "http://sf.ruc.edu.cn/",
+        "status": 200,
+        "outcome": "usable",
+        "error_code": "",
+        "seconds": 2.418,
+        "evidence": [
+          "public_dns_ipv4:106.120.213.245",
+          "publication_link"
+        ],
+        "headers": {
+          "server": "none",
+          "content-type": "text/html"
+        },
+        "timings": {
+          "http_ms": 2376,
+          "admission_wait_ms": 0
+        },
+        "html_utf8_bytes": 78181,
+        "sha256": "8fdfbe6182b21b977a46b68c64830b5e07832c5ad2af0b95609c5b67cfff1559",
+        "title": "中国人民大学财政金融学院",
+        "href_count": 251
+      },
+      {
+        "route": "proxy_hostname",
+        "requested": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+        "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+        "status": 200,
+        "outcome": "usable",
+        "error_code": "",
+        "seconds": 0.536,
+        "evidence": [
+          "public_dns_ipv4:106.120.213.245",
+          "publication_link"
+        ],
+        "headers": {
+          "server": "none",
+          "content-type": "text/html"
+        },
+        "timings": {
+          "http_ms": 508,
+          "admission_wait_ms": 0
+        },
+        "html_utf8_bytes": 31304,
+        "sha256": "e39f9ce29a8363d4317403b9117dbb729ae6b1fc71e8440cbac0f97addb45a84",
+        "title": "全部_中国人民大学财政金融学院",
+        "href_count": 203
+      }
+    ],
+    "report_sha256": "bd5fbc4b7dfacd15e8be9718435fe8e601f5bba1dbdbf3d2ef3eb1573e180878",
+    "total_actual_HTTP_reads_for_this_finance_subinvestigation": 16,
+    "final_durable_loop_actual_HTTP_reads": 7,
+    "other_diagnostic_and_interrupted_attempt_HTTP_reads": 9,
+    "separate_TCP_TLS_socket_diagnostics": 2
+  },
+  "finance_durable_retry": {
+    "runtime_network_route_patched": false,
+    "retry_time_control": "First failed task stored exact 30-second retry (jitter pinned to1 for this check); verified no early claim. Only isolated task available_at moved due instead of sleeping30 seconds. No generation/attempt/HTTP checkpoint reset.",
+    "sources": [
+      {
+        "requested": "http://sf.ruc.edu.cn/",
+        "first": {
+          "final_url": "http://sf.ruc.edu.cn/",
+          "status": 502,
+          "outcome": "network_error",
+          "error_code": "http_502",
+          "evidence": [
+            "proxy_route_retry_available",
+            "public_dns_ipv4:106.120.213.245"
+          ],
+          "timings": {
+            "http_ms": 4033,
+            "admission_wait_ms": 0
+          },
+          "html_utf8_bytes": 165,
+          "sha256": "c79699a487ee2ca3f59a9906a52a0a208a9fef58011668cc42e57d63930b7c63",
+          "title": "502 Bad Gateway"
+        },
+        "saved_retry": {
+          "task_id": 1,
+          "generation": 1,
+          "state": "pending",
+          "attempts": 1,
+          "checkpoint": {
+            "http_retry_direct": {
+              "sf.ruc.edu.cn": 0
+            }
+          },
+          "retry_delay_seconds": 30.0
+        },
+        "no_claim_before_due": true,
+        "same_generation_retry": true,
+        "second": {
+          "final_url": "http://sf.ruc.edu.cn/",
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "direct_on_durable_retry",
+            "public_dns_ipv4:106.120.213.245",
+            "publication_link"
+          ],
+          "timings": {
+            "http_ms": 284,
+            "admission_wait_ms": 0
+          },
+          "html_utf8_bytes": 78181,
+          "sha256": "8fdfbe6182b21b977a46b68c64830b5e07832c5ad2af0b95609c5b67cfff1559",
+          "title": "中国人民大学财政金融学院"
+        },
+        "final_task": {
+          "state": "done",
+          "attempts": 1,
+          "generation": 1,
+          "claim_count": 2,
+          "checkpoint": {
+            "http_retry_direct": {
+              "sf.ruc.edu.cn": 0
+            }
+          }
+        },
+        "actual_breadcrumb_regions": []
+      },
+      {
+        "requested": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+        "first": {
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+          "status": 502,
+          "outcome": "network_error",
+          "error_code": "http_502",
+          "evidence": [
+            "proxy_route_retry_available",
+            "public_dns_ipv4:106.120.213.245"
+          ],
+          "timings": {
+            "http_ms": 798,
+            "admission_wait_ms": 0
+          },
+          "html_utf8_bytes": 165,
+          "sha256": "c79699a487ee2ca3f59a9906a52a0a208a9fef58011668cc42e57d63930b7c63",
+          "title": "502 Bad Gateway"
+        },
+        "saved_retry": {
+          "task_id": 2,
+          "generation": 1,
+          "state": "pending",
+          "attempts": 1,
+          "checkpoint": {
+            "http_retry_direct": {
+              "sf.ruc.edu.cn": 0
+            }
+          },
+          "retry_delay_seconds": 30.0
+        },
+        "no_claim_before_due": true,
+        "same_generation_retry": true,
+        "second": {
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "direct_on_durable_retry",
+            "public_dns_ipv4:106.120.213.245",
+            "publication_link"
+          ],
+          "timings": {
+            "http_ms": 308,
+            "admission_wait_ms": 0
+          },
+          "html_utf8_bytes": 31304,
+          "sha256": "e39f9ce29a8363d4317403b9117dbb729ae6b1fc71e8440cbac0f97addb45a84",
+          "title": "全部_中国人民大学财政金融学院"
+        },
+        "final_task": {
+          "state": "done",
+          "attempts": 1,
+          "generation": 1,
+          "claim_count": 2,
+          "checkpoint": {
+            "http_retry_direct": {
+              "sf.ruc.edu.cn": 0
+            }
+          }
+        },
+        "actual_breadcrumb_regions": [
+          {
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "当前位置： 首页 > 首页 > 公告 > 全部",
+            "links": [
+              {
+                "title": "首页",
+                "url": "http://sf.ruc.edu.cn/index.htm"
+              },
+              {
+                "title": "首页",
+                "url": "http://sf.ruc.edu.cn/sylm/index.htm"
+              },
+              {
+                "title": "公告",
+                "url": "http://sf.ruc.edu.cn/sylm/gg_sy/index.htm"
+              },
+              {
+                "title": "全部",
+                "url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "list_observed_item_count": 20,
+    "observed_body_samples": [
+      {
+        "list_title": "线上专场 | 人大国际金融学院推免生接收工作宣讲",
+        "list_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+        "list_date": "2026-06-28",
+        "body": {
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+          "status": 200,
+          "outcome": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "evidence": [
+            "direct_on_durable_retry",
+            "public_dns_ipv4:106.120.213.245"
+          ],
+          "timings": {
+            "http_ms": 605,
+            "admission_wait_ms": 0
+          },
+          "html_utf8_bytes": 27939,
+          "sha256": "7005a3a6d8e01e5bc46f08b9c88104b5d09c6222e98f2f90d37304a567620d29",
+          "title": "线上专场 | 人大国际金融学院推免生接收工作宣讲_中国人民大学财政金融学院"
+        },
+        "heading_identity_matches": true,
+        "attachment_urls": [],
+        "actual_breadcrumb_regions": [
+          {
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "当前位置： 首页 > 首页 > 公告 > 招生公告",
+            "links": [
+              {
+                "title": "首页",
+                "url": "http://sf.ruc.edu.cn/index.htm"
+              },
+              {
+                "title": "首页",
+                "url": "http://sf.ruc.edu.cn/sylm/index.htm"
+              },
+              {
+                "title": "公告",
+                "url": "http://sf.ruc.edu.cn/sylm/gg_sy/index.htm"
+              },
+              {
+                "title": "招生公告",
+                "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm"
+              }
+            ]
+          }
+        ],
+        "manual_retained_body_region_check": {
+          "source": "literal actual .articleDetail / .articleTitle h3 in retained public HTML; not AI output or installed rule",
+          "additional_HTTP_calls": 0,
+          "additional_API_calls": 0,
+          "body_selector": ".articleDetail",
+          "body_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2)",
+          "body_text_chars": 233,
+          "body_match_count": 1,
+          "title_selector": ".articleTitle h3",
+          "title_match_count": 1,
+          "title_matches_list": true,
+          "real_publication_date_in_title_region": true,
+          "scoped_classification_outcome": "usable",
+          "scoped_classification_evidence": [
+            "readiness_selector"
+          ]
+        }
+      },
+      {
+        "list_title": "国际金融学院推免生接收工作宣讲通知",
+        "list_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+        "list_date": "2026-06-25",
+        "body": {
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+          "status": 200,
+          "outcome": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "evidence": [
+            "direct_on_durable_retry",
+            "public_dns_ipv4:106.120.213.245"
+          ],
+          "timings": {
+            "http_ms": 209,
+            "admission_wait_ms": 0
+          },
+          "html_utf8_bytes": 27539,
+          "sha256": "761436a72d8817d843eec15dd9a2d0dc01d296284672c493b976af3b0993c25e",
+          "title": "国际金融学院推免生接收工作宣讲通知_中国人民大学财政金融学院"
+        },
+        "heading_identity_matches": true,
+        "attachment_urls": [],
+        "actual_breadcrumb_regions": [
+          {
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "当前位置： 首页 > 首页 > 公告 > 招生公告",
+            "links": [
+              {
+                "title": "首页",
+                "url": "http://sf.ruc.edu.cn/index.htm"
+              },
+              {
+                "title": "首页",
+                "url": "http://sf.ruc.edu.cn/sylm/index.htm"
+              },
+              {
+                "title": "公告",
+                "url": "http://sf.ruc.edu.cn/sylm/gg_sy/index.htm"
+              },
+              {
+                "title": "招生公告",
+                "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm"
+              }
+            ]
+          }
+        ],
+        "manual_retained_body_region_check": {
+          "source": "literal actual .articleDetail / .articleTitle h3 in retained public HTML; not AI output or installed rule",
+          "additional_HTTP_calls": 0,
+          "additional_API_calls": 0,
+          "body_selector": ".articleDetail",
+          "body_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2)",
+          "body_text_chars": 181,
+          "body_match_count": 1,
+          "title_selector": ".articleTitle h3",
+          "title_match_count": 1,
+          "title_matches_list": true,
+          "real_publication_date_in_title_region": true,
+          "scoped_classification_outcome": "usable",
+          "scoped_classification_evidence": [
+            "readiness_selector"
+          ]
+        }
+      },
+      {
+        "list_title": "关于研究生新生资格复审通知",
+        "list_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+        "list_date": "2026-09-28",
+        "body": {
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+          "status": 200,
+          "outcome": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "evidence": [
+            "direct_on_durable_retry",
+            "public_dns_ipv4:106.120.213.245"
+          ],
+          "timings": {
+            "http_ms": 189,
+            "admission_wait_ms": 0
+          },
+          "html_utf8_bytes": 32302,
+          "sha256": "5a390f44eccae123b8fa8334922cbb5e2d13168f4a75534c364b437a1dc6967a",
+          "title": "关于研究生新生资格复审通知_中国人民大学财政金融学院"
+        },
+        "heading_identity_matches": true,
+        "attachment_urls": [
+          "http://sf.ruc.edu.cn/docs/2025-09/c647ddbfae9d4b1b92f6ffa9e120b782.xlsx"
+        ],
+        "actual_breadcrumb_regions": [
+          {
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "当前位置： 首页 > 首页 > 公告 > 专硕教务",
+            "links": [
+              {
+                "title": "首页",
+                "url": "http://sf.ruc.edu.cn/index.htm"
+              },
+              {
+                "title": "首页",
+                "url": "http://sf.ruc.edu.cn/sylm/index.htm"
+              },
+              {
+                "title": "公告",
+                "url": "http://sf.ruc.edu.cn/sylm/gg_sy/index.htm"
+              },
+              {
+                "title": "专硕教务",
+                "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm"
+              }
+            ]
+          }
+        ],
+        "manual_retained_body_region_check": {
+          "source": "literal actual .articleDetail / .articleTitle h3 in retained public HTML; not AI output or installed rule",
+          "additional_HTTP_calls": 0,
+          "additional_API_calls": 0,
+          "body_selector": ".articleDetail",
+          "body_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2)",
+          "body_text_chars": 597,
+          "body_match_count": 1,
+          "title_selector": ".articleTitle h3",
+          "title_match_count": 1,
+          "title_matches_list": true,
+          "real_publication_date_in_title_region": true,
+          "scoped_classification_outcome": "usable",
+          "scoped_classification_evidence": [
+            "readiness_selector"
+          ]
+        }
+      }
+    ],
+    "all_new_user_sources_installed_by_this_check": 0,
+    "manual_rule_status": "Not AI generated, not installed. Generic article classifier needs_adapter retained honestly; actual scoped extraction and heading/date identity usable on all3 retained public pages.",
+    "report_sha256": "4bcccf2504b1e1fbf301a78f32336a6d4701ea8911da11da1cdf1355685c83f2"
+  },
+  "finance_body_reader_before": {
+    "HTTP_calls": 0,
+    "API_calls": 0,
+    "user_database_reads": 0,
+    "user_database_writes": 0,
+    "rule_source": "Manual literal actual retained .articleDetail; not AI output or installed user source.",
+    "scope": "Call original production article_samples and default onboarding reader with retained raw HTTP only.",
+    "config": {
+      "name": "全部",
+      "list_url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+      "content_selector": ".articleDetail"
+    },
+    "records": [
+      {
+        "title": "线上专场 | 人大国际金融学院推免生接收工作宣讲",
+        "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+        "date": "2026-06-28"
+      },
+      {
+        "title": "国际金融学院推免生接收工作宣讲通知",
+        "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+        "date": "2026-06-25"
+      },
+      {
+        "title": "关于研究生新生资格复审通知",
+        "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+        "date": "2026-09-28"
+      }
+    ],
+    "before_default_onboarding_reader": {
+      "passed": false,
+      "status": "full",
+      "failure_kind": "rule_error",
+      "identity_conflicts": [],
+      "retry_after": 0,
+      "matched_count": 0,
+      "required_matches": 2,
+      "available_count": 3,
+      "sample_count": 3,
+      "samples": [
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+          "title": "线上专场 | 人大国际金融学院推免生接收工作宣讲",
+          "matched": false,
+          "reason": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+          "title": "国际金融学院推免生接收工作宣讲通知",
+          "matched": false,
+          "reason": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+          "title": "关于研究生新生资格复审通知",
+          "matched": false,
+          "reason": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm"
+        }
+      ]
+    },
+    "after_configured_read_control": {
+      "passed": true,
+      "status": "full",
+      "failure_kind": "",
+      "identity_conflicts": [],
+      "retry_after": 0,
+      "matched_count": 3,
+      "required_matches": 2,
+      "available_count": 3,
+      "sample_count": 3,
+      "samples": [
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+          "title": "线上专场 | 人大国际金融学院推免生接收工作宣讲",
+          "matched": true,
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+          "content_hash": "4bd7dffedb2bde8b254797efd4406c5fbc086529d9022f7b96a800a0fcfc89ab",
+          "title_matched": true,
+          "content_selector_count": 1,
+          "listed_title_abbreviated": false,
+          "observed_title_candidates": [
+            "线上专场人大国际金融学院推免生接收工作宣讲中国人民大学财政金融学院",
+            "公告",
+            "招生公告",
+            "线上专场人大国际金融学院推免生接收工作宣讲"
+          ],
+          "title_prefix_observed": false,
+          "reason": "matched",
+          "attachment": false,
+          "attachment_urls": [],
+          "body_basis": "executed_selector"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+          "title": "国际金融学院推免生接收工作宣讲通知",
+          "matched": true,
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+          "content_hash": "8b573124794e4907ce1e2a83a6ac64bdefdf187bbcf40943253689709eec8b79",
+          "title_matched": true,
+          "content_selector_count": 1,
+          "listed_title_abbreviated": false,
+          "observed_title_candidates": [
+            "国际金融学院推免生接收工作宣讲通知中国人民大学财政金融学院",
+            "公告",
+            "招生公告",
+            "国际金融学院推免生接收工作宣讲通知"
+          ],
+          "title_prefix_observed": false,
+          "reason": "matched",
+          "attachment": false,
+          "attachment_urls": [],
+          "body_basis": "executed_selector"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+          "title": "关于研究生新生资格复审通知",
+          "matched": true,
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+          "content_hash": "26ba05fe1c8b83bb18e85e62e7caf479896db86200413f9c258f5a9ced028fd6",
+          "title_matched": true,
+          "content_selector_count": 1,
+          "listed_title_abbreviated": false,
+          "observed_title_candidates": [
+            "关于研究生新生资格复审通知中国人民大学财政金融学院",
+            "公告",
+            "专硕教务",
+            "关于研究生新生资格复审通知"
+          ],
+          "title_prefix_observed": false,
+          "reason": "matched",
+          "attachment": true,
+          "attachment_urls": [
+            "http://sf.ruc.edu.cn/images/2024-09/809b805e1c454425b9c81418ed87b218.jpg",
+            "http://sf.ruc.edu.cn/images/2024-09/cf93bb259159497893db52b480aa0d62.jpg",
+            "http://sf.ruc.edu.cn/docs/2025-09/c647ddbfae9d4b1b92f6ffa9e120b782.xlsx"
+          ],
+          "body_basis": "executed_selector"
+        }
+      ]
+    }
+  },
+  "finance_body_reader_after": {
+    "HTTP_calls": 0,
+    "API_calls": 0,
+    "API_tokens": 0,
+    "user_database_reads": 0,
+    "user_database_writes": 0,
+    "scope": "Complete retained real list and three real bodies; manually declared observed selectors; no AI automatic onboarding or source installation.",
+    "before_report_sha256": "db4f60ca08293265cf73df34527c27c3f98c9602bd8db89c82312ca374e7bd99",
+    "before": {
+      "passed": false,
+      "status": "full",
+      "failure_kind": "rule_error",
+      "identity_conflicts": [],
+      "retry_after": 0,
+      "matched_count": 0,
+      "required_matches": 2,
+      "available_count": 3,
+      "sample_count": 3,
+      "samples": [
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+          "title": "线上专场 | 人大国际金融学院推免生接收工作宣讲",
+          "matched": false,
+          "reason": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+          "title": "国际金融学院推免生接收工作宣讲通知",
+          "matched": false,
+          "reason": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+          "title": "关于研究生新生资格复审通知",
+          "matched": false,
+          "reason": "needs_adapter",
+          "error_code": "content_not_recognized",
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm"
+        }
+      ]
+    },
+    "config": {
+      "name": "全部",
+      "list_url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+      "group_name": "",
+      "list_selector": ".viewCont .viewItem",
+      "title_selector": "a",
+      "link_selector": "a",
+      "date_selector": "span",
+      "content_selector": ".articleDetail"
+    },
+    "declared_scope": {
+      "container_selector": ".articleBox",
+      "heading_selector": ".articleBox h2"
+    },
+    "actual_breadcrumb": [
+      {
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "text": "当前位置： 首页 > 首页 > 公告 > 全部",
+        "links": [
+          {
+            "title": "首页",
+            "url": "http://sf.ruc.edu.cn/index.htm"
+          },
+          {
+            "title": "首页",
+            "url": "http://sf.ruc.edu.cn/sylm/index.htm"
+          },
+          {
+            "title": "公告",
+            "url": "http://sf.ruc.edu.cn/sylm/gg_sy/index.htm"
+          },
+          {
+            "title": "全部",
+            "url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm"
+          }
+        ]
+      }
+    ],
+    "list_validation": {
+      "errors": [],
+      "region": {
+        "name": "全部",
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > h2:nth-of-type(1)",
+        "basis": "executed_ai_scope"
+      },
+      "item_count": 20,
+      "records": [
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+          "title": "线上专场 | 人大国际金融学院推免生接收工作宣讲",
+          "date": "2026-06-28"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+          "title": "国际金融学院推免生接收工作宣讲通知",
+          "date": "2026-06-25"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+          "title": "关于研究生新生资格复审通知",
+          "date": "2026-09-28"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/5bf88014c2c2426eb1cf6692a4b1d560.htm",
+          "title": "【博士】关于博士研究生新生资格复审的通知",
+          "date": "2026-09-17"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/20bc4fd6fff842ba931481100c11aa08.htm",
+          "title": "财政金融学院2027届专业硕士论文开题注意事项",
+          "date": "2026-09-16"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/b2294e1132cd422f86468118ab44b10c.htm",
+          "title": "财政金融学院2026年暑假值班表",
+          "date": "2026-07-09"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/57717a9b8c0e4f558e96177eb494e071.htm",
+          "title": "中国人民大学国际金融学院2027年推免生接收工作报名通知（直博项目）",
+          "date": "2026-06-25"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/b9f4b4b37b1c4102a9e727307aaccef8.htm",
+          "title": "中国人民大学国际金融学院2027年推免生接收工作报名通知（专业学位硕士项目）",
+          "date": "2026-06-25"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/478263fac0be43409c41e9b79a99f632.htm",
+          "title": "财政金融学院推免生接收工作宣讲通知",
+          "date": "2026-06-24"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/7c3fd5a12f644970b90ceef6b6c7727a.htm",
+          "title": "中国人民大学财政金融学院2027年推免生接收工作报名通知（直博项目）",
+          "date": "2026-06-24"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/f9cc7872c6d74d56b159dff1a2537560.htm",
+          "title": "中国人民大学财政金融学院2027年推免生接收工作报名通知（专业学位硕士项目）",
+          "date": "2026-06-24"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/6c5913a06fce4fd583e25a90dab1c782.htm",
+          "title": "【硕博培养】财政金融学院2026年“求是学术-栋梁”初评拟推荐项目公示",
+          "date": "2026-06-02"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/1578fd5b4fc94661b92941a89b1b750f.htm",
+          "title": "【硕博】2025-2026学年第二学期财政金融学院博士学位论文答辩公示",
+          "date": "2026-05-22"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/e08d5895e92c413480e75ad7bf812c61.htm",
+          "title": "【硕博】2025-2026学年第二学期财政金融学院学硕答辩安排",
+          "date": "2026-05-20"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/ac1379c2759f4b1bb93048eaea922513.htm",
+          "title": "2026上半年财政金融学院在校学生申请发表学术论文奖励审核结果公示",
+          "date": "2026-05-14"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/a2d2bca1967b4662a0a430b86f22ebef.htm",
+          "title": "【硕博培养】2026年春季博士研究生开题安排",
+          "date": "2026-04-14"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/5c520be1cdc1460b927959a576bef70e.htm",
+          "title": "财政金融学院2024级硕博直通研究生资格考试面试办法",
+          "date": "2026-03-30"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/c716d8e7a1d148fcb02fbe851dee26c3.htm",
+          "title": "【硕博培养】财政金融学院2026年国家建设高水平大学公派研究生项目审核推荐名单",
+          "date": "2026-03-20"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/585f7fb3c3de4ad9b150a283602d1c1f.htm",
+          "title": "中国人民大学财政金融学院2026年工商管理硕士（MBA）研究生招生考试复试录取工作方案",
+          "date": "2026-03-18"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/f0f45e385e1a45c0960b04949610acc2.htm",
+          "title": "财政金融学院2026年博士研究生“申请—考核”制综合考核笔试成绩公示及进入面试成绩要求",
+          "date": "2026-03-18"
+        }
+      ]
+    },
+    "after_default_configured_reader": {
+      "passed": true,
+      "status": "full",
+      "failure_kind": "",
+      "identity_conflicts": [],
+      "retry_after": 0,
+      "matched_count": 3,
+      "required_matches": 2,
+      "available_count": 20,
+      "sample_count": 3,
+      "samples": [
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+          "title": "线上专场 | 人大国际金融学院推免生接收工作宣讲",
+          "matched": true,
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+          "content_hash": "4bd7dffedb2bde8b254797efd4406c5fbc086529d9022f7b96a800a0fcfc89ab",
+          "title_matched": true,
+          "content_selector_count": 1,
+          "listed_title_abbreviated": false,
+          "observed_title_candidates": [
+            "线上专场人大国际金融学院推免生接收工作宣讲中国人民大学财政金融学院",
+            "公告",
+            "招生公告",
+            "线上专场人大国际金融学院推免生接收工作宣讲"
+          ],
+          "title_prefix_observed": false,
+          "observed_primary_title_candidates": [
+            "线上专场人大国际金融学院推免生接收工作宣讲"
+          ],
+          "reason": "matched",
+          "attachment": false,
+          "attachment_urls": [],
+          "body_basis": "executed_selector"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+          "title": "国际金融学院推免生接收工作宣讲通知",
+          "matched": true,
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+          "content_hash": "8b573124794e4907ce1e2a83a6ac64bdefdf187bbcf40943253689709eec8b79",
+          "title_matched": true,
+          "content_selector_count": 1,
+          "listed_title_abbreviated": false,
+          "observed_title_candidates": [
+            "国际金融学院推免生接收工作宣讲通知中国人民大学财政金融学院",
+            "公告",
+            "招生公告",
+            "国际金融学院推免生接收工作宣讲通知"
+          ],
+          "title_prefix_observed": false,
+          "observed_primary_title_candidates": [
+            "国际金融学院推免生接收工作宣讲通知"
+          ],
+          "reason": "matched",
+          "attachment": false,
+          "attachment_urls": [],
+          "body_basis": "executed_selector"
+        },
+        {
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+          "title": "关于研究生新生资格复审通知",
+          "matched": true,
+          "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+          "content_hash": "26ba05fe1c8b83bb18e85e62e7caf479896db86200413f9c258f5a9ced028fd6",
+          "title_matched": true,
+          "content_selector_count": 1,
+          "listed_title_abbreviated": false,
+          "observed_title_candidates": [
+            "关于研究生新生资格复审通知中国人民大学财政金融学院",
+            "公告",
+            "专硕教务",
+            "关于研究生新生资格复审通知"
+          ],
+          "title_prefix_observed": false,
+          "observed_primary_title_candidates": [
+            "关于研究生新生资格复审通知"
+          ],
+          "reason": "matched",
+          "attachment": true,
+          "attachment_urls": [
+            "http://sf.ruc.edu.cn/images/2024-09/809b805e1c454425b9c81418ed87b218.jpg",
+            "http://sf.ruc.edu.cn/images/2024-09/cf93bb259159497893db52b480aa0d62.jpg",
+            "http://sf.ruc.edu.cn/docs/2025-09/c647ddbfae9d4b1b92f6ffa9e120b782.xlsx"
+          ],
+          "body_basis": "executed_selector"
+        }
+      ]
+    },
+    "retained_transport_requests": [
+      {
+        "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+        "purpose": "article",
+        "readiness_selector": ".articleDetail",
+        "exploration": true
+      },
+      {
+        "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+        "purpose": "article",
+        "readiness_selector": ".articleDetail",
+        "exploration": true
+      },
+      {
+        "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+        "purpose": "article",
+        "readiness_selector": ".articleDetail",
+        "exploration": true
+      }
+    ],
+    "declared_selector_provenance": "Literal actual .articleBox h2, .viewCont/.viewItem/a/span, and .articleDetail, checked against retained DOM; not model-created rules.",
+    "installed_sources": 0
+  },
+  "actual_default_dynamic_before": {
+    "scope": "One actual official dynamic page through the frozen production default BrowserRuntime/OriginAdmission/broker/task_fetch path, backed exclusively by a new project-local test database. No AI, user DB or school/source installation.",
+    "report_sha256": "3ab61afe3cb93e7207f3a6771df53ad3b20c1537137072b01d7c9233b47000f5",
+    "isolated_database_sha256": "2d10c7d75e19541c76eadd203487b8a9d24a16aa0a7d5998696bd8a151a9b9a1",
+    "material_verified": true,
+    "browser_navigation_timeout_seconds": 45,
+    "navigation_elapsed_ms": 23618,
+    "total_harness_elapsed_seconds": 26.042947,
+    "observed_browser_request_events": 79,
+    "HTTP_responses_observed": 47,
+    "HTTP_response_status_counts": {
+      "200": 47
+    },
+    "responded_resource_type_counts": {
+      "document": 1,
+      "stylesheet": 4,
+      "script": 12,
+      "image": 24,
+      "xhr": 6
+    },
+    "unresponded_when_material_complete": 32,
+    "unresponded_type_counts": {
+      "image": 32
+    },
+    "resource_peak_concurrency": 34,
+    "navigation_permit_reserve_calls": 1,
+    "navigation_limiter_scope": "One navigation execution reserves one global/browser/host permit and starts according to the shared interval. Same execution-host token is reused for subresources. Resource peak is not navigation concurrency.",
+    "broker_calls": [
+      {
+        "action": "reserve",
+        "status": 200,
+        "url": "https://rdzs.ruc.edu.cn/",
+        "elapsed_seconds": 0.924442,
+        "allowed": true,
+        "retry_after": 0,
+        "active_origin_permits": 1,
+        "active_fetch_leases": 3
+      },
+      {
+        "action": "release",
+        "status": 200,
+        "url": null,
+        "elapsed_seconds": 24.528595,
+        "allowed": null,
+        "retry_after": null,
+        "active_origin_permits": 0,
+        "active_fetch_leases": 0
+      }
+    ],
+    "leases_released_after_poll": true,
+    "leases_released_after_shutdown": true,
+    "final_task": {
+      "state": "done",
+      "generation": 1,
+      "claim_count": 14,
+      "attempts": 0,
+      "checkpoint_fetches": 1,
+      "browser_pending_saved": false
+    },
+    "notification_link_occurrences": 29,
+    "notification_title_url_distinct_pairs": 27,
+    "matches_retained_actual_title_url_multiset": true,
+    "remaining_root_placeholders": 0,
+    "all_five_column_more_targets_real": true,
+    "DOM_observations": [
+      {
+        "event": "domcontentloaded",
+        "elapsed_seconds": 22.045862
+      }
+    ],
+    "data_HTTP_statuses": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "inference": "The previous once-read failure was under a diagnostic limiter that serialized every resource with a one-second interval, which production does not do. Under actual default navigation admission, all six XHR responses arrived and program waiting returned complete DOM after DOMContentLoaded. No source change, larger timeout or image suppression was needed for this production-path comparison.",
+    "limits": "One RUC rdzs material acquisition only; no real model decisions, identity/body validation, full school discovery, daily collection or universal dynamic-site reliability claim.",
+    "initial_HTTP_reads": 0,
+    "browser_dispatches": 1,
+    "AIExecution_count": 0,
+    "user_database_reads": 0,
+    "user_database_writes": 0,
+    "source_hashes": {
+      "backend/browser_service/runtime.py": "d10b041f893c8d89165766628871222477ebc4e1a5089adc75dc324c58880c32",
+      "backend/browser_service/admission.py": "9fe00422964ac6ee04645b0e96f77694225172f3451b398982a0cab0d09276c0",
+      "backend/browser_service/server.py": "90ef4137e5219e5b1fecab2cf772547a7014f4663ff158722e56a0418c48f7b9",
+      "backend/routes/browser_origin.py": "25d28fd2abb3f51043b5c6c0c3215995df65d92c54e9ccb35028e7cb6efb443b",
+      "backend/services/runtime_leases.py": "a6de285c84bf09c98dbd7547d6a01845326430d8abbe41bf1b6d657fe5197d19",
+      "backend/services/task_fetch.py": "e57ecb051d506178413a9b8eb65d65aa5c2cafa27fdff18801a9e2de3e0566b6",
+      "backend/scraper/acquisition/classifier.py": "900cfc7f694f6c153b91acbecfc45e97e8125e0e6b54165fc87c23d6768fab10",
+      "backend/scraper/acquisition/coordinator.py": "525dda701b90ac82d098a8ee9c4660e8a862807f931cd52de85ca0764c606142"
+    }
+  },
+  "actual_default_dynamic_after": {
+    "scope": "One frozen 2.10 actual default production acquisition through real task_fetch/browser service/OriginAdmission/isolated broker DB; navigation-only test, no full school/source/body/daily/model acceptance claim.",
+    "report_sha256": "2c7b8484607b2621ab1015d9af1dc28b8f5aeb8ecce071e09c39e11837a09155",
+    "isolated_database_sha256": "3f96ed692ebdf84bd691e2a59bbd90b0506dc0f94a1685b173d30076efa35c15",
+    "material_verified": true,
+    "read_deadline_seconds": 45,
+    "navigation_ms": 25385,
+    "harness_total_seconds": 27.890975,
+    "observer_request_events": 79,
+    "HTTP_responses_observed": 44,
+    "HTTP_response_status_counts": {
+      "200": 44
+    },
+    "responded_type_counts": {
+      "document": 1,
+      "stylesheet": 4,
+      "script": 12,
+      "image": 21,
+      "xhr": 6
+    },
+    "unresponded_when_material_complete": 35,
+    "unresponded_type_counts": {
+      "image": 35
+    },
+    "unresponded_failure_counts": {
+      "pending_when_material_completed": 35
+    },
+    "inflight_browser_request_event_peak": 41,
+    "resource_peak_limitation": "Counts browser request events awaiting finish/fail, including guard or socket queueing; does not claim this many active TCP connections or concurrent navigations.",
+    "navigation_reserve_calls": 1,
+    "broker_calls": [
+      {
+        "action": "reserve",
+        "status": 200,
+        "url": "https://rdzs.ruc.edu.cn/",
+        "elapsed_seconds": 0.98975,
+        "allowed": true,
+        "retry_after": 0,
+        "active_origin_permits": 1,
+        "active_fetch_leases": 3
+      },
+      {
+        "action": "release",
+        "status": 200,
+        "url": null,
+        "elapsed_seconds": 26.345832,
+        "allowed": null,
+        "retry_after": null,
+        "active_origin_permits": 0,
+        "active_fetch_leases": 0
+      }
+    ],
+    "permits_after_poll": 0,
+    "fetch_leases_after_poll": 0,
+    "permits_after_shutdown": 0,
+    "fetch_leases_after_shutdown": 0,
+    "final_task": {
+      "state": "done",
+      "generation": 1,
+      "claim_count": 15,
+      "attempts": 0,
+      "checkpoint_fetches": 1,
+      "browser_pending_saved": false
+    },
+    "retained_original_HTTP_bytes": 33887,
+    "retained_original_HTTP_sha256": "a8219baa863da5b0e835b23126297cbe9b225c7cb449c0cbd242899bde0ceaab",
+    "original_HTTP_reclassified": {
+      "outcome": "requires_render",
+      "error_code": "dynamic_material_pending"
+    },
+    "notification_link_occurrences": 29,
+    "distinct_actual_title_url_pairs": 27,
+    "matches_retained_actual_title_url_multiset": true,
+    "same_title_url_multiset_as_2_9_actual_production_read": true,
+    "all_five_column_more_targets_match_2_9_actual_production_read": true,
+    "root_placeholders": 0,
+    "DOM_events": [
+      {
+        "event": "domcontentloaded",
+        "elapsed_seconds": 19.544354
+      }
+    ],
+    "data_HTTP_statuses": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "AIExecution_count": 0,
+    "initial_HTTP_reads": 0,
+    "browser_dispatches": 1,
+    "user_database_reads": 0,
+    "user_database_writes": 0,
+    "default_images_fonts_media_allowed": true,
+    "network_resource_overrides": false,
+    "source_hashes": {
+      "backend/browser_service/runtime.py": "df92efa6ae5621d5140814a0b94d53f3d1a897db68dcb32c76944eb870457f3e",
+      "backend/browser_service/admission.py": "9fe00422964ac6ee04645b0e96f77694225172f3451b398982a0cab0d09276c0",
+      "backend/browser_service/server.py": "90ef4137e5219e5b1fecab2cf772547a7014f4663ff158722e56a0418c48f7b9",
+      "backend/routes/browser_origin.py": "25d28fd2abb3f51043b5c6c0c3215995df65d92c54e9ccb35028e7cb6efb443b",
+      "backend/services/runtime_leases.py": "a6de285c84bf09c98dbd7547d6a01845326430d8abbe41bf1b6d657fe5197d19",
+      "backend/services/task_fetch.py": "e57ecb051d506178413a9b8eb65d65aa5c2cafa27fdff18801a9e2de3e0566b6",
+      "backend/scraper/acquisition/classifier.py": "5da9e5ac6a397190aeca794d0153ddfab74a0b638a4f9182df57ff07e45b3664",
+      "backend/scraper/acquisition/coordinator.py": "525dda701b90ac82d098a8ee9c4660e8a862807f931cd52de85ca0764c606142"
+    },
+    "code_freeze_matches": true
+  },
+  "controlled_classifier_and_retained_checks": {
+    "scope": "Retained actual HTML replay and clearly marked controlled DOM transformations; no new official HTTP/browser/API request and no user database access.",
+    "HTTP_reads": 0,
+    "browser_reads": 0,
+    "model_requests": 0,
+    "user_database_reads": 0,
+    "before_classifier_sha256": "077044f27745ed280445f1bf0b81305412438760a04f6c2fecd51329b25d423c",
+    "after_classifier_sha256": "5da9e5ac6a397190aeca794d0153ddfab74a0b638a4f9182df57ff07e45b3664",
+    "rows": [
+      {
+        "name": "Actual retained HTTP still requires rendering",
+        "retained_HTML_sha256": "a8219baa863da5b0e835b23126297cbe9b225c7cb449c0cbd242899bde0ceaab",
+        "retained_HTML_bytes": 33887,
+        "controlled_transformation": null,
+        "transport": "http",
+        "readiness_selector": "",
+        "policy": {},
+        "before": {
+          "outcome": "requires_render",
+          "error_code": "dynamic_material_pending",
+          "evidence": [
+            "observed_dynamic_request",
+            "placeholder_publication_targets:13",
+            "placeholder_column_targets:5",
+            "loading_regions:0"
+          ]
+        },
+        "after": {
+          "outcome": "requires_render",
+          "error_code": "dynamic_material_pending",
+          "evidence": [
+            "observed_dynamic_request",
+            "placeholder_publication_targets:13",
+            "placeholder_column_targets:5",
+            "loading_regions:0"
+          ]
+        },
+        "expected_before": "requires_render",
+        "expected_after": "requires_render",
+        "passed": true
+      },
+      {
+        "name": "Actual retained middle DOM still incomplete",
+        "retained_HTML_sha256": "52e96710408a9f8050d4f6be8b0dc623eaff7d1969ae5618f0be5b91e1cd206d",
+        "retained_HTML_bytes": 35021,
+        "controlled_transformation": null,
+        "transport": "browser",
+        "readiness_selector": "",
+        "policy": {
+          "dynamic_material_observed": true
+        },
+        "before": {
+          "outcome": "needs_adapter",
+          "error_code": "dynamic_material_incomplete",
+          "evidence": [
+            "observed_dynamic_request",
+            "placeholder_publication_targets:0",
+            "placeholder_column_targets:2",
+            "loading_regions:0"
+          ]
+        },
+        "after": {
+          "outcome": "needs_adapter",
+          "error_code": "dynamic_material_incomplete",
+          "evidence": [
+            "observed_dynamic_request",
+            "placeholder_publication_targets:0",
+            "placeholder_column_targets:2",
+            "loading_regions:0"
+          ]
+        },
+        "expected_before": "needs_adapter",
+        "expected_after": "needs_adapter",
+        "passed": true
+      },
+      {
+        "name": "Actual full production-default DOM remains usable",
+        "retained_HTML_sha256": "56fb0bae31373c81c614ce824d25671a6c035661c851e0e82d76407a5f84b0cb",
+        "retained_HTML_bytes": 34557,
+        "controlled_transformation": null,
+        "transport": "browser",
+        "readiness_selector": "",
+        "policy": {
+          "dynamic_material_observed": true
+        },
+        "before": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        },
+        "after": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        },
+        "expected_before": "usable",
+        "expected_after": "usable",
+        "passed": true
+      },
+      {
+        "name": "Controlled loader removal preserves actual unfinished HTTP targets",
+        "retained_HTML_sha256": "a8219baa863da5b0e835b23126297cbe9b225c7cb449c0cbd242899bde0ceaab",
+        "retained_HTML_bytes": 33887,
+        "controlled_transformation": "remove_inline_loader_scripts",
+        "transport": "browser",
+        "readiness_selector": "",
+        "policy": {
+          "dynamic_material_observed": true
+        },
+        "before": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        },
+        "after": {
+          "outcome": "needs_adapter",
+          "error_code": "dynamic_material_incomplete",
+          "evidence": [
+            "retained_dynamic_observation",
+            "placeholder_publication_targets:13",
+            "placeholder_column_targets:5",
+            "loading_regions:0"
+          ]
+        },
+        "expected_before": "usable",
+        "expected_after": "needs_adapter",
+        "passed": true
+      },
+      {
+        "name": "Controlled loader removal does not invalidate actual completed production DOM",
+        "retained_HTML_sha256": "56fb0bae31373c81c614ce824d25671a6c035661c851e0e82d76407a5f84b0cb",
+        "retained_HTML_bytes": 34557,
+        "controlled_transformation": "remove_inline_loader_scripts",
+        "transport": "browser",
+        "readiness_selector": "",
+        "policy": {
+          "dynamic_material_observed": true
+        },
+        "before": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        },
+        "after": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        },
+        "expected_before": "usable",
+        "expected_after": "usable",
+        "passed": true
+      },
+      {
+        "name": "Controlled visible body readiness contract cannot bypass actual unfinished middle DOM",
+        "retained_HTML_sha256": "52e96710408a9f8050d4f6be8b0dc623eaff7d1969ae5618f0be5b91e1cd206d",
+        "retained_HTML_bytes": 35021,
+        "controlled_transformation": null,
+        "transport": "browser",
+        "readiness_selector": "body",
+        "policy": {
+          "dynamic_material_observed": true
+        },
+        "before": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "readiness_selector"
+          ]
+        },
+        "after": {
+          "outcome": "needs_adapter",
+          "error_code": "dynamic_material_incomplete",
+          "evidence": [
+            "observed_dynamic_request",
+            "placeholder_publication_targets:0",
+            "placeholder_column_targets:2",
+            "loading_regions:0"
+          ]
+        },
+        "expected_before": "usable",
+        "expected_after": "needs_adapter",
+        "passed": true
+      },
+      {
+        "name": "Controlled visible body readiness contract remains usable after actual completion",
+        "retained_HTML_sha256": "56fb0bae31373c81c614ce824d25671a6c035661c851e0e82d76407a5f84b0cb",
+        "retained_HTML_bytes": 34557,
+        "controlled_transformation": null,
+        "transport": "browser",
+        "readiness_selector": "body",
+        "policy": {
+          "dynamic_material_observed": true
+        },
+        "before": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "readiness_selector"
+          ]
+        },
+        "after": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "readiness_selector"
+          ]
+        },
+        "expected_before": "usable",
+        "expected_after": "usable",
+        "passed": true
+      },
+      {
+        "name": "Actual retained PGS material verdict unchanged",
+        "retained_HTML_sha256": "4deb0f19e7129e928023e827415ec5d6fe302d3d6e5b33c1f141ac5c53cb3bbc",
+        "retained_HTML_bytes": 31423,
+        "controlled_transformation": null,
+        "transport": "http",
+        "readiness_selector": "",
+        "policy": {},
+        "before": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        },
+        "after": {
+          "outcome": "usable",
+          "error_code": "",
+          "evidence": [
+            "visible_directory_content"
+          ]
+        },
+        "expected_before": "usable",
+        "expected_after": "usable",
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "row_count": 8
+  },
+  "controlled_runtime_and_local_Edge_checks": {
+    "checked_at": "2026-10-11T14:15:06.804556+00:00",
+    "test_modules": [
+      "test_browser_runtime",
+      "test_browser_runtime_real",
+      "test_dynamic_material_acquisition",
+      "test_discovery_fetch_policy.BrowserPolicyTests",
+      "test_discovery_fetch_policy.SharedPolicyTests",
+      "test_shared_fetch_runtime",
+      "test_browser_runtime_routes",
+      "test_acquisition",
+      "test_acceptance_instrumentation"
+    ],
+    "tests_run": 132,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 13,
+    "successful": true,
+    "browser": "real Microsoft Edge against local-only aiohttp fixtures",
+    "external_school_requests": 0,
+    "model_requests": 0,
+    "user_database_access": false,
+    "production_read_budget_seconds": 45,
+    "cleanup": "Separate bounded cleanup: page and admission close in parallel; each primary or fallback stage is capped at 5 seconds (up to about 10 seconds overall). Unreachable release callbacks retain only expiring permits; failed page/context cleanup isolates context and uses existing supervisor watchdog.",
+    "red_regression_evidence": {
+      "initial_5_tests_failures": 4,
+      "failed_scenarios": [
+        "slow final validation lost partial",
+        "slow page cleanup lost partial",
+        "next DOM read exceeded deadline and lost validated partial",
+        "expired origin_busy result kept replaying"
+      ],
+      "external_cancel_cleanup_test_failed_before_cleanup_cancellation_handling": true,
+      "closing_and_replaced_admission_guard_tests_failed_before_guard_fix": 2
+    },
+    "controlled_45_second_replay": {
+      "fixture": "FakePage using retained dynamic-publication-template, final public validator delayed 200ms; no networking",
+      "before": {
+        "elapsed_seconds": 45.014,
+        "state": "failed",
+        "error_code": "browser_timeout",
+        "result_present": false
+      },
+      "after": {
+        "elapsed_seconds": 45.004,
+        "state": "done",
+        "error_code": "dynamic_material_incomplete",
+        "partial_html_retained": true,
+        "page_closed": true,
+        "remaining_admissions": 0
+      },
+      "scope": "45s green replay preceded final guard-only safety patch; final suite tests that guard patch against real local Edge."
+    },
+    "files": {
+      "backend/browser_service/runtime.py": "df92efa6ae5621d5140814a0b94d53f3d1a897db68dcb32c76944eb870457f3e",
+      "tests/test_browser_runtime.py": "3699f2e53ee426785de6fc3bea4fda57333b801b68a6908c4e7c1e8836da1ab6"
+    },
+    "full_suite_files": {
+      "backend/browser_service/runtime.py": "639272874b45db5cc5e7944a107ebe65124cbefd7196ef30c20cc6c6a4974c53",
+      "tests/test_browser_runtime.py": "3699f2e53ee426785de6fc3bea4fda57333b801b68a6908c4e7c1e8836da1ab6"
+    },
+    "final_cleanup_budget_validation": {
+      "change": "Count an interrupted release retry and HTTP-session close inside the same 10s total cleanup allowance. Read/navigation/guard logic unchanged.",
+      "tests_run": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "successful": true
+    }
+  },
+  "controlled_typed_failure_and_durable_recovery": {
+    "generated_at": "2026-10-11T14:59:48.752197+00:00",
+    "scope": "Pure local controlled acquisition fixtures and isolated databases; not newly observed website incidents. No user database or secrets accessed.",
+    "official_website_requests": 0,
+    "model_api_requests": 0,
+    "production_files_frozen": true,
+    "files_sha256": {
+      "backend/scraper/acquisition/coordinator.py": "2465a4469c0649c276b697113963414b272c1daa5e22069c2b486b81d915a1a8",
+      "backend/scraper/selector_monitor.py": "17804ead0d9dd33ddbb56ed732f0c341a2816a96aad51864e04e1bf018256796",
+      "backend/services/source_collection.py": "8485345e79e621f0d479097d3ef5b8ace1aceb5ba162b87b805d1f1a49a2f2cb",
+      "backend/services/source_governance.py": "62ed527f3df12e499b786c8e1a6019010a3a0d8646d398e24c1fd56bfd34e894",
+      "backend/services/source_onboarding.py": "790bdecc0d1a2254e73e5c8928a83d3bd0000bb5cd038a361baf08056cbcc39f",
+      "tests/test_automatic_parser_repair.py": "02a08e8e1ec779adbb9dc64f82c45f5bc5b05d72cd075e388cae66b0a6453c11"
+    },
+    "red": [
+      {
+        "tests": 4,
+        "failure_instances": 9,
+        "meaning": "Default collection and shared repair/snapshot replay lost typed material/network/access errors."
+      },
+      {
+        "tests": 2,
+        "failure_instances": 3,
+        "meaning": "Governance list/independent-list/exploration accepted incomplete material; existing exhausted recovery fixture passed."
+      },
+      {
+        "tests": 1,
+        "failure_instances": 1,
+        "meaning": "Actual worker finished first dynamic-material failure as failed instead of scheduling existing bounded retry."
+      }
+    ],
+    "green": {
+      "tests": 259,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 12,
+      "elapsed_seconds": 22.736,
+      "modules": [
+        "test_automatic_parser_repair",
+        "test_direct_onboarding",
+        "test_source_governance",
+        "test_source_governance_recovery",
+        "test_source_validation",
+        "test_dynamic_material_acquisition",
+        "test_fetch_evidence_resume",
+        "test_shared_fetch_runtime",
+        "test_source_fetch_failures",
+        "test_discovery_fetch_policy",
+        "test_acquisition"
+      ]
+    },
+    "assertions": [
+      "Typed network/material/access verdicts and evidence survive shared classifier, snapshot capture and onboarding replay; no AI repair or model calls.",
+      "Genuine changed selectors/readiness_missing still follow existing validated repair and preserve source identity.",
+      "Same collect task performs exactly 3 bounded attempts with existing 30s/120s jitter policy and then 6h recovery; test jitter fixed to 1 for exact assertion.",
+      "A longer Retry-After of 6h+60s on the exhausted attempt wins over recovery; no early automatic queue; after elapsed delay the same task ID reopens with new generation.",
+      "After complete material returns, one new notice is ingested; original source/rule/version/announcement IDs/read state/star remain intact.",
+      "Plain HTML snapshot callers remain compatible; explicit usable cannot override failed typed HTML."
+    ],
+    "existing_cache_coverage": [
+      "test_dynamic_material_acquisition.DynamicMaterialAcquisitionTests.test_incomplete_dynamic_dom_is_not_a_completed_replay_but_other_material_is",
+      "test_shared_fetch_runtime: browser polling handoff does not repeat HTTP or submit",
+      "test_fetch_evidence_resume: completed denied observation stays denied after handoff"
+    ],
+    "limits": [
+      "PostgreSQL variants skipped: no dedicated PostgreSQL test URI configured.",
+      "No new retry limits, AI budgets, model-provider settings or publication-channel/UI changes."
+    ]
+  },
+  "controlled_reader_and_user_state_peercheck": {
+    "scope": "offline isolated peer review, fixtures and controlled edits; no website/API/user database",
+    "source_hashes": {
+      "backend/services/source_onboarding.py": "790bdecc0d1a2254e73e5c8928a83d3bd0000bb5cd038a361baf08056cbcc39f",
+      "backend/services/source_governance.py": "62ed527f3df12e499b786c8e1a6019010a3a0d8646d398e24c1fd56bfd34e894",
+      "backend/services/source_validation.py": "e96b804f22527446fd1a306d3602d549a8ce6ef7ee16f97b98bf9dfdd4699e6b",
+      "tests/test_source_validation.py": "691e095f7f8b4d8f26546a9953f2a85125306c95e553699f9723612eb1a533a3"
+    },
+    "http_transport": "mocked",
+    "model_calls": 0,
+    "user_db_access": 0,
+    "production_files_unchanged_during_review": true,
+    "cases": [
+      {
+        "case": "two columns bind independent rules; strict scope and failed repair preserve identity/user state",
+        "passed": true,
+        "initial_read_selectors": [
+          "",
+          ".body-a",
+          ".body-a",
+          ".body-a",
+          ".body-b",
+          ".body-b",
+          ".body-b"
+        ],
+        "all_trial_reads_exploration": true,
+        "sources": 2,
+        "notices": 6,
+        "user_state_guard_equal": true,
+        "ai_execution_rows": 0
+      },
+      {
+        "case": "retained real finance fragments with controlled abbreviated list and contradictory primary h3",
+        "passed": true,
+        "matched_count": 2,
+        "validation_passed": false,
+        "first_reason": "article_identity_conflict"
+      }
+    ]
+  },
+  "controlled_legacy_unknown_paid_before": {
+    "mode": "before",
+    "source_sha256": "aea5e292823567b7310141f95344138199d0a3cbde16aed9f99b7150a139e13e",
+    "scope": "offline isolated fixture; before uses retained HEAD implementation; calls are mocks, no actual billing",
+    "model_dispatch_entry_calls": 1,
+    "mock_execution_ids": [
+      "directory:93b52c98ba788f9cf8ba5cc33988ecaceb9d7a62:2"
+    ],
+    "original_execution": {
+      "id": "legacy-unknown-paid",
+      "status": "uncertain",
+      "usage_known": false,
+      "reserved_tokens": 9000,
+      "request_sent": true
+    },
+    "original_event_applied": true,
+    "original_event_logically_unchanged": false,
+    "journal_count": 2,
+    "result": {
+      "status": "not_a_column",
+      "changed": false
+    },
+    "real_network_calls": 0,
+    "real_model_calls": 0,
+    "user_database_access": 0
+  },
+  "controlled_legacy_unknown_paid_after": {
+    "mode": "after",
+    "source_sha256": "e92f26ce141c9d3e3e83b8f3458314f22fd07c4b9e132bb1a70bb17168b5c9b9",
+    "scope": "offline isolated fixture; before uses retained HEAD implementation; calls are mocks, no actual billing",
+    "model_dispatch_entry_calls": 0,
+    "mock_execution_ids": [],
+    "original_execution": {
+      "id": "legacy-unknown-paid",
+      "status": "uncertain",
+      "usage_known": false,
+      "reserved_tokens": 9000,
+      "request_sent": true
+    },
+    "original_event_applied": false,
+    "original_event_logically_unchanged": true,
+    "journal_count": 1,
+    "result": {
+      "status": "waiting",
+      "error_code": "ai_result_unknown",
+      "changed": false
+    },
+    "real_network_calls": 0,
+    "real_model_calls": 0,
+    "user_database_access": 0,
+    "unknown_request_preservation_passed": true,
+    "executed_text_sha256": "bfc962e0dcb4ff276eb1a1ebb170ecc190becf4c3306aa341c12aac1a222a3d3"
+  },
+  "final_isolated_regression": {
+    "tests_run": 1390,
+    "passed": 1366,
+    "skipped": 24,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 262.727,
+    "actual_AI_calls": 0,
+    "production_database_access": false
+  },
+  "limitations": [
+    "Real finance HTML and literal manual scoped selectors are not new paid AI recognition or an installed user source.",
+    "Actual attachment addresses observed; linked XLSX was not additionally downloaded or parsed.",
+    "No new whole-school equal-budget AI A/B comparison.",
+    "Original five-school, fifty-source, hundred-notice end-to-end acceptance gaps remain.",
+    "Browser request events, responses, in-flight events and navigation permits are distinct measurements.",
+    "No generalized zero-error or calibrated probability claim."
+  ]
+}

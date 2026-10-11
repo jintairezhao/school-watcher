@@ -110,7 +110,19 @@ def _evidence_root():
     return (Path(inventory).parent if inventory else Path(current_app.instance_path)) / 'source-governance-evidence'
 
 
-def _snapshot(html, url, *, outcome='usable', role='list'):
+def _snapshot(html, url, *, outcome=None, role='list'):
+    from backend.scraper.acquisition import FetchResult
+    raw = getattr(html, 'result', None)
+    metadata = {}
+    if isinstance(raw, FetchResult):
+        # Retained HTML must not turn a transport/material failure into usable
+        # evidence when replayed by another worker or after a process restart.
+        if outcome is None or not raw.ok:
+            outcome = raw.outcome
+        metadata = {'status': raw.status, 'transport': raw.transport,
+                    'error_code': raw.error_code, 'message': raw.message,
+                    'evidence': list(raw.evidence), 'retry_after': raw.retry_after}
+    outcome = outcome or 'usable'
     html = str(html)
     if len(html.encode()) > 8 * 1024 * 1024:
         raise ValueError('网页证据超过单页限制')
@@ -126,7 +138,7 @@ def _snapshot(html, url, *, outcome='usable', role='list'):
         except FileExistsError:
             pass
     return {'hash': digest, 'url': canonical_url(url), 'role': role, 'outcome': outcome,
-            'captured_at': datetime.utcnow().isoformat()}
+            'captured_at': datetime.utcnow().isoformat(), **metadata}
 
 
 def read_snapshot(reference):
@@ -151,9 +163,13 @@ class CapturedEvidence:
     bundle: dict
 
 
-def _fetch(url, purpose, *, config=None):
+def _fetch(url, purpose, *, config=None, exploration=None):
     from backend.scraper.engine import _fetch_html
-    policy = {'exploration': config is None or purpose == 'directory'}
+    # Trial rules locate material without turning a sampled article into daily
+    # collection. Legacy callers retain their default; trials pass their mode.
+    if exploration is None:
+        exploration = config is None or purpose == 'directory'
+    policy = {'exploration': bool(exploration)}
     config = config or {}
     selector = (config.get('content_selector', '') if purpose in ('body', 'article') else
                 config.get('list_selector', '') if purpose in ('list', 'independent_list') else '')
@@ -166,20 +182,23 @@ def _fetch(url, purpose, *, config=None):
 
 
 def _fetch_snapshot(url, purpose, fetcher):
-    from backend.scraper.acquisition import FetchFailure
+    from backend.scraper.acquisition import FetchFailure, FetchedHTML
+    from backend.scraper.selector_monitor import _repairable_result
     try:
         html = fetcher(url, purpose)
+        result = getattr(html, 'result', None)
+        if result is not None and not result.ok:
+            raise FetchFailure(result)
     except FetchFailure as exc:
-        if purpose not in ('list', 'independent_list') or exc.outcome != 'needs_adapter' or not exc.result.html:
+        if (purpose not in ('list', 'independent_list') or
+                not _repairable_result(exc.result) or not exc.result.html):
             raise
         # The transport's generic list recognizer is not the authority for an
         # AI-declared CSS plan. Retain readable material and let _column_scope,
         # article identity and the independent sample validate the actual plan.
-        return _snapshot(exc.result.html, exc.result.final_url or url,
+        return _snapshot(FetchedHTML(exc.result), exc.result.final_url or url,
                          outcome='needs_adapter', role=purpose)
     result = getattr(html, 'result', None)
-    if result is not None and not result.ok:
-        raise ValueError('官网返回了无效页面')
     outcome = getattr(result, 'outcome', 'usable')
     if outcome not in ('usable', 'empty'):
         raise ValueError('网页内容尚未就绪，不能审核来源')
@@ -189,10 +208,11 @@ def _fetch_snapshot(url, purpose, fetcher):
 def _exploration_html(url):
     """Unknown readable markup is AI material, never a successful body sample."""
     from backend.scraper.acquisition import FetchFailure, FetchedHTML
+    from backend.scraper.selector_monitor import _repairable_result
     try:
         return _fetch(url, 'directory')
     except FetchFailure as exc:
-        if exc.outcome == 'needs_adapter' and exc.result.html:
+        if _repairable_result(exc.result) and exc.result.html:
             return FetchedHTML(exc.result)
         raise
 

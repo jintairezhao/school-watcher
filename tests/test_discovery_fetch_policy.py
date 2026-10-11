@@ -80,6 +80,67 @@ class _StalledTLS(socketserver.BaseRequestHandler):
 
 
 class HTTPDeadlineTests(unittest.TestCase):
+    def test_optional_proxy_gateway_error_waits_then_changes_route_without_extra_send(self):
+        from contextlib import ExitStack
+        from backend.scraper.acquisition import classify_result
+        for status in (502, 503, 504):
+            with self.subTest(status=status):
+                handle = {'attempts': 0, 'checkpoint': {}}
+                sent = []
+                origin_gateway = [False]
+                class Response:
+                    headers = {'Content-Type': 'text/html'}
+                    def __init__(self, code): self.status = code
+                    async def __aenter__(self): return self
+                    async def __aexit__(self, *args): pass
+                    @property
+                    def content(self): return self
+                    async def iter_chunked(self, size): yield b'<article>Public notification</article>'
+                class Session:
+                    def __init__(self, **kwargs): pass
+                    async def __aenter__(self): return self
+                    async def __aexit__(self, *args): pass
+                    async def get(self, target, **kwargs):
+                        sent.append(kwargs.get('proxy'))
+                        return Response(status if kwargs.get('proxy') or origin_gateway[0] else 200)
+                def remember(address):
+                    handle['checkpoint']['http_retry_direct'] = {'www.example.edu.cn': handle['attempts']}
+                with ExitStack() as stack:
+                    for name, value in [('_shared_permit', None), ('_release_permit', None),
+                                        ('select_proxy', 'http://proxy.example:8080'),
+                                        ('public_addresses', ['8.8.8.8']), ('proxy_required', False)]:
+                        stack.enter_context(patch('backend.scraper.acquisition.http_transport.' + name, return_value=value))
+                    stack.enter_context(patch('backend.scraper.acquisition.http_transport.aiohttp.ClientSession', Session))
+                    stack.enter_context(patch('backend.scraper.acquisition.http_transport.remember_proxy_failure', side_effect=remember))
+                    with tasks.execution_scope(handle):
+                        request = FetchRequest('http://www.example.edu.cn/info/1.htm', purpose='article')
+                        first = classify_result(request, fetch_http(request))
+                        self.assertEqual(first.outcome, 'network_error')
+                        self.assertEqual(first.error_code, 'http_' + str(status))
+                        self.assertIn('proxy_route_retry_available', first.evidence)
+                        self.assertEqual(sent, ['http://proxy.example:8080'])
+                        same_attempt = classify_result(request, fetch_http(request))
+                        self.assertEqual(same_attempt.status, status)
+                        self.assertEqual(sent, ['http://proxy.example:8080'] * 2)
+                        handle['attempts'] = 1
+                        second = classify_result(request, fetch_http(request))
+                        self.assertEqual(second.status, 200)
+                        self.assertEqual(sent[-1], None)
+                        self.assertIn('direct_on_durable_retry', second.evidence)
+                    with patch('backend.scraper.acquisition.http_transport.proxy_required', return_value=True):
+                        with tasks.execution_scope(handle):
+                            required = classify_result(request, fetch_http(request))
+                    self.assertEqual(required.status, status)
+                    self.assertNotIn('proxy_route_retry_available', required.evidence)
+                    self.assertEqual(sent[-1], 'http://proxy.example:8080')
+                    origin_gateway[0] = True
+                    with patch('backend.scraper.acquisition.http_transport.select_proxy', return_value=None):
+                        with tasks.execution_scope({'attempts': 0, 'checkpoint': {}}):
+                            direct = classify_result(request, fetch_http(request))
+                    self.assertEqual(direct.outcome, 'network_error')
+                    self.assertEqual(direct.error_code, 'http_' + str(status))
+                    self.assertNotIn('proxy_route_retry_available', direct.evidence)
+
     def test_automatic_proxy_denial_yields_before_a_later_direct_attempt(self):
         from contextlib import ExitStack
         from backend.scraper.acquisition import classify_result

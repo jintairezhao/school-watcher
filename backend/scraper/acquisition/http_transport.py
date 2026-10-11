@@ -114,9 +114,12 @@ async def read_http(request, permit=None, trace=None):
                         trace['phase'] = 'body'
                         response_headers = dict(response.headers)
                         retry_after = retry_after_seconds(response.headers.get('Retry-After'))
-                        if response.status in (403, 407) and proxy and not required_proxy:
+                        if response.status in (403, 407, 502, 503, 504) and proxy and not required_proxy:
                             # An environment proxy can reject a public page the
-                            # direct route can read. Record a route problem, not
+                            # direct route can read, or fail its pinned-IP route
+                            # with a gateway status. Preserve the observed HTTP
+                            # status; this does not prove who generated it.
+                            # Record an available route check, not
                             # a parser problem; the durable queue owns the wait
                             # and any later direct attempt. Never resend here.
                             notes.append('proxy_route_retry_available')

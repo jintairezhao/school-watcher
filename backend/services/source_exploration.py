@@ -127,7 +127,8 @@ def set_workflow(proposal, status, **detail):
 
 def acquire(proposal, action, observed):
     from backend.services import source_governance as g, tasks
-    from backend.scraper.acquisition import FetchFailure, FetchDeferred
+    from backend.scraper.acquisition import FetchFailure, FetchDeferred, FetchedHTML
+    from backend.scraper.selector_monitor import _repairable_result
     from backend.scraper.http_client import validate_public_url, same_school_url
     from backend.database.models import School
     bundle = json.loads(proposal.evidence_json)
@@ -171,8 +172,8 @@ def acquire(proposal, action, observed):
                       'url': url, 'error_code': exc.error_code, 'reason': str(exc)[:400]}
             # An unfamiliar but readable document is still material for AI. It is
             # never a successful validation sample until the normal gate accepts it.
-            if exc.result.html and exc.outcome not in ('denied', 'needs_manual', 'network_error', 'unavailable'):
-                bundle.setdefault('exploration_pages', []).append(g._snapshot(exc.result.html,
+            if exc.result.html and _repairable_result(exc.result):
+                bundle.setdefault('exploration_pages', []).append(g._snapshot(FetchedHTML(exc.result),
                     exc.result.final_url or url, role=purpose, outcome=exc.outcome))
         db.session.add(SourceReviewEvent(proposal_id=proposal.id, action='exploration_read', detail_json=g._json(result)))
     else:
@@ -234,6 +235,46 @@ def record_step_progress(proposal, detail):
     detail['progress'] = state
     set_workflow(proposal, workflow.get('status', 'checking'), progress=state)
     return state
+
+
+def _hold_legacy_paid_call(proposal, journal, changed):
+    """A new manifest must not escape an unresolved original paid execution."""
+    from backend.ai.models import AIExecution
+    from backend.services import tasks
+    for event in journal:
+        detail = json.loads(event.detail_json)
+        if detail.get('manifest_started'):
+            continue
+        ident = detail.get('execution_id')
+        original = db.session.get(AIExecution, ident, populate_existing=True) if ident else None
+        result = detail.get('result') or {}
+        if original:
+            active = original.status in ('reserved', 'sending')
+            # Old rows defaulted request_sent to False. That flag alone cannot
+            # prove an unbilled call when usage and its reservation are unknown.
+            unknown = original.status == 'uncertain' or (original.usage or {}).get('known') is not True
+        else:
+            active = False
+            unknown = (detail.get('status') == 'uncertain' or result.get('status') == 'uncertain'
+                or detail.get('status') in ('failed', 'partial', 'succeeded') and
+                   result.get('usage', {}).get('known') is not True)
+        if not active and not unknown:
+            continue
+        code = '' if active else 'ai_result_unknown'
+        reason = ('等待旧调用心跳恢复核对，保留原调用账目' if active else
+                  '原模型请求结果或用量尚未确认，进度已保存，不会自动重复计费')
+        set_workflow(proposal, 'checking', ai_status='waiting' if active else code, reason=reason)
+        handle = tasks.current_execution()
+        if handle:
+            checkpoint = dict(handle.get('checkpoint') or {})
+            if not active:
+                checkpoint['source_exploration_unknown'] = {'proposal_id': proposal.id,
+                    'event_id': event.id, 'execution_id': ident}
+            tasks.defer(capability='directory', phase='source_material' if active else 'ai_result',
+                state='pending' if active else 'waiting', delay=5 if active else 0,
+                checkpoint=checkpoint, error_code=code, reason=reason)
+        return {'status': 'pending' if active else 'waiting', 'error_code': code, 'changed': changed}
+    return None
 
 
 def run(proposal_id, *, inventory=None):
@@ -299,29 +340,41 @@ def run(proposal_id, *, inventory=None):
             if detail.get('status') in ('pending', 'uncertain', 'failed', 'partial') and not detail.get('manifest_started'):
                 from backend.ai.models import AIExecution
                 original = db.session.get(AIExecution, detail.get('execution_id')) if detail.get('execution_id') else None
-                if original and original.status in ('reserved', 'sending'):
-                    db.session.commit()
-                    if tasks.current_execution():
-                        tasks.defer(capability='directory', phase='source_material', delay=5,
-                                    reason='等待旧调用心跳恢复核对，保留原调用账目')
-                    return {'status': 'pending', 'changed': changed}
-                # Old inputs were silently truncated. Keep their journal intact
-                # and allocate a new manifest step from the full saved snapshots.
-                detail.update(applied=True, recovered_by_manifest=True)
-                pending.detail_json = g._json(detail); db.session.commit()
-                evidence = material(proposal)
-                detail = {'execution_id': f'manifest-journal:{proposal.id}:{pending.id}',
-                    'attempt': len(journal) + 1, 'revision': proposal.revision, 'input': evidence,
-                    'reservation': len(canonical(evidence).encode()), 'binding_version': binding['version'],
-                    'applied': False, 'manifest_started': True, 'previous_event_id': pending.id,
-                    'legacy_attempts': max(legacy_attempts, detail.get('attempt', 1))}
-                pending = save_event(proposal.id, STEP_ACTION, detail)
+                if original and original.status == 'succeeded' and original.output:
+                    # Reuse a completed original response, including an unknown
+                    # bill. Only program validation may run; the gate below
+                    # still prevents its next paid action until usage is known.
+                    from backend.ai.runtime import _result
+                    detail.update(status='succeeded', result=_result(original))
+                    pending.detail_json = g._json(detail); db.session.commit()
+                else:
+                    held = _hold_legacy_paid_call(proposal, journal, changed)
+                    if held:
+                        return held
+                    # A settled/unsent old input can migrate to full snapshots.
+                    # Unknown events keep their original ID, material and reserve.
+                    detail.update(applied=True, recovered_by_manifest=True)
+                    pending.detail_json = g._json(detail); db.session.commit()
+                    evidence = material(proposal)
+                    detail = {'execution_id': f'manifest-journal:{proposal.id}:{pending.id}',
+                        'attempt': len(journal) + 1, 'revision': proposal.revision, 'input': evidence,
+                        'reservation': len(canonical(evidence).encode()), 'binding_version': binding['version'],
+                        'applied': False, 'manifest_started': True, 'previous_event_id': pending.id,
+                        'legacy_attempts': max(legacy_attempts, detail.get('attempt', 1))}
+                    pending = save_event(proposal.id, STEP_ACTION, detail)
             if detail.get('revision') != proposal.revision:
                 detail['applied'] = True; detail['discarded'] = 'revision_changed'
                 pending.detail_json = g._json(detail); db.session.commit(); continue
             evidence = detail.get('input') or material(proposal)
+            if detail.get('status') == 'succeeded' and not evidence.get('observed_urls'):
+                # Complete legacy outputs can be program-checked against full
+                # retained observations without rebinding/resending their input.
+                evidence = material(proposal)
             event = pending
         else:
+            held = _hold_legacy_paid_call(proposal, journal, changed)
+            if held:
+                return held
             from backend.database.models import School
             db.session.execute(db.update(School).where(School.id == proposal.school_id).values(name=School.name))
             evidence = material(proposal)
@@ -343,6 +396,9 @@ def run(proposal_id, *, inventory=None):
                 set_workflow(proposal, 'recognition_incomplete', ai_status='needs_recovery',
                              reason='已保存结果尚不足以完成接入，保留缺口与原调用次数')
                 return {'status': 'needs_recovery', 'changed': changed}
+            held = _hold_legacy_paid_call(proposal, journal, changed)
+            if held:
+                return held
             set_workflow(proposal, 'checking', ai_status='running', reason='AI 正在判断已有官网材料')
             try:
                 from backend.database.models import BackgroundTask

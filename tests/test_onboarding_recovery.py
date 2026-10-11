@@ -65,7 +65,8 @@ class OnboardingRecoveryTests(unittest.TestCase):
         self.assertEqual(child.checkpoint, {})
         handle = tasks.claim(capabilities=['http'])
         with tasks.execution_scope(handle), \
-             patch('backend.services.source_onboarding._read', side_effect=self.fixture.fetch), \
+             patch('backend.services.source_onboarding._read',
+                   side_effect=lambda url, purpose, **kwargs: self.fixture.fetch(url, purpose)), \
              patch('backend.services.source_onboarding.recognize_column', side_effect=AssertionError('AI disabled')):
             connected = dispatch('onboard', handle['payload'])
         self.assertEqual(connected['state'], 'connected')

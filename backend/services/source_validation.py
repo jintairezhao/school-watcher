@@ -12,7 +12,7 @@ from backend.database.source_governance_models import SourceValidation
 from backend.scraper.http_client import same_school_url, validate_public_url
 from backend.services.source_inventory import canonical_url
 
-VALIDATION_VERSION = 3
+VALIDATION_VERSION = 4
 
 
 def sample_failure_kind(samples):
@@ -111,6 +111,33 @@ def _article_body_evidence(soup, config, title, page_url):
             'body_basis': 'executed_selector' if bounded else 'semantic_article' if semantic else 'non_navigation_paragraphs'}
 
 
+def _observed_article_headlines(soup, config):
+    """Read explicit local headline roles, excluding body sections/site slogans."""
+    from backend.services.source_governance import _normal
+    title_role = re.compile(r'(?:article|news|content|detail|entry|post)[-_]?(?:title|headline)'
+                            r'|(?:title|headline)[-_]?(?:article|news|content|detail|entry|post)', re.I)
+    site_role = re.compile(r'(?:^|[\s_-])(?:site|logo|brand|slogan|banner)(?:$|[\s_-])', re.I)
+    regions = soup.select(config['content_selector']) if config.get('content_selector') else []
+    preceding = {id(region.find_previous_sibling()) for region in regions
+                 if region.name not in ('body', 'html', 'head')}
+    titles = []
+    for node in soup.select('h1,h2,h3,[itemprop="headline"]'):
+        local = [node] + list(node.parents)[:2]
+        markers = [' '.join(parent.get('class', [])) + ' ' + parent.get('id', '') for parent in local]
+        if any(site_role.search(value) for value in markers):
+            continue
+        explicit = node.get('itemprop') == 'headline' or any(title_role.search(value) and
+            (parent is node or len(parent.select('h1,h2,h3')) == 1) for parent, value in zip(local, markers))
+        article = node.find_parent('article')
+        semantic = node.name == 'h1' and article is not None and len(article.select('h1')) == 1
+        adjacent = node.name == 'h1' and id(node) in preceding
+        if explicit or semantic or adjacent:
+            value = _normal(node.get_text(' ', strip=True))
+            if value and value not in titles:
+                titles.append(value)
+    return titles
+
+
 def article_samples(config, records, fetcher):
     from backend.services.discovery_policy import get_policy
     from backend.services.source_governance import _normal
@@ -195,16 +222,23 @@ def article_samples(config, records, fetcher):
             sample['matched'] = bool(named and enough_body and len(visible) >= len(title))
             primary_titles = [_normal(node.get('content') or node.get_text(' ', strip=True))
                               for node in soup.select('h1,h2,h3,meta[property="og:title"]')]
+            observed_headlines = _observed_article_headlines(soup, config)
             abbreviated = bool(re.search(r'(?:\.{3,}|…+)\s*$', record['title']))
             prefix = _normal(re.sub(r'(?:\.{3,}|…+)\s*$', '', record['title'])) if abbreviated else ''
-            prefix_observed = bool(prefix and any(prefix in heading for heading in headings))
+            prefix_observed = bool(prefix and any(prefix in heading for heading in (observed_headlines or headings)))
             # A CMS's literal ellipsis is incomplete title evidence. Do not
             # turn a matching real prefix into a contradictory identity, or
             # count an arbitrary short prefix as a verified full notification.
             unclear_abbreviation = bool(abbreviated and (prefix_observed or len(prefix) < 12))
-            identity_conflict = bool(not named and enough_body and primary_titles and not unclear_abbreviation)
+            if observed_headlines and not unclear_abbreviation and not any(title and title in heading for heading in observed_headlines):
+                # A stale document/OG title cannot cover a contradictory actual
+                # article heading, even when other sampled notices are correct.
+                named = False
+                sample.update(title_matched=False, matched=False)
+            identity_conflict = bool(not named and enough_body and (primary_titles or observed_headlines) and not unclear_abbreviation)
             sample.update(listed_title_abbreviated=abbreviated,
-                          observed_title_candidates=list(dict.fromkeys(headings))[:6], title_prefix_observed=prefix_observed)
+                          observed_title_candidates=list(dict.fromkeys(headings))[:6], title_prefix_observed=prefix_observed,
+                          observed_primary_title_candidates=observed_headlines[:3])
             sample['reason'] = ('matched' if sample['matched'] else 'article_title_abbreviated'
                                 if unclear_abbreviation else 'article_identity_conflict'
                                 if identity_conflict else 'article_identity_or_body_mismatch')
