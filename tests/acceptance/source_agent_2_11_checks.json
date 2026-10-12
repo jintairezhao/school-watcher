@@ -1,0 +1,291 @@
+{
+  "release": "2.11",
+  "scope": "Shared navigation and column-scoped pagination fixes. Real API recovery predates the pagination fix; retained-material replays and controlled regressions are separate evidence.",
+  "user_database_modified": false,
+  "fee_limits_increased": false,
+  "unknown_paid_requests_reissued": false,
+  "navigation_same_material_comparison": {
+    "base_commit": "1062de4ea8e601e8f18f6e9d8f071c7f40a56ea7",
+    "material_sha256": "4a703c2482432df9c02fd7565de4b5000e680713895d95ff2771f27c0eea6e22",
+    "complete_html_utf8_bytes": 100693,
+    "before": {
+      "status": "failed",
+      "exception_type": "NotImplementedError",
+      "error_message": "Pseudo-element found at position 86"
+    },
+    "after": {
+      "status": "completed",
+      "observed_links": 99,
+      "navigation_candidates": 89,
+      "observed_links_preserved": true
+    },
+    "new_model_requests": 0,
+    "new_official_requests": 0
+  },
+  "real_zju_recovery_before_pagination_fix": {
+    "candidate_snapshot_sha256": "7b678e5d8486605526116f0bf17fa8e1b1ce96350ad2bb608c4f0183ec258eb0",
+    "model": "deepseek-flash",
+    "metrics": {
+      "actual_requests": 37,
+      "ordinary_requests": 36,
+      "connection_diagnostics": 1,
+      "actual_tokens": 189729,
+      "unknown_reserved_tokens": 0,
+      "budget_stopped": true,
+      "trial_limits": {
+        "requests": 40,
+        "tokens": 200000
+      },
+      "remaining_requests_before_token_reservation": 3,
+      "remaining_tokens_before_next_reservation": 10271,
+      "official_http_transport_attempts_cumulative": 329,
+      "official_http_transport_attempts_this_window": 326,
+      "logical_page_attempts_cumulative": 308,
+      "task_evidence_cache_hits_this_window": 256,
+      "discovery_snapshot_cache_hits_this_window": 660,
+      "cumulative_harness_elapsed_seconds": 698.457,
+      "this_window_wall_seconds": 600.446,
+      "duration_note": "698.457 s is cumulative over retained earlier windows; this window was approximately 600 s. Cache counts measure lookups, not guaranteed avoided network requests."
+    },
+    "installed_source_count": 3,
+    "saved_list_records": 36,
+    "sources": [
+      {
+        "actual_name": "招生宣传片",
+        "actual_list_url": "https://zdzsc.zju.edu.cn/87262/list.htm",
+        "saved_records": 6,
+        "department_assigned": false
+      },
+      {
+        "actual_name": "最新公告",
+        "actual_list_url": "https://zdzsc.zju.edu.cn/zxgg/list.htm",
+        "saved_records": 14,
+        "department_assigned": false
+      },
+      {
+        "actual_name": "最新通知",
+        "actual_list_url": "https://www.zju.edu.cn/xxgk/1690/list.htm",
+        "saved_records": 16,
+        "department_assigned": false
+      }
+    ],
+    "inventory_states": {
+      "pending": 60,
+      "fetched": 24,
+      "failed": 5,
+      "running": 1
+    },
+    "coverage_verified": false,
+    "diagnostic_scope": "One successful, usage-known connection diagnostic inside the original isolated budget; live user profile pause and unknown prior charges were not altered.",
+    "source1_limit": "6 video-publication records; 3 observed article titles match, bodies are video-compatible placeholders. mp4 addresses were observed, not downloaded. Actual two-page list has 10 records; this run did not collect all 10.",
+    "other_source_limits": "Latest announcements has 14 records, including one real title whose leading 2026 year was lost in the original run. Latest notices has 16 real historical records dated 2008–2016; these are not evidence of recent updates. All three have no assigned department; a footer maintainer is not proof of publisher.",
+    "original_progress_and_billing_preserved": true,
+    "review_sha256": "5ef51f2214cd1b4e05d756072ef9d8597ae7cb57df4b8507dcb8460c14eb9523"
+  },
+  "pagination_same_material_and_controlled_recovery": {
+    "passed": true,
+    "scope": "Real retained complete HTML and isolated synthetic recovery fixtures; not additional API onboarding or a live update.",
+    "validation_version": 5,
+    "actual_model_requests": 0,
+    "actual_official_website_requests": 0,
+    "materials": {
+      "page1": {
+        "captured_at": "2026-10-12T07:33:21.333840",
+        "hash": "81de53f5d364c33cbac0eeec6c6fe30a5b12ccba9834770918afef90cf90e457",
+        "outcome": "usable",
+        "role": "list",
+        "url": "https://www.zju.edu.cn/xxgk/1690/list.htm"
+      },
+      "page2": {
+        "hash": "94d741b654fd2b544172f5782f0f0727b836e784bac9ebeb7de0c81212b3ef2a",
+        "url": "https://www.zju.edu.cn/xxgk/1690/list2.htm",
+        "outcome": "usable"
+      },
+      "hashes_verified": true
+    },
+    "sidebar": {
+      "actual_name": "信息公开制度",
+      "actual_list_records": 2,
+      "before_next_url": "https://www.zju.edu.cn/xxgk/1690/list2.htm",
+      "after_next_url": null,
+      "before_errors": [
+        "pagination_repeats_first_page"
+      ],
+      "after_errors": [],
+      "new_source_installed": false,
+      "limit": "Old validation rejected pagination before any sidebar body trial. No sidebar installation or successful full onboarding is claimed."
+    },
+    "main": {
+      "actual_name": "最新通知",
+      "first_page_records": 16,
+      "observed_next_url": "https://www.zju.edu.cn/xxgk/1690/list2.htm",
+      "next_page_records": 2,
+      "genuine_repeat_still_rejected": true
+    },
+    "daily_retained_replay": {
+      "offline_pages": [
+        "https://www.zju.edu.cn/xxgk/1690/list.htm",
+        "https://www.zju.edu.cn/xxgk/1690/list2.htm"
+      ],
+      "new_notices": 0,
+      "checked": 18,
+      "source_count": 3,
+      "notice_count": 36,
+      "source_edges_unchanged": true,
+      "limit": "Offline configuration reuse only; no live update, added notice, or real network continuity claim."
+    },
+    "original_measurement_files_unchanged": true,
+    "controlled_targeted_regression": {
+      "seconds": 20.41,
+      "passed": 192,
+      "frozen": true,
+      "errors": 0,
+      "tested": 192,
+      "failures": 0
+    },
+    "controlled_checkpoint_recovery": {
+      "tests_run": 59,
+      "skipped": 0,
+      "passed": 59,
+      "elapsed_seconds": 6.745,
+      "guards": {
+        "actual_network_attempts": 0,
+        "unexpected_model_dispatches": 0
+      },
+      "no_real_api_or_official_website_access": true,
+      "no_user_or_acceptance_database_writes": true,
+      "pre_patch_red_result": {
+        "new_tests_run": 8,
+        "failed_assertions": 7,
+        "root_causes": [
+          "known_pager_failure_not_reopened",
+          "version_4_body_failure_reopened_by_generic_version_change"
+        ]
+      },
+      "verified_behaviors": [
+        "same_task_id_and_generation",
+        "same_paid_decision_id_and_model_input",
+        "same_school_round_and_full_fee_ledger",
+        "same_source_id_subscription_read_star_history",
+        "no_repeat_ai_after_replay_failure",
+        "network_handoff_resumes_same_candidate",
+        "expired_snapshot_changed_page_executes_paid_rule_first",
+        "conditional_update_cannot_overwrite_another_worker",
+        "respect_user_parent_pause_and_website_wait",
+        "unknown_paid_result_remains_waiting",
+        "unrelated_rule_failures_not_reopened"
+      ],
+      "source_files_unchanged": true
+    },
+    "recovery_constraints": [
+      "List scope is a required argument. Missing, empty, None and blank selectors cannot silently fall back to a whole-page search.",
+      "Old unverified neighbor cursors restart from the current observed entry; saved notifications and source identities remain.",
+      "Known old pagination_repeats_first_page failures revalidate only retained paid rules in the same task generation and budget.",
+      "User pauses, website waits and unknown paid results do not trigger a fresh model request.",
+      "Later pages are checked for matching column identity before notices are written."
+    ]
+  },
+  "title_prefix_same_material_comparison": {
+    "scope": "Actual complete retained ZJU list, old frozen and corrected title helper; program governance extraction plus daily-engine literal text control.",
+    "material_sha256": "1c6da456f7fa42fa5d3183a06d21fce3462d885878f76a5123e585ace9e72889",
+    "actual_visible_title": "2026年本科生招生专业目录",
+    "original_url": "https://zdzsc.zju.edu.cn/2026/0613/c87333a3178523/page.htm",
+    "before": {
+      "governance_title": "本科生招生专业目录",
+      "engine_text_control_title": "本科生招生专业目录"
+    },
+    "after": {
+      "governance_title": "2026年本科生招生专业目录",
+      "engine_text_control_title": "2026年本科生招生专业目录"
+    },
+    "retained_records": 14,
+    "original_addresses_preserved": true,
+    "original_measurement_files_unchanged": true,
+    "passed": true,
+    "actual_model_requests": 0,
+    "actual_official_website_requests": 0,
+    "external_call_guard_hits": 0,
+    "old_original_database_title_modified": false,
+    "limitation": "A retained list replay, not a new live collection or original database migration."
+  },
+  "five_school_retained_material_replay": {
+    "code_commit": "1062de4ea8e601e8f18f6e9d8f071c7f40a56ea7",
+    "snapshot_sha256": "6d172aa59639a7a4a0cf23d85a0026130815b5a0539a1abea3d9f73d0f8b80dc",
+    "schools": [
+      "Huazhong University of Science and Technology",
+      "Wuhan University",
+      "Chongqing University",
+      "Nankai University",
+      "Shandong University"
+    ],
+    "summary": {
+      "schools": 5,
+      "source_rules": 36,
+      "rules_passed": 34,
+      "rules_not_passed": 2,
+      "memberships_checked": 349,
+      "memberships_confirmed": 337,
+      "distinct_notices_checked": 334,
+      "distinct_notices_confirmed": 324,
+      "identity_conflicts": 0,
+      "frozen_source_files_unchanged": true,
+      "original_measurement_data_unchanged": true,
+      "seconds": 43.064
+    },
+    "independent_literal_anchor_summary": {
+      "schools": 5,
+      "memberships_checked": 349,
+      "literal_titles_urls_regions_confirmed": 255,
+      "literal_title_mismatches_or_missing_labels": 84,
+      "literal_original_urls_observed": 349,
+      "distinct_notices_confirmed": 242,
+      "external_call_guard_hits": {}
+    },
+    "new_model_requests": 0,
+    "new_official_requests": 0,
+    "method": "Use the unchanged source list_selector only to locate the previously validated physical region. Match each retained notice URL against literal a[href] values in that region. Compare the stored title to observed title/data-title attributes, otherwise a sole heading inside the link, otherwise link text; never use title_selector or synthesize a title. Missing/mismatched link labels are not counted as exact titles.",
+    "department_ownership_limit": "Region identity is replayed by current 2.10. Existing manual publisher proofs are reused separately; stored group_name alone is never a department proof.",
+    "fresh_equal_budget_comparison": false
+  },
+  "final_isolated_regression": {
+    "tests_run": 1436,
+    "passed": 1412,
+    "skipped": 24,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 205.605,
+    "normalized_source_sha256": {
+      "backend/scraper/detectors/title_quality.py": "413484833d7abfc78b063cac080f2faf150b209512d6f6d55514d0acecea13a4",
+      "backend/scraper/discovery/layered.py": "2794d982ceb2e1c152b0bb42898d38e6c301e411f450bfa68b23858a8c1a2ec4",
+      "backend/scraper/discovery/script_directories.py": "7efe8f8d4f1fcbbca7e848eadc93424fe2358c3fdcd2329ee6057ecf3fa2f6b4",
+      "backend/scraper/discovery/structure.py": "3dbefed0b54547b94eed5519a2ce24343663d966933d8c9d22b3362d41150114",
+      "backend/scraper/engine.py": "9e7c41d3a454aacfee5fbd76443a815d37865d2dcbc402cdc7e0b6a59ede635e",
+      "backend/services/source_baselines.py": "34bbbb2a0d9db218ef0e2096be155d4d17418ffa5a2a2609df2b26716e4ccc47",
+      "backend/services/source_exploration.py": "a459bbd10ff6c20b0e23c70a4f758502f241381a06d6e43702702a6befb8969a",
+      "backend/services/source_governance.py": "f9c5ec5762ec3c30b04d13542ea17557d3a6bb27b3d693b88c94011520638cfe",
+      "backend/services/source_onboarding.py": "36712bec48e0f843b005616c8db75525f7e9e4cb7a2b78115e28ded4095f055f",
+      "backend/services/source_validation.py": "686cc824153e1774e04683583cddbf11a761c0529ce1258f28a201eac007fec2",
+      "desktop/__init__.py": "8940797d5b8677d1173892fc5eb35b68a0571607a72454d7b502d98691a2865e",
+      "tests/test_acquisition_callers.py": "349557d9c44df934a853e542ea8020c35824a47e5972dfd785573410e064f6cb",
+      "tests/test_desktop_onboarding.py": "3af97d9cdd8581db9525ffd99fdd262bb2d3d2c9a06ecde59703383f6fcec9da",
+      "tests/test_layered_student_information.py": "3e935886c6a1a8270149ad02350c6a7fcc1b2fa76f41b4262c2162bdd0f3dd16",
+      "tests/test_notice_title_prefix.py": "5c5f6474242994db1a359a4b9c4b8325a4b95fc42686551d103079caae3c7fe1",
+      "tests/test_onboarding_recovery.py": "6a59cfd029dc6befb851e76cd4e8ee35a9d780154e3d586ba156e63440ee1129",
+      "tests/test_pagination_checkpoint_upgrade.py": "41ff0564a5fb8082e1d6e313fb8f33ed8c37e1ed066edbfc6ab91aec9418c943",
+      "tests/test_pagination_scope.py": "4c259a405d494dbb021384d87ba2bb5c9109fbc41b1dbdca458b836ec81958ee",
+      "tests/test_script_directories.py": "f8fb03eb2097963667f8f30b506ca0b7deb38127e312f0d668e949725c7aaa05",
+      "tests/test_source_validation.py": "39d56405296e7f81da85976f2974c5e48e16f61208668470768c1b176e7ad952"
+    },
+    "actual_model_requests": 0,
+    "actual_official_website_requests": 0,
+    "production_database_access": false
+  },
+  "limitations": [
+    "No new five-school, fifty-source end-to-end equal-budget API comparison.",
+    "Retained observations are not new independent holdouts or natural continuous-update trials.",
+    "Empty columns, same-name departments and long-running scheduled collection still need broader real-site acceptance.",
+    "Cached lookups, logical reads, HTTP transport attempts and browser resources use distinct counts.",
+    "Publication size and platform-native behavior are checked separately by release CI.",
+    "No universal zero-error, fixed success probability or full-school coverage claim."
+  ]
+}

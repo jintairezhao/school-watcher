@@ -225,7 +225,8 @@ class SourceValidationTests(unittest.TestCase):
         self.assertEqual(handle['checkpoint']['school_round'], 'same-budget-round')
         self.assertEqual(handle['checkpoint']['onboarding_page'], reference)
         self.assertEqual(handle['checkpoint']['column_regions']['decision_ids'], ['original-paid-decision'])
-        self.assertEqual(handle['checkpoint']['column_validation']['validation_version'], 4)
+        from backend.services.source_validation import VALIDATION_VERSION
+        self.assertEqual(handle['checkpoint']['column_validation']['validation_version'], VALIDATION_VERSION)
         self.assertEqual(self.latest_validation()['articles']['matched_count'], 3)
 
     def test_cached_unrecognized_body_is_reclassified_under_bound_rule(self):
@@ -496,7 +497,7 @@ class SourceValidationTests(unittest.TestCase):
             {'school_id': self.fixture.school_id, 'url': URL, 'ai_assist': False})
         job.checkpoint = {'saved_model_observation': {'cursor': 4}, 'column_validation': {
             'page_hash': hashlib.sha256((URL + '\\0' + HTML).encode()).hexdigest(),
-            'validation_version': VALIDATION_VERSION - 1, 'stage': 'done',
+            'validation_version': 3, 'stage': 'done',
             'department_ids': [], 'completed': [], 'new_count': 0,
             'failures': [{'issue': {'codes': ['article_sample_mismatch']}}],
             'result': {'state': 'unsupported'}, 'progress': {'stopped': True}}}

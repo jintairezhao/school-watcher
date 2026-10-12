@@ -8,6 +8,77 @@ from backend.services.source_inventory import resolve_page_link
 from .literal_data import literal_assignment
 
 
+def literal_navigation_material(element, link, page_url, cache=None):
+    """Observe one indexed menu entry without evaluating website JavaScript.
+
+    The DOM selector identifies its actual script. The suffix identifies one
+    parsed literal entry; neither the candidate name nor URL supplies truth.
+    """
+    if element is None or element.name != 'script' or element.get('src'):
+        return None
+    _, separator, suffix = (link.get('locator') or '').partition('::text(')
+    if not separator or not suffix.endswith(')'):
+        return None
+    position = suffix[:-1]
+    path = re.fullmatch(r'([A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*)'
+                        r'(\[(?:0|[1-9][0-9]{0,5})\](?:\.children\[(?:0|[1-9][0-9]{0,5})\])*)', position)
+    if not path:
+        return None
+    binding = path[1]
+    cache = {} if cache is None else cache
+    key = ('literal_navigation', id(element), binding)
+    if key not in cache:
+        try:
+            cache[key] = literal_assignment(element.get_text(), binding)
+        except ValueError:
+            cache[key] = None
+    entries = cache[key]
+    ancestors = []
+    indexes = [int(value) for value in re.findall(r'\[([0-9]+)\]', path[2])]
+
+    def summary(entry):
+        if not isinstance(entry, dict):
+            return None
+        fields = ('name', 'href') if isinstance(entry.get('name'), str) else ('title', 'link')
+        if any(not isinstance(entry.get(field), str) for field in fields):
+            return None
+        return {fields[0]: entry[fields[0]], fields[1]: entry[fields[1]]}
+
+    for depth, index in enumerate(indexes):
+        if not isinstance(entries, list) or index >= len(entries) or not summary(entries[index]):
+            return None
+        entry = entries[index]
+        if depth < len(indexes) - 1:
+            ancestors.append(summary(entry))
+            entries = entry.get('children', [])
+    observed = summary(entry)
+    name = entry.get('name', entry.get('title', '')).strip()
+    introduction = link.get('label') == name + '（官网介绍）'
+    if link.get('label') != name and not introduction:
+        return None
+    href = entry.get('url') if introduction else entry.get('href', entry.get('link', ''))
+    if not isinstance(href, str):
+        return None
+    try:
+        target = resolve_page_link(page_url, href)
+    except ValueError:
+        return None
+    if target != link.get('url'):
+        return None
+    if introduction:
+        observed = dict(observed, url=href)
+    neighbors = [value for candidate in entries[max(0, index - 1):index + 2]
+                 if (value := summary(candidate))]
+    children = [value for candidate in entry.get('children', []) if (value := summary(candidate))]
+    text = json.dumps({'position': position, 'entry': observed, 'ancestors': ancestors,
+                       'nearby_entries': neighbors, 'children': children}, ensure_ascii=False)
+    from backend.ai.skill_loader import digest
+    hierarchy = [value.get('name', value.get('title', '')).strip() for value in ancestors]
+    return {'key': digest(['literal-navigation-1', urlsplit(page_url).netloc,
+                           link['locator'], element.get_text(), text]),
+            'text': text, 'hierarchy': hierarchy}
+
+
 def zju_relationships(soup, page_url, root_url, owner_key):
     from .structure import classify, locator, node_key, SERVICE, FILES, SKIP
     nodes, links, notes = [], [], []

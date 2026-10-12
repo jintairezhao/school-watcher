@@ -22,7 +22,7 @@ from backend.database.source_governance_models import (
     SourceProposal, SourceConfigVersion, SourceReviewEvent, SchoolOnboarding)
 from backend.services.source_inventory import canonical_url, site_key
 
-VERSION = 'source-governance-7'
+VERSION = 'source-governance-8'
 FIELDS = ('name', 'list_url', 'list_selector', 'title_selector', 'link_selector',
           'date_selector', 'content_selector', 'group_name')
 ACTION_LABEL = re.compile(r'^(?:read(?:\s+more)?|more|learn\s+more|了解|更多|查看|详情)$', re.I)
@@ -237,12 +237,12 @@ def _normal(text):
     return re.sub(r'[\s\-—_|·：:]+', '', text or '')
 
 
-def _extract(config, reference):
+def _extract(config, reference, *, html=None):
     from backend.scraper.discovery.publication_lists import select_node
     from backend.scraper.detectors.title_quality import is_junk_title, clean_title
     from backend.scraper.date_elements import publication_date_text
     from backend.scraper.change_detector import parse_date
-    soup = BeautifulSoup(read_snapshot(reference), 'lxml')
+    soup = BeautifulSoup(read_snapshot(reference) if html is None else html, 'lxml')
     items = soup.select(config['list_selector'])
     records, errors = [], []
     for item in items:
@@ -342,16 +342,16 @@ def _breadcrumb_region(heading, container, items, page_url, expected, column_url
     return None
 
 
-def _column_scope(config, reference, scope_evidence=None):
+def _column_scope(config, reference, scope_evidence=None, *, html=None):
     """A list must remain within one actual named publishing region."""
     from backend.scraper.discovery.publication_lists import publication_lists, article_heading
     from backend.scraper.discovery.structure import locator
-    html = read_snapshot(reference)
+    html = read_snapshot(reference) if html is None else html
     from backend.services.source_review_recovery import page_problem
     problem = page_problem(html)
     if problem:
         return [], [problem], {}
-    soup, items, records, errors = _extract(config, reference)
+    soup, items, records, errors = _extract(config, reference, html=html)
     if not items:
         if reference.get('outcome') == 'empty':
             expected = _normal(_column_label(config['name'], config.get('group_name', '')))
@@ -595,8 +595,13 @@ def capture_source_evidence(school_id, candidate, *, department_id=None, seed_ht
                 break
         bundle['access_limited'] = [key.split(':', 1)[1] for key, value in bundle['samples'].items()
                                     if key.startswith('article:') and str(value).startswith('access_limited:')]
-        from backend.scraper.engine import _next_page_url
-        next_url = _next_page_url(read_snapshot(first), first['url'], 1)
+        from backend.scraper.engine import _next_page_url, PaginationScopeError
+        try:
+            next_url = (_next_page_url(read_snapshot(first), first['url'], 1,
+                        list_selector=config['list_selector'], scope=scope_evidence) if records else None)
+        except PaginationScopeError as exc:
+            bundle['pagination_error'] = str(exc)
+            next_url = None
         if next_url:
             bundle['pagination'] = sample('pagination', next_url, 'list', observed_url=next_url)
         # The independent read is required precisely when the first pass is
@@ -775,7 +780,8 @@ def validate_proposal(proposal_id, *, independent_evidence=None):
                 errors.append('source_login_required'
                               if gated and len(gated) == len(sampled) else 'article_sample_missing')
             from backend.scraper.engine import _next_page_url
-            next_url = _next_page_url(read_snapshot(bundle['list']), bundle['list']['url'], 1)
+            next_url = (_next_page_url(read_snapshot(bundle['list']), bundle['list']['url'], 1,
+                        list_selector=config['list_selector'], scope=bundle.get('scope_evidence')) if records else None)
             if next_url:
                 pagination = bundle.get('pagination')
                 if not pagination or canonical_url(pagination.get('observed_url', '')) != canonical_url(next_url):

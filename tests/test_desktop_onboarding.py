@@ -186,8 +186,9 @@ class FirstSubscriptionTests(unittest.TestCase):
         first += f'<li><a href="/{year}/05/30/expired.html">地址标注日期的历史通知</a></li>'
         first += '<a href="/page2">下一页</a>'
         old = item('历史通知事项说明', f'{year}-05-31', '/older')
-        pages = ['<ul>' + first + '</ul>', '<ul>' + old + '</ul><a href="/page3">下一页</a>',
-                 '<ul>' + old + '</ul><a href="/page4">下一页</a>']
+        pages = ['<section><h2>通知</h2><ul>' + first + '</ul></section>',
+                 '<section><h2>通知</h2><ul>' + old + '</ul><a href="/page3">下一页</a></section>',
+                 '<section><h2>通知</h2><ul>' + old + '</ul><a href="/page4">下一页</a></section>']
         with patch('backend.scraper.engine._fetch_html', side_effect=pages) as fetch, \
                 patch('backend.scraper.engine.save_element_signatures'), \
                 patch('backend.scraper.selector_monitor.evaluate_and_repair', return_value={'action': 'healthy'}):
@@ -238,7 +239,7 @@ class FirstSubscriptionTests(unittest.TestCase):
             requested.append(url)
             number = 1 if url.endswith('notices/') else int(url.rsplit('/', 1)[1])
             next_link = f'<a href="/page/{number + 1}">下一页</a>' if number < 8 else ''
-            return f'<ul><li><a href="/notice-{number}">学校历史事项相关通知 {number}</a><time>{year}-06-01</time></li></ul>{next_link}'
+            return f'<section><h2>通知</h2><ul><li><a href="/notice-{number}">学校历史事项相关通知 {number}</a><time>{year}-06-01</time></li></ul>{next_link}</section>'
         task = tasks.enqueue('collect', department.id, {'school_id': self.school.id, 'department_id': department.id})
         with patch('backend.scraper.engine._fetch_html', side_effect=fetch), \
                 patch('backend.scraper.engine.save_element_signatures'), \

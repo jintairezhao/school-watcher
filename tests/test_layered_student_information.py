@@ -17,6 +17,57 @@ ROOT = 'https://example.edu.cn/'
 
 
 class LayeredDiscoveryTests(unittest.TestCase):
+    def test_script_menu_locations_keep_real_entries_and_navigation_context(self):
+        from backend.scraper.discovery.structure import extract_structure
+        from backend.scraper.discovery.layered import route_structure, navigation_candidates
+        root = 'https://www.zju.edu.cn/'
+        data = [{'name': '组织机构', 'href': '/org/', 'children': [
+            {'name': '工程学院', 'href': '/engineering/'},
+            {'name': '办事通知', 'href': '/notices/'}]}]
+        html = '<title>浙江大学</title><div><script>main._menu = ' + json.dumps(data, ensure_ascii=False) + ';</script></div>'
+        page = {'url': root, 'label': '浙江大学', 'kind': 'root',
+                'path_json': '[]', 'discovery_policy': 'valuable'}
+        parsed = route_structure(extract_structure(html, root, root), page, html, root, policy='valuable')
+        original = {(link['url'], link['locator']) for link in parsed['links']}
+        candidates = navigation_candidates(html, parsed, page)
+        self.assertEqual({link['url'] for link, _ in candidates},
+                         {root + 'org/', root + 'engineering/', root + 'notices/'})
+        self.assertEqual(original, {(link['url'], link['locator']) for link in parsed['links']})
+        engineering = next((link, context) for link, context in candidates if link['url'].endswith('/engineering/'))
+        self.assertIn('::text(main._menu[0].children[0])', engineering[0]['locator'])
+        self.assertIn('工程学院', engineering[1])
+        self.assertIn('组织机构', engineering[1])
+        self.assertIn('/engineering/', engineering[1])
+        self.assertEqual(engineering[0]['_navigation_material']['hierarchy'], ['组织机构'])
+        self.assertNotEqual(engineering[0]['_navigation_material']['key'],
+                            next(link['_navigation_material']['key'] for link, _ in candidates if link['url'].endswith('/notices/')))
+
+    def test_text_entry_location_keeps_observed_container_without_dropping_route(self):
+        from backend.scraper.discovery.structure import locator
+        from backend.scraper.discovery.layered import navigation_candidates
+        html = '<title>测试大学</title><main><p>院系目录 工程学院 自然科学学院</p></main>'
+        soup = BeautifulSoup(html, 'lxml')
+        link = {'url': ROOT + 'engineering/', 'label': '工程学院', 'kind': 'navigation',
+                'decision': 'navigation_pending', 'path': ['院系目录'],
+                'locator': locator(soup.p) + '::text(0)'}
+        candidates = navigation_candidates(html, {'links': [link]}, {'url': ROOT})
+        self.assertEqual(len(candidates), 1)
+        self.assertIs(candidates[0][0], link)
+        self.assertIn('自然科学学院', candidates[0][1])
+
+    def test_deferred_literal_menu_in_footer_is_not_footer_utility_navigation(self):
+        from backend.scraper.discovery.structure import extract_structure
+        from backend.scraper.discovery.layered import route_structure, navigation_candidates
+        root = 'https://www.zju.edu.cn/'
+        html = '<footer><script>main._menu=[{name:"组织机构",href:"/org/"}];</script>'
+        html += '<a href="/utilities/">服务说明</a></footer>'
+        page = {'url': root, 'label': '浙江大学', 'kind': 'root',
+                'path_json': '[]', 'discovery_policy': 'valuable'}
+        parsed = route_structure(extract_structure(html, root, root), page, html, root, policy='valuable')
+        candidates = navigation_candidates(html, parsed, page)
+        self.assertEqual([link['url'] for link, _ in candidates], [root + 'org/'])
+        self.assertIn('组织机构', candidates[0][1])
+
     def test_ready_columns_get_turns_before_finishing_large_department_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
             store = Inventory(Path(tmp) / 'inventory.db')

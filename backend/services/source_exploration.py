@@ -187,7 +187,7 @@ def acquire(proposal, action, observed):
 def inferred_actions(proposal, evidence):
     """Compatibility with v1 review responses: acquire actual missing materials."""
     from backend.services import source_governance as g
-    from backend.scraper.engine import _next_page_url
+    from backend.scraper.engine import _next_page_url, PaginationScopeError
     bundle, config = json.loads(proposal.evidence_json), json.loads(proposal.candidate_json)
     actions = []
     if config.get('list_selector'):
@@ -195,7 +195,14 @@ def inferred_actions(proposal, evidence):
         present = {canonical_url(ref['url']) for _, ref in references(bundle)}
         actions += [{'type': 'read_page', 'url': r['url'], 'purpose': 'article', 'reason': '补充通知正文'}
                     for r in records[:3] if r['url'] not in present]
-    next_url = _next_page_url(g.read_snapshot(bundle['list']), bundle['list']['url'], 1)
+    try:
+        _, scope_errors, _ = (g._column_scope(config, bundle['list'], bundle.get('scope_evidence'))
+                              if config.get('list_selector') else ([], ['list_missing'], {}))
+        next_url = (_next_page_url(g.read_snapshot(bundle['list']), bundle['list']['url'], 1,
+                    list_selector=config['list_selector'], scope=bundle.get('scope_evidence'))
+                    if not scope_errors else None)
+    except PaginationScopeError:
+        next_url = None
     if next_url and next_url in evidence['observed_urls']:
         actions.append({'type': 'read_page', 'url': next_url, 'purpose': 'list', 'reason': '补充分页'})
     # Identity may require the root/department navigation, never a guessed address.

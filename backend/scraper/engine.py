@@ -3,6 +3,7 @@
 import logging
 import re
 import os
+import json
 from datetime import datetime, timezone
 from urllib.parse import urljoin
 
@@ -90,9 +91,120 @@ def _resolve_url(base_url: str, link: str) -> str:
     return urljoin(base_url, link)
 
 
-def _next_page_url(html: str, current_url: str, page_number: int) -> str | None:
-    """Follow only pagination links actually present in the effective DOM."""
+PAGINATION_SCOPE_VERSION = 1
+
+
+class PaginationScopeError(ValueError):
+    def __init__(self):
+        super().__init__('pagination_scope_unconfirmed')
+
+
+def _pagination_root(items):
+    roots = []
+    for item in items:
+        root = next((node for node in [item, *item.parents]
+                     if node.name in ('ul', 'ol', 'table') or node.get('role') == 'list'), None)
+        roots.append(root)
+    if all(root is not None for root in roots):
+        if len({id(root) for root in roots}) != 1:
+            raise PaginationScopeError()
+        return roots[0]
+    # Card lists need not use ul/li. Their selected entries must still share a
+    # local parent, rather than joining independent widgets at body level.
+    for parent in items[0].parents:
+        if parent.name in ('html', 'body', '[document]'):
+            break
+        if all(any(node is parent for node in item.parents) for item in items):
+            headings = [node for node in parent.select('h1,h2,h3,h4,h5,h6')
+                        if not any(item is node or any(ancestor is item for ancestor in node.parents) for item in items)]
+            if len(headings) > 1:
+                raise PaginationScopeError()
+            return parent
+    raise PaginationScopeError()
+
+
+def _pagination_owner(soup, anchor, selected_root, scope=None):
+    """Bind an observed pager to its nearest actual list and heading region."""
+    def paging_or_navigation(node):
+        for parent in [node, *node.parents]:
+            if parent.name in ('nav', 'header', 'footer'):
+                return True
+            marker = ' '.join([parent.get('id', ''), *parent.get('class', [])])
+            if re.search(r'(?:^|[ _-])(?:pag(?:e|ing|ination)|pager)(?:[ _-]|$)|wp_paging', marker, re.I):
+                return True
+        links = node.select('a[href]')
+        return bool(links and all(re.fullmatch(r'\d+|[‹›«»<>]|首页|末页|上一页|下一页|上页|下页|next|prev',
+                                             link.get_text(' ', strip=True), re.I) for link in links))
+
+    roots = [node for node in soup.select('ul,ol,table,[role="list"]')
+             if node.select('a[href]') and (node is selected_root or not paging_or_navigation(node))]
+    # Neighboring publication cards may use div/article instead of ul. Their
+    # repeated linked children are equally real list boundaries.
+    for node in soup.select('div,section,article'):
+        if node is selected_root or any(parent is selected_root for parent in node.parents) or paging_or_navigation(node):
+            continue
+        children = [child for child in node.find_all(recursive=False)
+                    if child.select('a[href]') and not paging_or_navigation(child)]
+        if (node.name == 'article' and node.select('a[href]')) or (len(children) >= 2 and len({child.name for child in children}) == 1):
+            roots.append(node)
+    if not any(node is selected_root for node in roots):
+        roots.append(selected_root)
+    roots = [node for node in roots if node is selected_root or not any(
+        other is not node and any(parent is node for parent in other.parents) for other in roots)]
+    heading = soup.select_one(scope.get('heading_selector', '')) if scope and scope.get('heading_selector') else None
+    for region in anchor.parents:
+        local = [node for node in roots if node is region or any(parent is region for parent in node.parents)]
+        if not local:
+            # An unknown one-item card need not resemble a known CMS list.
+            # Its own non-control links still bound this pager to that widget;
+            # do not cross the wrapper and attach it to an earlier ul.
+            foreign_links = [link for link in region.select('a[href]') if link is not anchor
+                             and not paging_or_navigation(link)
+                             and not set(link.get('rel', [])) & {'next', 'prev'}
+                             and not re.fullmatch(r'\d+|[‹›«»<>]|首页|末页|上一页|下一页|上页|下页|next|prev',
+                                                  link.get_text(' ', strip=True), re.I)]
+            if foreign_links:
+                return None
+            continue
+        tags = list(region.find_all(True))
+        positions = {id(node): index for index, node in enumerate(tags)}
+        if any(node is region for node in local):
+            return region
+        index = positions[id(anchor)]
+        headings = [node for node in tags if (node.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6')
+                    or heading is not None and node.name == heading.name and heading.get('class')
+                    and set(node.get('class', [])) == set(heading.get('class', [])))
+                    and not any(root is node or any(parent is root for parent in node.parents) for root in local)]
+        preceding = [root for root in local if positions[id(root)] < index]
+        previous = max(preceding, key=lambda node: positions[id(node)]) if preceding else None
+        end = max((positions[id(node)] for node in [previous, *previous.find_all(True)]), default=-1) if previous else -1
+        # A new peer heading between a list and this pager starts the next
+        # region. This also handles a pager above its own list.
+        boundaries = [node for node in headings if end < positions[id(node)] < index]
+        if previous is not None and not boundaries:
+            return previous
+        following = [root for root in local if positions[id(root)] > index
+                     and not any(index < positions[id(h)] < positions[id(root)] for h in headings)]
+        return min(following, key=lambda node: positions[id(node)]) if following else None
+    return None
+
+
+def _next_page_url(html: str, current_url: str, page_number: int, *,
+                   list_selector: str, scope: dict | None = None) -> str | None:
+    """Require a real list scope and follow only its observed pagination."""
+    if not isinstance(list_selector, str) or not list_selector.strip():
+        raise PaginationScopeError()
     soup = BeautifulSoup(html, 'lxml')
+    items = soup.select(list_selector)
+    if not items:
+        raise PaginationScopeError()
+    root = _pagination_root(items)
+    container = None
+    if scope and scope.get('container_selector'):
+        containers = soup.select(scope['container_selector'])
+        if len(containers) != 1 or not all(item is containers[0] or any(parent is containers[0] for parent in item.parents) for item in items):
+            raise PaginationScopeError()
+        container = containers[0]
     candidates = []
     for anchor in soup.select('a[href]'):
         href = anchor.get('href', '').strip()
@@ -106,6 +218,21 @@ def _next_page_url(html: str, current_url: str, page_number: int) -> str | None:
         numbered = label == str(page_number + 1)
         if 'next' not in rel and not next_label and not numbered:
             continue
+        if root is not None:
+            if any(item is anchor or any(parent is item for parent in anchor.parents) for item in items):
+                continue
+            if container is not None and scope.get('heading_selector'):
+                heading = soup.select_one(scope['heading_selector'])
+                # Executed heading + entries give an explicit local region;
+                # controls outside it belong to another widget. Tight list-only
+                # breadcrumb regions still use the structural sibling check.
+                if heading is not None and (heading is container or any(parent is container for parent in heading.parents)):
+                    from backend.services.source_governance import _heading_region
+                    boundary = _heading_region(heading, container, items)
+                    if boundary and not (anchor is boundary or any(parent is boundary for parent in anchor.parents)):
+                        continue
+            if _pagination_owner(soup, anchor, root, scope) is not root:
+                continue
         target = urljoin(current_url, href)
         if target == current_url:
             continue
@@ -245,33 +372,53 @@ def scrape_department(department: Department, school_base_url: str,
     _orig_content_sel = department.content_selector
 
     from backend.services.source_collection import collection_progress, save_collection_progress
+    from backend.services.source_governance import source_config, _hash, _column_scope
+    from backend.database.source_governance_models import SourceValidation
+    config = source_config(department)
+    config_hash = _hash(config)
+    column_scope = None
+    for validation in SourceValidation.query.filter_by(department_id=department.id, config_hash=config_hash).order_by(SourceValidation.id.desc()):
+        detail = json.loads(validation.validation_json)
+        region = detail.get('region') or {}
+        if detail.get('status') in ('full', 'limited') and region.get('container') and region.get('heading'):
+            column_scope = {'container_selector': region['container'], 'heading_selector': region['heading']}
+            break
+    scope_hash = _hash([config, column_scope])
     progress_key = f'column:{department.id}:{cutoff:%Y-%m}'
     saved = collection_progress(progress_key)
     if saved:
         new_count, total = saved['new'], saved['total']
-        page, page_url = saved['page'], saved['page_url']
-        visited_pages = set(saved.get('visited', []))
-        consecutive_existing = saved.get('consecutive_existing', 0)
-        old_pages = saved.get('old_pages', 0)
-        incremental_mode = saved.get('incremental_mode', incremental_mode)
-        department._fetch_confirmed_empty = saved.get('confirmed_empty', False)
-        for name, value in saved.get('selectors', {}).items():
-            setattr(department, name, value)
-        list_sel = department.list_selector or ''
-        title_sel = department.title_selector or ''
-        link_sel = department.link_selector or ''
-        date_sel = department.date_selector or ''
-        content_sel = department.content_selector or ''
-        need_probe = not list_sel
+        selectors = {name: getattr(department, name) for name in
+                     ('list_selector', 'title_selector', 'link_selector', 'date_selector', 'content_selector')}
+        trusted_cursor = (saved.get('pagination_scope_version') == PAGINATION_SCOPE_VERSION
+                          and saved.get('scope_hash') == scope_hash and saved.get('selectors') == selectors)
+        if trusted_cursor:
+            page, page_url = saved['page'], saved['page_url']
+            visited_pages = set(saved.get('visited', []))
+            consecutive_existing = saved.get('consecutive_existing', 0)
+            old_pages = saved.get('old_pages', 0)
+            incremental_mode = saved.get('incremental_mode', incremental_mode)
+            department._fetch_confirmed_empty = saved.get('confirmed_empty', False)
+            column_scope = column_scope or saved.get('column_scope')
+        else:
+            # Old cursors could point at a neighboring widget. Re-read the
+            # current entry and rule before ingesting, preserving source/user
+            # history, task generation and all model accounting.
+            saved['finished'] = False
 
     def checkpoint_page(next_url, next_page, finished=False):
         save_collection_progress(progress_key, {'new': new_count, 'total': total,
             'page': next_page, 'page_url': next_url, 'visited': sorted(visited_pages),
             'consecutive_existing': consecutive_existing, 'incremental_mode': incremental_mode,
             'old_pages': old_pages,
+            'pagination_scope_version': PAGINATION_SCOPE_VERSION,
+            'scope_hash': scope_hash, 'column_scope': column_scope,
             'confirmed_empty': department._fetch_confirmed_empty, 'finished': finished,
             'selectors': {name: getattr(department, name) for name in
                 ('list_selector', 'title_selector', 'link_selector', 'date_selector', 'content_selector')}})
+
+    if saved and not trusted_cursor:
+        checkpoint_page(page_url, page)
 
     while not saved.get('finished'):
         if page > MAX_TOTAL_PAGES:
@@ -337,6 +484,15 @@ def scrape_department(department: Department, school_base_url: str,
             from backend.scraper.fetch_errors import SourceAccessError
             raise SourceAccessError('官网返回的页面未识别到通知，不能据此判定为空列表')
 
+        # A later page must still publish this column, even if its old selector
+        # happens to match entries in another region after navigation/redirect.
+        _, scope_errors, region = _column_scope(config, {'url': page_url}, column_scope, html=html)
+        if scope_errors and (column_scope or page > 1):
+            from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
+            raise ParserRepairPending(queue_parser_repair(department, html))
+        if region and not column_scope:
+            column_scope = {'container_selector': region['container'], 'heading_selector': region['heading']}
+
         total += len(items)
         page_new = 0
         page_old = 0
@@ -397,7 +553,11 @@ def scrape_department(department: Department, school_base_url: str,
         else:
             consecutive_empty = 0
 
-        next_page = _next_page_url(html, page_url, page)
+        try:
+            next_page = _next_page_url(html, page_url, page, list_selector=list_sel, scope=column_scope)
+        except PaginationScopeError:
+            from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
+            raise ParserRepairPending(queue_parser_repair(department, html))
         if not next_page:
             checkpoint_page(page_url, page, finished=True)
             break

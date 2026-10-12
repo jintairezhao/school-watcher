@@ -164,7 +164,7 @@ class OnboardingRecoveryTests(unittest.TestCase):
         job.checkpoint = {'column_regions': {'columns': [ai_column(content_selector='')],
             'decision_ids': ['old-paid-observation'], 'cursor': 1}, 'column_validation': {
             'page_hash': hashlib.sha256((URL + '\\0' + HTML).encode()).hexdigest(),
-            'validation_version': VALIDATION_VERSION - 1, 'stage': 'done', 'completed': [],
+            'validation_version': 3, 'stage': 'done', 'completed': [],
             'department_ids': [], 'new_count': 0,
             'failures': [{'issue': {'codes': ['article_sample_mismatch']}}],
             'result': {'state': 'unsupported'}, 'progress': {'stopped': True}}}
@@ -211,7 +211,7 @@ class OnboardingRecoveryTests(unittest.TestCase):
         job.checkpoint = {'column_regions': {'hash': digest(regions), 'columns': [first],
             'decision_ids': [paid_id], 'cursor': 1, 'unresolved': []}, 'column_validation': {
             'page_hash': hashlib.sha256((URL + '\\0' + html).encode()).hexdigest(),
-            'validation_version': VALIDATION_VERSION if already_handed_off else VALIDATION_VERSION - 1,
+            'validation_version': VALIDATION_VERSION if already_handed_off else 3,
             'stage': 'rules' if already_handed_off else 'done', 'completed': [],
             'department_ids': [], 'new_count': 0, 'material_pending': True, 'material_feedback': [],
             'failures': [{'issue': {'codes': ['article_sample_mismatch']}}],

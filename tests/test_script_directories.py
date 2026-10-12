@@ -20,6 +20,43 @@ def script(binding, data):
 
 
 class LiteralDirectoryTests(unittest.TestCase):
+    def test_literal_navigation_context_rejects_changed_identity_and_executable_material(self):
+        from bs4 import BeautifulSoup
+        from backend.scraper.discovery.structure import locator_element
+        from backend.scraper.discovery.script_directories import literal_navigation_material
+        html = script('main._menu', [{'name': '组织机构', 'href': '/org/'}])
+        parsed = extract_structure(html, ROOT, ROOT)
+        link = next(link for link in parsed['links'] if link['label'] == '组织机构')
+        document = BeautifulSoup(html, 'lxml')
+        element = locator_element(document, link['locator'])
+        material = literal_navigation_material(element, link, ROOT)
+        self.assertIn('组织机构', material['text'])
+        for altered in (dict(link, url=ROOT + 'invented/'), dict(link, label='虚构学院'),
+                        dict(link, locator=link['locator'].replace('[0]', '[9]')),
+                        dict(link, locator=link['locator'].replace('[0]', '[getDirectory()]'))):
+            with self.subTest(altered=altered):
+                self.assertIsNone(literal_navigation_material(element, altered, ROOT))
+        executable = BeautifulSoup(html.replace(';</script>', ';sendData();</script>'), 'lxml')
+        self.assertIsNone(literal_navigation_material(executable.script, link, ROOT))
+
+    def test_literal_college_website_and_introduction_keep_distinct_real_context(self):
+        from bs4 import BeautifulSoup
+        from backend.scraper.discovery.structure import locator_element
+        from backend.scraper.discovery.script_directories import literal_navigation_material
+        html = script('list._college', [{'title': '信息学部', 'link': '/info/', 'url': '', 'children': [
+            {'title': '工程学院', 'link': 'https://engineering.zju.edu.cn/', 'url': '/intro.htm'}]}])
+        parsed = extract_structure(html, URL, ROOT, 'directory', '学院（系）')
+        document = BeautifulSoup(html, 'lxml')
+        website = next(link for link in parsed['links'] if link['label'] == '工程学院')
+        introduction = next(link for link in parsed['links'] if link['label'] == '工程学院（官网介绍）')
+        materials = [literal_navigation_material(locator_element(document, link['locator']), link, URL)
+                     for link in (website, introduction)]
+        self.assertTrue(all(materials))
+        self.assertTrue(all(material['hierarchy'] == ['信息学部'] for material in materials))
+        self.assertIn('https://engineering.zju.edu.cn/', materials[0]['text'])
+        self.assertIn('/intro.htm', materials[1]['text'])
+        self.assertNotEqual(materials[0]['key'], materials[1]['key'])
+
     def test_quoted_code_stays_text_and_escapes_decode(self):
         result = literal_assignment(r'''/* intro */ list._college = [
             {title:'\u5b66\u9662', link:'https://a.zju.edu.cn/',

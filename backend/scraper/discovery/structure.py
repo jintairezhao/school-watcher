@@ -58,6 +58,19 @@ def locator(element):
     return ' > '.join(reversed(parts))
 
 
+def locator_element(document, position):
+    """Resolve the DOM part of an evidence location, retaining its text identity.
+
+    ``::text(...)`` records a literal-data index or unlinked text occurrence;
+    it is an evidence suffix, not a CSS pseudo-element. Consumers keep the
+    complete position for identity and resolve only its actual containing tag.
+    """
+    if not position or position == 'document':
+        return None
+    selector = position.partition('::text(')[0]
+    return document.select_one(selector) if selector else None
+
+
 def node_key(kind, label, url):
     if kind == 'unit' and url.startswith(('http://', 'https://')):
         parsed = urlsplit(url)

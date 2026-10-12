@@ -185,13 +185,19 @@ def navigation_candidates(html, parsed, page):
         if address in seen or address == canonical_url(page['url']):
             continue
         seen.add(address)
-        node = soup.select_one(link['locator']) if link.get('locator') else None
+        from .structure import locator_element
+        node = locator_element(soup, link.get('locator'))
+        from .script_directories import literal_navigation_material
+        literal = literal_navigation_material(node, link, page['url'], region_cache)
         # Footer utility navigation doesn't extend a school's skeleton.
-        if node and node.find_parent('footer'):
+        # A literal menu may be declared in a deferred footer script while its
+        # entries render in the site's main navigation.
+        if node and node.find_parent('footer') and not literal:
             continue
         from .navigation_roles import region_material
-        link['_navigation_material'] = region_material(node, page['url'], region_cache)
-        context = node.parent.get_text(' ', strip=True)[:1100] if node else link['label']
+        link['_navigation_material'] = literal or region_material(node, page['url'], region_cache)
+        context = (literal['text'][:1100] if literal else
+                   node.parent.get_text(' ', strip=True)[:1100] if node else link['label'])
         context = '\n'.join([*headings, ' / '.join(link.get('path', []))[-400:], context])
         result.append((link, context))
     return result

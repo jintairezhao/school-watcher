@@ -49,10 +49,11 @@ def check_baseline(inventory, baseline):
     nodes = []
     all_nodes = [n for n in inventory.structure(key) if n['reference_url'] == reference]
     owners = {n['node_key'] for n in all_nodes if n['relation'] == 'page_identity'}
+    from backend.scraper.discovery.structure import locator_element
     for node in all_nodes:
         if node['locator'] == 'document':
             continue
-        element = soup.select_one(node['locator'].split('::text(')[0])
+        element = locator_element(soup, node['locator'])
         if element is not None and any(element is s or any(p is s for p in element.parents) for s in scopes):
             nodes.append(node)
     expected = {e['id']: e for e in entries}

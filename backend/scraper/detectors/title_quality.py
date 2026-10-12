@@ -107,22 +107,35 @@ def extract_best_title(item, *, article_url='') -> str:
     return best
 
 
-# 标题开头的日期/分隔符串（博达多校把日期拼在标题文本前）
-_LEAD_DATE_RE = re.compile(r'^[\d\-/.年月日\s｜|]+')
+# Consume one calendar field, never an unrestricted run of numbers. A link
+# can wrap "06-15", "2026" and the actual "2026年…" title in separate nodes.
+_LEAD_DATE_RE = re.compile(
+    r'^[\s｜|]*(?:'
+    r'(?P<year_first>[12]\d{3})[-/.](?P<month_first>\d{1,2})[-/.](?P<day_first>\d{1,2})'
+    r'|(?P<month_last>\d{1,2})[-/.](?P<day_last>\d{1,2})\s*(?P<year_last>[12]\d{3})'
+    r'(?!(?:[年届级]|学年|[-/—–.][12]\d{3}))'
+    r'|(?P<month_only>\d{1,2})[-/.](?P<day_only>\d{1,2})'
+    r'(?:(?!\d)|(?=[12]\d{3}(?:[年届级]|学年|[-/—–.][12]\d{3}))))')
 
 
 def clean_title(title: str) -> str:
     """剥离标题前缀的日期串和「浏览数：N」等噪声（通用，不分学校）。
 
-    仅当开头串含 ≥4 个数字且带分隔符时才剥离，避免误伤
-    「2026年工作要点」这类合法数字开头标题。
+    只剥离一段有效日期，保留随后真实标题中的年份和学年范围。
     """
     if not title:
         return title
     m = _LEAD_DATE_RE.match(title)
-    if m and sum(ch.isdigit() for ch in m.group(0)) >= 4 \
-            and any(c in m.group(0) for c in '-/.'):
-        title = title[m.end():]
+    if m:
+        year = m.group('year_first') or m.group('year_last') or '2000'
+        month = m.group('month_first') or m.group('month_last') or m.group('month_only')
+        day = m.group('day_first') or m.group('day_last') or m.group('day_only')
+        try:
+            datetime(int(year), int(month), int(day))
+        except ValueError:
+            pass
+        else:
+            title = title[m.end():]
     title = re.sub(r'浏览数[：:]*\s*\d*', '', title)
     return title.strip(' ｜|:：-—\t')
 

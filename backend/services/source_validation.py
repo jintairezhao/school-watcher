@@ -12,7 +12,7 @@ from backend.database.source_governance_models import SourceValidation
 from backend.scraper.http_client import same_school_url, validate_public_url
 from backend.services.source_inventory import canonical_url
 
-VALIDATION_VERSION = 4
+VALIDATION_VERSION = 5
 
 
 def sample_failure_kind(samples):
@@ -271,9 +271,13 @@ def article_samples(config, records, fetcher):
 
 
 def pagination_sample(config, records, html, reference, scope, fetcher):
-    from backend.scraper.engine import _next_page_url
+    from backend.scraper.engine import _next_page_url, PaginationScopeError
     from backend.services.source_governance import _column_scope, _snapshot
-    target = _next_page_url(html, config['list_url'], 1)
+    try:
+        target = _next_page_url(html, reference['url'], 1,
+                                list_selector=config['list_selector'], scope=scope)
+    except PaginationScopeError as exc:
+        return {'state': 'rejected', 'errors': [str(exc)]}
     if not target:
         return {'state': 'not_observed', 'errors': []}
     validate_public_url(target, resolve=False)

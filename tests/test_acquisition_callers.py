@@ -84,9 +84,9 @@ class AcquisitionCallerTests(unittest.TestCase):
         task = tasks.enqueue('collect', self.news.id, {'department_id': self.news.id})
         handle = tasks.claim()
         def page(start, next_link=''):
-            return '<ul class="notice-list">' + ''.join(
+            return '<section><h2>' + self.news.name + '</h2><ul class="notice-list">' + ''.join(
                 f'<li><a href="article/{i}.htm">关于教学安排的有效通知{i}</a><time>2026-09-23</time></li>'
-                for i in range(start, start + 3)) + '</ul>' + next_link
+                for i in range(start, start + 3)) + '</ul>' + next_link + '</section>'
         first = page(0, '<a href="page2.htm">下一页</a>')
         with tasks.execution_scope(handle), \
              patch('backend.scraper.engine._fetch_html', side_effect=[first, tasks.TaskDeferred(capability='browser')]), \
