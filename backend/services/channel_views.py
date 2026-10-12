@@ -15,9 +15,10 @@ from backend.services.inbox import filtered_inbox, inbox_mailbox, read_expressio
 def channel_url(source, view=None):
     if not g.get('user'):
         return url_for('pages.school_detail', school_id=source.school_id, dept=source.id)
+    mailbox = view or inbox_mailbox(request.args)
     return url_for('pages.index', school=source.school_id, dept=source.id,
                    period='all', _anchor='sources',
-                   **({'view': 'saved'} if (view or inbox_mailbox(request.args)) == 'saved' else {}))
+                   **({'view': mailbox} if mailbox in ('saved','trash') else {}))
 
 
 def channel_breadcrumb(source):
@@ -54,6 +55,23 @@ def prime_publications(announcement_ids):
 def publication_links(announcement_id):
     prime_publications([announcement_id])
     return _publication_cache().get(announcement_id, [])
+
+
+def announcement_share_url(announcement, source=None):
+    """Use this appearance's verified stored address, including an offline favorite."""
+    source = source or announcement.department
+    if source is None:
+        return ''
+    found = next((row for row in publication_links(announcement.id) if row['source_id'] == source.id), None)
+    if found:
+        return found['article_url']
+    from backend.database.models import AnnouncementSource
+    from backend.services.announcement_sources import _publication_url
+    appearance = db.session.get(AnnouncementSource, (announcement.id, source.id))
+    address = appearance.article_url if appearance else ''
+    if not address and source.id == announcement.department_id:
+        address = announcement.url
+    return _publication_url(address)
 
 
 def channel_overview(user_id, *, school_id=None, q='', view='inbox'):

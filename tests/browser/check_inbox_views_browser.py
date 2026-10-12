@@ -25,6 +25,7 @@ def check(capture=True):
         announcement.content_html = '<p>隔离界面验收正文，阅读模式切换不重新抓取，也不改变已读状态。</p>' * 60
         announcement.content_text = announcement.content_text or '隔离界面验收正文。'
         announcement.content_cached_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        announcement.resources_scanned_at = announcement.content_cached_at
     db.session.add(UserAnnouncementState(user_id=1, announcement_id=1, starred=True)); db.session.commit()
     cookie = app.session_interface.get_signing_serializer(app).dumps({'user_id': 1, '_csrf_token': 'reading-fixture'})
     server = make_server('127.0.0.1', 0, app, threaded=True)
@@ -155,7 +156,7 @@ def check(capture=True):
             expect(page.locator('#rowStar3')).to_have_count(0)
             expect(page.locator('.reading-title')).to_contain_text('北京学术交流')
             assert 'selected=1' in page.url
-            expect(page.locator('.mailbox-views a')).to_have_count(2)
+            expect(page.locator('.mailbox-views a')).to_have_count(3)
             expect(page.locator('a[href^="/channels"]')).to_have_count(0)
             checks.append('favorites synchronize and unfavoriting another row preserves the current article')
 

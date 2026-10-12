@@ -9,11 +9,13 @@ import sqlite3
 import tempfile
 import zipfile
 import shutil
+import base64
 
 from sqlalchemy import null, text
+from flask import current_app
 
 from backend.database.db import db
-from backend.database.models import (School, Department, Announcement, AnnouncementSource,
+from backend.database.models import (School, Department, Announcement, AnnouncementSource, AnnouncementResource,
                                      DepartmentDirectoryEntry)
 from backend.scraper.change_detector import compute_hash
 from backend.scraper.sanitizer import sanitize_html
@@ -32,6 +34,8 @@ TABLES = {
     'announcement_sources': (AnnouncementSource, ('announcement_id', 'department_id',
         'list_url', 'article_url', 'first_seen_at', 'last_seen_at')),
     'department_directory_entries': (DepartmentDirectoryEntry, ('parent_id', 'department_id', 'position')),
+    'announcement_resources': (AnnouncementResource, ('announcement_id','url_key','url','filename','kind',
+        'state','mime_type','byte_size','sha256','payload','saved_at','error')),
 }
 
 
@@ -66,10 +70,13 @@ def export_data(progress=None):
                 for name, (model, columns) in TABLES.items():
                     writer.write(',' + json.dumps(name) + ':[')
                     first = True
-                    for row in db.session.query(*(getattr(model, c) for c in columns)).yield_per(500):
+                    query = db.session.query(*(getattr(model, c) for c in columns))
+                    if name == 'announcement_resources': query = query.filter(model.state == 'ready')
+                    for row in query.yield_per(1 if name == 'announcement_resources' else 500):
                         if not first:
                             writer.write(',')
-                        values = {c: v.isoformat() if isinstance(v, datetime) else v for c, v in zip(columns, row)}
+                        values = {c: v.isoformat() if isinstance(v, datetime) else base64.b64encode(v).decode('ascii')
+                                  if isinstance(v, bytes) else v for c, v in zip(columns, row)}
                         if name == 'announcements':
                             from backend.services.summaries import export_summary
                             ann = db.session.get(Announcement, values['id'])
@@ -177,7 +184,8 @@ def _legacy_rows(archive, infos, candidates, progress, disk_backed, max_rows):
                     column_sql = ','.join('"' + c + '"' for c in columns)
                     rows = connection.execute(f'SELECT {column_sql} FROM "{table}" LIMIT ?', (max_rows + 1,))
                     for index, row in enumerate(rows, 1):
-                        data[table].append(dict(zip(columns, row)))
+                        values = {c:base64.b64encode(v).decode('ascii') if isinstance(v,bytes) else v for c,v in zip(columns,row)}
+                        data[table].append(values)
                         _report(progress, 'checking_database', index)
     if len(candidates) != 1:
         raise ValueError('备份中需要且只能包含一份通知数据库')
@@ -253,7 +261,7 @@ def validate_data(data, progress=None, max_rows=MAX_ROWS):
     if not isinstance(data, dict) or data.get('format') != FORMAT or type(data.get('version')) is not int or data['version'] != 1:
         raise ValueError('不支持此备份版本，请使用兼容版本导出')
     for table, (_, columns) in TABLES.items():
-        rows = data.get(table, [] if table in ('announcement_sources', 'department_directory_entries') else None)
+        rows = data.get(table, [] if table in ('announcement_sources', 'department_directory_entries','announcement_resources') else None)
         if not isinstance(rows, (list, DiskRows)) or len(rows) > max_rows:
             raise ValueError('备份缺少数据表或记录数超过限制')
         data[table] = rows
@@ -278,6 +286,13 @@ def validate_data(data, progress=None, max_rows=MAX_ROWS):
                 elif field == 'position':
                     if type(value) is not int or not 0 <= value < 2**31:
                         raise ValueError('备份中的目录顺序无效')
+                elif field == 'byte_size':
+                    from backend.services.saved_materials import MAX_ATTACHMENT_BYTES
+                    if type(value) is not int or not 0 <= value <= max(MAX_ATTACHMENT_BYTES,int(current_app.config.get('SAVED_ATTACHMENT_MAX_BYTES',MAX_ATTACHMENT_BYTES))):
+                        raise ValueError('备份中的附件大小无效或超过读取额度')
+                elif field == 'payload':
+                    if not isinstance(value,str) or len(value)>row['byte_size']*4//3+8:
+                        raise ValueError('备份中的附件编码无效')
                 elif field != 'id':
                     if value is not None and not isinstance(value, str):
                         raise ValueError('备份中的文字字段无效')
@@ -303,6 +318,15 @@ def validate_data(data, progress=None, max_rows=MAX_ROWS):
                 if version is not None and (not isinstance(version, dict) or
                         len(json.dumps(version, ensure_ascii=False)) > 512000):
                     raise ValueError('备份中的摘要版本无效')
+            if table == 'announcement_resources':
+                from backend.services.saved_materials import resource_key, resource_url
+                try: payload = base64.b64decode(row['payload'],validate=True)
+                except (ValueError,TypeError) as exc: raise ValueError('备份中的附件编码无效') from exc
+                if (row['state']!='ready' or row['kind'] not in ('attachment','image') or row['url_key']!=resource_key(resource_url(row['url']))
+                        or not payload or len(payload)!=row['byte_size'] or hashlib.sha256(payload).hexdigest()!=row['sha256']):
+                    raise ValueError('备份中的附件校验未通过')
+                row['filename'] = (row.get('filename') or '官网附件').replace('\\','/').rsplit('/',1)[-1]
+                if any(ord(c)<32 or ord(c)==127 for c in row['filename']): raise ValueError('备份中的附件名称无效')
         if isinstance(rows, DiskRows):
             rows.normalized = True
     _report(progress, 'checking_relations')
@@ -324,6 +348,8 @@ def validate_data(data, progress=None, max_rows=MAX_ROWS):
         parent, child = departments.get(row['parent_id']), departments.get(row['department_id'])
         if not parent or not child or parent['id'] == child['id'] or parent['school_id'] != child['school_id']:
             raise ValueError('备份中的部门目录关系无效')
+    for row in data['announcement_resources']:
+        if row['announcement_id'] not in announcements: raise ValueError('备份中的附件缺少所属通知')
     return data
 
 
@@ -503,6 +529,18 @@ def merge_data(data, progress=None):
             key = (dept_map[row['parent_id']].id, dept_map[row['department_id']].id)
             if key[0] != key[1] and db.session.get(DepartmentDirectoryEntry, key) is None:
                 db.session.add(DepartmentDirectoryEntry(parent_id=key[0], department_id=key[1], position=row['position']))
+        for row in _rows_progress(data['announcement_resources'],progress,'merging_attachments'):
+            ident = ann_map[row['announcement_id']]
+            existing = db.session.get(AnnouncementResource,(ident,row['url_key']))
+            if existing and existing.state=='ready': continue
+            if existing is None:
+                existing=AnnouncementResource(announcement_id=ident,url_key=row['url_key']);db.session.add(existing)
+            for field in ('url','filename','kind','mime_type','byte_size','sha256','saved_at'): setattr(existing,field,row.get(field))
+            # Disk-backed rows are read afresh after validation; apply the same
+            # basename normalization here rather than relying on a temporary dict.
+            existing.filename = (existing.filename or '官网附件').replace('\\','/').rsplit('/',1)[-1]
+            existing.payload=base64.b64decode(row['payload'],validate=True)
+            existing.state,existing.error='ready',''
         from backend.services.source_governance import propose_source
         from backend.services.tasks import enqueue
         for department, candidate, expected in _rows_progress(source_reviews, progress, 'reviewing_sources'):

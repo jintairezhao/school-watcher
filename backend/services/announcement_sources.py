@@ -24,8 +24,10 @@ def record_source(announcement, department, article_url=None, observed_at=None):
                                     statement.excluded.last_seen_at), else_=AnnouncementSource.last_seen_at)}))
 
 
-def source_expression(school_ids=None, department_ids=None, group=None):
-    allowed = db.select(Department.id).join(School, School.id == Department.school_id).where(School.enabled.is_(True))
+def source_expression(school_ids=None, department_ids=None, group=None, *, include_disabled=False):
+    allowed = db.select(Department.id).join(School, School.id == Department.school_id)
+    if not include_disabled:
+        allowed = allowed.where(School.enabled.is_(True))
     if school_ids is not None:
         allowed = allowed.where(Department.school_id.in_(school_ids))
     if department_ids is not None:
@@ -125,11 +127,12 @@ def publication_links_for(announcement_ids):
     return result
 
 
-def schools_for(query):
+def schools_for(query, *, include_disabled=False):
     ids = query.with_entities(Announcement.id).order_by(None).subquery()
     refs = memberships(db.select(ids.c.id))
     school_ids = db.select(Department.school_id).join(refs, refs.c.department_id == Department.id)
-    return School.query.filter(School.enabled.is_(True), School.id.in_(school_ids)).order_by(School.name).all()
+    schools = School.query.filter(School.id.in_(school_ids))
+    return (schools if include_disabled else schools.filter(School.enabled.is_(True))).order_by(School.name).all()
 
 
 def preferred_source(announcement, sources, school_id=None, department_id=None):

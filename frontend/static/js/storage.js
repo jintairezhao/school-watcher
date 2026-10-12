@@ -31,7 +31,7 @@
         checking_database:'正在检查旧版数据库', checking_relations:'正在校验数据关系', waiting_database:'正在等待数据库',
         indexing:'正在检查已有通知', merging_schools:'正在合并学校', merging_departments:'正在合并栏目',
         merging_announcements:'正在合并通知', merging_memberships:'正在合并通知来源', merging_sources:'正在合并来源',
-        merging_directories:'正在合并目录', reviewing_sources:'正在核实来源配置', committing:'正在保存合并结果',
+        merging_directories:'正在合并目录', merging_attachments:'正在合并已保存附件', reviewing_sources:'正在核实来源配置', committing:'正在保存合并结果',
         downloading:'正在传输到浏览器', done:'已完成'};
     function progressView(id) {
         const node = document.getElementById(id);

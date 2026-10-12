@@ -101,6 +101,8 @@ def fetch_content(ann_id):
             if meta:
                 ann.published_at = parse_date(meta.get('content', ''))
         db.session.commit()
+        from backend.services.saved_materials import queue_materials
+        queue_materials(ann)
         prune_content()
         return {'saved': True, 'bytes': size}
     except Exception as exc:
@@ -117,25 +119,39 @@ def prune_content(*, all_cache=False):
     days = policy()['body_cache_days']
     cutoff = retention_cutoff(days, datetime.utcnow()) if days else None
     limit = capacity_bytes('body_cache_mb', 'BODY_CACHE_BYTES', 150 * 1048576)
-    pinned = exists().where(UserAnnouncementState.announcement_id == Announcement.id,
-                            UserAnnouncementState.starred.is_(True))
+    from backend.services.saved_materials import pin_expression, TRASH_DAYS
+    from backend.database.models import AnnouncementResource
+    pinned = pin_expression()
+    trash_cutoff = datetime.utcnow() - timedelta(days=TRASH_DAYS)
+    expired_trash = exists().where(UserAnnouncementState.announcement_id == Announcement.id,
+        UserAnnouncementState.starred.is_(False), UserAnnouncementState.trashed_at <= trash_cutoff)
+    resource_bytes = db.session.query(db.func.coalesce(db.func.sum(AnnouncementResource.byte_size), 0)).filter(
+        AnnouncementResource.announcement_id == Announcement.id).correlate(Announcement).scalar_subquery()
     accessed = db.func.coalesce(Announcement.content_accessed_at, Announcement.content_cached_at, Announcement.created_at)
-    rows = db.session.query(Announcement.id, Announcement.content_bytes, accessed.label('accessed')).filter(
+    rows = db.session.query(Announcement.id, (Announcement.content_bytes + resource_bytes).label('content_bytes'),
+        accessed.label('accessed'), expired_trash.label('trash_expired')).filter(
         ~pinned, db.or_(Announcement.content_bytes > 0, Announcement.content_html != '',
-                       Announcement.content_text != '', Announcement.content_cached_at.isnot(None))
+                       Announcement.content_text != '', Announcement.content_cached_at.isnot(None),
+                       exists().where(AnnouncementResource.announcement_id == Announcement.id))
     ).order_by(accessed, Announcement.id).all()
     total = sum(r.content_bytes for r in rows)
     expired = []
     for row in rows:
-        if all_cache or (limit and total > limit) or (cutoff and (row.accessed is None or row.accessed < cutoff)):
+        if row.trash_expired or all_cache or (limit and total > limit) or (cutoff and (row.accessed is None or row.accessed < cutoff)):
             expired.append(row.id)
             total -= row.content_bytes
     evicted = 0
     for start in range(0, len(expired), 200):
         # Recheck pins at the write, in case a user saved the article since the scan.
-        result = db.session.execute(db.update(Announcement).where(Announcement.id.in_(expired[start:start + 200]), ~pinned).values(
+        # State changes and resource commits take this same parent-row lock.
+        # Recheck pins after locking, so restoring a favorite cannot race eviction.
+        locked = db.session.query(Announcement.id).filter(Announcement.id.in_(expired[start:start + 200])).with_for_update().all()
+        cleared = db.session.execute(db.update(Announcement).where(Announcement.id.in_([r.id for r in locked]), ~pinned).values(
             content_html='', content_text='', content_bytes=0, content_cached_at=None,
-            content_accessed_at=None, content_error=''))
-        evicted += result.rowcount
+            content_accessed_at=None, content_error='', resources_scanned_at=None).returning(Announcement.id)).scalars().all()
+        db.session.execute(db.delete(AnnouncementResource).where(AnnouncementResource.announcement_id.in_(cleared)))
+        evicted += len(cleared)
+    db.session.execute(db.update(UserAnnouncementState).where(UserAnnouncementState.starred.is_(False),
+        UserAnnouncementState.trashed_at <= trash_cutoff).values(trashed_at=None))
     db.session.commit()
     return {'evicted': evicted, 'unpinned_bytes': total}

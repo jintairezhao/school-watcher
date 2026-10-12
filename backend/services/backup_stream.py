@@ -66,6 +66,9 @@ class ProgressReader:
 
 def read_json(source, total, progress=None, max_rows=200000):
     from backend.services.data_transfer import TABLES
+    from flask import current_app, has_app_context
+    from backend.services.saved_materials import MAX_ATTACHMENT_BYTES
+    resource_limit = max(MAX_ATTACHMENT_BYTES, int(current_app.config.get('SAVED_ATTACHMENT_MAX_BYTES', MAX_ATTACHMENT_BYTES))) if has_app_context() else MAX_ATTACHMENT_BYTES
     data = BackupData()
     builder = None
     row_depth = 0
@@ -78,7 +81,8 @@ def read_json(source, total, progress=None, max_rows=200000):
         for prefix, event, value in parser:
             if builder is not None:
                 row_size += len(value.encode('utf-8')) if isinstance(value, str) else 8
-                if row_size > 12 * 1024 * 1024 or row_depth > 24:
+                limit = resource_limit * 4 // 3 + 1024 * 1024 if table == 'announcement_resources' else 12 * 1024 * 1024
+                if row_size > limit or row_depth > 24:
                     raise ValueError('备份中的单条记录过大或嵌套过深')
                 builder.event(event, value)
                 row_depth += int(event in ('start_map', 'start_array')) - int(event in ('end_map', 'end_array'))

@@ -3,6 +3,7 @@ import hashlib
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
+from flask import has_app_context
 
 from backend.scraper.http_client import requests, validate_public_url
 from backend.scraper.sanitizer import sanitize_html
@@ -39,6 +40,13 @@ def render_article_html(html, ann_id=None, base_url=''):
     if ann_id is None or not html:
         return sanitize_html(html)
     soup = BeautifulSoup(html, 'lxml')
+    from backend.database.models import AnnouncementResource
+    from backend.services.saved_materials import resource_url, resource_key
+    saved = {row.url_key for row in AnnouncementResource.query.filter_by(announcement_id=ann_id, state='ready', kind='attachment').all()} if has_app_context() else set()
+    for anchor in soup.find_all('a', href=True):
+        url = resource_url(anchor['href'], base_url)
+        if url and resource_key(url) in saved:
+            anchor['href'] = f'/api/announcements/{int(ann_id)}/resources/{resource_key(url)}'
     for img in soup.find_all('img', src=True):
         url = _source(img['src'], base_url)
         if url:

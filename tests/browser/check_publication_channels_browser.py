@@ -93,7 +93,7 @@ with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Browsing 
             page.route('**/*', serve)
             page.add_init_script('localStorage.setItem("theme", ' + json.dumps(theme) + ')')
             page.goto(f'http://localhost/?school={school_id}&period=all')
-            expect(page.locator('.mailbox-views a')).to_have_count(2)
+            expect(page.locator('.mailbox-views a')).to_have_count(3)
             expect(page.locator('a[href^="/channels"]')).to_have_count(0)
             expect(page.get_by_role('link', name='按发布渠道', exact=True)).to_have_count(0)
             page.locator('#openFilters').click()

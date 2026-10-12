@@ -113,6 +113,7 @@ class Announcement(db.Model):
     content_accessed_at = db.Column(db.DateTime)
     content_bytes = db.Column(db.Integer, nullable=False, default=0, server_default='0')
     content_error = db.Column(db.String(300), nullable=False, default='', server_default='')
+    resources_scanned_at = db.Column(db.DateTime)
     summary = db.Column(db.Text, comment='AI摘要')
     published_at = db.Column(db.DateTime, comment='发布时间')
     content_hash = db.Column(db.String(64), comment='内容哈希（用于变更检测）')
@@ -287,6 +288,25 @@ class UserAnnouncementState(db.Model):
     starred = db.Column(db.Boolean, nullable=False, default=False, server_default='0')
     # Retain old records and portable backups without changing subscriptions or stars.
     archived = db.Column(db.Boolean, nullable=False, default=False, server_default='0')
+    trashed_at = db.Column(db.DateTime, nullable=True, index=True)
+    __table_args__ = (db.Index('ix_state_retention_pin', 'announcement_id', 'starred', 'trashed_at'),)
+
+
+class AnnouncementResource(db.Model):
+    """Observed attachments/images saved with a pinned article, shared once."""
+    __tablename__ = 'announcement_resources'
+    announcement_id = db.Column(db.Integer, db.ForeignKey('announcements.id', ondelete='CASCADE'), primary_key=True)
+    url_key = db.Column(db.String(64), primary_key=True)
+    url = db.Column(db.Text, nullable=False)
+    filename = db.Column(db.String(1000), nullable=False, server_default='')
+    kind = db.Column(db.String(20), nullable=False, server_default='attachment')
+    state = db.Column(db.String(20), nullable=False, server_default='pending')
+    mime_type = db.Column(db.String(200), nullable=False, server_default='')
+    byte_size = db.Column(db.BigInteger, nullable=False, server_default='0', default=0)
+    sha256 = db.Column(db.String(64), nullable=False, server_default='')
+    payload = db.deferred(db.Column(db.LargeBinary, nullable=True))
+    saved_at = db.Column(db.DateTime, nullable=True)
+    error = db.Column(db.String(500), nullable=False, server_default='')
 
 
 class RateBucket(db.Model):

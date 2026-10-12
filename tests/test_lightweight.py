@@ -244,7 +244,7 @@ class LightweightTests(unittest.TestCase):
             self.assertIn('选课通知', soup.select_one('#noticeList').get_text())
             self.assertIn('历史资料通知', soup.select_one('#noticeList').get_text())
             self.assertFalse(soup.select('[data-state-field="archived"]'))
-            self.assertEqual(len(soup.select('.mailbox-views a')), 2)
+            self.assertEqual(len(soup.select('.mailbox-views a')), 3)
             self.assertIsNone(soup.select_one('a[href^="/channels"]'))
         self.assertEqual((self.notice.content_text, UserRead.query.one().read_at), original)
         self.assertEqual(UserRead.query.count(), 1)

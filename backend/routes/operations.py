@@ -120,6 +120,9 @@ def storage():
     pinned = db.session.query(UserAnnouncementState.announcement_id).filter_by(starred=True)
     saved_bytes = db.session.query(db.func.coalesce(db.func.sum(Announcement.content_bytes), 0)).filter(
         Announcement.id.in_(pinned)).scalar()
+    from backend.database.models import AnnouncementResource
+    saved_bytes += db.session.query(db.func.coalesce(db.func.sum(AnnouncementResource.byte_size), 0)).filter(
+        AnnouncementResource.announcement_id.in_(pinned)).scalar()
     from backend.services.storage_policy import policy
     from backend.services.task_fetch import evidence_root
     evidence = evidence_root()

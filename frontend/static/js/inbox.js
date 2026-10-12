@@ -361,8 +361,9 @@
                         else control.textContent = label;
                         control.setAttribute('aria-pressed', String(saved)); control.disabled = false;
                     });
-                    showToast('success', saved ? '已加入我的收藏' : '已取消收藏');
-                    if (!saved && readingView.mailbox(appliedURL) === 'saved') {
+                    showToast('success', saved ? (data.archive?.state === 'ready' ? '已收藏，正文与附件已保存' : '已收藏，正在后台保存正文与附件') : '已移入回收站，30 天内可恢复收藏');
+                    window.dispatchEvent(new CustomEvent('notice:favorite-changed', {detail: {id: button.dataset.id, starred: saved}}));
+                    if ((!saved && readingView.mailbox(appliedURL) === 'saved') || (saved && readingView.mailbox(appliedURL) === 'trash')) {
                         const keepSelected = button.dataset.id !== appliedURL.searchParams.get('selected');
                         await navigate(readingView.withMode(keepSelected ? appliedURL : workspace.dataset.backUrl,
                             readingView.mode(appliedURL) === 'focus'), {preserveList: true, refreshList: true});

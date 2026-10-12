@@ -28,8 +28,9 @@ def _pinned_url(url, address):
     return urlunsplit((parsed.scheme, authority, parsed.path, parsed.query, ''))
 
 
-async def read_http(request, permit=None, trace=None):
+async def read_http(request, permit=None, trace=None, *, capture_binary=False, max_bytes=None, extra_headers=None):
     policy = get_policy()
+    read_limit = int(max_bytes) if capture_binary else policy['html_max_bytes']
     budget = min(float(request.timeout_seconds), float(policy['http_total_seconds']))
     start = time.monotonic()
     target, visited = request.url, set()
@@ -87,6 +88,8 @@ async def read_http(request, permit=None, trace=None):
                                'Accept-Encoding': 'gzip, deflate',
                                'Accept': 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.5',
                                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'}
+                    if capture_binary and extra_headers:
+                        headers.update({name:value for name,value in extra_headers.items() if name in ('Referer','Accept')})
                     remaining = budget - (time.monotonic() - start - admission_wait)
                     connect_remaining = max(.001, policy['http_connect_seconds'] -
                                             (time.monotonic() - connection_start))
@@ -136,9 +139,15 @@ async def read_http(request, permit=None, trace=None):
                             trace['redirect_target'] = target
                             continue
                         mime = response.headers.get('Content-Type', '').lower()
+                        if capture_binary and response.status >= 400:
+                            return FetchResult(target, status=response.status, headers=response_headers,
+                                outcome='network_error' if response.status in (408, 429, 500, 502, 503, 504) else 'denied',
+                                error_code='http_' + str(response.status), retry_after=retry_after,
+                                evidence=tuple(notes),
+                                message='官网附件暂时无法读取（HTTP ' + str(response.status) + '）')
                         pdf = request.purpose == 'article' and ('application/pdf' in mime or
                             'application/octet-stream' in mime and urlsplit(target).path.lower().endswith('.pdf'))
-                        if mime and not pdf and not any(kind in mime for kind in ('text/', 'application/xhtml', 'application/json', '+json')):
+                        if not capture_binary and mime and not pdf and not any(kind in mime for kind in ('text/', 'application/xhtml', 'application/json', '+json')):
                             return FetchResult(target, status=response.status, headers=response_headers,
                                 outcome='denied', error_code='non_html_resource', message='该官网地址返回了非网页资源',
                                 retry_after=retry_after, evidence=tuple(notes))
@@ -151,14 +160,18 @@ async def read_http(request, permit=None, trace=None):
                                                message='官网使用了暂不支持的网页压缩格式')
                         async for chunk in response.content.iter_chunked(65536):
                             if decoder:
-                                chunk = decoder.decompress(chunk, policy['html_max_bytes'] + 1 - len(payload))
+                                chunk = decoder.decompress(chunk, read_limit + 1 - len(payload))
                             payload.extend(chunk)
-                            if len(payload) > policy['html_max_bytes']:
+                            if len(payload) > read_limit:
                                 return FetchResult(target, status=response.status, headers=response_headers,
                                     outcome='denied', error_code='response_too_large',
-                                    message=f"官网页面超过{policy['html_max_bytes'] / 1048576:g} MiB读取上限，已停止读取")
+                                    message=f"官网响应超过{read_limit / 1048576:g} MiB读取上限，未保存不完整内容")
                         if decoder and not decoder.eof:
                             raise aiohttp.ClientPayloadError('Incomplete compressed response')
+                        if capture_binary:
+                            return FetchResult(target, status=response.status, headers=dict(response.headers),
+                                attachment={'payload': bytes(payload)}, outcome='usable',
+                                evidence=tuple(notes) + ('public_dns_ipv4:' + address,))
                         if pdf:
                             from .attachments import pdf_observation
                             attachment = pdf_observation(bytes(payload), target, response_headers)
@@ -187,7 +200,7 @@ async def read_http(request, permit=None, trace=None):
     return FetchResult(target, outcome='denied', error_code='redirect_limit', message='官网跳转次数超出本次读取上限')
 
 
-def fetch_http(request):
+def fetch_http(request, *, capture_binary=False, max_bytes=None, extra_headers=None):
     permit = None
     start = time.monotonic()
     trace = {}
@@ -197,7 +210,9 @@ def fetch_http(request):
         # the shared queue rather than occupying an HTTP worker while waiting.
         permit = _shared_permit(request.url, request.timeout_seconds)
         start = time.monotonic()
-        result = loop.run_until_complete(read_http(request, permit, trace))
+        reader = (read_http(request, permit, trace, capture_binary=True, max_bytes=max_bytes, extra_headers=extra_headers)
+                  if capture_binary else read_http(request, permit, trace))
+        result = loop.run_until_complete(reader)
         if 'proxy_route_retry_available' in result.evidence:
             remember_proxy_failure(result.final_url)
         return result

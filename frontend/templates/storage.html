@@ -22,7 +22,7 @@
     <tr><th scope="row">已结束的抓取记录</th><td></td><td><button class="btn btn-outline btn-sm" type="button" data-cleanup="logs">清理</button></td></tr>
     </tbody>
 </table>
-<p class="storage-help">清理保留接入进度、通知目录与收藏正文；正在使用的证据会跳过。</p>
+<p class="storage-help">清理保留接入进度、通知目录、收藏正文与附件，以及回收站 30 天内的副本；正在使用的证据会跳过。</p>
 <div class="storage-actions"><button class="btn btn-outline" type="button" data-cleanup="expired">按保留规则清理</button><button class="btn btn-outline" type="button" data-cleanup="all_cache">清空可清理缓存</button></div>
 <p id="cleanupStatus" class="storage-status" role="status" aria-live="polite"></p>
 {% if config.DESKTOP_MODE %}
@@ -60,7 +60,7 @@
 
 <section class="storage-section" aria-labelledby="backupTitle">
     <h2 id="backupTitle">备份与合并导入</h2>
-    <p>备份通知、已缓存正文与来源信息，不包含账户和个人阅读状态。</p>
+    <p>备份通知、已缓存正文、已保存附件与来源信息，不包含账户和个人阅读状态。</p>
     <div class="storage-actions"><button class="btn btn-primary" type="button" id="exportStorage">导出数据备份</button></div>
     <p id="exportStatus" class="storage-status" role="status" aria-live="polite"></p>
     <div id="exportProgress" class="storage-progress" hidden>

@@ -48,10 +48,10 @@ def index():
     reading_view = 'focus' if request.args.get('view') == 'focus' else 'split'
     retained_query = Announcement.query.filter(
         state_expression(g.user.id, 'archived'), source_expression())
-    if view == 'saved':
-        state_query = Announcement.query.filter(
-            state_expression(g.user.id, 'starred'), source_expression())
-        schools = schools_for(state_query)
+    if view in ('saved', 'trash'):
+        from backend.services.saved_materials import trash_expression
+        state_query = Announcement.query.filter(state_expression(g.user.id, 'starred') if view == 'saved' else trash_expression(g.user.id))
+        schools = schools_for(state_query, include_disabled=True)
     else:
         schools = sorted({s.id: s for s in schools + schools_for(retained_query)}.values(),
                          key=lambda school: school.name)
@@ -405,7 +405,8 @@ def school_detail(school_id):
 def announcement_detail(ann_id):
     """通知详情页 — 显示全文 + AI摘要"""
     from backend.services.announcement_sources import source_expression, sources_for, preferred_source
-    ann = Announcement.query.filter(Announcement.id == ann_id, source_expression()).first()
+    from backend.services.saved_materials import readable_expression
+    ann = Announcement.query.filter(Announcement.id == ann_id, readable_expression(g.user.id if g.get('user') else None)).first()
     if not ann:
         flash('通知不存在', 'error')
         return redirect(url_for('pages.index'))
@@ -420,7 +421,7 @@ def announcement_detail(ann_id):
     sources = sources_for([ann.id]).get(ann.id, [])
     from backend.services.channel_views import prime_publications
     prime_publications([ann.id])
-    display_source = preferred_source(ann, sources, department_id=request.args.get('source', type=int))
+    display_source = preferred_source(ann, sources, department_id=request.args.get('source', type=int)) or ann.department
     back_url = request.args.get('from', '')
     if not (back_url.startswith('/') and not back_url.startswith('//')):
         back_url = url_for('pages.school_detail', school_id=display_source.school_id,

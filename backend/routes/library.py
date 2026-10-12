@@ -69,23 +69,52 @@ def search_suggestions():
 @bp.route('/api/announcements/<int:ann_id>/state', methods=['PUT'])
 @login_required
 def update_state(ann_id):
-    ann = db.session.get(Announcement, ann_id)
-    from backend.services.announcement_sources import source_expression
-    if not ann or not Announcement.query.filter(Announcement.id == ann_id, source_expression()).first():
+    from backend.services.saved_materials import readable_expression, queue_materials, material_status
+    ann = Announcement.query.filter(Announcement.id == ann_id, readable_expression(g.user.id)).with_for_update().first()
+    if not ann:
         return jsonify(error='通知不存在或来源已下架'), 404
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or not data or set(data) - {'starred'}:
         return jsonify(error='请选择收藏操作'), 400
     if any(type(value) is not bool for value in data.values()):
         return jsonify(error='状态必须为 true 或 false'), 400
+    from datetime import datetime, timedelta
+    from sqlalchemy import case
+    from backend.services.saved_materials import TRASH_DAYS
+    now = datetime.utcnow()
     db.session.execute(insert(UserAnnouncementState).values(
-        user_id=g.user.id, announcement_id=ann_id, **data).on_conflict_do_update(
-            index_elements=['user_id', 'announcement_id'], set_=data))
+        user_id=g.user.id, announcement_id=ann_id, starred=data['starred'], trashed_at=None).on_conflict_do_update(
+            index_elements=['user_id', 'announcement_id'], set_={'starred': data['starred'],
+                'trashed_at': None if data['starred'] else case(
+                    (UserAnnouncementState.starred.is_(True), now), else_=UserAnnouncementState.trashed_at)}))
     db.session.commit()
     if data.get('starred'):
-        from backend.services.content_cache import request_content
-        request_content(ann)
-    return jsonify(success=True, **data)
+        queue_materials(ann)
+    state = db.session.get(UserAnnouncementState, (g.user.id, ann_id))
+    expires = state.trashed_at + timedelta(days=TRASH_DAYS) if state.trashed_at else None
+    return jsonify(success=True, **data, trash_until=expires.isoformat() + 'Z' if expires else None,
+        archive=material_status(ann) if data['starred'] else None)
+
+
+@bp.route('/api/announcements/<int:ann_id>/saved-materials', methods=['GET', 'POST'])
+@login_required
+def saved_materials_status(ann_id):
+    from datetime import datetime, timedelta
+    from backend.services.saved_materials import TRASH_DAYS, material_status, queue_materials
+    state = db.session.get(UserAnnouncementState, (g.user.id, ann_id))
+    expires = state.trashed_at + timedelta(days=TRASH_DAYS) if state and state.trashed_at else None
+    active_trash = bool(expires and expires > datetime.utcnow())
+    ann = db.session.get(Announcement, ann_id)
+    if not ann or not state or (not state.starred and not active_trash):
+        return jsonify(state='none', resources=[])
+    if request.method == 'POST':
+        from backend.auth.rate_limit import check_rate_limit
+        if not check_rate_limit(f'saved-materials:user:{g.user.id}', 30, 3600)[0]:
+            return jsonify(error='保存请求较频繁，请稍后重试'), 429
+        queue_materials(ann, retry=True)
+    result = material_status(ann)
+    return jsonify(**result, starred=state.starred,
+        trash_until=expires.isoformat() + 'Z' if active_trash else None)
 
 
 @bp.route('/api/inbox/read', methods=['POST'])

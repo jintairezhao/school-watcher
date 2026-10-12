@@ -10,15 +10,17 @@
 {% set source_school = current_school.name if current_school else '全部学校' %}
 {% set source_scope = ('已选 ' ~ selected_dept_ids|length ~ ' 个栏目') if selected_dept_ids else (current_group or '全部栏目') %}
 {% set focused_reading = reading_view == 'focus' %}
-<div class="inbox-workspace {% if detail_requested %}detail-requested{% endif %}" data-user-id="{{ current_user.id }}" data-source-mode="closed" data-reading-view="{{ 'focus' if focused_reading else 'split' }}" data-back-url="{{ back_to_list_url }}" data-view="{{ view }}" data-can-collect="{{ 'true' if current_user.is_admin else 'false' }}">
+<div class="inbox-workspace {% if detail_requested %}detail-requested{% endif %}" data-user-id="{{ current_user.id }}" data-source-mode="closed" data-reading-view="{{ 'focus' if focused_reading else 'split' }}" data-back-url="{{ back_to_list_url }}" data-view="{{ view }}" data-can-collect="{{ 'true' if current_user.is_admin and view != 'trash' else 'false' }}">
     {% include '_inbox_source_panel.html' %}
     <section class="notice-panel" aria-label="通知列表">
         <header class="notice-toolbar">
-            <h1 class="sr-only">{{ '我的收藏' if view == 'saved' else '通知收件箱' }}</h1>
+            <h1 class="sr-only">{{ '回收站' if view == 'trash' else ('我的收藏' if view == 'saved' else '通知收件箱') }}</h1>
             <nav class="mailbox-views" aria-label="信息管理">
                 <a href="{{ url_for('pages.index', view='focus') if focused_reading else url_for('pages.index') }}" data-inbox-entry="inbox" {% if view == 'inbox' %}aria-current="page"{% endif %}>收件箱{% if view == 'inbox' and scope_unread %}<span class="mailbox-unread" aria-label="当前范围 {{ scope_unread }} 条未读">{{ scope_unread }}</span>{% endif %}</a>
                 <a href="{{ url_for('pages.index', view='focus', mailbox='saved', period='all') if focused_reading else url_for('pages.index', view='saved', period='all') }}" data-inbox-entry="saved" {% if view == 'saved' %}aria-current="page"{% endif %}>我的收藏</a>
+                <a href="{{ url_for('pages.index', view='focus', mailbox='trash', period='all') if focused_reading else url_for('pages.index', view='trash', period='all') }}" data-inbox-entry="trash" {% if view == 'trash' %}aria-current="page"{% endif %}>回收站</a>
             </nav>
+            {% if view == 'trash' %}<p class="trash-help">取消收藏后保留 30 天；恢复收藏可继续长期保存，到期仅清理正文和附件缓存。</p>{% endif %}
             <div class="toolbar-topline">
                 <button class="source-scope-trigger" type="button" id="openFilters" data-open-sources aria-expanded="false" aria-controls="sourcePanel" title="{{ source_school }} · {{ source_scope }}" aria-label="打开来源筛选：{{ source_school }} · {{ source_scope }}">
                     <span class="source-scope-prefix">来源</span>
@@ -160,10 +162,10 @@
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg>
                 {% set school_empty = view == 'inbox' and current_school and (dept_counts.values()|sum) == 0 %}
                 <h3>{{ '本校尚未收录通知' if school_empty else '没有符合条件的通知' }}</h3>
-                <p>{% if view == 'saved' %}阅读通知时点击“收藏”，即可在这里集中查看。{% elif school_empty %}找到的公开信息会自动出现在这里。你可以查看处理进度，或先阅读其他学校的通知。{% else %}可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。{% endif %}</p>
+                <p>{% if view == 'trash' %}暂无回收站记录。取消收藏的通知会在这里保留 30 天，可随时恢复收藏。{% elif view == 'saved' %}阅读通知时点击“收藏”，即可长期保存正文与附件。{% elif school_empty %}找到的公开信息会自动出现在这里。你可以查看处理进度，或先阅读其他学校的通知。{% else %}可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。{% endif %}</p>
                 {% if view == 'inbox' and period != 'all' %}<button class="text-button" type="button" data-period="all">查看全部时间的通知</button>{% endif %}
                 {% if current_school_id in subscribed_school_ids %}<a href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">查看自动查找进度</a>{% endif %}
-                <a href="{{ url_for('pages.index') }}">{{ '查看所有已订阅学校' if school_empty else '清除筛选' }}</a>
+                <a href="{{ url_for('pages.index', view=view if view != 'inbox' else none, period='all') }}">{{ '查看所有已订阅学校' if school_empty else '清除筛选' }}</a>
             </div>
             {% endif %}
         </div>
@@ -171,6 +173,7 @@
 
     <aside class="reader-panel" aria-label="通知详情">
         {% if selected_announcement %}
+        {% set selected_source = display_sources.get(selected_announcement.id, selected_announcement.department) %}
         <div class="reader-toolbar">
             <button class="text-button reader-view-toggle" type="button" id="toggleReadingView" data-toggle-reading-view aria-pressed="{{ 'true' if focused_reading else 'false' }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/></svg><span>{{ '返回列表' if focused_reading else '专注阅读' }}</span></button>
             <a class="reader-back" href="{{ back_to_list_url }}" aria-label="返回通知列表">
@@ -180,11 +183,12 @@
             <button class="text-button reader-source-trigger" type="button" id="readerSource" data-open-sources aria-controls="sourcePanel" aria-expanded="false" aria-label="打开来源筛选：{{ source_school }} · {{ source_scope }}">来源</button>
             <button class="text-button" type="button" id="undoRead" data-announcement-id="{{ selected_announcement.id }}">设为未读</button>
             {% set selected_state = states.get(selected_announcement.id) %}
-            <button class="text-button" type="button" id="readerStar" data-state-field="starred" data-state-value="{{ 'false' if selected_state and selected_state.starred else 'true' }}" data-id="{{ selected_announcement.id }}" aria-pressed="{{ 'true' if selected_state and selected_state.starred else 'false' }}">{{ '取消收藏' if selected_state and selected_state.starred else '收藏' }}</button>
+            <button class="text-button" type="button" id="readerStar" data-state-field="starred" data-state-value="{{ 'false' if selected_state and selected_state.starred else 'true' }}" data-id="{{ selected_announcement.id }}" aria-pressed="{{ 'true' if selected_state and selected_state.starred else 'false' }}">{{ '恢复收藏' if view == 'trash' else ('取消收藏' if selected_state and selected_state.starred else '收藏') }}</button>
             {% if selected_announcement.url %}<a class="text-button reader-original" href="{{ selected_announcement.url }}" target="_blank" rel="noopener noreferrer">原文<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 5h5v5M10 14L19 5M19 13v6H5V5h6"/></svg></a>{% endif %}
+            {% from '_share_button.html' import share_button %}
+            {{ share_button(selected_announcement, selected_source) }}
         </div>
         <article class="reader-document">
-            {% set selected_source = display_sources.get(selected_announcement.id, selected_announcement.department) %}
             {% from '_reader_document.html' import reader_document %}
             {{ reader_document(selected_announcement, selected_source, announcement_sources.get(selected_announcement.id, []), selected_provenance, current_user) }}
         </article>

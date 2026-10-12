@@ -4,7 +4,10 @@
     const user = document.body.dataset.userId;
     const sourceKeys = ['school', 'dept', 'group'];
     const bases = new WeakMap();
-    const mailbox = url => url.searchParams.get('view') === 'saved' || url.searchParams.get('mailbox') === 'saved' ? 'saved' : 'inbox';
+    const mailbox = url => {
+        const value = url.searchParams.get('view') === 'focus' ? url.searchParams.get('mailbox') : url.searchParams.get('view');
+        return ['saved', 'trash'].includes(value) ? value : 'inbox';
+    };
     const key = box => 'inbox-sources:' + user + ':' + box;
     const positiveId = value => typeof value === 'string' && /^[1-9]\d*$/.test(value);
     function read(box) {

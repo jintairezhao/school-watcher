@@ -235,21 +235,24 @@ def inbox_mailbox(args):
     view = args.get('view', 'inbox')
     if view == 'focus':
         view = args.get('mailbox', 'inbox')
-    return view if view in ('inbox', 'saved') else 'inbox'
+    return view if view in ('inbox', 'saved', 'trash') else 'inbox'
 
 
 def filtered_inbox(user_id, args, include_read=True):
     """Parameters are shared with the GET page; invalid source IDs cannot widen scope."""
     args = normalize_inbox_args(args)
     view = inbox_mailbox(args)
-    query = Announcement.query.filter(source_expression())
+    query = Announcement.query
     # Saved records remain accessible after unsubscribing from a source.
     if view == 'saved':
         query = query.filter(state_expression(user_id, 'starred'))
+    elif view == 'trash':
+        from backend.services.saved_materials import trash_expression
+        query = query.filter(trash_expression(user_id))
     else:
         # The legacy flag only retains these existing records after unsubscribe;
         # it no longer hides them or grants access to any other user's records.
-        query = query.filter(or_(subscription_scope(user_id), state_expression(user_id, 'archived')))
+        query = query.filter(source_expression(), or_(subscription_scope(user_id), state_expression(user_id, 'archived')))
     school_id = args.get('school', type=int)
     if school_id:
         from backend.services.directory_options import directory_entries_for, expand_directory_ids
@@ -263,7 +266,8 @@ def filtered_inbox(user_id, args, include_read=True):
                          for column in unit['columns']}
             dept_ids = [i for i in dept_ids if i in group_ids] if args.getlist('dept') else list(group_ids)
         query = query.filter(source_expression(school_ids=[school_id],
-                            department_ids=dept_ids if group or any(args.getlist('dept')) else None))
+                            department_ids=dept_ids if group or any(args.getlist('dept')) else None,
+                            include_disabled=view in ('saved','trash')))
     period = args.get('period', 'all' if view != 'inbox' else 'week')
     if period not in ('week', 'all', 'archive'):
         period = 'week'

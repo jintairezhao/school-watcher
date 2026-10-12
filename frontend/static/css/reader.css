@@ -66,6 +66,12 @@
 }
 .standalone-reader-toolbar :is(a, button) { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; font-size: var(--text-control); }
 .standalone-reading .announcement-detail { border: 0; border-radius: 0; box-shadow: none; }
+.saved-materials { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--color-border); font-size: var(--text-control); }
+.saved-materials[hidden], .saved-materials [hidden] { display: none; }
+.saved-materials p { margin: 0 0 8px; color: var(--color-text-secondary); }
+.saved-materials ul { margin: 0; padding-left: 1.25rem; }
+.saved-materials li { margin-block: 6px; overflow-wrap: anywhere; }
+.saved-materials .text-button { min-height: 44px; }
 @media (max-width: 1023px) {
     .reader-document { padding: 1.5rem 1rem; }
     .reading-title { font-size: 1.5rem; }

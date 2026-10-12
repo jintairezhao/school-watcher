@@ -73,6 +73,8 @@ def _schedule_due(lease=None):
                     'ai_assist': assistance,
                     'trigger': 'background_discovery'}, 6 * 3600)
     due('maintenance', 'daily', {}, 86400)
+    from backend.services.saved_materials import resume_saved_materials
+    resume_saved_materials()
     due('backup', 'daily', {}, 86400)
     AppConfig.set('worker_heartbeat', now.isoformat())
     db.session.remove()
@@ -115,6 +117,9 @@ def dispatch(kind, payload):
     if kind == 'content':
         from backend.services.content_cache import fetch_content
         return fetch_content(payload['announcement_id'])
+    if kind == 'saved_resource':
+        from backend.services.saved_materials import save_resource
+        return save_resource(payload['announcement_id'], payload['url_key'])
     if kind == 'student_assessment':
         from backend.services.student_information import process
         return process(payload)

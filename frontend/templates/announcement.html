@@ -8,6 +8,8 @@
         返回通知列表
     </a>
     {% if announcement.url %}<a class="text-button" href="{{ announcement.url }}" target="_blank" rel="noopener noreferrer">查看原文</a>{% endif %}
+    {% from '_share_button.html' import share_button %}
+    {{ share_button(announcement, display_source) }}
 </nav>
 <article class="announcement-detail reader-document">
     {% from '_reader_document.html' import reader_document %}

@@ -177,6 +177,7 @@
 .notice-item:has(.notice-channel-link) .notice-row { padding-bottom:4px; }
 .reader-toolbar { min-height: 60px; gap: 12px; padding: 8px 24px; }
 .reader-toolbar .text-button { min-height: 44px; }
+.trash-help { margin: 0 0 8px; color: var(--color-text-secondary); font-size: var(--text-meta); line-height: 1.65; }
 .reader-panel > .reader-document { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .reader-toolbar .reader-view-toggle { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; }
 .reader-original { display: inline-flex; align-items: center; gap: 5px; }

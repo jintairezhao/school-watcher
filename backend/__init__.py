@@ -94,9 +94,12 @@ def create_app(test_config=None):
 
     from backend.services.source_labels import source_breadcrumb
     app.jinja_env.filters['source_breadcrumb'] = source_breadcrumb
-    from backend.services.channel_views import channel_breadcrumb, publication_links
+    from backend.services.channel_views import channel_breadcrumb, publication_links, announcement_share_url
     app.jinja_env.filters['channel_breadcrumb'] = channel_breadcrumb
     app.jinja_env.globals['publication_links'] = publication_links
+    app.jinja_env.globals['announcement_share_url'] = announcement_share_url
+    from backend.services.saved_materials import user_favorite_state
+    app.jinja_env.globals['user_favorite_state'] = user_favorite_state
     from backend.services.article_images import render_article_html
     app.jinja_env.filters['article_html'] = render_article_html
     from backend.services.student_information import article_view, source_view

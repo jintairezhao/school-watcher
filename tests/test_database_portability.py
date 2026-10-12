@@ -15,7 +15,7 @@ import sqlalchemy as sa
 from backend import create_app
 from backend.core.config import ROOT_DIR
 from backend.database.db import db
-from backend.database.models import (Announcement, AnnouncementSource, AnnouncementMerge, AppConfig,
+from backend.database.models import (Announcement, AnnouncementSource, AnnouncementMerge, AnnouncementResource, AppConfig,
     BackgroundTask, Department, School, Subscription, User, UserRead, UserAnnouncementState,
     VerificationSession, VerificationWaiter)
 from backend.services.announcement_identity import upsert_listing
@@ -71,12 +71,24 @@ class DatabasePortabilityTests(unittest.TestCase):
         db.session.add_all([a, b]); db.session.flush()
         notice, _ = upsert_listing(a, '只存在于旧备份的通知', school.url + '#/notice/1')
         notice.content_text = '历史正文'
+        notice.content_html = '<article>历史正文</article>'
+        notice.resources_scanned_at = datetime(2026, 10, 10)
         record_source(notice, a)
         record_source(notice, b)
         db.session.add_all([Subscription(user_id=user.id, school_id=school.id, department_ids=[a.id, b.id]),
             UserRead(user_id=user.id, announcement_id=notice.id),
             UserAnnouncementState(user_id=user.id, announcement_id=notice.id, starred=True, archived=True),
             AppConfig(key='check_interval', value='30')])
+        from backend.services.saved_materials import resource_key
+        payload = b'%PDF-1.4\nretained backup attachment\n%%EOF\n'
+        url = 'https://fixture.example.edu/attachment.pdf'
+        db.session.add(AnnouncementResource(announcement_id=notice.id, url_key=resource_key(url),
+            url=url, filename='历史附件.pdf', kind='attachment', state='ready', payload=payload,
+            byte_size=len(payload), sha256=hashlib.sha256(payload).hexdigest(), mime_type='application/pdf'))
+        trash_reader = User(username='trash-reader', password_hash='preserved-trash-hash')
+        db.session.add(trash_reader); db.session.flush()
+        db.session.add(UserAnnouncementState(user_id=trash_reader.id, announcement_id=notice.id,
+            starred=False, trashed_at=datetime(2026, 10, 10)))
         task = BackgroundTask(identity=f'collect:{a.id}', kind='collect', payload={'department_id': a.id},
                               state='waiting', capability='browser', phase='verification', generation=3)
         db.session.add(task); db.session.flush()
@@ -95,6 +107,14 @@ class DatabasePortabilityTests(unittest.TestCase):
         state = db.session.get(UserAnnouncementState, (user, notice))
         self.assertTrue(state.starred and state.archived)
         self.assertEqual(AnnouncementSource.query.filter_by(announcement_id=notice).count(), 2)
+        self.assertEqual(db.session.get(Announcement, notice).resources_scanned_at, datetime(2026, 10, 10))
+        resource = AnnouncementResource.query.filter_by(announcement_id=notice).one()
+        self.assertEqual(resource.payload, b'%PDF-1.4\nretained backup attachment\n%%EOF\n')
+        self.assertEqual(resource.sha256, hashlib.sha256(resource.payload).hexdigest())
+        trash_reader = User.query.filter_by(username='trash-reader').one()
+        trash = db.session.get(UserAnnouncementState, (trash_reader.id, notice))
+        self.assertFalse(trash.starred)
+        self.assertEqual(trash.trashed_at, datetime(2026, 10, 10))
 
     def test_old_duplicates_merge_every_relation_and_personal_state(self):
         app = self.app(revision='12a6c93f4e80')
