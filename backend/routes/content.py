@@ -87,7 +87,9 @@ def article_image(ann_id, image_key):
     from sqlalchemy.orm import undefer
     resource = AnnouncementResource.query.options(undefer(AnnouncementResource.payload)).filter_by(
         announcement_id=ann_id, url_key=resource_key(resource_url(url))).first()
-    if resource and resource.state == 'ready' and resource.kind == 'image':
+    # One observed URL can be both an inline image and a downloadable attachment.
+    # The validated image bytes determine rendering, not which tag came first.
+    if resource and resource.state == 'ready':
         from backend.services.article_images import _image_type
         try:
             mime = _image_type(resource.payload or b'')

@@ -119,6 +119,24 @@ class SavedMaterialTests(unittest.TestCase):
         self.assertEqual(AnnouncementResource.query.count(), 0)
         self.assertEqual(UserAnnouncementState.query.count(), 0)
 
+    def test_linked_inline_image_uses_same_offline_attachment_copy(self):
+        import base64
+        from backend.services.article_images import image_sources
+        image_url = 'https://files.example.edu.cn/notice.png#preview'
+        self.ann.content_html = f'<article><a href="{image_url}"><img src="{image_url}"></a></article>'
+        db.session.commit(); self.star(True)
+        row = AnnouncementResource.query.one()
+        self.assertEqual(row.kind, 'attachment')
+        png = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1ioAAAAASUVORK5CYII=')
+        with patch('backend.services.saved_materials.download_resource', return_value=(png,'image/png','notice.png')):
+            saved_materials.save_resource(self.ann.id, row.url_key)
+        image_key = next(iter(image_sources(self.ann.content_html, self.ann.url)))
+        with patch('backend.routes.content.fetch_article_image', side_effect=AssertionError('Offline')):
+            response = self.client.get(f'/api/announcements/{self.ann.id}/images/{image_key}')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, png)
+        self.assertEqual(self.client.get(f'/api/announcements/{self.ann.id}/resources/{row.url_key}').data, png)
+
     def test_portable_backup_preserves_resource_bytes_without_exporting_personal_state(self):
         self.star(True);row=AnnouncementResource.query.one();key=row.url_key
         with patch('backend.services.saved_materials.download_resource',return_value=(PDF,'application/pdf','通知.pdf')):
