@@ -239,7 +239,7 @@ def _normal(text):
 
 def _extract(config, reference, *, html=None):
     from backend.scraper.discovery.publication_lists import select_node
-    from backend.scraper.detectors.title_quality import is_junk_title, clean_title
+    from backend.scraper.detectors.title_quality import is_junk_title, extract_title_text
     from backend.scraper.date_elements import publication_date_text
     from backend.scraper.change_detector import parse_date
     soup = BeautifulSoup(read_snapshot(reference) if html is None else html, 'lxml')
@@ -250,7 +250,7 @@ def _extract(config, reference, *, html=None):
         title_node = select_node(item, config['title_selector']) if config['title_selector'] else item
         href = anchor.get('href', '') if anchor else ''
         url = canonical_url(urljoin(reference['url'], href)) if href and not href.startswith(('javascript:', 'mailto:', 'tel:')) else ''
-        title = clean_title((title_node.get('title') or title_node.get('data-title') or title_node.get_text(' ', strip=True)) if title_node else '')
+        title = extract_title_text(title_node, anchor=anchor, page_url=reference['url'])
         if not url or not title or len(title) > 300 or is_junk_title(title, article_url=url):
             errors.append('invalid_list_item')
             continue

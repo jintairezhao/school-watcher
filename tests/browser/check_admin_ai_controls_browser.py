@@ -55,6 +55,7 @@ def main():
                 assert not [url for url in requests if '/discover' in url]
                 page.goto(base + '/admin#platform')
                 expect(page.locator('#aiProvider option')).to_have_count(4)
+                expect(page.locator('#aiSummary, #aiSummaryLimit, #summaryIds')).to_have_count(0)
                 expect(page.get_by_label('模型名称', exact=True)).to_be_visible()
                 expect(page.locator('#aiProfiles')).to_contain_text('还没有连接 AI')
                 page.locator('#aiProvider').select_option('deepseek')
@@ -72,10 +73,23 @@ def main():
                 page.get_by_role('button', name='测试连接（调用 API）', exact=True).click()
                 expect(page.locator('#aiProfiles')).to_contain_text('fixture-model · 可用')
                 assert paid.call_count == calls_before + 1
-                for selector in ('#aiDirectory', '#aiSummary'):
+                for selector in ('#aiDirectory',):
                     page.locator(selector).select_option(label='DeepSeek · fixture-model')
                 page.get_by_role('button', name='保存功能设置', exact=True).click()
                 expect(page.locator('#aiStatus')).to_have_text('功能设置已保存')
+                # Retiring summary controls must not reset stored legacy caps
+                # or binding/history when saving the remaining source settings.
+                profile_id = int(page.locator('#aiDirectory').input_value())
+                assert page.request.put(base + '/api/admin/ai/bindings/summary',
+                    headers={'X-CSRF-Token': 'token'}, data={'profile_id': profile_id}).ok
+                assert page.request.put(base + '/api/admin/ai/limits',
+                    headers={'X-CSRF-Token': 'token'}, data={'summary': 12345}).ok
+                page.locator('#aiLimitsForm').evaluate("form => form.closest('details').open = true")
+                page.locator('#aiLimitsForm button[type="submit"]').click()
+                expect(page.locator('#aiStatus')).to_have_text('用量设置已保存。')
+                retained = page.request.get(base + '/api/admin/ai').json()
+                assert retained['limits']['summary'] == 12345
+                assert retained['bindings']['summary'] == profile_id
                 page.get_by_role('button', name='编辑', exact=True).click()
                 expect(page.locator('#aiKey')).to_have_value('')
                 expect(page.locator('#aiKey')).to_have_attribute('type', 'password')
@@ -89,13 +103,13 @@ def main():
                 expect(page.locator('#aiKey')).to_have_value('')
                 assert paid.call_count == calls_before + 1
                 active = page.locator('#aiProfiles .admin-user-row').filter(has_text='fixture-model')
-                bound_id = page.locator('#aiSummary').input_value()
+                bound_id = page.locator('#aiDirectory').input_value()
                 active.get_by_role('button', name='停用', exact=True).click()
                 expect(active).to_contain_text('已停用')
                 expect(active.get_by_role('button', name='启用', exact=True)).to_be_enabled()
                 page.reload()
                 expect(active).to_contain_text('已停用')
-                for selector in ('#aiDirectory', '#aiSummary'):
+                for selector in ('#aiDirectory',):
                     expect(page.locator(selector)).to_have_value(bound_id)
                     expect(page.locator(selector + ' option:checked')).to_contain_text('已停用')
                 page.get_by_role('button', name='保存功能设置', exact=True).click()
@@ -107,7 +121,7 @@ def main():
                 expect(page.locator('#aiStatus')).to_have_text('服务已保存，当前已停用。点击“启用”即可继续使用。')
                 active.get_by_role('button', name='启用', exact=True).click()
                 expect(active).to_contain_text('可用')
-                for selector in ('#aiDirectory', '#aiSummary'):
+                for selector in ('#aiDirectory',):
                     expect(page.locator(selector)).to_have_value(bound_id)
                     expect(page.locator(selector + ' option:checked')).to_have_text('DeepSeek · fixture-model')
                 assert paid.call_count == calls_before + 1
@@ -151,7 +165,7 @@ def main():
                 active.get_by_role('button', name='删除', exact=True).click()
                 expect(page.locator('#aiProfiles')).to_contain_text('还没有连接 AI')
                 expect(page.locator('#aiProfileId')).to_have_value('')
-                for selector in ('#aiDirectory', '#aiSummary'):
+                for selector in ('#aiDirectory',):
                     expect(page.locator(selector)).to_have_value('')
                 page.reload()
                 expect(page.locator('#aiProfiles')).to_contain_text('还没有连接 AI')

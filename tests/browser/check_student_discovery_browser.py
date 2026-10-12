@@ -59,7 +59,7 @@ with patch('backend.services.onboarding_progress.ai_available', return_value=Tru
             page.route('**/*', serve)
             page.add_init_script('localStorage.setItem("theme", ' + json.dumps(theme) + ')')
             page.goto(f'http://localhost/subscriptions/{fixture.school.id}')
-            expect(page.get_by_role('link', name='自动找通知', exact=True)).to_be_visible()
+            expect(page.get_by_role('link', name='来源设置', exact=True)).to_be_visible()
             expect(page.locator('#discoveryNotices')).to_be_visible()
             expect(page.locator('#sourcePreferences')).not_to_have_attribute('open', '')
             expect(page.locator('#discoveryCounts')).to_contain_text('已收录 0 条通知')

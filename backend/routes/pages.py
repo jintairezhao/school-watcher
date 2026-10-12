@@ -13,7 +13,7 @@ from backend.database.models import (School, Department, Announcement,
                                      Subscription, UserAnnouncementState)
 from backend.auth import admin_required
 from backend.services.article_provenance import article_provenance
-from backend.services.summaries import current_summaries, summary_status
+from backend.services.summaries import current_summaries
 
 bp = Blueprint('pages', __name__)
 
@@ -244,7 +244,6 @@ def index():
         states=states,
         excerpts=excerpts,
         summary_texts=current_summaries(announcements),
-        summary_state=summary_status(selected_announcement) if selected_announcement else None,
         subscribed_school_ids={s.school_id for s in subscriptions},
         dept_counts=dept_counts,
         current_school=current_school,
@@ -428,7 +427,6 @@ def announcement_detail(ann_id):
                            dept=display_source.id)
 
     return render_template('announcement.html', announcement=ann, back_url=back_url,
-                           summary_state=summary_status(ann),
                            sources=sources, display_source=display_source,
                            provenance=article_provenance(ann.content_html, ann.url))
 

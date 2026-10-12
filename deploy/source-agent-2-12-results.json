@@ -1,0 +1,28 @@
+{
+  "version": "2.12",
+  "material": {
+    "html_sha256": "91fa0cacff6c17b412f8950f75648ac0cb9e85135787060641c3d880fdf5fc6d",
+    "scope": "Actual retained SJTU HTTP HTML replay and minimal isolated copies of existing source/notice metadata; not whole-school onboarding or fresh browser rendering."
+  },
+  "sjtu_retained_replay": {
+    "readable_sources_without_identity_loss": 9,
+    "list_records": 10,
+    "real_column_name": "讲座列表",
+    "list_validation_errors": [],
+    "column_scope_errors": [],
+    "matched_existing_records": 10,
+    "corrected_existing_titles": 10,
+    "inserted_duplicate_records": 0,
+    "immutable_user_snapshot_unchanged": true
+  },
+  "resources": {
+    "actual_model_requests": 0,
+    "actual_official_HTTP_reads": 1,
+    "fee_limits_increased": false,
+    "user_database_modified": false
+  },
+  "limitations": [
+    "Retained HTTP DOM replay, not full dynamic rendering or whole-school discovery.",
+    "Unobserved older bad titles await their next successful collection."
+  ]
+}

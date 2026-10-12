@@ -105,7 +105,7 @@
         try {
             settings = await api('/api/admin/ai');
             field('aiStatus').textContent = settings.encryption_available
-                ? (settings.legacy ? '原有 DeepSeek 摘要服务可继续使用。要发现学校栏目，请添加并测试服务，再保存下方的功能设置。' : '')
+                ? (settings.legacy ? '原有服务配置已保留。请添加并测试来源识别服务，再保存下方的功能设置。' : '')
                 : '尚未配置本实例的加密主密钥，请按部署文档设置后保存 API 密钥。';
             const currentProvider = field('aiProvider').value;
             const currentRegion = field('aiRegion').value;
@@ -150,7 +150,7 @@
                 });
                 row.append(actions); profiles.append(row);
             });
-            for (const [id, purpose] of [['aiDirectory', 'directory'], ['aiSummary', 'summary']]) {
+            for (const [id, purpose] of [['aiDirectory', 'directory']]) {
                 field(id).replaceChildren(option('', '请选择测试通过的服务'), ...settings.profiles
                     .filter(p => (p.enabled && p.tested) || p.id === settings.bindings[purpose])
                     .map(p => {
@@ -161,7 +161,7 @@
                     }));
                 field(id).value = settings.bindings[purpose] || '';
             }
-            for (const [id, key] of [['aiTotalLimit', 'total'], ['aiDirectoryLimit', 'directory'], ['aiSummaryLimit', 'summary'], ['aiSchoolLimit', 'school_discovery']]) field(id).value = settings.limits[key];
+            for (const [id, key] of [['aiTotalLimit', 'total'], ['aiDirectoryLimit', 'directory'], ['aiSchoolLimit', 'school_discovery']]) field(id).value = settings.limits[key];
             field('aiConcurrent').value = settings.max_concurrent;
             field('aiSchoolRequests').value = settings.school_request_limit;
         } catch (error) { field('aiStatus').textContent = error.message; }
@@ -189,7 +189,7 @@
     });
     field('aiBindingForm').addEventListener('submit', event => {
         event.preventDefault(); action(event.submitter, async () => {
-            for (const [id, purpose] of [['aiDirectory', 'directory'], ['aiSummary', 'summary']]) {
+            for (const [id, purpose] of [['aiDirectory', 'directory']]) {
                 const profileId = Number(field(id).value);
                 if (profileId && profileId !== settings.bindings[purpose]) {
                     await api('/api/admin/ai/bindings/' + purpose, 'PUT', {profile_id: profileId});
@@ -207,7 +207,7 @@
     field('aiLimitsForm').addEventListener('submit', event => {
         event.preventDefault(); action(event.submitter, async () => {
             await api('/api/admin/ai/limits', 'PUT', {total: Number(field('aiTotalLimit').value), directory: Number(field('aiDirectoryLimit').value),
-                summary: Number(field('aiSummaryLimit').value), school_discovery: Number(field('aiSchoolLimit').value),
+                school_discovery: Number(field('aiSchoolLimit').value),
                 school_requests: Number(field('aiSchoolRequests').value), max_concurrent: Number(field('aiConcurrent').value)});
             field('aiStatus').textContent = '用量设置已保存。';
         });

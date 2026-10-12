@@ -16,8 +16,8 @@
         <header class="notice-toolbar">
             <h1 class="sr-only">{{ '我的收藏' if view == 'saved' else '通知收件箱' }}</h1>
             <nav class="mailbox-views" aria-label="信息管理">
-                <a href="{{ url_for('pages.index', view='focus') if focused_reading else url_for('pages.index') }}" {% if view == 'inbox' %}aria-current="page"{% endif %}>收件箱{% if view == 'inbox' and scope_unread %}<span class="mailbox-unread" aria-label="当前范围 {{ scope_unread }} 条未读">{{ scope_unread }}</span>{% endif %}</a>
-                <a href="{{ url_for('pages.index', view='focus', mailbox='saved', period='all') if focused_reading else url_for('pages.index', view='saved', period='all') }}" {% if view == 'saved' %}aria-current="page"{% endif %}>我的收藏</a>
+                <a href="{{ url_for('pages.index', view='focus') if focused_reading else url_for('pages.index') }}" data-inbox-entry="inbox" {% if view == 'inbox' %}aria-current="page"{% endif %}>收件箱{% if view == 'inbox' and scope_unread %}<span class="mailbox-unread" aria-label="当前范围 {{ scope_unread }} 条未读">{{ scope_unread }}</span>{% endif %}</a>
+                <a href="{{ url_for('pages.index', view='focus', mailbox='saved', period='all') if focused_reading else url_for('pages.index', view='saved', period='all') }}" data-inbox-entry="saved" {% if view == 'saved' %}aria-current="page"{% endif %}>我的收藏</a>
             </nav>
             <div class="toolbar-topline">
                 <button class="source-scope-trigger" type="button" id="openFilters" data-open-sources aria-expanded="false" aria-controls="sourcePanel" title="{{ source_school }} · {{ source_scope }}" aria-label="打开来源筛选：{{ source_school }} · {{ source_scope }}">
@@ -27,7 +27,7 @@
                 </button>
                 <div class="source-context-row">
                     <p class="source-scope-context"><span class="source-scope-selection" title="{{ source_scope }}">{{ source_scope }}</span><span> · {{ pagination.total }} 条<span id="activeFilterSummary"> · {% if period == 'archive' and current_year %}{{ current_year }} 年{% if current_month %} {{ current_month }} 月{% endif %}{% elif period == 'all' %}全部时间{% else %}近一周{% endif %}{% if read_filter == 'unread' %} · 未读{% elif read_filter == 'read' %} · 已读{% endif %}</span></span></p>
-                    {% if current_school_id in subscribed_school_ids %}<a class="source-settings-link" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}" aria-label="查看{{ current_school.name }}的自动查找进度与来源设置">自动找通知</a>{% endif %}
+                    {% if current_school_id in subscribed_school_ids %}<a class="source-settings-link" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}" aria-label="查看{{ current_school.name }}的自动查找进度与来源设置">来源设置</a>{% endif %}
                 </div>
             </div>
             <div class="notice-tools">
@@ -186,7 +186,7 @@
         <article class="reader-document">
             {% set selected_source = display_sources.get(selected_announcement.id, selected_announcement.department) %}
             {% from '_reader_document.html' import reader_document %}
-            {{ reader_document(selected_announcement, selected_source, announcement_sources.get(selected_announcement.id, []), selected_provenance, summary_state, current_user) }}
+            {{ reader_document(selected_announcement, selected_source, announcement_sources.get(selected_announcement.id, []), selected_provenance, current_user) }}
         </article>
         {% else %}
         {% include '_reader_empty.html' %}

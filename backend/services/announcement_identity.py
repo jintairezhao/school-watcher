@@ -31,11 +31,13 @@ def _set_identity(mapper, connection, target):
     target.canonical_url, target.url_key = article_identity(target.url)
 
 
-def upsert_listing(department, title, url, published_at=None, **initial_values):
+def upsert_listing(department, title, url, published_at=None, *, observed_title_variants=(), **initial_values):
     """Return (article, created), leaving the caller's transaction uncommitted.
 
 The unique constraint resolves races from separate sources and workers. Existing
 article content and original publication metadata remain untouched by list scans.
+Only an exact metadata-contaminated title observed again in the primary source
+can be corrected, preserving identity and every reader's state.
 """
     canonical, key = article_identity(url)
     if not key:
@@ -60,4 +62,7 @@ article content and original publication metadata remain untouched by list scans
                    Announcement.url_key == key).with_for_update()).scalar_one())
     if article.canonical_url != canonical:
         raise ValueError('通知身份冲突，需要人工核对原文地址')
+    if (not created and article.department_id == department.id
+            and article.title in observed_title_variants and title != article.title):
+        article.title = title
     return article, created

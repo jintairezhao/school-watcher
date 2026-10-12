@@ -68,18 +68,18 @@
     function rememberConditions(url) {
         try { localStorage.setItem(conditionPreferenceKey, JSON.stringify(noticeConditions(url))); } catch (_) {}
     }
-    function initialConditionsURL() {
+    function initialConditionsURL(entry = appliedURL) {
         // Explicit links and history retain their own conditions. Restore defaults only
         // on a fresh entry without filters, never while handling Back/Forward.
-        if (conditionKeys.some(key => appliedURL.searchParams.has(key))) return appliedURL;
+        if (conditionKeys.some(key => entry.searchParams.has(key))) return entry;
         try {
             const saved = JSON.parse(localStorage.getItem(conditionPreferenceKey) || 'null');
             if (saved && ['week', 'all', 'archive'].includes(saved.period) && ['all', 'read', 'unread'].includes(saved.read)) {
-                const next = withConditions(appliedURL, saved);
+                const next = withConditions(entry, saved);
                 return withConditions(next, noticeConditions(next));
             }
         } catch (_) {}
-        return appliedURL;
+        return entry;
     }
     const inboxSearch = window.createInboxSearch(workspace, {
         getURL: () => new URL(appliedURL),
@@ -225,6 +225,7 @@
             desiredURL = new URL(url);
             // Only a successful, current response can replace the saved preference.
             rememberConditions(url);
+            window.inboxSourceMemory?.remember(url, find('#schoolFilter')?.value || '');
             syncControls(url);
             sources.render();
             if (!sameSources) sources.restore();
@@ -423,9 +424,10 @@
         appliedURL.hash = ''; desiredURL.hash = '';
         history.replaceState(null, '', appliedURL.pathname + appliedURL.search);
     }
-    const initialURL = initialConditionsURL();
+    const initialURL = initialConditionsURL(window.inboxSourceMemory?.initialURL(appliedURL) || appliedURL);
     if (initialURL.href !== appliedURL.href) navigate(initialURL, {history: 'replace', revealSource: revealInitialSource});
     else {
+        window.inboxSourceMemory?.remember(appliedURL, find('#schoolFilter')?.value || '');
         if (conditionKeys.some(key => appliedURL.searchParams.has(key))) rememberConditions(appliedURL);
         if (revealInitialSource) sources.revealSelection();
     }

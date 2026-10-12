@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sys
 import threading
+from urllib.parse import urlsplit
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -60,17 +61,20 @@ def main():
                                 ('mobile', {'width': 390, 'height': 844})]:
                 page.set_viewport_size(size)
                 page.goto(base + f'/announcement/{fixture.ann_id}')
-                expect(page.locator('[data-summary-text]')).to_contain_text('2026年10月1日')
-                page.get_by_text('查看历史摘要', exact=True).click()
-                expect(page.get_by_text('这是一份旧的未核对摘要。', exact=True)).to_be_visible()
-                page.screenshot(path=str(folder / f'shared-summary-{label}.png'), full_page=True)
+                expect(page.locator('.reader-content')).to_contain_text(BODY)
+                expect(page.get_by_role('button', name='生成摘要', exact=True)).to_have_count(0)
+                expect(page.get_by_role('button', name='分析用途与时间', exact=True)).to_have_count(0)
+                expect(page.locator('[data-summary-text], .student-insight')).to_have_count(0)
+                page.screenshot(path=str(folder / f'plain-reader-{label}.png'), full_page=True)
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
                 page.goto(base + f'/announcement/{other_id}')
-                page.get_by_role('button', name='生成摘要', exact=True).click()
-                expect(page.locator('[data-summary-message]')).to_contain_text('配置')
-                expect(page.get_by_role('button', name='生成摘要', exact=True)).to_be_enabled()
+                expect(page.locator('.reader-content')).to_contain_text(BODY)
+                assert not [url for url in outgoing if urlsplit(url).path.startswith('/api/')
+                            and ('/summary' in url or '/student-information' in url)]
+                assert paid.call_count == (0 if label == 'desktop' else 2)
                 page.goto(base + '/admin#platform')
                 expect(page.locator('#aiProvider')).to_be_visible()
+                expect(page.locator('#aiSummary, #aiSummaryLimit, #summaryIds')).to_have_count(0)
                 expect(page.locator('#aiProvider option')).to_have_count(4)
                 expect(page.locator('#aiName')).to_have_count(0)
                 expect(page.locator('#aiRegionGroup')).to_be_hidden()
@@ -105,7 +109,7 @@ def main():
                     page.get_by_role('button', name='测试连接（调用 API）', exact=True).click()
                     expect(page.locator('#aiProfiles')).to_contain_text('DeepSeek · fixture-model · 可用')
                     assert paid.call_count == 2
-                    for selector in ('#aiDirectory', '#aiSummary'):
+                    for selector in ('#aiDirectory',):
                         expect(page.locator(selector + ' option').last).to_have_text('DeepSeek · fixture-model')
                     page.locator('#aiProfiles').get_by_role('button', name='编辑', exact=True).click()
                     expect(page.locator('#aiFormTitle')).to_have_text('修改 AI 服务')
@@ -136,7 +140,8 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             assert not errors, errors
             browser.close()
-        print('Passed: shared summaries, provider-specific fields, automatic service labels, save/edit without API calls, explicit mock connection tests, desktop/mobile overflow and JS errors.')
+        assert db.session.get(Announcement, fixture.ann_id).summary == '这是一份旧的未核对摘要。'
+        print('Passed: reader without notice AI controls or calls, retained summary history, provider fields, save/edit without API calls, explicit mock connection tests, desktop/mobile layout.')
     finally:
         if server:
             server.shutdown(); server.server_close()

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}{{ school.name }} · 自动找通知{% endblock %}
+{% block title %}{{ school.name }} · 来源设置{% endblock %}
 {% block content %}
 <div class="sources-page">
     {% from '_school_header.html' import school_header with context %}
     {{ school_header(school, 'sources', '自动从官网寻找与你的学习、申请和校园生活有关的信息。') }}
-    <section class="discovery-status" id="discoveryStatus" data-school-id="{{ school.id }}" aria-label="自动找通知进度">
+    <section class="discovery-status" id="discoveryStatus" data-school-id="{{ school.id }}" aria-label="来源接入进度">
         <div class="discovery-status-heading"><h2 id="discoveryMessage" role="status">{{ discovery.message }}</h2><span id="discoveryActivity"></span></div>
-        <progress id="discoveryProgress" aria-label="自动找通知进度" {% if not discovery.busy %}hidden{% endif %}></progress>
+        <progress id="discoveryProgress" aria-label="来源接入进度" {% if not discovery.busy %}hidden{% endif %}></progress>
         <p id="discoveryCounts">已收录 {{ discovery.article_count|default(0) }} 条通知 · 已接入 {{ discovery.verified_source_count }} 个信息来源</p>
         <p id="discoveryValue" class="text-muted">{{ discovery.value_summary|default('优先寻找升学、奖助、实习就业、竞赛和校园办事信息。', true) }}</p>
         <p class="source-path-help text-muted">找到可用的信息后会自动收录，无需逐个确认部门或栏目。收录结果可以直接阅读。</p>

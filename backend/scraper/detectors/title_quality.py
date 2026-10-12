@@ -11,7 +11,9 @@
 """
 
 import re
+from copy import copy
 from datetime import datetime, timezone
+from urllib.parse import urljoin
 from backend.scraper.article_urls import ARTICLE
 
 # 纯日期形态（整串匹配才判垃圾，「2026年8月28日关于…的通知」这类真实标题不受影响）
@@ -79,7 +81,83 @@ def _title_score(t: str) -> int:
     return score
 
 
-def extract_best_title(item, *, article_url='') -> str:
+_HEADLINE = '[itemprop="headline"], .title, .headline, .news-title, .article-title, h1, h2, h3, h4, h5, h6'
+_METADATA = re.compile(r'^(?:time|date|datetime|calendar|address|venue|location|person|author|speaker|tag|tags|summary|description|views|hits)(?:[-_].*)?$', re.I)
+
+
+def _same_link(first, second, page_url=''):
+    from backend.services.source_inventory import canonical_url
+    try:
+        base = urljoin('https://title-evidence.invalid/', page_url)
+        left, right = canonical_url(urljoin(base, first)), canonical_url(urljoin(base, second))
+        return bool(left and right and left == right)
+    except (ValueError, UnicodeError):
+        return False
+
+
+def _belongs(node, anchor, page_url):
+    owner = node if node.name == 'a' else node.find_parent('a', href=True)
+    return (not owner or not anchor or owner is anchor
+            or _same_link(owner.get('href', ''), anchor.get('href', ''), page_url))
+
+
+def extract_title_text(element, *, anchor=None, page_url=''):
+    """Read a literal headline field, excluding a card's separate metadata.
+
+    Never remove arbitrary numeric prefixes: years, ranges and numbers can be
+    real headlines. Multiple different headline fields are ambiguous evidence.
+    """
+    if element is None or not _belongs(element, anchor, page_url):
+        return ''
+    attribute = (element.get('title') or element.get('data-title') or '').strip()
+    if attribute:
+        return attribute
+    fields = [element] if (element.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6')
+        or element.get('itemprop') == 'headline'
+        or set(element.get('class', [])) & {'title', 'headline', 'news-title', 'article-title'}) else element.select(_HEADLINE)
+    candidates = {node.get_text(' ', strip=True) for node in fields
+                  if _belongs(node, anchor, page_url) and node.get_text(' ', strip=True)}
+    if candidates:
+        return next(iter(candidates)) if len(candidates) == 1 else ''
+    # A configured wrapper may contain a date and a plain text headline. Read
+    # its remaining DOM text after removing whole observed metadata fields.
+    fragment = copy(element)
+    for node in list(fragment.find_all(True)):
+        if node.parent is None:
+            continue
+        tokens = [node.get('id', ''), *node.get('class', [])]
+        foreign_link = (node.name == 'a' and anchor is not None
+            and not _same_link(node.get('href', ''), anchor.get('href', ''), page_url))
+        if (node.name in ('time', 'script', 'style') or node.get('itemprop') in ('datePublished', 'author')
+                or any(_METADATA.fullmatch(token) for token in tokens) or foreign_link):
+            node.decompose()
+    return clean_title(fragment.get_text(' ', strip=True))
+
+
+def observed_title_variants(element, title, *, anchor=None, page_url=''):
+    """Exact corrupt predecessors witnessed in this card; never guess old text.
+
+    Used only to repair an existing primary-source title for the same URL. An
+    ordinary newly worded title or a different publication stays untouched.
+    """
+    if element is None or extract_title_text(element, anchor=anchor, page_url=page_url) != title:
+        return ()
+    raw = {element.get_text(strip=True), element.get_text(' ', strip=True)}
+    variants = set(raw)
+    for text in raw:
+        variants.add(clean_title(text))
+        # Historical pre-2.11 cleaner consumed a run of date/numeric characters.
+        prefix = re.match(r'^[\d\-/.年月日\s｜|]+', text)
+        legacy = text
+        if (prefix and sum(ch.isdigit() for ch in prefix.group()) >= 4
+                and any(ch in prefix.group() for ch in '-/.')):
+            legacy = text[prefix.end():]
+        legacy = re.sub(r'浏览数[：:]*\s*\d*', '', legacy).strip(' ｜|:：-—\t')
+        variants.add(legacy)
+    return tuple(value for value in variants if value and value != title)
+
+
+def extract_best_title(item, *, article_url='', page_url='') -> str:
     """在列表项元素内按回退链挑选最佳真实标题，找不到返回 ''。
 
     回退链：a[title] 属性 → 各链接文本得分最高且非垃圾者 →
@@ -87,8 +165,17 @@ def extract_best_title(item, *, article_url='') -> str:
     日期链接/MORE 链接因得分低或被门控而自然落选。
     """
     best, best_score = '', -1
-    for a in item.find_all('a', href=True):
-        cand = (a.get('title') or a.get('data-title') or '').strip() or a.get_text(strip=True)
+    links = item.find_all('a', href=True)
+    if item.name == 'a' and item.get('href'):
+        links = [item, *links]
+    relevant = [a for a in links if not article_url or _same_link(a['href'], article_url, page_url or article_url)]
+    if article_url and links and not relevant:
+        return ''
+    for a in relevant:
+        cand = extract_title_text(a, anchor=a, page_url=page_url)
+        if not cand and len({n.get_text(' ', strip=True) for n in a.select(_HEADLINE)
+                             if n.get_text(' ', strip=True)}) > 1:
+            return ''
         if is_junk_title(cand, article_url=a.get('href', '') if article_url else ''):
             continue
         s = _title_score(cand)
@@ -98,7 +185,13 @@ def extract_best_title(item, *, article_url='') -> str:
         return best
     # 链接全为垃圾（日期/图片链接）时，在子级文本节点里找最佳标题
     for el in item.find_all(['span', 'div', 'p', 'h1', 'h2', 'h3', 'h4', 'em', 'strong']):
-        cand = el.get_text(strip=True)
+        if not _belongs(el, relevant[0] if relevant else None, page_url):
+            continue
+        if el.select('a[href]'):
+            continue
+        if any(_METADATA.fullmatch(token) for token in [el.get('id', ''), *el.get('class', [])]):
+            continue
+        cand = extract_title_text(el, anchor=relevant[0] if relevant else None, page_url=page_url)
         if is_junk_title(cand, article_url=article_url):
             continue
         s = _title_score(cand)

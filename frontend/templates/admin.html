@@ -68,12 +68,9 @@
             </div>
         </div>
         <div class="setting-card">
-            <div class="setting-card-header"><h3>手动任务</h3><p>立即触发抓取或重新生成摘要</p></div>
+            <div class="setting-card-header"><h3>手动任务</h3><p>立即更新已接通的学校来源</p></div>
             <div class="setting-card-body manual-actions">
                 <button class="btn btn-primary" onclick="triggerScrapeAll()" id="btnScrapeAll">立即抓取全部（活跃学校）</button>
-                <label for="summaryIds">批量生成摘要：填写通知编号（逗号分隔，最多 50 条）</label>
-                <input id="summaryIds" class="form-input" placeholder="例如：9226, 9227" inputmode="numeric">
-                <button class="btn btn-outline" onclick="triggerSummarize()" id="btnSummarize">生成所选通知摘要</button>
             </div>
         </div>
     </div>
@@ -197,18 +194,6 @@ async function triggerScrapeAll() {
     var d = await resp.json();
     showToast(d.success ? 'success' : 'error', d.message || d.error);
     btn.disabled = false;
-}
-async function triggerSummarize() {
-    var ids = document.getElementById('summaryIds').value.split(/[,，\s]+/).filter(Boolean).map(Number);
-    if (!ids.length || ids.length > 50 || ids.some(i => !Number.isSafeInteger(i) || i < 1)) {
-        showToast('error', '请填写 1–50 个有效通知编号'); return;
-    }
-    var btn = document.getElementById('btnSummarize'); btn.disabled = true;
-    try {
-        var resp = await fetch('/api/summarize', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ids: ids})});
-        var d = await resp.json(); showToast(resp.ok ? 'success' : 'error', d.message || d.error);
-    } catch (e) { showToast('error', '提交失败，请重试'); }
-    finally { btn.disabled = false; }
 }
 
 </script>

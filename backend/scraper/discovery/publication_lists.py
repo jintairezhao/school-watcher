@@ -11,7 +11,7 @@ import soupsieve
 from backend.scraper.cms_registry import load_selector_profiles
 from backend.scraper.change_detector import parse_date
 from backend.scraper.detectors.dom_analyzer import find_repeating_blocks
-from backend.scraper.detectors.title_quality import is_junk_title
+from backend.scraper.detectors.title_quality import is_junk_title, extract_title_text
 from backend.services.source_inventory import canonical_url, resolve_page_link
 from .structure import ARTICLE, MORE, SKIP, clean, locator, nearby_heading
 from .publication_tabs import tab_bindings
@@ -335,7 +335,7 @@ def samples_for(items, config, url):
         anchor = select_node(item, config.get('link_selector') or 'a[href]')
         if title_node is None or anchor is None or not anchor.get('href'):
             continue
-        title = clean(title_node.get('title') or title_node.get('data-title') or title_node.get_text(' ', strip=True))
+        title = clean(extract_title_text(title_node, anchor=anchor, page_url=url))
         href = anchor['href'].strip()
         if not resolve_page_link(url, href):
             continue

@@ -156,7 +156,7 @@
         if (calls && !max) {
             field('aiUsageEmpty').hidden = false;
             text('aiUsageEmpty', '这段时间有调用记录，已记录的 Token 用量为 0。');
-        } else text('aiUsageEmpty', '这段时间还没有调用记录。使用 AI 发现栏目或生成摘要后，会在这里显示。');
+        } else text('aiUsageEmpty', '这段时间还没有调用记录。使用 AI 识别学校来源后，会在这里显示。');
         const rows = field('aiUsageRows'); rows.replaceChildren();
         [...entries].reverse().forEach(day => {
             const row = node('tr');

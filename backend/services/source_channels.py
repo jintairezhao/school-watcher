@@ -16,6 +16,7 @@ from backend.services.runtime_catalog import RuntimeCatalog
 from backend.services.source_inventory import canonical_url, site_key, website_scope_path
 from backend.services.source_ownership import BRANDING_PREFIX
 from backend.services.announcement_sources import _publication_url
+from backend.services.source_labels import source_label
 
 
 def _address(value):
@@ -41,7 +42,7 @@ def _scope_contains(address, entrance):
 
 
 def _column_label(source, units=()):
-    label = (source.name or '').strip() or '官网信息'
+    label = source_label(source.name, '官网栏目')
     for name in sorted({row['name'] for row in units}, key=len, reverse=True):
         for separator in ('-', '－', '—', ' / '):
             if label.startswith(name + separator):
@@ -230,15 +231,16 @@ def _descriptor(source, data, units):
             basis = 'site_identity'
         else:
             address = _address(source.list_url)
-            publisher_label = _display_address(address) or '官网信息来源'
+            publisher_label = ''
             publisher_key = _key(school.id, 'page', address or source.id)
             publisher_address = address
             basis = 'official_page'
         # Legacy grouping is useful column context, not proof of a publisher.
-        group = (source.group_name or '').strip()
+        group = source_label(source.group_name)
         if group and group not in (label, publisher_label) and not label.startswith(group + ' / '):
             label = group + ' / ' + label
-    names = [school.name, *[unit['name'] for unit in units]] if units else [school.name, publisher_label]
+    publisher_label = source_label(publisher_label)
+    names = [school.name, *[source_label(unit['name']) for unit in units]] if units else [school.name, publisher_label]
     names.append(label)
     breadcrumb = ' / '.join(dict.fromkeys(name for name in names if name))
     return {'source_id': source.id, 'school_id': school.id, 'school_name': school.name,
@@ -247,35 +249,11 @@ def _descriptor(source, data, units):
             '_publisher_address': publisher_address}
 
 
-def _display_address(address):
-    parts = urlsplit(address)
-    label = parts.netloc + parts.path.rstrip('/')
-    if parts.query:
-        label += '?' + parts.query
-    if parts.fragment:
-        label += '#' + parts.fragment
-    return label
-
-
-def _disambiguate(result, cache):
-    identities = defaultdict(set)
-    for data in cache['schools'].values():
-        if not data['school']:
-            continue
-        for unit in data['departments'].values():
-            if unit.kind == 'unit' and unit.school_id == data['school'].id:
-                address = _address(unit.list_url)
-                key = _key(unit.school_id, 'unit', address, unit.name) if address else _key(unit.school_id, 'unit', unit.id)
-                identities[(unit.school_id, unit.name)].add(key)
-    for row in cache['descriptors'].values():
-        identities[(row['school_id'], row['publisher_label'])].add(row['publisher_key'])
+def _hide_internal_addresses(result):
+    # Homonyms retain their real names and separate identity keys. Their
+    # official links distinguish them without injecting URLs into breadcrumbs.
     for row in result.values():
-        label = row['publisher_label']
-        address = row.pop('_publisher_address', '')
-        if len(identities[(row['school_id'], label)]) > 1 and address:
-            row['publisher_label'] = label + '（' + _display_address(address) + '）'
-            parts = row['breadcrumb'].split(' / ')
-            row['breadcrumb'] = ' / '.join(row['publisher_label'] if part == label else part for part in parts)
+        row.pop('_publisher_address', None)
 
 
 def channels_for(departments):
@@ -327,5 +305,5 @@ def channels_for(departments):
         if identity not in cache['descriptors']:
             cache['descriptors'][identity] = _descriptor(source, data, resolved_units[source.id])
         result[source.id] = dict(cache['descriptors'][identity])
-    _disambiguate(result, cache)
+    _hide_internal_addresses(result)
     return result

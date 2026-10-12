@@ -30,6 +30,7 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
     """
     from backend.services.source_placements import official_source_placements, _within_unit
     from backend.services.source_channels import channels_for
+    from backend.services.source_labels import source_label
     departments = list(departments)
     known = sorted(known_departments if known_departments is not None else departments,
                    key=lambda d: len(d.name), reverse=True)
@@ -65,6 +66,9 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
     legacy_parent_ids = {owner.id for ident, owner in legacy_owners.items() if ident != owner.id}
 
     def put(group, nodes, column, *, official=False, directory=False):
+        group = source_label(group, '其他信息来源')
+        column = {**column, 'label': source_label(column['label'], '官网栏目')}
+        nodes = [{**node, 'name': source_label(node['name'], '官网来源')} for node in nodes]
         # A column can sit directly in a navigation group, with no department
         # between them. Render the column as a leaf instead of inventing a unit.
         direct_column = not nodes
@@ -137,7 +141,7 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
                     'label': path['label'] if dept.id in placements else label}, official=True)
         else:
             # Agent-installed columns need not have a separate unit row. Reuse
-            # saved website identity (or its actual address) for the publisher
+            # saved website identity for the publisher
             # layer; never infer a department from the column or group name.
             # Keep reliable legacy unit-column relationships ahead of this.
             if not is_child and dept.id not in legacy_parent_ids:
@@ -145,10 +149,12 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
                     publishers = channels_for(departments)
                 publisher = publishers.get(dept.id)
                 if publisher:
+                    nodes = ([{'key': publisher['publisher_key'], 'name': publisher['publisher_label']}]
+                             if publisher['publisher_label'] else [])
                     unit = put((dept.group_name or '').strip() or '其他信息来源',
-                        [{'key': publisher['publisher_key'], 'name': publisher['publisher_label']}],
+                        nodes,
                         {'department': dept, 'label': label})
-                    unit['expandable'] = True
+                    unit['expandable'] = bool(nodes)
                     continue
             unit = put((owner.group_name or '').strip() or '其他信息来源',
                        [{'key': owner.id, 'name': owner.name}], {'department': dept, 'label': label})

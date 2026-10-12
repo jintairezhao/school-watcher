@@ -6,7 +6,7 @@
 </header>
 <nav class="surface-tabs school-tabs" aria-label="学校信息">
     <a href="{{ url_for('pages.school_detail', school_id=school.id) }}" {% if active == 'preview' %}aria-current="page"{% endif %}>本校通知</a>
-    {% if current_user %}<a href="{{ url_for('subscriptions.manage_sources', school_id=school.id) }}" {% if active == 'sources' %}aria-current="page"{% endif %}>自动找通知</a>{% endif %}
+    {% if current_user %}<a href="{{ url_for('subscriptions.manage_sources', school_id=school.id) }}" {% if active == 'sources' %}aria-current="page"{% endif %}>来源设置</a>{% endif %}
     <a href="{{ url_for('source_structure.school_structure', school_id=school.id) }}" {% if active == 'structure' %}aria-current="page"{% endif %}>官网结构</a>
 </nav>
 {% endmacro %}

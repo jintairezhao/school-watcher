@@ -77,8 +77,8 @@ class SourceChannelTests(unittest.TestCase):
         info = channels_for([a, b])
         self.assertNotEqual(info[a.id]['publisher_key'], info[b.id]['publisher_key'])
         self.assertEqual(info[a.id]['official_url'], a.list_url)
-        self.assertEqual(info[a.id]['publisher_label'], '工程学院（example.edu.cn/north）')
-        self.assertIn('工程学院（example.edu.cn/south）', info[b.id]['breadcrumb'])
+        self.assertEqual(info[a.id]['publisher_label'], '工程学院')
+        self.assertEqual(info[b.id]['breadcrumb'], '测试大学 / 工程学院 / 通知公告')
         self.assertEqual(channels_for([a])[a.id]['publisher_label'], info[a.id]['publisher_label'])
 
     def test_navigation_group_alone_is_not_a_publisher_or_a_review_request(self):
@@ -87,7 +87,7 @@ class SourceChannelTests(unittest.TestCase):
         self.link(group, source)
         info = channels_for([source])[source.id]
         self.assertEqual(info['basis'], 'official_page')
-        self.assertEqual(info['publisher_label'], 'example.edu.cn/x/notices')
+        self.assertEqual(info['publisher_label'], '')
         self.assertIn('院系设置 / 通知公告', info['breadcrumb'])
         self.assertEqual(info['column_label'], '院系设置 / 通知公告')
         self.assertNotIn('核实', str(info))
@@ -107,7 +107,7 @@ class SourceChannelTests(unittest.TestCase):
         self.catalog.paths.return_value = {source.list_url: [self.path('计算机学院', ROOT + 'cs/')]}
         info = channels_for([source])[source.id]
         self.assertEqual(info['basis'], 'official_page')
-        self.assertEqual(info['publisher_label'], 'partner.invalid/notices')
+        self.assertEqual(info['publisher_label'], '')
         source.list_url = ROOT + 'cs/notices/'
         self.catalog.paths.return_value = {source.list_url: [dict(self.path('计算机学院', ROOT + 'cs/'),
             basis='official_directory_navigation', identity_pending=True)]}
@@ -139,7 +139,9 @@ class SourceChannelTests(unittest.TestCase):
         second = self.source('portal?unit=two#/notice')
         info = channels_for([first, second])
         self.assertNotEqual(info[first.id]['publisher_key'], info[second.id]['publisher_key'])
-        self.assertNotEqual(info[first.id]['breadcrumb'], info[second.id]['breadcrumb'])
+        self.assertNotEqual(info[first.id]['official_url'], info[second.id]['official_url'])
+        self.assertEqual(info[first.id]['breadcrumb'], '测试大学 / 通知公告')
+        self.assertEqual(info[second.id]['breadcrumb'], '测试大学 / 通知公告')
 
     def test_batch_request_reads_published_catalogue_once_and_never_fetches(self):
         first, second = self.source('one/notices/'), self.source('two/notices/')
@@ -162,7 +164,7 @@ class SourceChannelTests(unittest.TestCase):
     def test_legacy_group_is_column_context_without_claiming_publisher(self):
         source = self.source('https://www.tsinghua.edu.cn/news/', '院内新闻', group='地球科学与工程学院')
         info = channels_for([source])[source.id]
-        self.assertEqual(info['publisher_label'], 'www.tsinghua.edu.cn/news')
+        self.assertEqual(info['publisher_label'], '')
         self.assertEqual(info['column_label'], '地球科学与工程学院 / 院内新闻')
         self.assertIn('地球科学与工程学院 / 院内新闻', info['breadcrumb'])
 
@@ -177,6 +179,13 @@ class SourceChannelTests(unittest.TestCase):
         source = self.source('notices/')
         self.catalog.paths.return_value = {source.list_url: [self.path('工程学院', ROOT)]}
         self.assertEqual(channels_for([source])[source.id]['basis'], 'official_page')
+
+    def test_url_shaped_legacy_names_are_never_presented_as_source_names(self):
+        source = self.source('portal/', name='example.edu.cn/portal', group='https://example.edu.cn')
+        info = channels_for([source])[source.id]
+        self.assertEqual(info['breadcrumb'], '测试大学 / 官网栏目')
+        self.assertEqual(info['official_url'], source.list_url)
+        self.assertEqual(source.name, 'example.edu.cn/portal')
 
     def test_invalid_saved_urls_are_unlinked_and_do_not_break_scope_lookup(self):
         source = self.source('https://example.edu.cn:invalid/notices/')

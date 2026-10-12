@@ -12,7 +12,7 @@ from backend.scraper.detectors.dom_analyzer import (
     find_repeating_blocks, extract_dates_from_text,
     is_likely_notice_list, _find_first_date, _css_path,
 )
-from backend.scraper.detectors.title_quality import is_junk_title, clean_title
+from backend.scraper.detectors.title_quality import is_junk_title, extract_title_text
 from backend.scraper.change_detector import parse_date
 
 logger = logging.getLogger(__name__)
@@ -66,12 +66,9 @@ def detect_notice_list(html, url, existing_profiles=None):
                 title_el = item.select_one(profile['title_selector'])
                 if title_el:
                     # 苏迪等 CMS 标题在 a[title]/data-title 属性里，文本为空
-                    title = clean_title(
-                        title_el.get_text(strip=True)
-                        or (title_el.get('title') or '').strip()
-                        or (title_el.get('data-title') or '').strip())
                     # 质量门控：纯日期/MORE 等垃圾标题不算有效条目
                     link_el = item.select_one(profile.get('link_selector') or 'a[href]')
+                    title = extract_title_text(title_el, anchor=link_el, page_url=url)
                     date_el = item.select_one(profile['date_selector']) if profile.get('date_selector') else None
                     dated = parse_date(date_el.get_text(strip=True)) if date_el is not None else None
                     article_url = urljoin(url, link_el.get('href', '')) if link_el and dated else ''
@@ -279,7 +276,8 @@ def test_selectors(html, url, list_selector, title_selector='a',
         if title_selector:
             title_el = item.select_one(title_selector)
             if title_el:
-                title = title_el.get_text(strip=True)
+                title = extract_title_text(title_el,
+                    anchor=item.select_one(link_selector or 'a[href]'), page_url=url)
 
         # 链接
         if link_selector:

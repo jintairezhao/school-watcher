@@ -1,4 +1,4 @@
-"""Explicit analysis and manual change-check controls on desktop and mobile."""
+"""Reading never queues notice AI; source change checks remain explicit."""
 from datetime import datetime
 from pathlib import Path
 import os
@@ -54,17 +54,16 @@ try:
             page.add_init_script(f"localStorage.setItem('theme','{theme}')")
             address = f'http://localhost/?school={school_id}&period=all&selected={ann_id}&view=focus'
             page.goto(address)
-            expect(page.get_by_role('button', name='分析用途与时间')).to_be_visible()
+            expect(page.get_by_role('button', name='分析用途与时间')).to_have_count(0)
+            expect(page.get_by_role('button', name='生成摘要')).to_have_count(0)
             assert not paid_requests
             assert BackgroundTask.query.filter_by(kind='student_assessment').count() == 0
-            page.get_by_role('button', name='分析用途与时间').click()
-            expect(page.locator('.student-insight')).to_contain_text('可作历史参考', timeout=10000)
-            assert len(paid_requests) == 1
             page.reload()
-            expect(page.locator('.student-insight')).to_contain_text('可作历史参考')
-            assert len(paid_requests) == 1
+            expect(page.locator('.student-insight')).to_have_count(0)
+            assert not paid_requests
+            assert BackgroundTask.query.filter(BackgroundTask.kind.in_(('student_assessment', 'summary'))).count() == 0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-            page.screenshot(path=str(output / f'explicit-analysis-{width}.png'), full_page=True)
+            page.screenshot(path=str(output / f'plain-reader-{width}.png'), full_page=True)
             BackgroundTask.query.delete(); db.session.commit()
             page.goto(f'http://localhost/subscriptions/{school_id}')
             expect(page.get_by_role('button', name='再找一次', exact=True)).to_be_visible()
@@ -76,7 +75,7 @@ try:
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.screenshot(path=str(output / f'manual-check-{width}.png'), full_page=True)
             assert not errors, errors
-            print(f'{width}: explicit AI, cached reuse, manual change check and layout passed', flush=True)
+            print(f'{width}: no notice AI on reading/reload, manual source change check and layout passed', flush=True)
             page.close()
         browser.close()
 finally:

@@ -5,6 +5,7 @@ unit rows. The inbox must consume existing publisher evidence for those columns;
 hand-created unit fixtures alone do not exercise that production path.
 """
 import json
+import re
 from pathlib import Path
 import tempfile
 import unittest
@@ -76,15 +77,25 @@ class InboxPublisherProjectionTests(unittest.TestCase):
                 self.assertEqual(DepartmentDirectoryEntry.query.count(), 0)
                 descriptors, tree = self.checked_tree(rows)
                 units = [unit for group in tree.values() for unit in group]
-                self.assertTrue(all(unit['expandable'] for unit in units))
                 expected = {row['publisher_key']: row['publisher_label']
                             for row in run['expected_publishers']}
-                self.assertEqual({unit['key']: unit['name'] for unit in units}, expected)
+                # Retained evidence has old URL fallback/suffix labels. Those
+                # addresses remain identities, not human department names.
+                for unit in units:
+                    descriptor = descriptors[unit['columns'][0]['department'].id]
+                    self.assertIn(descriptor['publisher_key'], expected)
+                    if descriptor['basis'] == 'official_page':
+                        self.assertFalse(unit['expandable'])
+                        self.assertEqual(unit['name'], unit['columns'][0]['label'])
+                    else:
+                        self.assertTrue(unit['expandable'])
+                        self.assertEqual(unit['name'], re.sub(r'（[^（）]*\.edu[^（）]*）$', '', expected[unit['key']]))
                 for unit in units:
                     for column in unit['own_columns']:
                         source = column['department']
                         self.assertEqual(column['label'], source.name)
-                        self.assertEqual(descriptors[source.id]['publisher_key'], unit['key'])
+                        if unit['expandable']:
+                            self.assertEqual(descriptors[source.id]['publisher_key'], unit['key'])
                 self.assertCountEqual([column['department'].id for unit in units
                     for column in unit['columns']], [row.id for row in rows])
 
@@ -100,7 +111,7 @@ class InboxPublisherProjectionTests(unittest.TestCase):
         admissions = [unit for unit in units if unit['name'].startswith('山东大学研究生招生信息网')]
         self.assertEqual(len(admissions), 3)
         self.assertEqual(len({unit['key'] for unit in admissions}), 3)
-        self.assertEqual(len({unit['name'] for unit in admissions}), 3)
+        self.assertEqual({unit['name'] for unit in admissions}, {'山东大学研究生招生信息网'})
         # Even equal column labels must not merge independently observed sites.
         rows[0].name = rows[1].name = '通知公告'; db.session.commit()
         descriptors, tree = self.checked_tree(rows)
@@ -132,7 +143,8 @@ class InboxPublisherProjectionTests(unittest.TestCase):
         unknown = next(unit for group in tree.values() for unit in group
             if any(column['department'].id == 3 for column in unit['columns']))
         self.assertEqual(descriptors[3]['basis'], 'official_page')
-        self.assertEqual(unknown['name'], 'xxgk.nankai.edu.cn')
+        self.assertEqual(unknown['name'], '信息公开制度')
+        self.assertFalse(unknown['expandable'])
         self.assertEqual(unknown['columns'][0]['label'], '信息公开制度')
 
     def test_legacy_owner_own_source_and_columns_keep_one_unit_in_real_app_context(self):

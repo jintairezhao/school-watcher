@@ -15,7 +15,7 @@ from backend.database.models import School, Department, Announcement, ScrapeLog
 from backend.scraper.change_detector import parse_date
 from backend.scraper.date_elements import publication_date_text
 from backend.scraper.detectors.title_quality import (
-    is_junk_title, extract_best_title, date_from_url, clean_title)
+    is_junk_title, extract_best_title, date_from_url, extract_title_text, observed_title_variants)
 from backend.scraper.selector.selector_store import save_element_signatures, auto_heal_selectors
 from backend.scraper.cms_registry import load_selector_profiles
 
@@ -292,17 +292,10 @@ def _process_announcement_item(item, department, school_base_url: str) -> bool:
         # 提取标题（通用质量门控：配置选择器结果 → 项内回退链；
         # 垃圾标题——纯日期/MORE/导航文本——回退失败则跳过该条，任何学校不入库垃圾）
         title_elem = select_node(item, department.title_selector) if department.title_selector else item
-        title = ''
-        if title_elem:
-            # 苏迪等 CMS 标题在 a[title]/data-title 属性里
-            attr_title = (title_elem.get('title') or title_elem.get('data-title') or '').strip()
-            if attr_title:
-                title = attr_title
-            else:
-                title = title_elem.get_text(strip=True)
-        title = clean_title(title)  # 剥离前缀日期/浏览数噪声
+        title_page_url = getattr(department, '_fetch_final_url', department.list_url)
+        title = extract_title_text(title_elem, anchor=link_elem, page_url=title_page_url)
         if is_junk_title(title, article_url=title_context_url):
-            title = extract_best_title(item, article_url=title_context_url)
+            title = extract_best_title(item, article_url=full_url, page_url=title_page_url)
         if is_junk_title(title, article_url=title_context_url):
             return False
 
@@ -311,7 +304,9 @@ def _process_announcement_item(item, department, school_base_url: str) -> bool:
         if not full_url:
             return False
         from backend.services.announcement_identity import upsert_listing
-        _announcement, created = upsert_listing(department, title, full_url, published_at=published_at)
+        corrections = observed_title_variants(title_elem, title, anchor=link_elem, page_url=title_page_url)
+        _announcement, created = upsert_listing(department, title, full_url,
+            published_at=published_at, observed_title_variants=corrections)
         from backend.services.announcement_sources import record_source
         record_source(_announcement, department, full_url)
         return created

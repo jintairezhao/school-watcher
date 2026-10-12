@@ -45,7 +45,7 @@
             <button class="text-button" type="button" data-retry-source hidden>重试筛选</button>
         </div>
         <div class="source-management-links">
-            {% if current_school_id in subscribed_school_ids %}<a class="source-manage" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">自动找通知与来源设置</a>{% endif %}
+            {% if current_school_id in subscribed_school_ids %}<a class="source-manage" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">来源设置</a>{% endif %}
             <a class="source-manage" href="{{ url_for('pages.explore') }}">管理订阅学校</a>
         </div>
         <button class="btn btn-primary source-done" type="button" data-close-sources>完成</button>

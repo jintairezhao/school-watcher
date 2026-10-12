@@ -78,7 +78,7 @@ with sync_playwright() as playwright:
             page.locator('.source-settings-link').click()
             expect(page.get_by_role('heading', name='东南大学', exact=True)).to_be_visible()
 
-            page.goto(base + '/')
+            page.goto(base + '/?period=all')
             page.locator('#openFilters').click()
             state['fail_fragment'] = True
             page.locator('#schoolFilter').select_option(str(school_id))
@@ -91,7 +91,7 @@ with sync_playwright() as playwright:
             if group.get_attribute('aria-expanded') != 'true':
                 group.click()
             expect(page.locator(f'[data-department][value="{fixture.column.id}"]')).to_be_enabled()
-            page.get_by_role('link', name='自动找通知与来源设置', exact=True).click()
+            page.get_by_role('link', name='来源设置', exact=True).click()
             expect(page.get_by_role('heading', name='东南大学', exact=True)).to_be_visible()
             expect(page.locator(f'input[name="department"][value="{fixture.unit.id}"]')).to_have_count(1)
 

@@ -62,8 +62,11 @@ def check():
                 def within_page():
                     choose_filters(); open_sources()
                     page.locator('#schoolFilter').select_option('2'); settled()
-                    page.locator('.source-group-toggle').click()
-                    page.locator('.source-unit-toggle').click()
+                    if page.locator('.source-group-toggle').get_attribute('aria-expanded') != 'true':
+                        page.locator('.source-group-toggle').click()
+                    if (page.locator('.source-unit-toggle').count()
+                            and page.locator('.source-unit-toggle').get_attribute('aria-expanded') != 'true'):
+                        page.locator('.source-unit-toggle').click()
                     page.locator('.department-option').click(); settled()
                     params(school='2', dept='999', period='all', read='unread')
                     page.locator('#clearDepartments').click(); settled()
@@ -100,6 +103,21 @@ def check():
                     page.reload(); params(period='all', read='unread')
                     page.go_back()
                     expect(page).to_have_url(base + '/explore')
+
+                def source_return():
+                    page.goto(base + '/?school=2&dept=999&period=all&read=unread')
+                    page.goto(base + '/explore')
+                    page.locator('.nav-links a').filter(has_text='收件箱').click()
+                    expect(page.locator('#schoolFilter')).to_have_value('2')
+                    params(school='2', dept='999', period='all', read='unread')
+                    page.goto(base + '/')
+                    params(school='2', dept='999', period='all', read='unread')
+                    open_sources(); page.locator('#schoolFilter').select_option(''); settled()
+                    assert 'school' not in parse_qs(urlsplit(page.url).query)
+                    page.goto(base + '/explore')
+                    page.locator('.nav-links a').filter(has_text='收件箱').click()
+                    expect(page.locator('#schoolFilter')).to_have_value('')
+                    assert 'school' not in parse_qs(urlsplit(page.url).query)
 
                 def override_reset_account():
                     choose_filters()
@@ -187,7 +205,8 @@ def check():
                     open_sources(); page.locator('#schoolFilter').select_option('2'); settled()
                     params(period='all', read='unread')
 
-                for name, test in [('source changes and group/multiselect', within_page),
+                for name, test in [('return from another page keeps school and columns', source_return),
+                                   ('source changes and group/multiselect', within_page),
                                    ('selected year absent from next school', absent_year),
                                    ('fresh school/department entry and reload', fresh_entry),
                                    ('explicit URL, reset and account isolation', override_reset_account),
