@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import and_, or_
 from backend.database.db import db
 from backend.database.models import AppConfig, School, ScrapeLog, BackgroundTask
+from backend.core.timestamps import utc_stamp
 
 PAGE_SIZE = 200
 RETENTION_CHOICES = (7, 30, 90, 180, 365, 0)
@@ -58,10 +59,6 @@ def parse_time(value):
     return stamp.astimezone(timezone.utc).replace(tzinfo=None) if stamp.tzinfo else stamp
 
 
-def utc_stamp(value):
-    return value.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if value else None
-
-
 def log_page(args):
     period = args.get('period', 'recent')
     if period not in ('recent', 'archive'):
@@ -93,7 +90,6 @@ def log_page(args):
         items.append({**log.to_dict(),
             'school_name': school_name or (f'学校已移除（编号 {log.school_id}）' if log.school_id else '未归属学校'),
             'source_name': log.source_name or '历史任务（未记录具体栏目）',
-            'started_at': utc_stamp(log.started_at), 'finished_at': utc_stamp(log.finished_at),
             'duration_seconds': round(duration, 1) if duration is not None else None,
             'status_label': STATUS_LABELS.get(log.status, log.status or '未知')})
     cursor = {'before_id': rows[-1][0].id, 'before_time': utc_stamp(rows[-1][0].started_at)} if more else None

@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from backend.database.db import db
+from backend.core.timestamps import utc_stamp
 
 
 class School(db.Model):
@@ -196,8 +197,8 @@ class ScrapeLog(db.Model):
             'id': self.id,
             'school_id': self.school_id,
             'source_name': self.source_name,
-            'started_at': self.started_at.isoformat() if self.started_at else None,
-            'finished_at': self.finished_at.isoformat() if self.finished_at else None,
+            'started_at': utc_stamp(self.started_at),
+            'finished_at': utc_stamp(self.finished_at),
             'new_count': self.new_count,
             'total_count': self.total_count,
             'status': self.status,

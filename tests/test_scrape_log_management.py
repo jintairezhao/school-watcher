@@ -159,5 +159,31 @@ class ScrapeLogManagementTests(unittest.TestCase):
         self.assertEqual(data['recent_logs'],[])
         self.assertEqual(self.client_as(self.reader.id).get('/api/admin/stats').status_code,403)
 
+    def test_overview_and_full_history_publish_identical_explicit_utc_times(self):
+        from sqlalchemy import text
+        self.now = datetime(2026,10,13,3,31)
+        started = datetime(2026,10,13,3,28,28)
+        row = ScrapeLog(school_id=self.school.id,source_name='通知公告',started_at=started,
+            finished_at=started+timedelta(seconds=2),status='success',new_count=0,total_count=3)
+        db.session.add(row);db.session.commit()
+        stored = db.session.execute(text('SELECT started_at,finished_at FROM scrape_logs WHERE id=:id'), {'id':row.id}).one()
+        with patch('backend.routes.admin.datetime') as clock:
+            clock.utcnow.return_value = self.now
+            recent = self.client.get('/api/admin/stats').json['recent_logs'][0]
+        full = self.client.get('/api/admin/scrape-logs',query_string={'as_of':self.now.isoformat()}).json['rows'][0]
+        self.assertEqual(recent['started_at'],'2026-10-13T03:28:28Z')
+        self.assertEqual(recent['finished_at'],'2026-10-13T03:28:30Z')
+        self.assertEqual(recent['started_at'],full['started_at'])
+        self.assertEqual(recent['finished_at'],full['finished_at'])
+        self.assertEqual(db.session.execute(text('SELECT started_at,finished_at FROM scrape_logs WHERE id=:id'), {'id':row.id}).one(),stored)
+
+    def test_aware_log_time_serialization_preserves_actual_instant(self):
+        from datetime import timezone
+        from backend.services.scrape_logs import utc_stamp
+        china = timezone(timedelta(hours=8))
+        row = ScrapeLog(started_at=datetime(2026,10,13,11,28,tzinfo=china))
+        self.assertEqual(row.to_dict()['started_at'],'2026-10-13T03:28:00Z')
+        self.assertEqual(utc_stamp(row.started_at),'2026-10-13T03:28:00Z')
+
 
 if __name__=='__main__':unittest.main()

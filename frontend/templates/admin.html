@@ -27,7 +27,7 @@
     <div class="stat-grid" id="statGrid"><p class="text-muted">加载中…</p></div>
     <p class="text-muted" id="scrapeRateExplanation" hidden></p>
     <div class="setting-card">
-        <div class="setting-card-header"><h3>最近抓取</h3><p>最近 10 条已结束的抓取记录 · <a href="#logs">查看完整记录</a></p></div>
+        <div class="setting-card-header"><h3>最近抓取</h3><p>最近 10 条已结束的抓取记录 · 北京时间 · <a href="#logs">查看完整记录</a></p></div>
         <div class="setting-card-body"><div id="recentLogs" class="log-list"><p class="text-muted">加载中…</p></div></div>
     </div>
 </section>
@@ -87,6 +87,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/log-time.js') }}"></script>
 <script>
 // ---- 标签页切换（hash 记忆） ----
 function showTab(name) {
@@ -159,7 +160,7 @@ async function loadStats() {
             return '<div class="log-item"><span class="log-status log-' + l.status + '">' + statusName + '</span>' +
                 '<span class="log-info">学校#' + (l.school_id || '-') + ' 新增 ' + l.new_count + ' / 检查 ' + l.total_count +
                 (l.error_message ? ' <span class="log-error">' + escHtml(l.error_message).slice(0, 60) + '</span>' : '') + '</span>' +
-                '<span class="log-time">' + (l.started_at || '').slice(5, 16).replace('T', ' ') + '</span></div>';
+                '<span class="log-time">' + window.formatScrapeLogTime(l.started_at, true) + '</span></div>';
         }).join('') || '<p class="text-muted">暂无记录</p>';
     } catch (e) {
         document.getElementById('scrapeRateExplanation').hidden = true;

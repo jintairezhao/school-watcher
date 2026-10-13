@@ -5,15 +5,13 @@
     const find = selector => root.querySelector(selector);
     let loaded = false, generation = 0, anchor = '', retentionLoaded = false;
     let states = {};
-    const format = new Intl.DateTimeFormat('zh-CN', {timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit',
-        day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false});
     function element(tag, text, className) {
         const node = document.createElement(tag);
         if (text != null) node.textContent = text;
         if (className) node.className = className;
         return node;
     }
-    function time(value) { return value ? format.format(new Date(value)) : '尚未结束'; }
+    function time(value) { return window.formatScrapeLogTime(value); }
     function duration(seconds) {
         if (seconds == null) return '—';
         if (seconds < 60) return seconds + ' 秒';

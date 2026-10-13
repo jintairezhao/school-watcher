@@ -67,6 +67,10 @@ jobs:
         run: python tests/browser/check_admin_school_dialog_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify collection log timezones and day boundaries
+        run: python tests/browser/check_scrape_log_time_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify API usage charts and analytics interactions
         run: python tests/browser/check_ai_usage_browser.py
         env:
