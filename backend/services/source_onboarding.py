@@ -307,9 +307,22 @@ def _install(school_id, config, records, *, repair=False, previous_url=None, ai_
         db.session.flush()
     # An existing valid rule is not silently overwritten by rediscovery.
     new_count = 0
+    from backend.services.publication_dates import apply_listing_date, _record
+    verified_dates={sample['url']:sample.get('publication_date') for sample in (validation or {}).get('articles',{}).get('samples',[])
+        if sample.get('matched') and (sample.get('publication_date') or {}).get('state')=='verified'}
     for record in records:
+        listed_date=parse_date(record['date'])
+        from datetime import timedelta, timezone
+        if listed_date and listed_date.date()>datetime.now(timezone(timedelta(hours=8))).date():listed_date=None
         article, created = upsert_listing(source, record['title'], record['url'],
-            published_at=parse_date(record['date']) or date_from_url(record['url']))
+            published_at=listed_date)
+        proof=verified_dates.get(record['url'])
+        if proof:
+            article.published_at=datetime.fromisoformat(proof['date'])
+            _record(article,dict(proof,checked_full=True))
+        else:
+            observation=record.get('date_observation') or {'role':'listing','raw':record['date'],'text':record['date']}
+            apply_listing_date(article,source,observation,parse_date(observation['raw']))
         record_source(article, source, record['url'])
         new_count += int(created)
     source.last_scraped_at = datetime.utcnow()

@@ -75,6 +75,8 @@ def _schedule_due(lease=None):
     due('maintenance', 'daily', {}, 86400)
     from backend.services.saved_materials import resume_saved_materials
     resume_saved_materials()
+    from backend.services.publication_dates import resume_date_checks
+    resume_date_checks()
     due('backup', 'daily', {}, 86400)
     AppConfig.set('worker_heartbeat', now.isoformat())
     db.session.remove()
@@ -120,6 +122,9 @@ def dispatch(kind, payload):
     if kind == 'saved_resource':
         from backend.services.saved_materials import save_resource
         return save_resource(payload['announcement_id'], payload['url_key'])
+    if kind == 'publication_date':
+        from backend.services.publication_dates import check_date
+        return check_date(payload['announcement_id'])
     if kind == 'student_assessment':
         from backend.services.student_information import process
         return process(payload)

@@ -32,6 +32,17 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
     const button = panel.querySelector('.body-loader-retry');
     const placeholder = panel.querySelector('.body-loader-placeholder');
     const body = panel.querySelector('.body-loader-content');
+    function updatePublicationDate(data) {
+        if (!Object.prototype.hasOwnProperty.call(data, 'published_at') || !panel.isConnected) return;
+        const time = panel.closest('.reader-document, .article-document')?.querySelector('.reading-meta time')
+            || document.querySelector('.reading-header .reading-meta time');
+        if (!time) return;
+        const stamp = data.published_at || '';
+        if (time.getAttribute('datetime') === stamp) return;
+        time.setAttribute('datetime', stamp);
+        time.textContent = data.publication_date_label || '发布时间未知';
+        window.dispatchEvent(new CustomEvent('notice:publication-date', {detail: {id: panel.dataset.contentId}}));
+    }
     function phase(value) {
         panel.dataset.loadState = value;
         if (placeholder) placeholder.hidden = value !== 'loading';
@@ -53,6 +64,7 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
                 if (!panel.isConnected) return;
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || '正文暂时无法加载，请打开原文查看。');
+                updatePublicationDate(data);
                 if (data.content_status === 'saved') {
                     // HTML is sanitized by the server using the same policy as stored articles.
                     if (data.content_html) body.innerHTML = data.content_html;
@@ -93,7 +105,8 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
     }
     if (button) button.addEventListener('click', load);
     if (panel.dataset.cached === 'false') load();
-    else fetch(endpoint).catch(() => {});
+    else fetch(endpoint).then(response => response.ok ? response.json() : null)
+        .then(data => { if (data) updatePublicationDate(data); }).catch(() => {});
 });
 };
 window.initContentLoaders();

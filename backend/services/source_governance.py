@@ -240,7 +240,7 @@ def _normal(text):
 def _extract(config, reference, *, html=None):
     from backend.scraper.discovery.publication_lists import select_node
     from backend.scraper.detectors.title_quality import is_junk_title, extract_title_text
-    from backend.scraper.date_elements import publication_date_text
+    from backend.scraper.date_elements import publication_date_text, listing_date_observation
     from backend.scraper.change_detector import parse_date
     soup = BeautifulSoup(read_snapshot(reference) if html is None else html, 'lxml')
     items = soup.select(config['list_selector'])
@@ -258,7 +258,8 @@ def _extract(config, reference, *, html=None):
         date_text = publication_date_text(date_node)
         if date_text and not parse_date(date_text):
             errors.append('invalid_publication_date')
-        records.append({'url': url, 'title': title, 'date': date_text})
+        records.append({'url': url, 'title': title, 'date': date_text,
+                        'date_observation': listing_date_observation(date_node)})
     if len({r['url'] for r in records}) != len(records):
         errors.append('duplicate_list_items')
     return soup, items, records, errors

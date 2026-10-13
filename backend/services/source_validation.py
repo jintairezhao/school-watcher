@@ -245,6 +245,9 @@ def article_samples(config, records, fetcher):
             sample['attachment'] = bool(resources)
             sample.update(attachment_urls=resources, body_basis=evidence['body_basis'],
                           body_excerpt=evidence['body_text'][:240])
+            if sample['matched']:
+                from backend.services.publication_dates import inspect_article_date
+                sample['publication_date'] = inspect_article_date(html,address,record['title'])
             if not sample['matched']:
                 # Reuse this exact read on the repair turn, including its original
                 # DOM positions. No second network read or guessed body structure.

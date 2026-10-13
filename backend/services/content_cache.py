@@ -21,10 +21,14 @@ def status(ann):
 
 def request_content(ann):
     if ann.content_cached_at or ann.content_html:
+        from backend.services.publication_dates import reconcile_cached_date
+        corrected_date = reconcile_cached_date(ann)
         # Coalesce hot reads; viewing a cached article need not write every time.
         now = datetime.utcnow()
         if not ann.content_accessed_at or now - ann.content_accessed_at > timedelta(hours=1):
             ann.content_accessed_at = now
+            db.session.commit()
+        elif corrected_date:
             db.session.commit()
         return None
     from backend.services.tasks import enqueue
@@ -39,6 +43,9 @@ def fetch_content(ann_id):
     if not ann:
         return {'removed': True}
     if ann.content_cached_at:
+        from backend.services.publication_dates import reconcile_cached_date
+        reconcile_cached_date(ann)
+        db.session.commit()
         return {'cached': True}
     url, title = ann.url, ann.title
     from backend.services.announcement_sources import sources_for
@@ -96,10 +103,8 @@ def fetch_content(ann_id):
         ann.content_cached_at = ann.content_accessed_at = datetime.utcnow()
         ann.content_error = ''
         ann.content_hash = compute_hash(title, text)
-        if not ann.published_at:
-            meta = soup.select_one('meta[name="PubDate"],meta[name="pubdate"],meta[name="publishdate"],meta[property="article:published_time"]')
-            if meta:
-                ann.published_at = parse_date(meta.get('content', ''))
+        from backend.services.publication_dates import apply_article_date
+        apply_article_date(ann,html,final_url)
         db.session.commit()
         from backend.services.saved_materials import queue_materials
         queue_materials(ann)

@@ -194,8 +194,11 @@ class FirstSubscriptionTests(unittest.TestCase):
                 patch('backend.scraper.selector_monitor.evaluate_and_repair', return_value={'action': 'healthy'}):
             new, total = scrape_department(department, self.school.url)
         self.assertEqual(fetch.call_count, 3, 'confirm the boundary, then skip older pages')
-        self.assertEqual(new, 2)
-        self.assertEqual({a.title for a in Announcement.query.all()}, {'开学注册安排通知', '长期办理事项相关通知'})
+        self.assertEqual(new, 3)
+        self.assertEqual({a.title for a in Announcement.query.all()},
+                         {'开学注册安排通知', '长期办理事项相关通知', '地址标注日期的历史通知'})
+        self.assertIsNone(Announcement.query.filter_by(title='地址标注日期的历史通知').one().published_at,
+                          'a URL date is not evidence of publication or grounds for excluding a notice')
 
     def test_daily_health_reuses_recent_collection_but_fetches_stale_columns(self):
         from datetime import datetime, timedelta

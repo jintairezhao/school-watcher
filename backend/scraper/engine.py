@@ -284,10 +284,14 @@ def _process_announcement_item(item, department, school_base_url: str) -> bool:
         if department.date_selector:
             date_elem = select_node(item, department.date_selector)
             date_text = publication_date_text(date_elem)
+        from backend.scraper.date_elements import listing_date_observation
+        observation = listing_date_observation(date_elem if department.date_selector else None)
+        candidate_date = parse_date(observation['raw'])
         published_at = parse_date(date_text)
-        if not published_at and full_url:
-            published_at = date_from_url(full_url)
-        title_context_url = full_url if published_at else ''
+        from datetime import timedelta, timezone
+        if published_at and published_at.date() > datetime.now(timezone(timedelta(hours=8))).date():
+            published_at = None  # Verify future list hints in the actual article first.
+        title_context_url = full_url if published_at or date_from_url(full_url or '') else ''
 
         # 提取标题（通用质量门控：配置选择器结果 → 项内回退链；
         # 垃圾标题——纯日期/MORE/导航文本——回退失败则跳过该条，任何学校不入库垃圾）
@@ -307,6 +311,8 @@ def _process_announcement_item(item, department, school_base_url: str) -> bool:
         corrections = observed_title_variants(title_elem, title, anchor=link_elem, page_url=title_page_url)
         _announcement, created = upsert_listing(department, title, full_url,
             published_at=published_at, observed_title_variants=corrections)
+        from backend.services.publication_dates import apply_listing_date
+        apply_listing_date(_announcement, department, observation, candidate_date)
         from backend.services.announcement_sources import record_source
         record_source(_announcement, department, full_url)
         return created
@@ -499,10 +505,6 @@ def scrape_department(department: Department, school_base_url: str,
                 date_elem = select_node(item, department.date_selector)
                 date_text = publication_date_text(date_elem)
             pub_date = parse_date(date_text)
-            if not pub_date:
-                link = select_node(item, department.link_selector or 'a[href]')
-                if link:
-                    pub_date = date_from_url(_resolve_url(page_url, link.get('href', '')) or '')
             if pub_date and pub_date.replace(tzinfo=None) < cutoff:
                 page_old += 1
                 continue

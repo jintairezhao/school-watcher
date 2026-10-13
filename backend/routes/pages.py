@@ -108,6 +108,23 @@ def index():
     per_page = 40
 
     query = filtered_inbox(g.user.id, request.args, include_read=False)
+    requested_ann_id = request.args.get('selected', type=int)
+    date_selection = query.filter(Announcement.id == requested_ann_id).first() if requested_ann_id else None
+    if requested_ann_id and date_selection is None:
+        # A verified date correction can move the open notice outside the time
+        # window/page. Keep its reader while retaining every school/source and
+        # personal mailbox permission; list results still follow the time filter.
+        from backend.database.models import BackgroundTask
+        proof = BackgroundTask.query.filter_by(identity=f'publication_date:{requested_ann_id}').first()
+        if proof and proof.result.get('state') == 'verified' and proof.result.get('corrected'):
+            from werkzeug.datastructures import MultiDict
+            selection_args = MultiDict(request.args)
+            for key in ('period','year','month','read'): selection_args.poplist(key)
+            selection_args.setlist('period',['all'])
+            date_selection = filtered_inbox(g.user.id,selection_args,include_read=False).filter(Announcement.id==requested_ann_id).first()
+    if date_selection:
+        from backend.services.publication_dates import reconcile_cached_date
+        if reconcile_cached_date(date_selection): db.session.commit()
     read_exists = read_expression(g.user.id)
     scope_count = query.count()
     scope_unread = query.filter(~read_exists).count()
@@ -127,9 +144,11 @@ def index():
     from backend.services.student_information import listing_views
     announcement_values = {ident: dict(info, label=info['value_label'])
                            for ident, info in listing_views(announcements).items()}
-    announcement_sources = sources_for([a.id for a in announcements])
+    shown_ids = [a.id for a in announcements]
+    if date_selection and date_selection.id not in shown_ids: shown_ids.append(date_selection.id)
+    announcement_sources = sources_for(shown_ids)
     from backend.services.channel_views import prime_publications
-    prime_publications([a.id for a in announcements])
+    prime_publications(shown_ids)
     selected_ids = set(selected_dept_ids)
     allowed_subscriptions = {s.school_id: s.department_ids for s in subscriptions}
     def source_priority(source):
@@ -141,24 +160,24 @@ def index():
         sources.sort(key=source_priority)
     display_sources = {key: value[0] for key, value in announcement_sources.items() if value}
 
-    requested_ann_id = request.args.get('selected', type=int)
     selected_announcement = next(
         (ann for ann in announcements if ann.id == requested_ann_id),
-        None,
+        date_selection,
     )
     detail_requested = bool(requested_ann_id and selected_announcement and
                             selected_announcement.id == requested_ann_id)
     if detail_requested:
-        if read_state.mark_read(g.user.id, selected_announcement.id):
+        in_scope = query.filter(Announcement.id == selected_announcement.id).first() is not None
+        if read_state.mark_read(g.user.id, selected_announcement.id) and in_scope:
             scope_unread = max(0, scope_unread - 1)
 
     read_ids = read_state.read_ids_for(
         g.user.id,
-        [ann.id for ann in announcements],
+        shown_ids,
     )
     states = {s.announcement_id: s for s in UserAnnouncementState.query.filter(
         UserAnnouncementState.user_id == g.user.id,
-        UserAnnouncementState.announcement_id.in_([a.id for a in announcements])).all()}
+        UserAnnouncementState.announcement_id.in_(shown_ids)).all()}
     # One compact excerpt per visible row, without loading full documents into the list.
     excerpts = dict(db.session.query(Announcement.id, func.substr(Announcement.content_text, 1, 150))
                     .filter(Announcement.id.in_([a.id for a in announcements])).all())

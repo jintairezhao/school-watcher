@@ -100,6 +100,9 @@ def create_app(test_config=None):
     app.jinja_env.globals['announcement_share_url'] = announcement_share_url
     from backend.services.saved_materials import user_favorite_state
     app.jinja_env.globals['user_favorite_state'] = user_favorite_state
+    from backend.services.publication_dates import publication_date_label, publication_date_stamp
+    app.jinja_env.globals['publication_date_label'] = publication_date_label
+    app.jinja_env.globals['publication_date_stamp'] = publication_date_stamp
     from backend.services.article_images import render_article_html
     app.jinja_env.filters['article_html'] = render_article_html
     from backend.services.student_information import article_view, source_view

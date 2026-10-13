@@ -349,17 +349,21 @@ def samples_for(items, config, url):
         if not match and date_node is not None:
             match = re.fullmatch(r'\s*\d{1,2}\s+20\d{2}[-/.]\d{1,2}\s*', text)
         published = parse_date(match.group(0)) if match else None
+        from backend.scraper.date_elements import listing_date_observation
+        observation = listing_date_observation(date_node)
+        event_hint = observation['role'] == 'non_publication' and bool(parse_date(observation['raw']))
         # Short labels also occur on document-shaped institution introductions.
         # Require a row publication date as well as an article address before
         # relaxing the short-title heuristic.
         if ((len(title) < 6 and not ARTICLE.search(target))
-                or is_junk_title(title, article_url=target if published or config.get('explicit_video_publication') else '')):
+                or is_junk_title(title, article_url=target if published or event_hint or config.get('explicit_video_publication') else '')):
             continue
-        if not target or (published is None and not ARTICLE.search(target)):
+        if not target or (published is None and not event_hint and not ARTICLE.search(target)):
             continue
         if published and published.date() <= today:
             dates.append(published.date().isoformat())
-        samples[target] = {'title': title, 'url': target, 'date': published.date().isoformat() if published else None}
+        samples[target] = {'title': title, 'url': target, 'date': published.date().isoformat() if published else None,
+            **({'date_observation':observation} if event_hint else {})}
         # Keep every occurrence, including an image linking to the same article.
         # A title and URL alone cannot distinguish a news row from real navigation.
         for link in ([item] if item.name == 'a' else []) + item.select('a[href]'):

@@ -6,7 +6,7 @@ import soupsieve
 COMPLETE_DATE = re.compile(r'20\d{2}[年./-]\s*\d{1,2}[月./-]\s*\d{1,2}日?')
 
 
-def publication_date_text(element):
+def _date_text(element):
     if element is None:
         return ''
     if element.get('datetime'):
@@ -37,6 +37,43 @@ def publication_date_text(element):
         month, day, year = reverse.groups()
         return f'{year}-{month}-{day}'
     return text
+
+
+NON_PUBLICATION = re.compile(r'讲座(?:时间|日期)|活动(?:时间|日期)|会议(?:时间|日期)|举行(?:时间|日期)|'
+    r'报名(?:时间|日期|截止)|截止(?:时间|日期)|截至|更新时间|更新日期|修改时间|'
+    r'(?:event|lecture)[-_ ]?(?:date|time)|deadline|datemodified|startdate|enddate', re.I)
+TIME_RANGE = re.compile(r'\d{1,2}[:：]\d{2}\s*[—–~～至-]+\s*\d{1,2}[:：]\d{2}')
+
+
+def listing_date_observation(element):
+    raw = _date_text(element)
+    if not raw:
+        return {'role':'missing','text':'','raw':''}
+    markers = ' '.join(element.get('class', [])) + ' ' + (element.get('itemprop') or '')
+    parent = element.parent
+    context = raw
+    if parent is not None and not parent.select('a[href]'):
+        nearby = parent.get_text(' ',strip=True)
+        if len(nearby) < 160 and len(COMPLETE_DATE.findall(nearby)) == 1 and re.match(
+                r'^(?:发布日期|发布时间|发布于|发文日期|讲座时间|讲座日期|活动时间|活动日期|报名截止|截止时间|更新时间|更新日期)',nearby):
+            context = nearby
+        if len(nearby) < 160 and len(COMPLETE_DATE.findall(nearby)) == 1:
+            markers += ' ' + ' '.join(parent.get('class',[])) + ' ' + (parent.get('itemprop') or '')
+    if NON_PUBLICATION.search(context+' '+markers) or TIME_RANGE.search(raw):
+        return {'role':'non_publication','text':'','raw':raw[:300]}
+    # A selector spanning titles or prose cannot promote a quoted date to a
+    # publication field. Date-only tiles and explicit publication labels remain valid.
+    visible = re.sub(r'^(?:发布日期|发布时间|发布于|发文日期)\s*[：:]?\s*','',raw)
+    complete = re.match(r'^\s*\d{4}[年./-]\s*\d{1,2}[月./-]\s*\d{1,2}',visible)
+    english = re.fullmatch(r'\s*(?:[A-Za-z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}\s+[A-Za-z]+\s+\d{4})\s*',visible)
+    if not complete and not english:
+        return {'role':'ambiguous','text':'','raw':raw[:300]}
+    return {'role':'publication' if re.search(r'发布日期|发布时间|发布于|发文日期',context) else 'listing',
+        'text':raw,'raw':raw[:300]}
+
+
+def publication_date_text(element):
+    return listing_date_observation(element)['text']
 
 
 def infer_publication_date_selector(items):

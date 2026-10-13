@@ -262,6 +262,10 @@
         });
         navigate(url);
     }
+    window.addEventListener('notice:publication-date', event => {
+        if (String(event.detail.id) !== appliedURL.searchParams.get('selected') || desiredURL.href !== appliedURL.href) return;
+        navigate(appliedURL, {history: 'none', preserveList: true, refreshList: true});
+    });
     function selectColumns() {
         const url = new URL(desiredURL);
         ['dept', 'selected', 'page', 'group'].forEach(key => url.searchParams.delete(key));

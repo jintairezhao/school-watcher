@@ -68,7 +68,10 @@ def article_content(ann_id):
     if request.method == 'GET' and (ann.content_cached_at or ann.content_html):
         request_content(ann)
     state = status(ann)
+    from backend.services.publication_dates import publication_date_label, publication_date_stamp
     return jsonify(content_status=state, error=ann.content_error if state == 'failed' else '',
+                   published_at=publication_date_stamp(ann.published_at),
+                   publication_date_label=publication_date_label(ann.published_at),
                    content_html=render_article_html(ann.content_html, ann.id, ann.url) if state == 'saved' else '',
                    content_text=ann.content_text if state == 'saved' else ''), (202 if state == 'loading' else 200)
 

@@ -55,7 +55,8 @@ class TeachingModuleEvidenceTests(unittest.TestCase):
         soup = BeautifulSoup('<div class="time"><p class="d">09-20</p><p>2026</p></div>', 'lxml')
         self.assertEqual(publication_date_text(soup.div), '2026-09-20')
         soup.p.decompose()
-        self.assertEqual(publication_date_text(soup.div), '2026')
+        self.assertEqual(publication_date_text(soup.div), '',
+                         'a year alone must not invent a publication month or day')
 
     def test_prose_dates_and_competing_event_dates_are_not_publication_dates(self):
         for body in ('<p class="summary">活动开始于<span class="date">2026-09-12</span></p>',
