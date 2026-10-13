@@ -98,7 +98,10 @@ try:
             row.state, row.phase = 'running', 'fetch'
             db.session.commit()
             if width == 1280:
-                department = Department(school_id=fixture.school.id, name='测试学院', list_url='https://www.shu.edu.cn/test/')
+                # Preferences appear when a source has an installed extraction
+                # rule; an unconfigured candidate remains discovery work.
+                department = Department(school_id=fixture.school.id, name='测试学院',
+                    list_url='https://www.shu.edu.cn/test/', list_selector='#notices li')
                 db.session.add(department); db.session.commit()
                 page.locator('#discoveryRefresh').click()
                 page.locator('#sourcePreferences > summary').click()

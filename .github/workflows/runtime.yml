@@ -43,6 +43,10 @@ jobs:
         run: python tests/browser/check_publication_channels_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify retained real department and column evidence
+        run: python tests/browser/check_source_presentation_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify native window controls with the source drawer open
         run: python tests/browser/check_desktop_drawer_browser.py
         env:
