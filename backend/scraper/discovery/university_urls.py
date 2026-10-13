@@ -219,42 +219,59 @@ ALIAS_MAP = {
 }
 
 
-def suggest_url(name: str) -> str | None:
-    """根据学校名称查找官网URL。
+# Separate identities; a shared host is also valid when explicitly recorded.
+# Checked against these institutions' public home pages, 2026-10-13.
+QUALIFIED_URLS = {
+    '中国石油大学（北京）克拉玛依校区': 'https://www.cupk.edu.cn',
+    '哈尔滨工业大学（深圳）': 'https://www.hitsz.edu.cn',
+    '山东大学（威海）': 'https://www.wh.sdu.edu.cn',
+    '厦门大学嘉庚学院': 'https://www.jgxy.xmu.edu.cn',
+}
 
-    查找策略（按优先级）：
-    1. 精确匹配全称
-    2. 别名匹配 (ALIAS_MAP)
-    3. 子串模糊匹配（名称包含输入的学校名）
 
-    Returns:
-        找到的 URL 字符串，未找到返回 None
+def _name_key(name):
+    import re
+    import unicodedata
+    from backend.services.catalog import normalize_name
+    return normalize_name(re.sub(r'\s+', '', unicodedata.normalize('NFKC', name)))
+
+
+def suggest_school(name):
+    """Exact identity/explicit alias lookup, without guessing a parent website.
+
+    A name retains its campus/college qualifier even when its recorded URL is
+    shared. This is address lookup, not a claim of a successful live connection.
     """
-    if not name or not name.strip():
+    if not isinstance(name,str) or not name.strip() or len(name)>200:
         return None
-
-    name = name.strip()
-
-    # Step 1: 精确匹配
-    if name in UNIVERSITY_URL_MAP:
-        return UNIVERSITY_URL_MAP[name]
-
-    # Step 2: 别名
-    if name in ALIAS_MAP:
-        full_name = ALIAS_MAP[name]
-        if full_name in UNIVERSITY_URL_MAP:
-            return UNIVERSITY_URL_MAP[full_name]
-
-    # Step 3: 子串模糊匹配（输入是大学全称的子串）
-    # 例：输入"华中科技大学"匹配"华中科技大学"
-    for full_name, url in UNIVERSITY_URL_MAP.items():
-        if name in full_name:
-            return url
-
-    # Step 4: 反向子串匹配（全称包含输入）
-    # 例：输入"北京大学医学部"匹配"北京大学"
-    for full_name, url in UNIVERSITY_URL_MAP.items():
-        if full_name in name:
-            return url
-
+    from backend.services.catalog import catalog_entries
+    entries = {_name_key(item['name']): {'name':item['name'],'url':item['url']}
+               for item in catalog_entries()}
+    entries.update({_name_key(name): {'name':name,'url':url} for name,url in QUALIFIED_URLS.items()})
+    from flask import has_app_context
+    if has_app_context():
+        from backend.services.starter_catalog import catalog
+        for item in catalog().get('schools',[]):
+            entries[_name_key(item['name'])]={'name':item['name'],'url':item['url']}
+    key=_name_key(name)
+    if key in entries:
+        return entries[key]
+    if has_app_context():
+        from backend.database.models import School
+        from backend.database.school_registry_models import SchoolRegistryEntry
+        # Existing explicit local school/alias configurations are reusable.
+        # Conflicts are left unresolved; URL equality never merges identities.
+        matches={school.id:school for school in School.query.all() if _name_key(school.name)==key}
+        for entry in SchoolRegistryEntry.query.filter(SchoolRegistryEntry.school_id.is_not(None)):
+            if key in {_name_key(value) for value in [entry.canonical_name,*(entry.aliases or [])]}:
+                school=School.query.filter_by(id=entry.school_id).first()
+                if school:matches[school.id]=school
+        if len(matches)==1:
+            school=next(iter(matches.values()))
+            return {'name':school.name,'url':school.url}
     return None
+
+
+def suggest_url(name: str) -> str | None:
+    match=suggest_school(name)
+    return match['url'] if match else None

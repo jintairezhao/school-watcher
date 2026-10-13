@@ -63,6 +63,7 @@
             <div class="form-group">
                 <label for="schoolUrl">学校官网 URL *</label>
                 <input type="url" id="schoolUrl" class="form-input" required maxlength="1000" placeholder="https://www.example.edu.cn/">
+                <span id="schoolUrlHint" class="form-hint" role="status" aria-live="polite"></span>
             </div>
             <label><input type="checkbox" id="schoolEnabled" checked> 上架这所学校</label>
         </div>
@@ -158,6 +159,7 @@ let currentDeptSchoolId = null;
 // 学校操作
 // ============================================================
 function showAddSchool() {
+    resetSchoolSuggestion();
     document.getElementById('modalTitle').textContent = '添加学校';
     document.getElementById('editSchoolId').value = '';
     document.getElementById('schoolName').value = '';
@@ -169,6 +171,7 @@ function showAddSchool() {
 }
 
 function editSchool(id, name, url, enabled) {
+    resetSchoolSuggestion();
     document.getElementById('modalTitle').textContent = '编辑学校';
     document.getElementById('editSchoolId').value = id;
     document.getElementById('schoolName').value = name;
@@ -180,6 +183,7 @@ function editSchool(id, name, url, enabled) {
 }
 
 function closeModal() {
+    resetSchoolSuggestion();
     document.getElementById('schoolModal').close();
 }
 
@@ -216,6 +220,17 @@ async function saveSchool() {
 
 // ---- 学校名称输入时自动建议 URL ----
 let suggestTimer = null;
+let suggestController = null;
+let suggestVersion = 0;
+
+function resetSchoolSuggestion() {
+    suggestVersion++;
+    clearTimeout(suggestTimer);
+    suggestController?.abort();
+    suggestController = null;
+    const hint = document.getElementById('schoolUrlHint');
+    if (hint) hint.textContent = '';
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const nameInput = document.getElementById('schoolName');
@@ -223,36 +238,54 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!nameInput || !urlInput) return;
 
     nameInput.addEventListener('input', function() {
+        resetSchoolSuggestion();
         const name = this.value.trim();
-        // 只在 URL 为空或用户未手动修改过 URL 时自动填入
+        // A previous automatic suggestion belongs to the previous name.
+        if (urlInput.dataset.autoFilled === 'true') {
+            urlInput.value = '';
+            urlInput.dataset.autoFilled = 'false';
+        }
+        if (document.getElementById('editSchoolId').value) return;
         if (!name || name.length < 2) return;
-
-        // 防抖：输入停止 600ms 后触发
-        clearTimeout(suggestTimer);
+        const version = suggestVersion;
+        const hint = document.getElementById('schoolUrlHint');
         suggestTimer = setTimeout(async function() {
+            const controller = new AbortController();
+            suggestController = controller;
+            const timeout = setTimeout(() => controller.abort(), 15000);
             try {
-                const resp = await fetch('/api/schools/suggest-url?name=' + encodeURIComponent(name));
+                const resp = await fetch('/api/schools/suggest-url?name=' + encodeURIComponent(name), {signal: controller.signal});
+                if (!resp.ok) throw new Error('地址查询暂未完成');
                 const data = await resp.json();
+                if (version !== suggestVersion || nameInput.value.trim() !== name ||
+                    !document.getElementById('schoolModal').open || document.getElementById('editSchoolId').value) return;
                 if (data.found && data.url) {
                     // 仅当 URL 字段为空或仍是之前的自动填入值时更新
                     const currentUrl = urlInput.value.trim();
                     if (!currentUrl || urlInput.dataset.autoFilled === 'true') {
                         urlInput.value = data.url;
                         urlInput.dataset.autoFilled = 'true';
-                        urlInput.style.borderColor = '#22c55e';
-                        setTimeout(function() { urlInput.style.borderColor = ''; }, 2000);
+                        hint.textContent = data.message || '已匹配学校官网地址';
                     }
+                } else if (!urlInput.value.trim()) {
+                    hint.textContent = data.message || '未找到确切匹配，可补全学校或校区名称，或填写官网地址';
                 }
             } catch (e) {
-                // 静默失败，用户仍可手动输入
+                if (version === suggestVersion && document.getElementById('schoolModal').open && !urlInput.value.trim())
+                    hint.textContent = '地址查询暂未完成，可继续填写官网地址';
+            } finally {
+                clearTimeout(timeout);
+                if (suggestController === controller) suggestController = null;
             }
         }, 600);
     });
 
     // 用户手动修改 URL 时清除自动填入标记
     urlInput.addEventListener('input', function() {
+        resetSchoolSuggestion();
         urlInput.dataset.autoFilled = 'false';
     });
+    document.getElementById('schoolModal').addEventListener('close', resetSchoolSuggestion);
 });
 
 async function deleteSchool(id, name) {

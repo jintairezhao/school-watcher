@@ -106,12 +106,14 @@ def api_suggest_school_url():
     if not name:
         return jsonify({'found': False, 'url': None, 'message': '请提供学校名称'})
 
-    from backend.scraper.discovery.university_urls import suggest_url
-    url = suggest_url(name)
-    if url:
-        return jsonify({'found': True, 'url': url, 'message': f'已匹配 {name} 的官网'})
+    from backend.scraper.discovery.university_urls import suggest_school
+    match = suggest_school(name)
+    if match:
+        return jsonify({'found': True, 'url': match['url'], 'matched_name':match['name'],
+                        'message': f"已匹配 {match['name']} 的官网地址"})
     else:
-        return jsonify({'found': False, 'url': None, 'message': f'未找到 {name} 的官网，请手动输入'})
+        return jsonify({'found': False, 'url': None,
+                        'message': '未找到确切匹配，可补全学校或校区名称，或填写官网地址'})
 
 
 @bp.route('/api/schools/<int:school_id>', methods=['PUT'])
