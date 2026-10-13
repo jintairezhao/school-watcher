@@ -73,6 +73,8 @@ def _schedule_due(lease=None):
                     'ai_assist': assistance,
                     'trigger': 'background_discovery'}, 6 * 3600)
     due('maintenance', 'daily', {}, 86400)
+    from backend.services.source_grouping import resume_presentation_repairs
+    resume_presentation_repairs(schools)
     from backend.services.saved_materials import resume_saved_materials
     resume_saved_materials()
     from backend.services.publication_dates import resume_date_checks
@@ -171,7 +173,7 @@ def dispatch(kind, payload):
         from backend.services.source_grouping import run_grouping
         result = run_grouping(payload)
         if result['continuation_required']:
-            tasks.defer(capability='directory', phase='grouping_slice', checkpoint=result['checkpoint'], delay=1,
+            tasks.defer(capability='directory', phase='grouping_slice', checkpoint=result['checkpoint'], delay=result.get('delay',1),
                         reason='已保存官网归属证据，继续核对剩余栏目')
         return result
     if kind == 'navigation_review':

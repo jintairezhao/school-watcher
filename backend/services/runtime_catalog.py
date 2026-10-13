@@ -119,6 +119,14 @@ class RuntimeCatalog:
                 for row in rows:
                     page = unpack(row['page_gzip'])
                     result[row['url']] = {field: page.get(field) for field in fields}
+                    try:
+                        lists = json.loads(page.get('feed_json') or '{}').get('lists', [])
+                    except (TypeError, ValueError, AttributeError):
+                        lists = []
+                    result[row['url']]['column_regions'] = [
+                        {field: item.get(field) for field in ('name', 'column_url',
+                            'heading_locator', 'container_locator')}
+                        for item in lists if isinstance(item, dict)]
         return result
 
     def directory_entries(self, key, urls):

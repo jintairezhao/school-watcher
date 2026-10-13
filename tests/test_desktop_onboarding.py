@@ -118,7 +118,8 @@ class FirstSubscriptionTests(unittest.TestCase):
         from backend.database.db import db
         from backend.database.models import Department
         department = Department(school_id=self.school.id, name='培训招生',
-                                group_name='继续教育学院', list_url='https://cce.shu.edu.cn/jypx/pxzs.htm')
+                                group_name='继续教育学院', list_url='https://cce.shu.edu.cn/jypx/pxzs.htm',
+                                list_selector='.notices li')
         db.session.add(department); db.session.commit()
         path = {'nodes': [{'name': '继续教育学院'}], 'entry_nodes': [],
                 'entry_names': ['培训招生'], 'references': [{'title': '院系设置',

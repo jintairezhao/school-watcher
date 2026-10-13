@@ -146,6 +146,21 @@ def _fetch(request: FetchRequest, *, http_transport=None, browser_transport=None
         validate_public_url(api.url, resolve=False)
         _assert_execution()
         return map_api_response(request, http(api))
+    # After an actual failed HTTP observation, the second scheduled attempt can
+    # test the configured browser route. This replaces that attempt's HTTP read;
+    # it does not add an immediate retry or rewrite a working extraction rule.
+    from backend.scraper.http_client import inventory_retry_count
+    if request.browser_allowed and inventory_retry_count(request.url) == 1:
+        from .browser_client import BrowserClient
+        configured = browser_transport is not None or _browser_dispatch.get() is not None
+        if not configured:
+            client = BrowserClient()
+            configured = bool(client.base_url and client.token)
+            if configured:
+                browser_transport = client.fetch
+        if configured:
+            return _render(request,request,FetchResult(request.url,outcome='requires_render',
+                error_code='network_route_probe'),browser_transport=browser_transport)
     _assert_execution()
     raw = http(request)
     if isinstance(raw, dict):

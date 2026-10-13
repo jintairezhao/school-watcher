@@ -9,7 +9,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from backend import create_app
 from backend.database.db import db
-from backend.database.models import Department, School, Subscription, User, Announcement
+from backend.database.models import Department, School, Subscription, User, Announcement, DepartmentDirectoryEntry
 from backend.services.runtime_catalog import RuntimeCatalog
 from backend.services.source_inventory import Inventory
 from backend.scraper.discovery.inventory_crawler import inspect_page
@@ -61,14 +61,15 @@ class DirectoryOptionTests(unittest.TestCase):
         rows = Department.query.all()
         tree = source_hierarchy(rows, directory_entries=directory_entries_for(self.school.id))
         unit = tree['学院部门'][0]
-        names = [c['label'] for c in unit['columns']]
+        names = [child['name'] for child in unit['children']]
         self.assertEqual(len(names), 43)
         self.assertEqual(names[:2], ['信息与通信工程学院', '电子科学与工程学院'])
         self.assertIn('计算机科学与工程学院（网络空间安全学院）', names)
         self.assertNotIn('本部门通知', names)
         self.assertTrue(unit['directory'])
-        unavailable = next(c for c in unit['columns'] if c['label'] == '电子信息智能研究院')
-        self.assertFalse(unavailable['department'].list_url)
+        unavailable = next(child for child in unit['children'] if child['name'] == '电子信息智能研究院')
+        self.assertFalse(unavailable['url'])
+        self.assertEqual(unit['columns'], [])
 
     def test_sync_is_idempotent_preserves_records_and_supports_multiple_memberships(self):
         self.sync()
@@ -110,7 +111,7 @@ class DirectoryOptionTests(unittest.TestCase):
         with patch('backend.scraper.engine.scrape_department', return_value=(0, 1)) as scrape:
             scrape_school(self.school)
         ids = [call.args[0].id for call in scrape.call_args_list]
-        self.assertEqual(len(ids), 42)
+        self.assertEqual(ids, [])  # Directory units are discovery entrances, not installed article rules.
         self.assertNotIn(self.parent.id, ids)
         self.assertNotIn(self.configured.id, ids)
 
@@ -118,7 +119,10 @@ class DirectoryOptionTests(unittest.TestCase):
         self.sync()
         child = Department.query.filter_by(name='信息与通信工程学院').one()
         self.sub.department_ids = [self.parent.id]
-        db.session.add(Announcement(school_id=self.school.id, department_id=child.id, title='信通学院测试通知'))
+        column=Department(school_id=self.school.id,name='通知公告',list_url=ROOT_URL+'notices/',list_selector='li.notice')
+        db.session.add(column);db.session.flush()
+        db.session.add(DepartmentDirectoryEntry(parent_id=child.id,department_id=column.id))
+        db.session.add(Announcement(school_id=self.school.id, department_id=column.id, title='信通学院测试通知'))
         db.session.commit()
         client = self.app.test_client()
         with client.session_transaction() as session:
@@ -127,8 +131,9 @@ class DirectoryOptionTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('信通学院测试通知', response.text)
         self.assertIn('信息与通信工程学院', response.text)
-        self.assertIn('43 个栏目', response.text)
-        self.assertIn('官网未提供链接', response.text)
+        self.assertIn('1 个栏目', response.text)
+        self.assertIn('栏目待接入', response.text)
+        self.assertNotIn('43 个栏目', response.text)
         self.assertNotIn('信通学院测试通知', self.app.test_client().get('/?period=all').text)
 
 

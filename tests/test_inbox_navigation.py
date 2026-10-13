@@ -38,7 +38,7 @@ class SourceHierarchyTests(unittest.TestCase):
         units = source_hierarchy(rows)['组织机构']
         self.assertEqual(len(units), 1)
         self.assertEqual(units[0]['name'], rows[0].name)
-        self.assertEqual([c['label'] for c in units[0]['columns']], ['学生管理', '学生资助', '本部门通知'])
+        self.assertEqual([c['label'] for c in units[0]['columns']], ['学生管理', '学生资助', '官网信息'])
         self.assertEqual([c['department'].id for c in units[0]['columns']], [2, 3, 1])
         self.assertEqual(rows[2].group_name, None)
         self.assertEqual(rows[2].name, '学生工作与安全保卫部-学生资助')

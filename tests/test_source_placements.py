@@ -56,7 +56,7 @@ class PlacementEvidenceTests(unittest.TestCase):
         result = self.resolve(source(name='教务部-创新创业学院', group='组织机构',
                                      url=ROOT + 'innovation/notices/'), [path])
         self.assertEqual([n['name'] for n in result[0]['nodes']], ['教务部', '创新创业学院'])
-        self.assertEqual(result[0]['label'], '本部门通知')
+        self.assertEqual(result[0]['label'], '官网信息')
 
     def test_duplicate_directory_snapshots_share_unit_identity(self):
         a, b = route(), route(reference=ROOT + 'colleges/index.htm')

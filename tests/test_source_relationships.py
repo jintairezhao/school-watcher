@@ -393,7 +393,7 @@ class SourceRelationshipTests(unittest.TestCase):
         page = next(p for p in self.inventory.report(self.key)['pages'] if p['url'] == NOTICES)
         self.assertEqual(page['state'], 'fetched')
         self.assertIn('official_template_error_requires_review', json.loads(page['notes_json']))
-        self.assertEqual(page_health_label(page), '官网页面存在模板错误')
+        self.assertEqual(page_health_label(page), '部分页面内容需要继续适配')
         self.assertIsNotNone(self.inventory.snapshot(self.key, NOTICES))
 
     def test_changed_or_unavailable_reference_invalidates_the_join(self):
@@ -460,7 +460,7 @@ class SourceRelationshipTests(unittest.TestCase):
             self.assertEqual(len(soup.select('.source-path')), 2)
             self.assertIn('科学学院', response.text)
             self.assertIn('工程学院', response.text)
-            self.assertIn('其他信息来源', response.text)
+            self.assertNotIn('未知栏目', response.text)  # Unconfigured, unselected leads remain background work.
             self.assertNotIn('单位与栏目关系待核实', response.text)
             self.assertEqual(subscription.department_ids, [source.id])
             self.assertEqual((source.name, source.group_name), ('原有栏目名称', '原有分组'))

@@ -39,11 +39,16 @@ _inventory_read = ContextVar('inventory_http_read', default=None)
 @contextmanager
 def inventory_read_attempt(url, network_failures):
     """Use the durable page's retry count while the parent discovery task yields."""
-    marker = _inventory_read.set(((urlsplit(url).hostname or '').lower(), network_failures))
+    marker = _inventory_read.set(((urlsplit(url).hostname or '').lower(), network_failures, url))
     try:
         yield
     finally:
         _inventory_read.reset(marker)
+
+def inventory_retry_count(url):
+    """Persisted actual failures for this page, never the crawl slice count."""
+    marker = _inventory_read.get()
+    return marker[1] if marker and marker[2] == url else 0
 
 
 def retry_direct_for(url):

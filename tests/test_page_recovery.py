@@ -26,7 +26,7 @@ class SchoolNavigationTests(unittest.TestCase):
         db.session.add_all([self.user, self.school]); db.session.flush()
         self.group = Department(school_id=self.school.id, name='招生就业', kind='group', group_name='招生就业')
         self.column = Department(school_id=self.school.id, name='研究生招生办公室', kind='column',
-            list_url='https://yzb.seu.edu.cn', group_name='招生就业')
+            list_url='https://yzb.seu.edu.cn', list_selector='.notices li', group_name='招生就业')
         self.unit = Department(school_id=self.school.id, name='机械工程学院', kind='unit',
             group_name='院系设置', list_url='https://me.seu.edu.cn')
         db.session.add_all([self.group, self.column, self.unit]); db.session.flush()

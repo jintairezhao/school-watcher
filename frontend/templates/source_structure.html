@@ -18,9 +18,9 @@
     {{ school_header(school, 'structure', '查看院系、专业与通知来源的官网依据。') }}
     {% if report %}
     <div class="source-sync">
-        <strong>{% if report.accepted %}已完成本轮来源核对{% else %}部分来源尚未完成核对，已接通的栏目可以使用{% endif %}</strong>
-        <p>优先核对院系、专业、培养、选课和考试等学生相关来源。历史清单共检查 {{ report.states.get('fetched', 0) }} 个页面，保留 {{ report.states.get('pending', 0) + report.states.get('running', 0) }} 个待查入口；这些总数包含其它领域，不能当作学生相关来源的覆盖率。</p>
-        <p>单位覆盖率、栏目覆盖率和来源准确率：{% if not report.accepted %}未完成独立基准核对{% else %}均已通过{% endif %}。<a href="{{ request.full_path }}">刷新进度</a></p>
+        <strong>官网来源依据</strong>
+        <p>这里保留原始官网目录，通知来源已整理到左侧部门与栏目。尚未接通的入口由系统继续处理，无需逐项核实。</p>
+        <p>已读取 {{ report.states.get('fetched', 0) }} 个页面 · 已保存 {{ report.states.get('pending', 0) + report.states.get('running', 0) }} 个待处理入口。<a href="{{ request.full_path }}">刷新进度</a></p>
         {% if report.reference_checks %}
         <details><summary>已核对的目录范围</summary>
             {% for check in report.reference_checks %}
@@ -68,9 +68,10 @@
     <ul class="structure-tree">{% for node in tree %}{{ branch(node) }}{% endfor %}</ul>
     {% endif %}
     {% else %}<p>尚未取得可解析的组织目录，已知入口仍保留，等待继续核对。</p>{% endif %}
-    {% if issues %}<details class="directory-note" id="sourceIssues" {% if request.args.get('issues_page') %}open{% endif %}><summary>需要复查的来源（{{ issue_total }} 项）</summary>
+    {% if issues %}<details class="directory-note" id="sourceIssues" {% if request.args.get('issues_page') %}open{% endif %}><summary>自动适配记录（{{ issue_total }} 项）</summary>
+        <p>记录暂时无法读取或材料不足的入口。进度会保留，已接通的栏目继续更新；这些记录无需你逐项确认。</p>
         <ul class="structure-issues">{% for source in issues %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.label }}</a><span>{{ source.health_label }}</span></li>{% endfor %}</ul>
-        {% if issue_pages > 1 %}<nav class="pagination-bar" aria-label="待复查来源翻页">
+        {% if issue_pages > 1 %}<nav class="pagination-bar" aria-label="自动适配记录翻页">
             {% if issue_page > 1 %}<a rel="prev" href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=selected.url if selected else None, issues_page=issue_page-1) }}#sourceIssues">上一页</a>{% else %}<span>上一页</span>{% endif %}
             <span>第 {{ issue_page }} / {{ issue_pages }} 页</span>
             {% if issue_page < issue_pages %}<a rel="next" href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=selected.url if selected else None, issues_page=issue_page+1) }}#sourceIssues">下一页</a>{% else %}<span>下一页</span>{% endif %}

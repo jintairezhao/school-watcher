@@ -37,6 +37,7 @@ FILES = (
     'backend/services/source_inventory.py',
     'backend/services/discovery_changes.py',
     'backend/services/source_ownership.py',
+    'backend/services/source_directory_reconciliation.py',
     'config/cms_profiles.yaml',
 )
 # Freeze once per process. An old running worker must not label its results with

@@ -163,11 +163,24 @@ class LayeredDiscoveryTests(unittest.TestCase):
         parts = materials(1, ROOT, html)
         self.assertTrue(parts)
         original = BeautifulSoup(html, 'lxml')
+        by_url = {a['href']: a for a in original.select('a[href]')}
+        import soupsieve
         for part in parts:
             self.assertLessEqual(len(canonical(part).encode()), 24 * 1024)
             for item in part['evidence']:
                 root = item['original_root_selector']
-                self.assertEqual(len(original.select(root)), 1)
+                fragment = BeautifulSoup(item['html'], 'lxml')
+                observed = [by_url[a['href']] for a in fragment.select('a[href]')]
+                self.assertTrue(observed)
+                # Match the locator against its actual linked node/ancestors.
+                # A full document scan for each nth-of-type selector would
+                # repeatedly count all 2,500 siblings. This still checks every
+                # locator with the CSS engine and additionally proves identity.
+                owners = [node for node in [observed[0], *observed[0].parents]
+                          if getattr(node, 'name', None) != '[document]' and soupsieve.match(root, node)]
+                self.assertEqual(len(owners), 1)
+                self.assertTrue(all(node is owners[0] or any(parent is owners[0] for parent in node.parents)
+                                    for node in observed))
         links = {a['href'] for part in parts for item in part['evidence']
                  for a in BeautifulSoup(item['html'], 'lxml').select('a[href]')}
         self.assertEqual(links, {a['href'] for a in original.select('a[href]')})

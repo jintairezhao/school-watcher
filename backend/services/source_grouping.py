@@ -11,6 +11,72 @@ from backend.services.discovery_cache import DiscoveryCache
 from backend.services.runtime_catalog import RuntimeCatalog
 from backend.services.source_inventory import canonical_url, site_key
 
+PRESENTATION_VERSION = 'roster-navigation-2'
+
+def resume_presentation_repairs(schools):
+    """One durable metadata repair per upgrade; no new paid discovery round."""
+    from datetime import datetime, timedelta
+    from backend.database.models import DepartmentDirectoryEntry
+    from backend.services.discovery_policy import get_policy
+    queued = 0
+    for school in schools:
+        if not school.subscriber_count:
+            continue
+        if not school.departments.filter(Department.kind == 'unit').first():
+            continue  # Initial discovery already owns schools without a roster.
+        task = BackgroundTask.query.filter_by(identity=f'source_grouping:{school.id}').first()
+        if task and task.state in ('pending','running','waiting'):
+            continue
+        same_version = task and (task.payload or {}).get('presentation_version') == PRESENTATION_VERSION
+        previous = task.result or {} if task else {}
+        if same_version:
+            finished = task.finished_at or task.updated_at
+            incomplete = task.state == 'failed' or bool(previous.get('gaps'))
+            if not incomplete or finished > datetime.utcnow()-timedelta(seconds=get_policy()['recovery_seconds']):
+                continue
+        linked = db.select(DepartmentDirectoryEntry.department_id)
+        unit_names = db.select(Department.name).where(Department.school_id == school.id,Department.kind == 'unit')
+        ids = [d.id for d in school.departments.filter(Department.kind == 'column',
+            Department.list_selector.is_not(None), Department.list_selector != '',
+            db.or_(Department.id.not_in(linked), Department.group_name.is_(None),Department.group_name == '',
+                   Department.name.in_(unit_names))).all()]
+        if not ids:
+            continue
+        payload = {'school_id':school.id,'source_ids':ids,'presentation_version':PRESENTATION_VERSION}
+        saved = (task.checkpoint if task.state == 'failed' else previous.get('checkpoint')) if same_version else None
+        if saved:
+            payload['resume_checkpoint'] = saved
+        tasks.enqueue('source_grouping',school.id,payload)
+        queued += 1
+    return queued
+
+def cached_fetch(catalog, key, target):
+    """Reuse intact successful HTML; failures never masquerade as cached pages."""
+    page = catalog.get_page(key,target['url'])
+    if not page or page.get('state') != 'fetched' or not page.get('content_hash'):
+        return None
+    from backend.services.source_governance import read_snapshot
+    import hashlib
+    html = ''
+    for note in json.loads(page.get('notes_json') or '[]'):
+        if isinstance(note,str) and note.startswith('full_snapshot:'):
+            ref = json.loads(note.split(':',1)[1])
+            if ref.get('hash') == page['content_hash'] and ref.get('outcome','usable') in ('usable','empty'):
+                try:
+                    html = read_snapshot(ref)
+                except ValueError:
+                    pass
+                break
+    if not html:
+        html = catalog.snapshot(key,target['url'])
+    if not html or hashlib.sha256(html.encode()).hexdigest() != page['content_hash']:
+        return None
+    from backend.services.discovery_policy import get_policy
+    if len(html.encode()) > get_policy()['html_max_bytes']:
+        return None
+    return {'url':page.get('final_url') or page['url'],'status':page.get('status_code') or 200,
+            'html':html,'checked_at':page.get('checked_at'), 'transport':'retained_evidence'}
+
 
 def missing_groups(school_id):
     return Department.query.filter(Department.school_id == school_id,
@@ -32,7 +98,7 @@ def placement_gaps(school_id):
     return gaps
 
 
-def run_grouping(payload, *, checkpoint=None, fetcher=None, page_budget=3):
+def run_grouping(payload, *, checkpoint=None, fetcher=None, page_budget=None):
     """Read official directories and requested sources; never invoke a model.
 
     A slice limit only yields execution. Every discovered dependency remains in
@@ -41,16 +107,21 @@ def run_grouping(payload, *, checkpoint=None, fetcher=None, page_budget=3):
     """
     from backend.scraper.discovery.inventory_crawler import fetch_page, inspect_page
     from backend.services.source_placements import official_source_placements
+    from backend.services.discovery_policy import get_policy
+    page_budget = get_policy()['discovery_slice_pages'] if page_budget is None else page_budget
     school = db.session.get(School, payload['school_id'])
     if not school or not school.enabled:
         return {'continuation_required': False, 'restored_ids': [], 'gaps': []}
     handle = tasks.current_execution()
-    state = dict(checkpoint if checkpoint is not None else (handle or {}).get('checkpoint') or {})
+    state = dict(checkpoint if checkpoint is not None else (handle or {}).get('checkpoint') or
+                 payload.get('resume_checkpoint') or {})
     targets = [dict(t) for t in state.get('grouping_targets', [])]
     sources = [dict(s) for s in state.get('grouping_sources', [])]
     if not sources:
         selected = payload.get('source_ids')
-        sources = [{'id':d.id, 'name':d.name, 'url':d.list_url} for d in missing_groups(school.id)
+        candidates = (school.departments.filter(Department.id.in_(selected)).all()
+                      if payload.get('presentation_version') and selected else missing_groups(school.id))
+        sources = [{'id':d.id, 'name':d.name, 'url':d.list_url} for d in candidates
                    if selected is None or d.id in selected]
     if not sources:
         return {'continuation_required': False, 'restored_ids': [], 'gaps': []}
@@ -63,16 +134,34 @@ def run_grouping(payload, *, checkpoint=None, fetcher=None, page_budget=3):
         elif url and not existing:
             targets.append({'url':url, 'label':label, 'kind':kind, 'state':'pending'})
 
-    add(school.url, school.name, 'root')
+    catalog = RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH'])
+    if payload.get('presentation_version'):
+        from backend.database.models import DepartmentDirectoryEntry
+        units = {d.id:d for d in school.departments.filter(Department.kind == 'unit')}
+        for entry in DepartmentDirectoryEntry.query.filter(DepartmentDirectoryEntry.parent_id.in_(units)):
+            child = units.get(entry.department_id); parent = units[entry.parent_id]
+            if child and not child.list_url and parent.list_url:
+                add(parent.list_url,parent.name,'unit')
+    else:
+        add(school.url, school.name, 'root')
     for source in sources:
         add(source['url'], source['name'], 'channel')
     path = current_app.config['DISCOVERY_CACHE_PATH']
-    catalog = RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH'])
     with FileLock(str(path) + '.worker.lock', timeout=0):
         inventory = DiscoveryCache(path)
         key = inventory.ensure_site(school.name, school.url)
+        from backend.services.source_inventory import now
+        for target in targets:
+            if target['state'] == 'failed' and target.get('retry_at') and target['retry_at'] <= now():
+                target.update(state='pending',retry_at=None)
+                with inventory.connect() as connection:
+                    connection.execute("UPDATE pages SET state='pending',network_failures=0,retry_at=NULL "
+                                       "WHERE site_key=? AND url=? AND state='failed' AND retry_at<=?",
+                                       (key,target['url'],now()))
         for _ in range(page_budget):
-            pending = [t for t in targets if t['state'] == 'pending']
+            from backend.services.source_inventory import now
+            pending = [t for t in targets if t['state'] == 'pending' and
+                       (not t.get('retry_at') or t['retry_at'] <= now())]
             if not pending:
                 break
             target = min(pending, key=lambda t: {'root':0, 'directory':1, 'unit':2}.get(t['kind'], 3))
@@ -82,10 +171,11 @@ def run_grouping(payload, *, checkpoint=None, fetcher=None, page_budget=3):
             inventory.enqueue(key, target['url'], target['label'], target['kind'], 1, [], 'school_domain')
             report = inventory.report(key)
             page = next(p for p in report['pages'] if p['url'] == target['url'])
+            retained = cached_fetch(catalog,key,target) if not fetcher else None
             inspect_page(inventory, report['site'], dict(page, kind=target['kind'], label=target['label']),
-                         fetcher=fetcher or fetch_page)
+                         fetcher=fetcher or ((lambda address:retained) if retained else fetch_page), ai_assist=False)
             page = next(p for p in inventory.report(key)['pages'] if p['url'] == target['url'])
-            target.update(state=page['state'], reason=page.get('error') or '')
+            target.update(state=page['state'], reason=page.get('error') or '',retry_at=page.get('retry_at'))
             if page['state'] == 'fetched':
                 if target['kind'] in ('root', 'directory'):
                     with inventory.connect() as c:
@@ -118,15 +208,25 @@ def run_grouping(payload, *, checkpoint=None, fetcher=None, page_budget=3):
             if handle:
                 tasks.checkpoint(state)
         catalog.publish(inventory, key, merge=True)
+    if payload.get('presentation_version'):
+        from backend.services.school_structure import sync_official_structure
+        sync_official_structure(school,catalog)
     ids = [s['id'] for s in sources]
     # Website reads may outlast edits from the UI. Refresh current identities,
     # then apply a conditional update so a late result cannot replace user data.
     db.session.expire_all()
     departments = Department.query.filter(Department.id.in_(ids), Department.school_id == school.id).all()
     placements = official_source_placements(departments)
+    from backend.database.models import DepartmentDirectoryEntry
+    parent_groups = {}
+    units = {d.id:d for d in school.departments.filter(Department.kind == 'unit')}
+    for entry in DepartmentDirectoryEntry.query.filter(DepartmentDirectoryEntry.department_id.in_(ids)):
+        parent = units.get(entry.parent_id)
+        if parent and parent.group_name:
+            parent_groups.setdefault(entry.department_id,set()).add(parent.group_name)
     restored = set(state.get('restored_ids', []))
     for department in departments:
-        groups = {p['group'] for p in placements.get(department.id, [])}
+        groups = {p['group'] for p in placements.get(department.id, [])} or parent_groups.get(department.id,set())
         if not (department.group_name or '').strip() and len(groups) == 1:
             tasks.assert_owned()
             updated = db.session.execute(db.update(Department).where(
@@ -140,11 +240,16 @@ def run_grouping(payload, *, checkpoint=None, fetcher=None, page_budget=3):
     db.session.commit()
     state['restored_ids'] = sorted(restored)
     gaps = [{'source_id':d.id, 'name':d.name, 'url':d.list_url,
-             'reason':'尚无足够官网证据确定归属'} for d in departments if d.id not in placements]
+             'reason':'尚无足够官网证据确定归属'} for d in departments
+             if d.id not in placements and d.id not in parent_groups]
     gaps += [{'url':t['url'], 'reason':t['reason'] or '官网材料未能读取'} for t in targets
              if t['state'] not in ('pending', 'fetched')]
     state['grouping_gaps'] = gaps
     if handle:
         tasks.checkpoint(state)
-    return {'continuation_required': any(t['state'] == 'pending' for t in targets),
+    from datetime import datetime
+    from backend.services.source_inventory import now
+    delay = min([max(1,(datetime.fromisoformat(t['retry_at'])-datetime.fromisoformat(now())).total_seconds())
+                 if t.get('retry_at') else 1 for t in targets if t['state'] == 'pending'],default=1)
+    return {'continuation_required': any(t['state'] == 'pending' for t in targets), 'delay':delay,
             'restored_ids':sorted(restored), 'gaps':gaps, 'checkpoint':state}

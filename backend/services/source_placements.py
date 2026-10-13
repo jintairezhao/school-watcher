@@ -55,16 +55,21 @@ def _column_label(source, units):
     name = (source.name or '').strip()
     names = [n['name'].strip() for n in units]
     if name in (names[-1], '-'.join(names)):
-        return '本部门通知'
+        return '官网信息'
     for owner in sorted(names + ['-'.join(names)], key=len, reverse=True):
         for separator in ('-', '－', '—'):
             if name.startswith(owner + separator):
-                return name[len(owner) + 1:].strip() or '本部门通知'
+                return name[len(owner) + 1:].strip() or '官网信息'
     return name
 
 
 def _scoped_column_label(source, units, path):
-    label = _column_label(source, units)
+    from backend.services.source_labels import source_label
+    # The saved row may name its department rather than the actual column.
+    # Prefer the observed entrance text; no hostname/path becomes a human name.
+    observed = list(dict.fromkeys(source_label(name) for name in path.get('entry_names', [])
+                                  if source_label(name) and name not in {'首页', '主页'}))
+    label = observed[0] if len(observed) == 1 else _column_label(source, units)
     if label not in {'通知公告', '通知', '公告', '新闻动态', '最新动态', '新闻公告', '招生工作', '招生信息'}:
         return label
     if _same_page(source.list_url, units[-1].get('url')):
@@ -104,7 +109,9 @@ def placements_from_paths(source, school_url, paths, known_groups):
             return []
     candidates = []
     current_group = (source.group_name or '').strip()
-    for path in paths:
+    # Shared menus produce many entry paths. The nearest path describes the
+    # column; a detour through another menu must not win by iteration order.
+    for path in sorted(paths, key=lambda p: len(p.get('entry_nodes', []))):
         if path.get('basis') not in ('official_website_entry', 'official_directory_navigation'):
             continue
         nodes = path.get('nodes') or []
@@ -128,7 +135,8 @@ def placements_from_paths(source, school_url, paths, known_groups):
                 _within_unit(source.list_url, units[-1].get('url'), school_url)):
             continue
         candidates.append({'group': group,
-                           'nodes': [{'key': _unit_key(school_url, n), 'name': n['name'].strip()} for n in units],
+                           'nodes': [{'key': _unit_key(school_url, n), 'name': n['name'].strip(),
+                                      'url': n.get('url') or ''} for n in units],
                            'label': _scoped_column_label(source, units, path)})
     known = [candidate for candidate in candidates if candidate['group'] in known_groups]
     if known:

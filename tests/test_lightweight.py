@@ -177,7 +177,7 @@ class LightweightTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 soup = BeautifulSoup(response.text, 'lxml')
                 found.update(a['href'] for a in soup.select('.structure-issues a'))
-                link = soup.select_one('nav[aria-label="待复查来源翻页"] a[rel="next"]')
+                link = soup.select_one('nav[aria-label="自动适配记录翻页"] a[rel="next"]')
                 route = link['href'].split('#')[0] if link else None
             self.assertEqual(found, expected)
 

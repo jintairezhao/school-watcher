@@ -20,8 +20,20 @@ def expand_directory_ids(school_id, ids, entries=None):
     while True:
         children = {e.department_id for e in entries if e.parent_id in expanded}
         if children <= expanded:
-            return sorted(expanded)
+            break
         expanded.update(children)
+    # A verified published path can attach an existing source before the worker
+    # persists its directory edge. Department selections must already include
+    # those same sources shown beneath that department in the reader tree.
+    from backend.services.inbox import source_hierarchy
+    rows=Department.query.filter_by(school_id=school_id).all()
+    tree=source_hierarchy(rows,directory_entries=entries,available_only=True,retained_ids=expanded)
+    pending=[unit for units in tree.values() for unit in units]
+    while pending:
+        unit=pending.pop();pending.extend(unit['children'])
+        if unit.get('department_id') in expanded:
+            expanded.update(c['department'].id for c in unit['columns'])
+    return sorted(expanded)
 
 
 def sync_directory_options(school, catalog):
@@ -44,7 +56,7 @@ def sync_directory_options(school, catalog):
                          canonical_url(d.list_url or '') == canonical_url(url)), None)
             if unit is None:
                 unit = Department(school_id=school.id, name=name, list_url=url,
-                                  group_name=parent.group_name)
+                                  group_name=parent.group_name, kind='unit')
                 db.session.add(unit); db.session.flush()
                 existing.append(unit)
                 created += 1

@@ -105,6 +105,55 @@ class GroupingRecoveryTests(unittest.TestCase):
         self.assertEqual(result['failed_count'], 0)
         self.assertNotIn('该旧入口归属仍待核实', result['incomplete_reasons'])
 
+    def test_upgrade_repair_queues_once_and_reuses_failed_checkpoint_after_recovery_wait(self):
+        from datetime import datetime, timedelta
+        from backend.database.models import BackgroundTask
+        from backend.services.source_grouping import PRESENTATION_VERSION, resume_presentation_repairs
+        unit = Department(school_id=self.school.id, name='地球学院', kind='unit',
+                          list_url=HOME, group_name='院系设置')
+        db.session.add(unit); db.session.commit()
+        self.assertEqual(resume_presentation_repairs([self.school]), 1)
+        task = BackgroundTask.query.filter_by(identity=f'source_grouping:{self.school.id}').one()
+        self.assertEqual(task.payload['presentation_version'], PRESENTATION_VERSION)
+        self.assertEqual(resume_presentation_repairs([self.school]), 0)
+        checkpoint = {'grouping_sources':[{'id':self.source.id,'name':self.source.name,'url':CMS}],
+                      'grouping_targets':[{'url':HOME,'label':unit.name,'kind':'unit','state':'fetched'}]}
+        task.state = 'failed'; task.checkpoint = checkpoint; task.finished_at = datetime.utcnow()
+        db.session.commit()
+        self.assertEqual(resume_presentation_repairs([self.school]), 0)
+        task.finished_at = datetime.utcnow()-timedelta(days=1); db.session.commit()
+        self.assertEqual(resume_presentation_repairs([self.school]), 1)
+        self.assertEqual(task.payload['resume_checkpoint'], checkpoint)
+        self.assertEqual(task.payload['source_ids'], [self.source.id])
+        self.assertEqual(self.subscription.department_ids, [self.source.id])
+
+    def test_successful_upgrade_repair_is_not_requeued_as_daily_discovery(self):
+        from backend.database.models import BackgroundTask
+        from backend.services.source_grouping import resume_presentation_repairs
+        db.session.add(Department(school_id=self.school.id,name='地球学院',kind='unit',list_url=HOME))
+        db.session.commit()
+        self.assertEqual(resume_presentation_repairs([self.school]), 1)
+        task = BackgroundTask.query.filter_by(identity=f'source_grouping:{self.school.id}').one()
+        task.state = 'done'; task.result = {'gaps':[]}; db.session.commit()
+        with patch('backend.ai.runtime.run_skill',side_effect=AssertionError('Must not call AI')):
+            self.assertEqual(resume_presentation_repairs([self.school]), 0)
+
+    def test_cached_page_requires_successful_state_and_matching_full_hash(self):
+        import hashlib
+        from backend.services.source_grouping import cached_fetch
+        from types import SimpleNamespace
+        html = self.pages[HOME]
+        page = {'url':HOME,'state':'fetched','content_hash':hashlib.sha256(html.encode()).hexdigest(),
+                'notes_json':'[]','checked_at':'2026-10-13T00:00:00'}
+        catalog = SimpleNamespace(get_page=lambda key,url:page,snapshot=lambda key,url:html)
+        cached = cached_fetch(catalog,'school',{'url':HOME})
+        self.assertEqual(cached['html'],html)
+        self.assertEqual(cached['checked_at'],page['checked_at'])
+        page['state']='failed'
+        self.assertIsNone(cached_fetch(catalog,'school',{'url':HOME}))
+        page['state']='fetched'; page['content_hash']='stale'
+        self.assertIsNone(cached_fetch(catalog,'school',{'url':HOME}))
+
     def test_concurrent_manual_group_change_cannot_be_overwritten_by_late_recovery(self):
         source_id = self.source.id
         def placement(_):

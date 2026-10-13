@@ -19,7 +19,7 @@ def source_groups(departments):
     return groups
 
 
-def source_hierarchy(departments, known_departments=None, directory_entries=()):
+def source_hierarchy(departments, known_departments=None, directory_entries=(), *, available_only=False, retained_ids=()):
     """Project official directory paths without changing source IDs or subscriptions.
 
     Explicit directory memberships take precedence. Published website paths then
@@ -28,12 +28,24 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
     node exposes distinct descendant columns for filtering and its own columns
     for rendering, so an attached unit can remain a collapsible child.
     """
-    from backend.services.source_placements import official_source_placements, _within_unit
+    from backend.services.source_placements import official_source_placements, _within_unit, _same_page
+    from backend.services.source_ownership import normalized_name
     from backend.services.source_channels import channels_for
     from backend.services.source_labels import source_label
     departments = list(departments)
     known = sorted(known_departments if known_departments is not None else departments,
                    key=lambda d: len(d.name), reverse=True)
+    if available_only:
+        # Unconfigured candidates are work for discovery, not subscriptions a
+        # reader can use. Existing history remains visible during a repair.
+        from backend.database.models import AnnouncementSource
+        ids = [d.id for d in departments]
+        historical = {ident for (ident,) in db.session.query(Announcement.department_id).filter(
+            Announcement.department_id.in_(ids)).distinct()}
+        historical.update(ident for (ident,) in db.session.query(AnnouncementSource.department_id).filter(
+            AnnouncementSource.department_id.in_(ids)).distinct())
+        departments = [d for d in departments if d.kind in ('unit','group') or
+                      (d.list_selector or '').strip() or d.id in historical or d.id in retained_ids]
     placements = official_source_placements(known)
     by_id = {d.id: d for d in known}
     parents = {}
@@ -45,6 +57,21 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
             directory_ids.add(parent.id)
     groups = {}
     publishers = None
+
+    def resolve_node(node, school_id):
+        # The observed path, exact unit identity and stored directory membership
+        # together identify one presentation node. Never merge source rows or
+        # homonymous departments from different entrances.
+        address = node.get('url')
+        if not address:
+            return node
+        matches = [d for d in known if d.school_id == school_id and getattr(d, 'kind', '') == 'unit'
+                   and normalized_name(node['name']) in {normalized_name(d.name),
+                       normalized_name(getattr(getattr(d,'school',None),'name','')+d.name)}
+                   and _same_page(d.list_url, address)]
+        if len(matches) == 1:
+            return {**node, 'key': matches[0].id, 'name':matches[0].name, '_stored_unit': True}
+        return node
 
     def legacy_owner(dept):
         candidates = [item for item in known if item.school_id == dept.school_id
@@ -68,7 +95,8 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
     def put(group, nodes, column, *, official=False, directory=False):
         group = source_label(group, '其他信息来源')
         column = {**column, 'label': source_label(column['label'], '官网栏目')}
-        nodes = [{**node, 'name': source_label(node['name'], '官网来源')} for node in nodes]
+        nodes = [resolve_node({**node, 'name': source_label(node['name'], '官网来源')},
+                              column['department'].school_id) for node in nodes]
         # A column can sit directly in a navigation group, with no department
         # between them. Render the column as a leaf instead of inventing a unit.
         direct_column = not nodes
@@ -79,9 +107,10 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
         chain = [str(column['department'].school_id), group]
         for node in nodes:
             chain.append(str(node['key']))
+            stored = node.get('_stored_unit') or str(node['key']).isdigit() and int(node['key']) in by_id
             key = ('official-' + sha256('\0'.join(chain).encode()).hexdigest()[:20]
-                   if official else ('directory-' + sha256('\0'.join(chain).encode()).hexdigest()[:20]
-                   if directory and len(chain) > 3 else str(node['key'])))
+                   if official and not stored else ('directory-' + sha256('\0'.join(chain).encode()).hexdigest()[:20]
+                   if (directory or stored) and len(chain) > 3 else str(node['key'])))
             unit = siblings.setdefault(key, {'key': key, 'name': node['name'],
                 'expandable': (official or directory) and not direct_column, 'directory': directory,
                 'position': node.get('position', 0),
@@ -94,7 +123,7 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
     def directory_paths(owner, seen=frozenset()):
         if owner.id in seen:
             return []
-        node = {'key': owner.id, 'name': owner.name}
+        node = {'key': owner.id, 'name': owner.name, 'url': owner.list_url}
         ancestors = parents.get(owner.id, [])
         if not ancestors:
             if getattr(owner, 'kind', '') == 'group':
@@ -149,11 +178,13 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
                     publishers = channels_for(departments)
                 publisher = publishers.get(dept.id)
                 if publisher:
-                    nodes = ([{'key': publisher['publisher_key'], 'name': publisher['publisher_label']}]
+                    nodes = publisher.get('units') or ([{'key': publisher['publisher_key'], 'name': publisher['publisher_label']}]
                              if publisher['publisher_label'] else [])
-                    unit = put((dept.group_name or '').strip() or '其他信息来源',
+                    related = by_id.get(resolve_node(nodes[-1],dept.school_id)['key']) if nodes else None
+                    group = related.group_name if related and getattr(related,'kind','') == 'unit' else dept.group_name
+                    unit = put((group or '').strip() or '其他信息来源',
                         nodes,
-                        {'department': dept, 'label': label})
+                        {'department': dept, 'label': publisher['column_label'] if publisher.get('units') else label})
                     unit['expandable'] = bool(nodes)
                     continue
             unit = put((owner.group_name or '').strip() or '其他信息来源',
@@ -166,11 +197,11 @@ def source_hierarchy(departments, known_departments=None, directory_entries=()):
         unit['expandable'] |= bool(unit['children'])
         if unit['directory']:
             unit['children'].sort(key=lambda child: child['position'])
-            unit['own_columns'].sort(key=lambda c: c['position'])
+            unit['own_columns'].sort(key=lambda c: c.get('position', 0))
         elif unit['expandable']:
             for column in unit['own_columns']:
                 if str(column['department'].id) == unit['key']:
-                    column['label'] = '本部门通知'
+                    column['label'] = '官网信息'
         if not unit['directory']:
             unit['own_columns'].sort(key=lambda column: display_priority(column['label']))
             unit['children'].sort(key=lambda child: display_priority(child['name']))

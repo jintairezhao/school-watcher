@@ -702,7 +702,7 @@ def scrape_school(school: School, since_year: int | None = None,
         from backend.services.directory_options import directory_entries_for, expand_directory_ids
         entries = directory_entries_for(school.id)
         directory_ids = {e.parent_id for e in entries}
-        depts = [d for d in depts if d.id not in directory_ids and d.list_url]
+        depts = [d for d in depts if d.id not in directory_ids and d.list_url and d.kind not in ('unit','group')]
         subs = Subscription.query.filter_by(school_id=school.id).all()
         if subs and all(sub.department_ids is not None for sub in subs):
             wanted = expand_directory_ids(school.id, {dept_id for sub in subs for dept_id in sub.department_ids}, entries)

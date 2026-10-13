@@ -80,6 +80,18 @@ def sync_official_structure(school, catalog, *, commit=True):
                                 units_by_address[alias].append(unit)
 
     linked_columns = 0
+    from backend.services.source_directory_reconciliation import directory_websites
+    websites = directory_websites(school, indexed.values(),
+        DepartmentDirectoryEntry.query.filter(DepartmentDirectoryEntry.parent_id.in_(
+            [d.id for d in indexed.values()])).all(), report['pages'])
+    for ident, evidence in websites.items():
+        unit = next(d for d in indexed.values() if d.id == ident)
+        units_by_address[canonical_url(evidence['url'])].append(unit)
+        for source in existing:
+            if source.kind not in STRUCTURAL_KINDS and source.list_selector and _within_unit(
+                    source.list_url,evidence['url'],school.url):
+                link(unit,source,0)
+                linked_columns += 1
     for source in existing:
         if source.kind in STRUCTURAL_KINDS or not source.list_selector:
             continue

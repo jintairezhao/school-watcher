@@ -33,7 +33,7 @@ def fetch_page(url, *, purpose='directory', source_id='', readiness_selector='')
             'result': result, 'transport': result.transport, 'network': network, 'network_notes': notes}
 
 
-def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
+def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_assist=True):
     key, url = site['site_key'], page['url']
     assert_current_parser()
     from .structure import document_reference, directory_document
@@ -86,6 +86,11 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
             parsed['notes'].append(BRANDING_PREFIX + json.dumps({
                 'site_key': key, 'reference_url': url, 'final_url': final,
                 'content_hash': content_hash, 'candidates': parsed['branding_candidates']}, ensure_ascii=False))
+        if parsed.get('site_navigation'):
+            from backend.services.source_directory_reconciliation import NAVIGATION_PREFIX
+            parsed['notes'].append(NAVIGATION_PREFIX + json.dumps({
+                'site_key':key, 'reference_url':url, 'final_url':final,
+                'content_hash':content_hash, 'links':parsed['site_navigation']}, ensure_ascii=False))
         if response.get('network'):
             parsed['notes'].append('public_dns_ipv4:' + response['network']['public_ip'])
         parsed['notes'].extend(response.get('network_notes', []))
@@ -186,7 +191,7 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all'):
         review_routes = focus in ('layered', 'valuable') and bool(
             navigation_candidates(html, parsed, dict(page, discovery_policy=focus)))
         legacy_missing = focus not in ('layered', 'valuable') and page['kind'] in ('root', 'directory', 'unit') and not any(link['kind'] in needed for link in routes) and not (page['kind'] == 'unit' and feed)
-        if (review_routes and not (change and change['navigation_complete'])) or legacy_missing:
+        if ai_assist and ((review_routes and not (change and change['navigation_complete'])) or legacy_missing):
             from .ai_navigation import queue_navigation
             queue_navigation(site, dict(page, url=final, snapshot_url=url, snapshot_ref=snapshot_ref,
                 snapshot_hash=content_hash, discovery_policy=focus, navigation_routes=(change or {}).get('routes', [])))

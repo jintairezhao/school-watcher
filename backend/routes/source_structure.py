@@ -45,13 +45,13 @@ HEALTH = {'unverified': '尚未检查', 'unreachable': '暂时无法访问', 'da
 
 def page_health_label(page):
     if page.get('ownership_pending'):
-        return '外部站点归属待核实'
+        return '正在查找官网归属依据'
     if 'official_template_error_requires_review' in (page.get('notes_json') or ''):
-        return '官网页面存在模板错误'
+        return '部分页面内容需要继续适配'
     if 'directory_variant_differences:' in (page.get('notes_json') or ''):
         return '官网目录不同版本存在差异'
     if 'official_directory_link_requires_review:' in (page.get('notes_json') or ''):
-        return '官网目录含异常入口，需逐项复查'
+        return '正在寻找可用的替代入口'
     if page.get('state') == 'fetched' and page.get('kind') == 'major':
         return '专业入口已读取'
     if page.get('state') == 'fetched' and 'unit_profile_page:' in (page.get('notes_json') or ''):
@@ -169,11 +169,19 @@ def school_structure(school_id):
                     programme_contexts.append(json.loads(note.split(':', 1)[1]))
                 if note.startswith('programme_catalog_attributes:'):
                     programme_attributes.update({entry['key']: entry['fields'] for entry in json.loads(note.split(':', 1)[1])})
+        # An old publication date, variant directory or isolated CMS widget
+        # error is not a failed source. A readable list continues collecting.
+        def readable_region(page):
+            try:
+                feed = json.loads(page.get('feed_json') or '{}')
+                return any(column.get('name') and column.get('container_locator') and column.get('samples')
+                           for column in feed.get('lists', [feed]))
+            except (TypeError, ValueError):
+                return False
         issues = [dict(p, health_label=page_health_label(p)) for p in report['pages']
-                  if p['state'] in ('failed', 'blocked') or p['health'] in ('stale', 'retirement_notice', 'dynamic_content')
-                  or p.get('ownership_pending') or 'official_template_error_requires_review' in (p.get('notes_json') or '')
-                  or 'directory_variant_differences:' in (p.get('notes_json') or '')
-                  or 'official_directory_link_requires_review:' in (p.get('notes_json') or '')]
+                  if p['state'] in ('failed', 'blocked') or p['health'] in ('retirement_notice', 'dynamic_content')
+                  or p.get('ownership_pending') or ('official_template_error_requires_review' in (p.get('notes_json') or '')
+                  and not readable_region(p))]
     issue_total = len(issues)
     issue_pages = max(1, (issue_total + 49) // 50)
     issue_page = min(issue_pages, max(1, request.args.get('issues_page', 1, type=int)))

@@ -116,6 +116,13 @@ def _metadata_addresses(source, data):
 
 def _load_page_metadata(sources, data):
     wanted = {url for source in sources for url in _metadata_addresses(source, data)}
+    # An unlinked roster child needs its actual parent's navigation evidence.
+    # These are saved addresses, not URLs guessed from an institution name.
+    for unit in data['departments'].values():
+        if unit.school_id == data['school'].id and unit.kind == 'unit' and not unit.list_url:
+            wanted.update(_address(data['departments'][ident].list_url)
+                          for ident in data['parents'].get(unit.id, [])
+                          if data['departments'][ident].list_url)
     missing = wanted - data['metadata_checked']
     if not missing:
         return
@@ -214,7 +221,7 @@ def _identity_entrance(source, label, data):
 
 def _descriptor(source, data, units):
     school = data['school']
-    label = _column_label(source, units)
+    label = data.get('navigation_labels',{}).get(source.id) or _column_label(source, units)
     if units:
         publisher = units[-1]
         publisher_key = (_key(school.id, 'unit', _address(publisher['url']), publisher['name'])
@@ -246,6 +253,8 @@ def _descriptor(source, data, units):
     return {'source_id': source.id, 'school_id': school.id, 'school_name': school.name,
             'publisher_key': publisher_key, 'publisher_label': publisher_label, 'column_label': label,
             'breadcrumb': breadcrumb, 'official_url': _publication_url(source.list_url), 'basis': basis,
+            'units': [{'key':row.get('id') or _key(school.id,'unit',_address(row['url']),row['name']),
+                       'name':row['name'],'url':row['url']} for row in units],
             '_publisher_address': publisher_address}
 
 
@@ -280,7 +289,10 @@ def channels_for(departments):
             if child and child.school_id == parent.school_id:
                 parents[entry.department_id].append(entry.parent_id)
         for ident in missing:
-            cache['schools'][ident] = {'school': schools.get(ident), 'departments': indexed, 'parents': parents}
+            cache['schools'][ident] = {'school': schools.get(ident), 'departments': indexed, 'parents': parents,
+                'entries': [entry for entry in DepartmentDirectoryEntry.query.filter(
+                    DepartmentDirectoryEntry.parent_id.in_(indexed))
+                    if indexed[entry.parent_id].school_id == ident]}
     pending = defaultdict(list)
     resolved_units = {}
     for source in departments:
@@ -296,6 +308,25 @@ def channels_for(departments):
             pending[source.school_id].append(source)
     for ident, sources in pending.items():
         _load_page_metadata(sources, cache['schools'][ident])
+        data = cache['schools'][ident]
+        from backend.services.source_directory_reconciliation import directory_websites, navigation_parent
+        websites = directory_websites(data['school'], data['departments'].values(),
+                                      data['entries'], data['catalog_pages'].values())
+        for source in sources:
+            matches = [item for item in websites.values() if _scope_contains(source.list_url,item['url'])]
+            if len(matches) == 1:
+                match = matches[0]; unit = data['departments'][match['unit_id']]
+                resolved_units[source.id] = _unit_chain(unit.id,data) + [
+                    {'id':unit.id,'name':unit.name,'url':match['url']}]
+            else:
+                parent = navigation_parent(source,data['school'],data['departments'].values(),
+                                           data['catalog_pages'].values())
+                if parent:
+                    unit=data['departments'][parent['unit_id']]
+                    resolved_units[source.id]=_unit_chain(unit.id,data)+[
+                        {'id':unit.id,'name':unit.name,'url':unit.list_url}]
+                    if parent['name']:
+                        data.setdefault('navigation_labels',{})[source.id]=parent['name']
     result = {}
     for source in departments:
         data = cache['schools'][source.school_id]

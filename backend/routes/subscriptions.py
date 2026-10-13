@@ -129,7 +129,8 @@ def manage_sources(school_id):
     return render_template('sources.html', school=school, subscription=sub,
                            discovery=status(school),
                            onboarding=school_governance_status(school.id),
-                           groups=source_hierarchy(departments, directory_entries=directory_entries_for(school.id)), latest=latest,
+                           groups=source_hierarchy(departments, directory_entries=directory_entries_for(school.id), available_only=True,
+                               retained_ids=sub.department_ids or ()), latest=latest,
                            selected_ids=expand_directory_ids(school.id, sub.department_ids),
                            source_paths={d.id: relationships.paths_for(d.list_url) for d in departments})
 
@@ -178,7 +179,8 @@ def subscription_discovery(school_id):
     departments = school.departments.order_by(Department.id).all()
     sub = Subscription.query.filter_by(user_id=g.user.id, school_id=school.id).first()
     choices = render_template('_source_tree_choices.html', school=school,
-                              groups=source_hierarchy(departments, directory_entries=directory_entries_for(school.id)), subscription=sub,
+                              groups=source_hierarchy(departments, directory_entries=directory_entries_for(school.id), available_only=True,
+                                  retained_ids=sub.department_ids or ()), subscription=sub,
                               selected_ids=expand_directory_ids(school.id, sub.department_ids),
                               source_paths={d.id: relationships.paths_for(d.list_url) for d in departments})
     return jsonify(**status(school), choices_html=choices)

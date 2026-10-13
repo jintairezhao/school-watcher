@@ -577,8 +577,10 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
     if variants:
         notes.append('directory_variant_differences:' + json.dumps(variants, ensure_ascii=False))
     from backend.services.source_ownership import branding_candidates
+    from backend.services.source_directory_reconciliation import navigation_evidence
     return {'links': links, 'nodes': reconcile_unlinked_copies(nodes), 'notes': notes,
             'branding_candidates': branding_candidates(soup),
+            'site_navigation': navigation_evidence(soup, base_url),
             'title': clean(soup.title.get_text()) if soup.title else ''}
 
 

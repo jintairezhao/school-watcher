@@ -161,7 +161,7 @@ class InboxPublisherProjectionTests(unittest.TestCase):
         unit = tree['组织机构'][0]
         self.assertEqual((unit['key'], unit['name'], unit['expandable']), ('200', '研究生院', True))
         self.assertEqual({column['department'].id for column in unit['columns']}, {200, 201, 202})
-        self.assertEqual({column['label'] for column in unit['columns']}, {'本部门通知', '招生通知', '学位通知'})
+        self.assertEqual({column['label'] for column in unit['columns']}, {'官网信息', '招生通知', '学位通知'})
         # Known descendants preserve the owner's identity even in a restricted
         # subscription, without adding the unselected descendant sources.
         with self.app.test_request_context('/'):
