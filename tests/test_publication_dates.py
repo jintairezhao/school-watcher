@@ -97,6 +97,18 @@ class PublicationDateTests(unittest.TestCase):
         db.session.commit()
         self.assertEqual(self.ann.published_at,datetime(2026,10,16))
 
+    def test_incomplete_body_read_cannot_erase_a_verified_publication_date(self):
+        from backend.services.publication_dates import reconcile_cached_date, apply_article_date
+        from backend.scraper.engine import _process_announcement_item
+        self.ann.content_html=ARTICLE.replace('2026年09月30日','2026年10月16日')
+        reconcile_cached_date(self.ann);db.session.commit()
+        incomplete=f'<article><h1>{TITLE}</h1><p>讲座时间：2026-10-16</p></article>'
+        apply_article_date(self.ann,incomplete,URL);db.session.commit()
+        _process_announcement_item(BeautifulSoup(ITEM,'lxml').li,self.source,self.source.school.url)
+        db.session.commit()
+        self.assertEqual(self.ann.published_at,datetime(2026,10,16),
+                         'a later incomplete observation must not erase previously verified publication metadata')
+
     def test_unrelated_deadline_in_list_row_does_not_change_the_date_field_role(self):
         from backend.scraper.date_elements import publication_date_text
         node=BeautifulSoup('<li><a href="/notice">申请通知</a><span class="date">2026-09-30</span><p>报名截止10月16日。</p></li>','lxml').span

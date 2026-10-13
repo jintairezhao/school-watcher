@@ -135,6 +135,10 @@ def apply_article_date(ann,html,reference_url=None,*,cached_only=False):
         if canonical_url(reference_url)!=canonical_url(ann.url):
             return False
     proof=dict(inspect_article_date(html,ann.url,ann.title),checked_full=not cached_only)
+    if proof['state']!='verified':
+        previous=_job(ann)
+        if previous and _valid(previous.result,ann):
+            return False  # Incomplete new material cannot revoke verified metadata.
     changed=False
     if proof['state']=='verified':
         value=datetime.fromisoformat(proof['date'])
