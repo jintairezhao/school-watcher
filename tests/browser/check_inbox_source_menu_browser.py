@@ -43,7 +43,9 @@ def seed(app):
         for ident, name, group in rows:
             db.session.add(Department(id=ident, school_id=1, name=name, group_name=group,
                                       list_url=None if ident == 902 else f'https://fixture.example/source/{ident}'))
-        db.session.add(Department(id=999, school_id=2, name='教务通知', list_url='https://second.example/news'))
+        # This school has a connected but empty column, so it remains selectable.
+        db.session.add(Department(id=999, school_id=2, name='教务通知',
+                                  list_url='https://second.example/news', list_selector='#notices li'))
         db.session.flush()
         # Official directory evidence supplies ownership. Sibling URLs and
         # matching name prefixes alone do not establish a department relation.
@@ -189,12 +191,12 @@ def check(capture=True):
                     expect(item).to_be_checked()
                 expect(page.locator('.toolbar-topline')).to_contain_text('已选 1 个栏目')
                 page.locator('#sourceQuery').fill('官网未提供链接')
-                for item in page.locator('[data-department][value="902"]').all():
-                    expect(item).to_be_disabled()
-                expect(page.locator('.department-option:visible').first).to_contain_text('官网未提供链接')
+                expect(page.locator('[data-department][value="902"]')).to_have_count(0)
+                with app.app_context():
+                    assert db.session.get(Department, 902) is not None, 'Pending lead was erased'
                 page.locator('#clearSourceSearch').click()
                 page.locator('#clearDepartments').click(); settled()
-                checks.append('shared source identities, deduplicated counts, unavailable directory entries')
+                checks.append('shared source identities, deduplicated counts, pending leads retained off the menu')
 
                 def fail_fragment(route):
                     if route.request.headers.get('x-inbox-fragment') == '1':

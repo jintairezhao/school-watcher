@@ -47,6 +47,10 @@ jobs:
         run: python tests/browser/check_source_presentation_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify source drawer identity and pending entries
+        run: python -c "import runpy; runpy.run_path('tests/browser/check_inbox_source_menu_browser.py')['check'](capture=False)"
+        env:
+          PLAYWRIGHT_CHANNEL: chromium
       - name: Verify native window controls with the source drawer open
         run: python tests/browser/check_desktop_drawer_browser.py
         env:
