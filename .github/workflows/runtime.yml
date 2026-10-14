@@ -103,6 +103,10 @@ jobs:
         run: python tests/browser/check_discovery_pause_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify AI recovery status and cumulative usage explanations
+        run: python tests/browser/check_ai_recovery_status_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify department and column subscription tree
         run: python tests/browser/check_subscription_structure_browser.py
         env:

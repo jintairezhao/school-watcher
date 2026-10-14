@@ -32,7 +32,7 @@ def _ai_message(task, data, available):
     if unconfirmed:
         return f'{unconfirmed} 次模型请求结果未确认，预留额度保留；已有进度和已接入栏目保留，不会自动重发'
     if data.get('ai_error_code') == 'provider_connection_paused':
-        return 'AI 连接暂不可用，进度已保存；已接入的栏目继续更新'
+        return '官网识别因连续连接失败暂停；请重新测试当前模型配置，成功后自动继续。进度已保存，已接入栏目继续更新'
     if data.get('ai_error_code') == 'ai_result_unknown':
         return 'AI 返回结果尚未确认，进度已保存；已接入的栏目继续更新'
     if not available:
@@ -40,7 +40,7 @@ def _ai_message(task, data, available):
     if data.get('ai_error_code') == 'budget_exhausted':
         return '额度已用完，进度已保存；已接入的栏目继续更新'
     if data.get('ai_state') == 'running':
-        return 'AI 已连接，正在分析官网'
+        return '正在处理 AI 官网识别任务'
     if data.get('ai_state') == 'queued':
         return '已安排 AI 识别官网入口，已接入的栏目继续更新'
     history = dict((task.checkpoint or {}).get('ai_navigation') or {}) if task else {}
@@ -69,6 +69,32 @@ def _ai_message(task, data, available):
     return 'AI 辅助已完成本批识别' if succeeded or data.get('ai_state') == 'succeeded' else 'AI 辅助已开启'
 
 
+def _connection_resumed(job):
+    resumes = (job.checkpoint or {}).get('ai_connection_resume', 0)
+    return (type(resumes) is int and resumes > 0 and job.state in ('pending', 'running')
+            and job.error_code != 'provider_connection_paused')
+
+
+def _current_ai_progress(job):
+    """Project old checkpoints without rewriting progress or replaying a call."""
+    progress = dict((job.checkpoint or {}).get('discovery_progress') or {}) if job else {}
+    if job and _connection_resumed(job) and progress.get('ai_error_code') == 'provider_connection_paused':
+        progress.update(ai_state='running' if job.state == 'running' else 'queued', ai_error_code='')
+    return progress
+
+
+def _usage_message(usage):
+    requests, used, reserved = (usage.get(key, 0) for key in ('used_requests', 'used_tokens', 'reserved_tokens'))
+    if not requests and not reserved:
+        return ''
+    message = f'本轮累计调用 {requests:,} 次（含未完成调用） · 服务商已确认用量 {used:,} Token'
+    if reserved:
+        message += f' · 另预留 {reserved:,} Token（最终用量待确认）'
+    if usage.get('unconfirmed_requests'):
+        message += f" · {usage['unconfirmed_requests']:,} 次调用结果未确认"
+    return message
+
+
 def _navigation_progress(task, jobs, data):
     """Independent navigation workers retain their own actual AI progress."""
     data = dict(data)
@@ -83,11 +109,12 @@ def _navigation_progress(task, jobs, data):
     cached = sum((job.result or {}).get('cached_routes', 0) for job in children)
     data.update(ai_reviewed_routes=reviewed, ai_cached_routes=cached)
     failures = [job for job in children if job.state == 'failed' or
-        (job.result or {}).get('status') == 'needs_recovery' or
-        ((job.checkpoint or {}).get('discovery_progress') or {}).get('ai_state') in ('failed', 'uncertain')]
+        ((job.result or {}).get('status') == 'needs_recovery' and not (
+            _connection_resumed(job) and (job.result or {}).get('error_code') == 'provider_connection_paused')) or
+        _current_ai_progress(job).get('ai_state') in ('failed', 'uncertain')]
     if failures:
         latest = max(failures, key=lambda job: job.updated_at)
-        progress = (latest.checkpoint or {}).get('discovery_progress') or {}
+        progress = _current_ai_progress(latest)
         data.update(ai_state='failed', ai_error_code=(latest.result or {}).get('error_code') or
                     progress.get('ai_error_code') or latest.error_code)
     elif any(job.state == 'running' for job in children):
@@ -104,13 +131,21 @@ def status(school):
     from backend.database.source_governance_models import SourceProposal, SchoolOnboarding
     from backend.services.discovery_control import requested
     task = BackgroundTask.query.filter_by(identity=f'discover:{school.id}').first()
-    data = dict((task.checkpoint or {}).get('discovery_progress') or {}) if task else {}
+    data = _current_ai_progress(task)
     columns = Department.query.filter_by(school_id=school.id).all()
     count = sum(bool(d.list_selector) for d in columns)
     jobs = [t for t in BackgroundTask.query.filter(BackgroundTask.kind.in_(
         ('onboard', 'navigation_review', 'student_assessment'))).all() if t.payload.get('school_id') == school.id
         and (t.kind != 'student_assessment' or t.payload.get('automatic_source') or t.payload.get('automatic_listing'))]
+    # An earlier navigation generation is history, not the current round's
+    # connection state. Its billing ledger remains available in school_usage.
+    if task:
+        jobs = [job for job in jobs if job.kind != 'navigation_review' or
+            job.payload.get('school_generation', job.payload.get('parent_generation')) == task.generation]
     data = _navigation_progress(task, jobs, data)
+    from backend.ai.school_budget import school_usage
+    usage = school_usage(school.id)
+    data['ai_usage'] = usage
     budget_paused = any(job.state == 'waiting' and job.phase == 'ai_budget'
                         for job in ([task] if task else []) + jobs)
     if budget_paused:
@@ -251,9 +286,6 @@ def status(school):
     else:
         stage_message = f'正在处理 {len(live)} 个后台任务' if live else '本轮后台处理已结束'
     review_count = SourceProposal.query.filter_by(school_id=school.id, state='needs_review').count()
-    from backend.ai.school_budget import school_usage
-    usage=school_usage(school.id)
-    data['ai_usage']=usage
     return {'state': state, 'message': message, 'stage_message': stage_message, 'phase': data.get('phase', 'fetch'),
         'busy': busy, 'active': active, 'retry_at': retry_at,
         'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
@@ -273,7 +305,7 @@ def status(school):
         'ai_available': available, 'ai_state': data.get('ai_state', 'not_started'),
         'ai_reviewed_routes': data.get('ai_reviewed_routes', 0), 'ai_cached_routes': data.get('ai_cached_routes', 0),
         'ai_message': _ai_message(task, data, available),
-        'ai_usage': usage, 'budget_paused': budget_paused,
+        'ai_usage': usage, 'ai_usage_message': _usage_message(usage), 'budget_paused': budget_paused,
         'coverage': {'complete': False, 'gaps': gaps, 'placement_gap_count': 0},
         'incomplete_reasons': [g['reason'] for g in gaps],
         'needs_verification': any(t.state == 'waiting' and t.phase == 'verification' for t in ([task] if task else []) + live),

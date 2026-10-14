@@ -52,12 +52,8 @@
             ? '本轮检查：结构未变 ' + (data.changes.unchanged ?? 0) + ' 个 · 有变化 ' + (data.changes.changed ?? 0) + ' 个 · 新入口 ' + (data.changes.new ?? 0) + ' 个' : '';
         if (field('discoveryAI')) field('discoveryAI').textContent = data.ai_message || '';
         if (field('discoveryAIUsage')) {
-            const usage = data.ai_usage || {};
-            const number = value => Number(value || 0).toLocaleString('zh-CN');
-            field('discoveryAIUsage').hidden = !usage.used_requests && !usage.reserved_tokens;
-            field('discoveryAIUsage').textContent = '本轮实际请求 ' + number(usage.used_requests) + ' 次 · 实际用量 '
-                + number(usage.used_tokens) + ' Token' + (usage.reserved_tokens ? ' · 另预留 ' + number(usage.reserved_tokens) + ' Token，尚未结算' : '')
-                + (usage.unconfirmed_requests ? ' · ' + number(usage.unconfirmed_requests) + ' 次请求结果未确认' : '');
+            field('discoveryAIUsage').hidden = !data.ai_usage_message;
+            field('discoveryAIUsage').textContent = data.ai_usage_message || '';
         }
         if (field('discoveryGaps')) {
             const gaps = data.coverage?.gaps || [];

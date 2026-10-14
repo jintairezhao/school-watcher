@@ -81,6 +81,10 @@ def resume_connection_tasks(binding):
             continue
         saved['ai_connection_resume'] = int(saved.get('ai_connection_resume', 0)) + 1
         saved['ai_connection_binding'] = binding_ref(binding)
+        progress = dict(saved.get('discovery_progress') or {})
+        if progress.get('ai_error_code') == PAUSED:
+            progress.update(ai_state='queued', ai_error_code='', updated_at=now.isoformat() + 'Z')
+            saved['discovery_progress'] = progress
         job.checkpoint = saved
         # A tested credential update can continue this same model's saved work.
         payload = dict(job.payload or {})

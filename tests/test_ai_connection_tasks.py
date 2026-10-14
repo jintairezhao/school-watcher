@@ -228,6 +228,20 @@ class ConnectionRecoveryTests(unittest.TestCase):
         self.assertEqual(job.payload['binding']['version'], changed['version'])
         self.assertEqual(job.checkpoint['ai_connection_binding']['version'], changed['version'])
 
+    def test_successful_test_updates_saved_progress_but_preserves_material(self):
+        self.failures()
+        job = self.job('progress-resume')
+        job.checkpoint = dict(job.checkpoint, discovery_progress={
+            'ai_state': 'failed', 'ai_error_code': PAUSED, 'checked_pages': 19})
+        db.session.commit()
+        self.success()
+        db.session.refresh(job)
+        progress = job.checkpoint['discovery_progress']
+        self.assertEqual((progress['ai_state'], progress['ai_error_code']), ('queued', ''))
+        self.assertEqual(progress['checked_pages'], 19)
+        self.assertEqual(job.checkpoint['value_cursor'], 3)
+        self.assertEqual(job.checkpoint['value_rows'], [{'saved': True}])
+
     def test_successful_test_respects_manual_pause_and_explicit_continue_then_resumes(self):
         from backend.services.discovery_control import control
         self.failures()

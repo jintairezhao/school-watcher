@@ -86,7 +86,7 @@ class DiscoveryAIProgressTests(unittest.TestCase):
             progress = status(self.school)
         self.assertEqual(progress['state'], 'ai_connection')
         self.assertEqual(progress['ai_state'], 'connection_paused')
-        self.assertIn('AI 连接暂不可用', progress['ai_message'])
+        self.assertIn('连续连接失败', progress['ai_message'])
         self.assertIn('进度已保存', progress['message'])
         self.assertIn('等待 AI 连接恢复', progress['stage_message'])
         self.assertFalse(progress['active'])
@@ -116,7 +116,7 @@ class DiscoveryAIProgressTests(unittest.TestCase):
         progress = self.progress()
         self.assertEqual(progress['state'], 'running')
         self.assertIn('正在读取官网通知', progress['message'])
-        self.assertIn('AI 连接暂不可用', progress['ai_message'])
+        self.assertIn('连续连接失败', progress['ai_message'])
         self.assertIn('其他信息仍在处理', progress['stage_message'])
         self.assertTrue(progress['active'])
         self.assertTrue(progress['busy'])
@@ -127,6 +127,98 @@ class DiscoveryAIProgressTests(unittest.TestCase):
         self.assertEqual(progress['state'], 'ai_connection')
         self.assertIn('进度已保存', progress['message'])
         self.assertFalse(progress['can_retry'])
+
+    def resumed_navigation(self, *, running=False):
+        job = self.waiting_ai('ai_connection', 'provider_connection_paused')
+        job.checkpoint = {'route_cursor': 7, 'ai_connection_resume': 1,
+            'discovery_progress': {'ai_state': 'failed', 'ai_error_code': 'provider_connection_paused'}}
+        job.state, job.phase, job.error_code = ('running' if running else 'pending'), 'ai_resume', ''
+        db.session.commit()
+        return job
+
+    def test_verified_resume_does_not_show_old_connection_failure_while_queued(self):
+        job = self.resumed_navigation()
+        saved = dict(job.checkpoint)
+        progress = self.progress()
+        self.assertEqual(progress['ai_state'], 'queued')
+        self.assertNotIn('不可用', progress['ai_message'])
+        self.assertNotIn('连续连接失败', progress['ai_message'])
+        self.assertIn('安排', progress['ai_message'])
+        db.session.refresh(job)
+        self.assertEqual(job.checkpoint, saved)
+
+    def test_verified_resume_does_not_show_old_failure_while_running(self):
+        self.resumed_navigation(running=True)
+        progress = self.progress()
+        self.assertEqual(progress['ai_state'], 'running')
+        self.assertNotIn('不可用', progress['ai_message'])
+
+    def test_parent_resume_also_projects_current_state_without_erasing_cursor(self):
+        self.parent.state, self.parent.phase, self.parent.error_code = 'pending', 'ai_resume', ''
+        self.parent.checkpoint = {'page_cursor': 9, 'ai_connection_resume': 1,
+            'discovery_progress': {'ai_state': 'failed', 'ai_error_code': 'provider_connection_paused'}}
+        db.session.commit()
+        progress = self.progress()
+        self.assertEqual(progress['ai_state'], 'queued')
+        self.assertNotIn('不可用', progress['ai_message'])
+        self.assertEqual(self.parent.checkpoint['page_cursor'], 9)
+
+    def test_a_new_connection_pause_after_resume_remains_visible(self):
+        job = self.resumed_navigation()
+        job.state, job.phase, job.error_code = 'waiting', 'ai_connection', 'provider_connection_paused'
+        db.session.commit()
+        progress = self.progress()
+        self.assertEqual(progress['state'], 'ai_connection')
+        self.assertIn('连续连接失败', progress['ai_message'])
+        self.assertIn('测试', progress['ai_message'])
+
+    def test_old_navigation_wait_cannot_report_new_round_as_disconnected(self):
+        job = self.child('previous-round-wait', {}, current=False)
+        job.state, job.phase, job.error_code = 'waiting', 'ai_connection', 'provider_connection_paused'
+        self.child('current-good', {'status': 'processed', 'reviewed_routes': 4})
+        db.session.commit()
+        progress = self.progress()
+        self.assertEqual(progress['ai_state'], 'succeeded')
+        self.assertNotEqual(progress['state'], 'ai_connection')
+        self.assertNotIn('连续连接失败', progress['ai_message'])
+
+    def test_cumulative_usage_is_separate_from_current_connection_state(self):
+        from backend.ai.models import AIBudget, AISchoolRound
+        key = f'school-discovery:{self.school.id}:fixture'
+        db.session.add_all([AISchoolRound(school_id=self.school.id, budget_key=key),
+            AIBudget(key=key, used_requests=5, used_tokens=8239, reserved_tokens=11068, active_count=1)])
+        self.resumed_navigation()
+        progress = self.progress()
+        self.assertEqual(progress['ai_state'], 'queued')
+        self.assertIn('本轮累计调用 5 次', progress['ai_usage_message'])
+        self.assertIn('已确认用量 8,239 Token', progress['ai_usage_message'])
+        self.assertIn('预留 11,068 Token', progress['ai_usage_message'])
+        self.assertIn('待确认', progress['ai_usage_message'])
+
+    def test_html_and_polling_share_usage_copy_without_spending_or_mutation(self):
+        from bs4 import BeautifulSoup
+        from backend.ai.models import AIBudget, AISchoolRound
+        from backend.database.models import User
+        key = f'school-discovery:{self.school.id}:fixture'
+        ledger = AIBudget(key=key, used_requests=5, used_tokens=8239, reserved_tokens=11068)
+        db.session.add_all([AISchoolRound(school_id=self.school.id, budget_key=key), ledger])
+        job = self.resumed_navigation()
+        saved = dict(job.checkpoint)
+        client = self.fixture.app.test_client()
+        with client.session_transaction() as session:
+            session['user_id'] = User.query.filter_by(username='reader').one().id
+        with patch('backend.services.onboarding_progress.ai_available', return_value=True), \
+             patch('backend.ai.providers.complete', side_effect=AssertionError('Progress must not call the provider')):
+            page = client.get(f'/subscriptions/{self.school.id}')
+            poll = client.get(f'/api/subscriptions/{self.school.id}/discovery')
+        self.assertEqual((page.status_code, poll.status_code), (200, 200))
+        html = BeautifulSoup(page.text, 'html.parser')
+        self.assertEqual(html.select_one('#discoveryAI').text, poll.json['ai_message'])
+        self.assertEqual(html.select_one('#discoveryAIUsage').text, poll.json['ai_usage_message'])
+        self.assertNotIn('hidden', html.select_one('#discoveryAIUsage').attrs)
+        db.session.refresh(job); db.session.refresh(ledger)
+        self.assertEqual(job.checkpoint, saved)
+        self.assertEqual((ledger.used_requests, ledger.used_tokens, ledger.reserved_tokens), (5, 8239, 11068))
 
     def test_parent_connection_wait_without_children_is_saved(self):
         self.parent.state, self.parent.phase = 'waiting', 'ai_connection'
