@@ -91,6 +91,10 @@ jobs:
         run: python tests/browser/check_content_queue_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify wide tables and intact values in all reader views
+        run: python tests/browser/check_reader_tables_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify API usage charts and analytics interactions
         run: python tests/browser/check_ai_usage_browser.py
         env:

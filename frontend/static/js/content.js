@@ -11,6 +11,20 @@ window.normalizeArticleTypography = function (body) {
         if (element.tagName === 'FONT') ['face', 'size', 'color'].forEach(name => element.removeAttribute(name));
     });
     body.querySelectorAll('table').forEach(table => {
+        // Cached/imported tables may retain fixed widths from a different font
+        // or viewport. Size the rendered copy from its content, not those widths.
+        [table, ...table.querySelectorAll('col, colgroup, td, th')].forEach(element => {
+            element.removeAttribute('width');
+            element.style.removeProperty('width');
+            element.style.removeProperty('table-layout');
+        });
+        table.querySelectorAll('td, th').forEach(cell => {
+            const text = cell.textContent.replace(/\s+/g, ' ').trim();
+            const compact = text.length > 0 && Array.from(text).length <= 16
+                && !cell.querySelector('br, table, img, ul, ol, pre')
+                && cell.querySelectorAll('p, div').length <= 1;
+            cell.classList.toggle('reading-cell-compact', compact);
+        });
         if (table.parentElement.classList.contains('reading-table-scroll')) return;
         const scroll = document.createElement('div');
         scroll.className = 'reading-table-scroll';
