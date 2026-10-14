@@ -90,7 +90,9 @@ class SharedRuntimeTests(unittest.TestCase):
         self.assertEqual(second['checkpoint'], {'page': 2})
         tasks.finish(second, result={'new_count': 3})
         db.session.refresh(row)
-        self.assertEqual((row.claim_count, row.attempts, row.deadline_at), (2, 0, deadline))
+        self.assertEqual((row.claim_count, row.attempts), (2, 0))
+        self.assertGreaterEqual(row.deadline_at,deadline)
+        self.assertLess((row.deadline_at-deadline).total_seconds(),5)
 
     def test_heartbeat_cannot_revive_expired_lease_or_make_completed_data_fresh(self):
         row = self.job()
@@ -139,12 +141,13 @@ class SharedRuntimeTests(unittest.TestCase):
         tasks.finish(handle)
         self.assertIsNotNone(tasks.claim(worker_id='two'))
 
-    def test_old_jobs_age_ahead_of_new_body_reads(self):
+    def test_body_reads_get_a_turn_before_old_batch_updates(self):
         old = self.job()
         old.queued_at = datetime.utcnow() - timedelta(minutes=6)
         db.session.commit()
-        tasks.enqueue('content', 9)
-        self.assertEqual(tasks.claim()['id'], old.id)
+        body=tasks.enqueue('content', 9)
+        self.assertEqual(tasks.claim()['id'],body.id)
+        self.assertEqual(tasks.claim()['id'],old.id)
 
     def test_checkpoint_and_manual_wait_resume_keep_original_identity(self):
         row = self.job()

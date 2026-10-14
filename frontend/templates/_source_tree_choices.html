@@ -27,7 +27,7 @@
     <div class="source-unit-contents">
         {% for column in unit.own_columns %}{{ column_choice(column) }}{% endfor %}
         {% for child in unit.children %}{{ unit_choice(child, depth + 1) }}{% endfor %}
-        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">{% if not unit.url %}官网未提供公开网站链接{% else %}暂未找到可用的信息来源{% endif %}。后续找到的信息会按接收范围自动加入。</p>{% endif %}
+        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">{% if not unit.url %}尚未识别到官网入口{% else %}该单位的栏目尚未接通{% endif %}，已发现的进度会保留。</p>{% endif %}
     </div>
 </details>
 {% else %}

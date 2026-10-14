@@ -56,7 +56,8 @@
             const number = value => Number(value || 0).toLocaleString('zh-CN');
             field('discoveryAIUsage').hidden = !usage.used_requests && !usage.reserved_tokens;
             field('discoveryAIUsage').textContent = '本轮实际请求 ' + number(usage.used_requests) + ' 次 · 实际用量 '
-                + number(usage.used_tokens) + ' Token' + (usage.reserved_tokens ? ' · 另预留 ' + number(usage.reserved_tokens) + ' Token，尚未结算' : '');
+                + number(usage.used_tokens) + ' Token' + (usage.reserved_tokens ? ' · 另预留 ' + number(usage.reserved_tokens) + ' Token，尚未结算' : '')
+                + (usage.unconfirmed_requests ? ' · ' + number(usage.unconfirmed_requests) + ' 次请求结果未确认' : '');
         }
         if (field('discoveryGaps')) {
             const gaps = data.coverage?.gaps || [];

@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT), str(ROOT / 'tests')]
 from test_inbox_search_suggestions import InboxSearchTests
 from test_publication_dates import ARTICLE, TITLE, URL
+from test_article_observation import HTML as CUSTOM_HTML, TITLE as CUSTOM_TITLE, URL as CUSTOM_URL
+from backend.scraper.acquisition import FetchResult
 from backend.database.db import db
 from backend.database.models import Announcement, BackgroundTask, UserAnnouncementState, UserRead
 from backend.services.content_cache import fetch_content
@@ -31,6 +33,8 @@ def check():
         second.published_at = datetime(2026, 10, 15); second.content_html = None
         second.content_cached_at = None
         second_html = ARTICLE.replace(TITLE, second.title).replace('09月30日', '09月29日')
+        custom = Announcement(school_id=1,department_id=11,title=CUSTOM_TITLE,url=CUSTOM_URL)
+        db.session.add(custom);db.session.flush();custom_id=custom.id
         read_at = datetime(2026, 10, 12, 3, 0)
         db.session.add(UserRead(user_id=1, announcement_id=1, read_at=read_at))
         db.session.add_all([UserAnnouncementState(user_id=1, announcement_id=i, starred=True) for i in (1, 2)])
@@ -85,13 +89,23 @@ def check():
                 expect(page.locator('.reading-meta time')).to_have_text('2026年09月30日')
                 checks.append({'width': width, 'theme': theme, 'cached_correction': True,
                                'reload_and_standalone_correct': True, 'no_invented_midnight': True})
+            page.goto(base+f'/?school=1&dept=11&period=all&selected={custom_id}')
+            expect(page.locator('.reading-meta time')).to_have_text('发布时间未知')
+            with patch('backend.scraper.acquisition.coordinator.http_fetch',return_value=FetchResult(CUSTOM_URL,status=200,html=CUSTOM_HTML)) as fetch:
+                fetch_content(custom_id)
+            fetch.assert_called_once()
+            expect(page.locator('.reading-meta time')).to_have_text('2026年10月13日',timeout=15000)
+            expect(page.locator(f'[data-content-id="{custom_id}"]')).to_have_attribute('data-cached','true')
+            expect(page.locator(f'[data-content-id="{custom_id}"]')).to_contain_text('拟推荐以下181名学生')
+            page.screenshot(path=str(output/'custom-layout-corrected.png'))
+            checks.append({'custom_layout_body_and_unknown_date_recover':True,'actual_acquisition_classification':True})
             assert not errors, errors
             browser.close()
         db.session.expire_all()
         assert db.session.get(Announcement, 1).content_html == ARTICLE
         assert UserRead.query.filter_by(user_id=1, announcement_id=1).one().read_at == read_at
         assert UserAnnouncementState.query.filter_by(user_id=1, starred=True).count() == 2
-        assert BackgroundTask.query.filter_by(kind='publication_date').count() == 2
+        assert BackgroundTask.query.filter_by(kind='publication_date').count() == 3
         report = {'checks': checks, 'read_and_favorite_state_preserved': True,
                   'saved_body_unchanged': True, 'page_errors': errors,
                   'actual_model_requests': 0, 'actual_official_requests': 0}

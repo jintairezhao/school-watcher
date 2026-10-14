@@ -238,6 +238,24 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
             for text in soup.find_all(string=True)):
         empty_evidence = empty_evidence or ('explicit_empty_message',)
     from backend.scraper.article_resources import has_public_body_resource
+    # A stored notice supplies its actually observed title. Custom article DOMs
+    # can be identified by that title and local metadata, without requiring a
+    # known CMS class. This cannot relax list/directory contracts or access walls.
+    expected_title = request.policy.get('expected_article_title') if request.purpose == 'article' else ''
+    if expected_title:
+        from backend.scraper.article_observation import title_bound_body
+        if title_bound_body(soup,raw.final_url or request.url,expected_title) is not None:
+            return _decision(raw,'usable',evidence=('title_bound_article',))
+        if request.policy.get('publication_metadata_only'):
+            from backend.services.publication_dates import inspect_article_date
+            if inspect_article_date(html,raw.final_url or request.url,expected_title)['state']=='verified':
+                return _decision(raw,'usable',evidence=('title_bound_publication_metadata',))
+        elif raw.transport!='browser' and '<script' in lower:
+            from backend.scraper.article_observation import article_heading,publication_nodes
+            heading=article_heading(soup,expected_title)
+            if heading is not None and publication_nodes(soup,heading)[0]:
+                return _decision(raw,'requires_render','article_body_not_loaded',
+                    '已识别通知标题和日期，继续读取尚未出现的正文',('identified_article_missing_body',))
     if request.readiness_selector:
         try:
             ready = soup.select(request.readiness_selector)
@@ -253,7 +271,9 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
                     previously_observed=request.policy.get('dynamic_material_observed') is True, targeted=True)
                 if incomplete:
                     return _dynamic_material_decision(raw, incomplete)
-        if any(_visible(node) and (node.get_text(' ', strip=True) or node.select_one('img[src], a[href]')
+        from backend.scraper.article_observation import navigation_only_body
+        if any(_visible(node) and (request.purpose != 'article' or not navigation_only_body(str(node), raw.final_url))
+                and (node.get_text(' ', strip=True) or node.select_one('img[src], a[href]')
                 or request.purpose == 'article' and has_public_body_resource([node], raw.final_url)) for node in ready):
             return _decision(raw, 'usable', evidence=('readiness_selector',))
         if empty_evidence:
@@ -270,8 +290,10 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
         if incomplete:
             return _dynamic_material_decision(raw, incomplete)
     if request.purpose == 'article':
-        if any(len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
-               or has_public_body_resource([node], raw.final_url) for node in soup.select(_ARTICLE)):
+        from backend.scraper.article_observation import navigation_only_body
+        if any(not navigation_only_body(str(node), raw.final_url) and (
+               len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
+               or has_public_body_resource([node], raw.final_url)) for node in soup.select(_ARTICLE)):
             return _decision(raw, 'usable', evidence=('article_region',))
     elif request.purpose == 'directory':
         if raw.transport != 'browser' and _missing_script_navigation(html, soup, raw.final_url or request.url):

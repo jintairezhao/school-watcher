@@ -11,11 +11,13 @@ from bs4 import BeautifulSoup
 from sqlalchemy import select
 from backend.database.db import db
 from backend.database.models import Announcement, BackgroundTask
+from backend.scraper.article_observation import article_heading, publication_nodes
 
 DATE = re.compile(r'(?<!\d)(\d{4})\s*[年./-]\s*(\d{1,2})\s*[月./-]\s*(\d{1,2})日?(?!\d)')
 PUBLISH = re.compile(r'^(?:发布日期|发布时间|发文日期|发布于)\s*[：:]?\s*')
 META_KEYS = {'pubdate','publishdate','publicationdate','article:published_time','datepublished'}
 EDITOR = re.compile(r'责任编辑|编辑[:：]|作者[:：]|来源[:：]|浏览(?:量|次数)?[:：]')
+PARSER_VERSION = 'title-bound-2'
 
 
 def publication_date_stamp(value):
@@ -41,55 +43,21 @@ def _date(value):
 
 
 def inspect_article_date(html, url, title):
-    unknown = {'state':'unknown','url':url,'title_key':title_key(title)}
+    unknown = {'state':'unknown','url':url,'title_key':title_key(title),'parser_version':PARSER_VERSION}
     if not html or not unknown['title_key']:
         return unknown
     soup = BeautifulSoup(html,'lxml')
-    for node in soup.select('script,style,nav,aside,footer,blockquote,form'):
+    for node in soup.select('script,style,nav,aside,footer,blockquote'):
         node.decompose()
-    key = unknown['title_key']
-    heads = [node for node in soup.select('h1,h2,h3,[itemprop="headline"]')
-        if not node.find_parent('a') and key in title_key(node.get_text(' ',strip=True))]
-    if not heads:
-        named=[node for node in soup.select('div,p,span,strong') if not node.find_parent('a')
-            and not node.select('a[href]') and title_key(node.get_text(' ',strip=True))==key]
-        heads=[node for node in named if not any(other is not node and node in other.parents for other in named)]
-    if len(heads) != 1:
+    for node in soup.select('form'):
+        if node.select('input:not([type="hidden"]),textarea,select,button'):
+            node.decompose()
+    heading = article_heading(soup,title)
+    if heading is None:
         return dict(unknown,reason='article_heading_not_unique_or_matched')
-    heading = heads[0]
-    scope = heading.parent
-    if scope.name not in ('article','main','body') and len(scope.get_text(' ',strip=True)) < len(heading.get_text(' ',strip=True))+20:
-        scope = scope.parent
-    from backend.scraper.date_elements import NON_PUBLICATION, TIME_RANGE
-    candidates=[]; after=False
-    for node in scope.find_all(True):
-        if node is heading:
-            after=True;continue
-        if not after or heading in node.parents:
-            continue
-        if node.name in ('h1','h2','h3'):
-            break
-        if node.name not in ('span','time','p','div','td'):
-            continue
-        semantic=node.get('itemprop')=='datePublished'
-        text=(node.get('datetime') or node.get('content') or node.get_text(' ',strip=True)) if semantic else node.get_text(' ',strip=True)
-        # Publication metadata sits before article prose. A body paragraph or
-        # event schedule marks its boundary, not another possible publish field.
-        if node.name in ('p','td') and (NON_PUBLICATION.search(text) or len(text)>180):
-            break
-        if not text or len(text)>220 or NON_PUBLICATION.search(text) or TIME_RANGE.search(text):
-            continue
-        dates=list(DATE.finditer(text))
-        if len(dates)!=1:
-            continue
-        explicit=bool(PUBLISH.match(text))
-        date_only=bool(DATE.fullmatch(text.strip()))
-        parent_text=node.parent.get_text(' ',strip=True)
-        editorial=(date_only and len(parent_text)<220 and len(DATE.findall(parent_text))==1 and EDITOR.search(parent_text))
-        if node.name in ('p','td') and not (explicit or editorial or semantic or date_only):
-            break
-        if not (explicit or editorial or semantic):
-            continue
+    candidates=[]
+    nodes, _ = publication_nodes(soup,heading)
+    for node,text in nodes:
         date=_date(text)
         if date:
             from backend.scraper.discovery.structure import locator
@@ -153,7 +121,8 @@ def apply_article_date(ann,html,reference_url=None,*,cached_only=False):
 def reconcile_cached_date(ann):
     if not ann.content_html:return False
     job=_job(ann)
-    if job and (_valid(job.result,ann) or (job.result or {}).get('cached_body_hash')==hashlib.sha256(ann.content_html.encode()).hexdigest()):
+    if job and (_valid(job.result,ann) or ((job.result or {}).get('parser_version')==PARSER_VERSION
+            and (job.result or {}).get('cached_body_hash')==hashlib.sha256(ann.content_html.encode()).hexdigest())):
         return False
     apply_article_date(ann,ann.content_html,cached_only=True)
     return True  # Persist the new evidence marker even if the existing date matched.
@@ -162,8 +131,10 @@ def reconcile_cached_date(ann):
 def queue_date_check(ann):
     from backend.services import tasks
     job=_job(ann)
-    if job and (_valid(job.result,ann) or job.state in ('pending','running','waiting','done')):
+    if job and (_valid(job.result,ann) or job.state in ('pending','running','waiting')):
         return job
+    if job and job.state=='done' and (job.result or {}).get('parser_version')==PARSER_VERSION and (job.result or {}).get('checked_full'):
+        return job  # A complete unknown observation is not reread every collection.
     if job and job.next_run_at and job.next_run_at>datetime.utcnow():return job
     return tasks.enqueue('publication_date',ann.id,{'announcement_id':ann.id},commit=False)
 
@@ -172,7 +143,7 @@ def apply_listing_date(ann,department,observation,candidate_date):
     if ann.department_id!=department.id:return
     reconcile_cached_date(ann)
     local_today=datetime.now(timezone(timedelta(hours=8))).date()
-    uncertain=observation['role']=='non_publication' or bool(candidate_date and (
+    uncertain=(not ann.published_at and observation['role'] in ('missing','ambiguous')) or observation['role']=='non_publication' or bool(candidate_date and (
         observation['role']=='ambiguous' or candidate_date.date()>local_today))
     if not uncertain:return
     proof=_job(ann)
@@ -202,7 +173,8 @@ def check_date(ann_id):
     url,title=ann.url,ann.title
     started=datetime.utcnow()
     db.session.commit()
-    html=_fetch_html(url,raise_fetch_errors=True,purpose='article',source_id='publication-date:'+str(ann_id))
+    html=_fetch_html(url,raise_fetch_errors=True,purpose='article',source_id='publication-date:'+str(ann_id),
+        policy={'expected_article_title':title,'publication_metadata_only':True})
     final=getattr(html,'final_url',url)
     from backend.services.source_inventory import canonical_url
     if canonical_url(final)!=canonical_url(url):return {'state':'unknown','reason':'different_article_address'}
@@ -226,6 +198,16 @@ def resume_date_checks(limit=20):
     exists=db.select(BackgroundTask.id).where(BackgroundTask.identity==db.literal('publication_date:')+db.cast(Announcement.id,db.String)).exists()
     for ann in Announcement.query.filter(Announcement.content_html.isnot(None),Announcement.content_html!='',~exists).order_by(Announcement.id).limit(limit):
         reconcile_cached_date(ann)
+    # Retry old unrecognized metadata once after a parser revision. Keep verified
+    # dates and saved bodies intact, and never reset the task's retry cooldown.
+    old=BackgroundTask.query.filter_by(kind='publication_date',state='done').filter(
+        BackgroundTask.result['state'].as_string()=='unknown',
+        BackgroundTask.result['parser_version'].as_string().is_distinct_from(PARSER_VERSION)).order_by(BackgroundTask.id).limit(limit).all()
+    for job in old:
+        ann=db.session.get(Announcement,job.payload.get('announcement_id'))
+        if ann:
+            reconcile_cached_date(ann)
+            if not _valid(job.result,ann):queue_date_check(ann)
     jobs=BackgroundTask.query.filter_by(kind='publication_date',state='failed').filter(BackgroundTask.next_run_at<=datetime.utcnow()).limit(limit).all()
     for job in jobs:
         ann=db.session.get(Announcement,job.payload.get('announcement_id'))

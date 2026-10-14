@@ -432,12 +432,15 @@ def run(app, *, once=False, roles=None, concurrency=None, worker_id=None):
         from backend.services.desktop_maintenance import WorkerMaintenance
         maintenance = WorkerMaintenance(app)
         active = {}
+        active_kinds = {}
+        last_claim_kind = None
         last_schedule = 0
         last_heartbeat = 0
         while True:
             for future in [future for future in active if future.done()]:
                 future.result()
                 del active[future]
+                active_kinds.pop(future,None)
             if maintenance.poll(len(active)):
                 with app.app_context():
                     worker_heartbeat(worker_id, roles, stopped=True)
@@ -465,13 +468,20 @@ def run(app, *, once=False, roles=None, concurrency=None, worker_id=None):
                             preferred = ('directory',)
                         elif all(lane == 'directory' for lane in active.values()):
                             preferred = tuple(lane for lane in lanes if lane != 'directory')
-                    handle = tasks.claim(capabilities=preferred, worker_id=worker_id) if preferred else None
+                    # Offer readers one existing slot and keep another turn for
+                    # updates/discovery; a single slot alternates ready work.
+                    exclude=('content',) if ('content' in active_kinds.values() or slots==1 and last_claim_kind=='content') else ()
+                    handle = tasks.claim(capabilities=preferred, worker_id=worker_id,exclude_kinds=exclude) if preferred else None
                     if not handle:
-                        handle = tasks.claim(capabilities=lanes, worker_id=worker_id)
+                        handle = tasks.claim(capabilities=lanes, worker_id=worker_id,exclude_kinds=exclude)
+                    if not handle and exclude:
+                        handle = tasks.claim(capabilities=lanes,worker_id=worker_id)
                     db.session.remove()
                 if not handle:
                     break
-                active[pool.submit(execute, app, handle, maintenance.pause)] = handle['capability']
+                future=pool.submit(execute, app, handle, maintenance.pause)
+                active[future] = handle['capability'];active_kinds[future]=handle['kind']
+                last_claim_kind=handle['kind']
             if once:
                 for future in active:
                     future.result()

@@ -69,7 +69,9 @@ def article_content(ann_id):
         request_content(ann)
     state = status(ann)
     from backend.services.publication_dates import publication_date_label, publication_date_stamp
+    from backend.services.content_cache import progress_message
     return jsonify(content_status=state, error=ann.content_error if state == 'failed' else '',
+                   progress_message=progress_message(ann) if state=='loading' else '',
                    published_at=publication_date_stamp(ann.published_at),
                    publication_date_label=publication_date_label(ann.published_at),
                    content_html=render_article_html(ann.content_html, ann.id, ann.url) if state == 'saved' else '',

@@ -77,6 +77,11 @@ class SchoolAIBudgetTests(unittest.TestCase):
         self.assertEqual(school_usage(3)['used_requests'], 1)
         self.assertEqual(school_usage(3)['used_tokens'], 0)
         self.assertGreater(school_usage(3)['reserved_tokens'], 0)
+        self.assertEqual(school_usage(3)['unconfirmed_requests'],1)
+        from backend.services.onboarding_progress import _ai_message
+        message=_ai_message(None,{'ai_usage':school_usage(3),'ai_error_code':'budget_exhausted'},True)
+        self.assertIn('结果未确认',message)
+        self.assertNotIn('额度已用完',message)
 
     def test_explicit_limit_change_resumes_saved_items_without_new_round(self):
         from datetime import datetime, timedelta

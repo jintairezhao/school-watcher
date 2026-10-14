@@ -52,6 +52,9 @@ def inventory_retry_count(url):
 
 
 def retry_direct_for(url):
+    if not proxy_required():
+        from backend.services.http_route_memory import prefer_verified_direct
+        if prefer_verified_direct(url):return True
     from backend.services.tasks import current_execution
     handle = current_execution()
     origins = ((handle or {}).get('checkpoint') or {}).get('http_retry_direct', {})
@@ -72,6 +75,10 @@ def remember_proxy_failure(url):
         origins = dict(data.get('http_retry_direct') or {})
         origins[(urlsplit(url).hostname or '').lower()] = handle.get('attempts', 0)
         data['http_retry_direct'] = dict(list(origins.items())[-32:])
+        from backend.services.http_route_memory import fingerprint
+        fingerprints=dict(data.get('http_failed_proxy_fingerprints') or {})
+        fingerprints[(urlsplit(url).hostname or '').lower()]=fingerprint(url)
+        data['http_failed_proxy_fingerprints']=dict(list(fingerprints.items())[-32:])
         tasks.checkpoint(data)
 
 

@@ -100,6 +100,7 @@ async def read_http(request, permit=None, trace=None, *, capture_binary=False, m
                     proxy = select_proxy(target, get_environ_proxies(target))
                     required_proxy = proxy_required(request.policy)
                     if not required_proxy and retry_direct_for(target):
+                        trace['direct_after_proxy_failure']=bool(proxy)
                         proxy = None
                         notes.append('direct_on_durable_retry')
                     trace['retry_direct_url'] = target if proxy and not required_proxy else None
@@ -213,6 +214,9 @@ def fetch_http(request, *, capture_binary=False, max_bytes=None, extra_headers=N
         reader = (read_http(request, permit, trace, capture_binary=True, max_bytes=max_bytes, extra_headers=extra_headers)
                   if capture_binary else read_http(request, permit, trace))
         result = loop.run_until_complete(reader)
+        if 200 <= result.status < 300 and trace.get('direct_after_proxy_failure'):
+            from backend.services.http_route_memory import remember_verified_direct
+            remember_verified_direct(result.final_url)
         if 'proxy_route_retry_available' in result.evidence:
             remember_proxy_failure(result.final_url)
         return result

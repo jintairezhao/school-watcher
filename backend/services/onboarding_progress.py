@@ -28,6 +28,9 @@ def ai_available():
 def _ai_message(task, data, available):
     if data.get('ai_state') == 'disabled':
         return '本校已关闭 AI 识别，仍会自动查找和更新公开通知'
+    unconfirmed=(data.get('ai_usage') or {}).get('unconfirmed_requests',0)
+    if unconfirmed:
+        return f'{unconfirmed} 次模型请求结果未确认，预留额度保留；已有进度和已接入栏目保留，不会自动重发'
     if data.get('ai_error_code') == 'provider_connection_paused':
         return 'AI 连接暂不可用，进度已保存；已接入的栏目继续更新'
     if data.get('ai_error_code') == 'ai_result_unknown':
@@ -249,6 +252,8 @@ def status(school):
         stage_message = f'正在处理 {len(live)} 个后台任务' if live else '本轮后台处理已结束'
     review_count = SourceProposal.query.filter_by(school_id=school.id, state='needs_review').count()
     from backend.ai.school_budget import school_usage
+    usage=school_usage(school.id)
+    data['ai_usage']=usage
     return {'state': state, 'message': message, 'stage_message': stage_message, 'phase': data.get('phase', 'fetch'),
         'busy': busy, 'active': active, 'retry_at': retry_at,
         'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
@@ -268,7 +273,7 @@ def status(school):
         'ai_available': available, 'ai_state': data.get('ai_state', 'not_started'),
         'ai_reviewed_routes': data.get('ai_reviewed_routes', 0), 'ai_cached_routes': data.get('ai_cached_routes', 0),
         'ai_message': _ai_message(task, data, available),
-        'ai_usage': school_usage(school.id), 'budget_paused': budget_paused,
+        'ai_usage': usage, 'budget_paused': budget_paused,
         'coverage': {'complete': False, 'gaps': gaps, 'placement_gap_count': 0},
         'incomplete_reasons': [g['reason'] for g in gaps],
         'needs_verification': any(t.state == 'waiting' and t.phase == 'verification' for t in ([task] if task else []) + live),

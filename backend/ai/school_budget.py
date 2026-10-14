@@ -43,13 +43,16 @@ def school_budget_key(school_id, handle=None):
 
 
 def school_usage(school_id):
+    from backend.ai.models import AIExecution
     scope = db.session.get(AISchoolRound, school_id)
     row = db.session.get(AIBudget, scope.budget_key) if scope else None
+    unconfirmed=AIExecution.query.filter(AIExecution.status=='uncertain',
+        db.cast(AIExecution.budget_keys,db.Text).contains('"'+scope.budget_key+'"',autoescape=True)).count() if scope else 0
     return {'used_tokens': row.used_tokens if row else 0,
             'reserved_tokens': row.reserved_tokens if row else 0,
             'used_requests': row.used_requests if row else 0,
             'reserved_requests': row.reserved_requests if row else 0,
-            'budget_key': scope.budget_key if scope else None}
+            'budget_key': scope.budget_key if scope else None,'unconfirmed_requests':unconfirmed}
 
 
 def resume_budget_tasks():

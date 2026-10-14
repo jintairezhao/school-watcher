@@ -147,12 +147,14 @@ def enqueue(kind, key, payload=None, *, delay=0, replace_finished=True, min_inte
         deadline_at=now + timedelta(hours=2)), 'identity')
     task = BackgroundTask.query.filter_by(identity=identity).one()
     if task.state in ('done', 'failed') and replace_finished:
+        resume_queue_expiry = task.kind in ('collect','content','publication_date') and task.error_code in ('deadline_exceeded','execution_budget_exhausted')
         eligible = [BackgroundTask.id == task.id, BackgroundTask.state.in_(('done', 'failed'))]
         if min_interval:
             eligible.append(_freshness_column() <= now - timedelta(seconds=min_interval))
         db.session.execute(update(BackgroundTask).where(*eligible).values(
-            state='pending', payload=payload or {}, result={}, error='', error_code='', attempts=0,
-            claim_count=0, generation=BackgroundTask.generation + 1, checkpoint={}, capability=lane,
+            state='pending', payload=payload or {}, result={}, error='', error_code='', attempts=task.attempts if resume_queue_expiry else 0,
+            claim_count=task.claim_count if resume_queue_expiry else 0, generation=BackgroundTask.generation + 1,
+            checkpoint=dict(task.checkpoint or {}) if resume_queue_expiry else {}, capability=lane,
             phase='fetch', policy_version=str(policy_version), token=None, worker_id=None, lease_until=None,
             available_at=now + timedelta(seconds=delay), queued_at=now, next_run_at=None,
             deadline_at=now + timedelta(hours=2), finished_at=None, updated_at=now))
@@ -186,7 +188,8 @@ def _priority(now):
     # list refreshes. queued_at is retained on every resource/browser handoff.
     # A large page has many bounded fragments. Its next fragment must rotate
     # with other directory work rather than outrank every untouched school.
-    return case((or_(and_(BackgroundTask.kind == 'collect', BackgroundTask.phase == 'onboarding_collection'),
+    return case((BackgroundTask.kind == 'content', -3),
+                (or_(and_(BackgroundTask.kind == 'collect', BackgroundTask.phase == 'onboarding_collection'),
                      and_(BackgroundTask.kind == 'onboard', BackgroundTask.claim_count == 0)), -2),
                 (BackgroundTask.queued_at <= now - timedelta(minutes=5), -1),
                 (BackgroundTask.kind == 'content', 0), (BackgroundTask.kind.in_(('collect', 'onboard')), 1), else_=2)
@@ -241,7 +244,9 @@ def queue_ahead(task, capability=None):
     row = db.session.execute(select(BackgroundTask.queued_at, BackgroundTask.claim_count,
                                     BackgroundTask.available_at, BackgroundTask.id, BackgroundTask.kind, BackgroundTask.phase)
                              .where(BackgroundTask.id == task.id)).one()
-    if (row.kind == 'collect' and row.phase == 'onboarding_collection'
+    if row.kind=='content':
+        task_priority=-3
+    elif (row.kind == 'collect' and row.phase == 'onboarding_collection'
             or row.kind == 'onboard' and row.claim_count == 0):
         task_priority = -2
     elif row.queued_at <= now - timedelta(minutes=5):
@@ -275,7 +280,7 @@ def queue_ahead(task, capability=None):
     return int(total or 0), int(blocked or 0)
 
 
-def claim(lease_seconds=120, *, capabilities=None, worker_id='local'):
+def claim(lease_seconds=120, *, capabilities=None, worker_id='local', exclude_kinds=()):
     lanes = tuple(capabilities or CAPABILITIES)
     if not set(lanes).issubset(CAPABILITIES):
         raise ValueError('Unknown worker capability')
@@ -284,15 +289,26 @@ def claim(lease_seconds=120, *, capabilities=None, worker_id='local'):
         eligible = (BackgroundTask.capability.in_(lanes) & or_(
             (BackgroundTask.state == 'pending') & (BackgroundTask.available_at <= now),
             (BackgroundTask.state == 'running') & (BackgroundTask.lease_until <= now)))
+        if exclude_kinds:
+            eligible &= ~BackgroundTask.kind.in_(exclude_kinds)
         try:
             for row in db.session.execute(_claim_statement(eligible, now)).scalars().all():
                 from backend.services.discovery_control import should_pause, park_requested_claim
                 if should_pause(row.kind, row.payload or {}):
                     park_requested_claim(row, now)
                     continue
-                if row.deadline_at and row.deadline_at <= now:
+                deadline=row.deadline_at
+                if deadline and row.kind in ('collect','content','publication_date'):
+                    # Queue admission, retry delays and computer-off periods do
+                    # not consume the persisted remaining execution budget.
+                    if row.state=='pending':
+                        deadline=now+(deadline-row.updated_at)
+                    elif row.lease_until and row.lease_until<now:
+                        deadline+=now-row.lease_until
+                if deadline and deadline <= now:
                     db.session.execute(update(BackgroundTask).where(BackgroundTask.id == row.id, eligible).values(
-                        state='failed', error='本轮采集超过时间预算，稍后可重新安排', error_code='deadline_exceeded',
+                        state='failed', error='本轮实际处理时间已达上限，进度已保存' if row.kind in ('collect','content','publication_date') else '本轮探索时间已达上限，进度已保存',
+                        error_code='execution_budget_exhausted' if row.kind in ('collect','content','publication_date') else 'deadline_exceeded',
                         lease_until=None, token=None, checked_at=now, finished_at=now, updated_at=now))
                     continue
                 token = uuid4().hex
@@ -301,12 +317,12 @@ def claim(lease_seconds=120, *, capabilities=None, worker_id='local'):
                     continue
                 changed = db.session.execute(update(BackgroundTask).where(BackgroundTask.id == row.id, eligible).values(
                     state='running', token=token, worker_id=worker_id, lease_until=now + timedelta(seconds=lease_seconds),
-                    claim_count=BackgroundTask.claim_count + 1, updated_at=now))
+                    claim_count=BackgroundTask.claim_count + 1, updated_at=now,deadline_at=deadline))
                 if changed.rowcount:
                     handle = dict(id=row.id, token=token, generation=row.generation, policy_version=row.policy_version,
                                   capability=row.capability, phase=row.phase, checkpoint=dict(row.checkpoint or {}),
                                   identity=row.identity, kind=row.kind, payload=dict(row.payload or {}),
-                                  source_key=key, worker_id=worker_id, deadline_at=row.deadline_at, attempts=row.attempts)
+                                  source_key=key, worker_id=worker_id, deadline_at=deadline, attempts=row.attempts)
                     db.session.commit()
                     return handle
                 if key:

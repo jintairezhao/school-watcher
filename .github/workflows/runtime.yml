@@ -87,6 +87,10 @@ jobs:
         run: python tests/browser/check_publication_dates_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify queued article reads and automatic recovery
+        run: python tests/browser/check_content_queue_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify API usage charts and analytics interactions
         run: python tests/browser/check_ai_usage_browser.py
         env:

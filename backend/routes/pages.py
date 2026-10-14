@@ -14,6 +14,8 @@ from backend.database.models import (School, Department, Announcement,
 from backend.auth import admin_required
 from backend.services.article_provenance import article_provenance
 from backend.services.summaries import current_summaries
+from backend.scraper.article_observation import navigation_only_body
+from backend.services.content_cache import request_content
 
 bp = Blueprint('pages', __name__)
 
@@ -164,6 +166,8 @@ def index():
         (ann for ann in announcements if ann.id == requested_ann_id),
         date_selection,
     )
+    if selected_announcement and navigation_only_body(selected_announcement.content_html, selected_announcement.url):
+        request_content(selected_announcement)
     detail_requested = bool(requested_ann_id and selected_announcement and
                             selected_announcement.id == requested_ann_id)
     if detail_requested:
@@ -430,6 +434,8 @@ def announcement_detail(ann_id):
     if not ann:
         flash('通知不存在', 'error')
         return redirect(url_for('pages.index'))
+    if navigation_only_body(ann.content_html, ann.url):
+        request_content(ann)
 
     # 标记为已读（per-user；匿名只读不写）
     from backend.services import read_state

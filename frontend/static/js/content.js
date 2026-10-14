@@ -47,7 +47,7 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
         panel.dataset.loadState = value;
         if (placeholder) placeholder.hidden = value !== 'loading';
         body.setAttribute('aria-busy', String(value === 'loading'));
-        if (button) button.hidden = value === 'loading' || value === 'saved';
+        if (button) button.hidden = value === 'loading' || value === 'waiting' || value === 'saved';
     }
     let busy = false;
     async function load() {
@@ -56,11 +56,29 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
         phase('loading');
         if (message) message.textContent = '正在读取官网正文，你也可以先打开原文阅读。';
         if (button) button.disabled = true;
-        const deadline = Date.now() + 60000;
-        const read = method => fetch(endpoint, {method, signal: AbortSignal.timeout(Math.max(1, Math.min(15000, deadline - Date.now())))});
+        const read = method => fetch(endpoint, {method, signal: AbortSignal.timeout(15000)});
+        let method = 'POST';
         try {
-            let response = await read('POST');
-            for (let attempt = 0; attempt < 30 && Date.now() < deadline; attempt++) {
+            // The local response timeout is not a website timeout. Keep observing
+            // the same durable task while it queues/retries; never enqueue a
+            // second read merely because one observation was interrupted.
+            while (panel.isConnected) {
+                if (document.hidden) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    continue;
+                }
+                let response;
+                try {response = await read(method);}
+                catch (error) {
+                    if (!panel.isConnected) return;
+                    if (!['TimeoutError', 'AbortError', 'TypeError'].includes(error.name)) throw error;
+                    method = 'GET';
+                    phase('waiting');
+                    if (message) message.textContent = '正在重新连接应用，后台读取任务会保留，完成后自动显示。';
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    continue;
+                }
+                method = 'GET';
                 if (!panel.isConnected) return;
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || '正文暂时无法加载，请打开原文查看。');
@@ -84,20 +102,20 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
                 if (data.content_status === 'failed') {
                     throw new Error(data.error || '正文暂时无法加载，可以重试或打开官网原文。');
                 }
-                if (message) message.textContent = '正在读取官网正文，你也可以先打开原文阅读。';
-                if (document.hidden) throw new Error('读取任务已保存，返回页面后可重试查看。');
+                if (data.content_status === 'unloaded') {
+                    phase('unloaded');
+                    if (message) message.textContent = '正文任务尚未安排，可点击读取或打开官网原文。';
+                    return;
+                }
+                phase('loading');
+                if (message) message.textContent = data.progress_message || '正文正在后台处理，完成后会自动显示，也可以先打开官网原文。';
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                if (!panel.isConnected) return;
-                response = await read('GET');
             }
-            throw new Error('正文仍在等待处理，请稍后重试或打开原文。');
         } catch (error) {
             if (!panel.isConnected) return;
             phase('failed');
-            if (message) message.textContent = ['TimeoutError', 'AbortError'].includes(error.name)
-                ? '正文读取超时，可以重试或打开官网原文。'
-                : error instanceof TypeError ? '连接中断，正文暂未加载。可以重试或打开官网原文。'
-                : error instanceof SyntaxError ? '暂时无法读取正文返回的内容，可以重试或打开官网原文。' : error.message;
+            if (message) message.textContent = error instanceof SyntaxError
+                ? '应用返回的正文状态暂时无法读取，可重试查看结果或打开官网原文。' : error.message;
         } finally {
             busy = false;
             if (button?.isConnected) {button.disabled = false; button.textContent = '重新加载正文';}
