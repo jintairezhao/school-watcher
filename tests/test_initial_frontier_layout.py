@@ -150,6 +150,57 @@ class InitialFrontierLayoutTests(unittest.TestCase):
         self.store.finish(self.key, first['url'], state='fetched')
         self.assertEqual(Inventory(self.path).claim(self.key, focus='valuable')['url'], max(directories))
 
+    def test_observed_academic_directory_precedes_general_organization_despite_url_order(self):
+        organization = self.add('a-layout', '组织机构', 'directory', 1)
+        academic = self.add('z-layout', '院系设置', 'directory', 1)
+        for url in (organization, academic):
+            self.edge(ROOT, url, 'directory', content_hash='root-current')
+        self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], academic)
+        self.store.finish(self.key, academic, state='fetched')
+        self.assertEqual(Inventory(self.path).claim(self.key, focus='valuable')['url'], organization)
+
+    def test_observed_academic_layout_wording_variants_share_priority(self):
+        from backend.scraper.discovery.frontier import choose_route
+        organization = {'url': ROOT + 'a-layout', 'kind': 'directory', 'label': '组织机构',
+                        'depth': 1, 'priority': 0}
+        parent = {'url': ROOT, 'kind': 'root', 'state': 'fetched', 'content_hash': 'current'}
+        for label in ('院系设置', '教学机构', '教学科研单位', '学部设置', '学科设置',
+                      '学科专业', '学科与专业', '学科、专业设置', '本科专业设置',
+                      '研究生学科目录', '学科专业目录', '专业介绍', '学科建设'):
+            with self.subTest(label=label):
+                academic = dict(organization, url=ROOT + 'z-layout', label=label, priority=4)
+                edges = [{'parent_url': ROOT, 'target_url': page['url'], 'kind': 'directory',
+                          'decision': 'follow', 'content_hash': 'current'}
+                         for page in (organization, academic)]
+                self.assertEqual(choose_route([organization, academic], edges=edges,
+                                              parents={ROOT: parent}), academic)
+
+    def test_academic_news_or_channel_names_cannot_be_promoted_to_layout_directories(self):
+        organization = self.add('z-layout', '组织机构', 'directory', 1)
+        self.edge(ROOT, organization, 'directory', content_hash='root-current')
+        for index, label in enumerate(('学科建设新闻', '院系设置通知', '专业设置动态')):
+            channel = self.add(f'a-news-{index}', label, 'channel', 1)
+            self.edge(ROOT, channel, 'channel', content_hash='root-current')
+        self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], organization)
+
+    def test_oldest_turn_overlap_only_defers_fair_unit_probe_until_next_slice(self):
+        from backend.scraper.discovery.frontier import choose_route
+        oldest = {'url': ROOT + 'oldest', 'kind': 'navigation', 'frontier_rowid': 1}
+        unit = {'url': ROOT + 'unit', 'kind': 'unit', 'frontier_rowid': 3}
+        library = {'url': ROOT + 'library', 'kind': 'unit', 'attempts': 14}
+        columns = [{'url': ROOT + f'column-{i}', 'kind': 'channel', 'frontier_rowid': 4 + i}
+                   for i in range(3)]
+        pages = [oldest, unit, *columns]
+        history = {page['url']: page for page in [*pages, library]}
+        branches = {page['url']: library['url'] if page in columns else page['url'] for page in pages}
+        selected = []
+        for count in range(14, 18):
+            choice = choose_route(pages, claim_count=count, history=history, branches=branches)
+            selected.append(choice['url'])
+            pages.remove(choice)
+        self.assertEqual(selected[0], oldest['url'])  # Claim 15 retains its oldest-entrance turn.
+        self.assertEqual(selected[3], unit['url'])  # Claim 18 resumes the existing 3-page rotation.
+
 
 if __name__ == '__main__':
     unittest.main()

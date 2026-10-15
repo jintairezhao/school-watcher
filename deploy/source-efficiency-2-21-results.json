@@ -343,7 +343,7 @@
       "failed": 0,
       "seconds": 215.698,
       "source_hashes_unchanged": true,
-      "scope": "最终冻结代码完整回归；真实Edge本地页面检查包含在本次全套内"
+      "scope": "院系学科目录优先细调前的完整回归；细调后定向52项通过，最终提交完整CI结果见对应Actions记录"
     },
     "new_installer_size": "pending; Windows target remains soft approximately100MB; no browser/model bundle added",
     "real_Edge_local_fixtures": {
@@ -357,7 +357,8 @@
       "Linux": 1
     },
     "final_frozen_implementation_fresh_API_comparison_completed": false,
-    "final_AI_retest_limitation": "正式轮已达到本机原有100次请求上限，未为测试提高上限或新开轮次绕过；修复后仅执行明确标注的零模型复验。"
+    "final_AI_retest_limitation": "正式轮已达到本机原有100次请求上限，未为测试提高上限或新开轮次绕过；修复后仅执行明确标注的零模型复验。",
+    "final_academic_priority_full_CI": "提交后由桌面发布工作流执行，结果以对应提交的GitHub Actions记录为准"
   },
   "real_menu_cache_probe": {
     "new_requests": 1,
@@ -439,7 +440,7 @@
     }
   },
   "post_live_repairs": {
-    "final_frozen_source_sha256": "299acc7844b1b98e9d629286068bad252b479835c493d329d116fcbbf8ce312e",
+    "final_frozen_source_sha256": "6a99fc028eb562380f1f03dd24674380148cb4191ba7881f37b54e8e44a7b4bc",
     "new_model_requests": 0,
     "body_observation": {
       "fixes": [
@@ -458,7 +459,7 @@
     },
     "exploration_order": {
       "starting_URL": "真实官网首页，非随机地址",
-      "initial_layout": "当前首页快照直接观察的目录先用于了解布局",
+      "initial_layout": "当前首页快照直接观察的目录先用于了解布局；院系、教学机构、学科及专业目录优先于普通组织机构",
       "department_probe_interval": 3,
       "oldest_entrance_interval": 5,
       "uses_existing_policy_values": true,
@@ -476,9 +477,25 @@
           3
         ],
         "college_or_graduate_branches_in_first_30_before": 0,
-        "college_or_graduate_branches_in_first_30_after": 7
+        "college_or_graduate_branches_in_first_30_after": 7,
+        "scope": "本次院系学科目录优先细调前的真实保留图重放；不是新实网费用对照"
       },
-      "production_cost_or_speed_benefit_verified": false
+      "production_cost_or_speed_benefit_verified": false,
+      "academic_directory_precedes_general_organization": true,
+      "academic_priority_is_only_for_observed_directory_entrances": true,
+      "academic_priority_targeted_regression": {
+        "tests_run": 52,
+        "modules": {
+          "tests.test_initial_frontier_layout": 15,
+          "tests.test_focused_source_frontier": 13,
+          "tests.test_layered_student_information": 18,
+          "tests.test_student_source_focus": 6
+        },
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "ok": true
+      }
     },
     "same_round_candidate_replay": {
       "task_id": 92,
@@ -511,6 +528,7 @@
       "route_forced_or_proxy_settings_changed": false,
       "original_ledger_unchanged": true,
       "scope": "最终冻结代码的两篇正文实际读取及身份核验，不是最终版新的整校API费用对照"
-    }
+    },
+    "previous_frozen_source_before_academic_priority_sha256": "299acc7844b1b98e9d629286068bad252b479835c493d329d116fcbbf8ce312e"
   }
 }

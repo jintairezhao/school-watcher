@@ -155,7 +155,10 @@ def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
     if layout:
         # Only direct, still-unread homepage directory entrances get this
         # finite initial pass. Nested profiles cannot preempt columns forever.
-        return min(layout, key=route_rank)
+        from backend.services.student_sources import college_priority
+        return min(layout, key=lambda page: (
+            college_priority(page['kind'], page.get('label', ''), page.get('path_json', '[]')) != 0,
+            route_rank(page)))
     if (claim_count + 1) % max(1, int(interval)) == 0:
         return min(pages, key=lambda page: (page.get('frontier_rowid', 0), page.get('url', '')))
     if branches and history and (claim_count + 1) % max(1, int(slice_size)) == 0:

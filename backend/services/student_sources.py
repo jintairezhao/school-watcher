@@ -68,7 +68,8 @@ def student_priority(kind, label, path_json='[]', school_name=''):
 
 
 COLLEGE = re.compile(r'(?:学院|学部|书院|学系|系)(?:[（(].{1,25}[）)])?$')
-COLLEGE_DIRECTORY = re.compile(r'院系|学院设置|教学单位|教学机构|学部设置|二级学院|教学科研单位')
+COLLEGE_DIRECTORY = re.compile(r'院系|学院设置|教学单位|教学机构|学部设置|二级学院|教学科研单位|'
+                              r'(?:学科|专业)(?:设置|目录|介绍|建设)|学科[、与和/\s]*专业')
 PROFILE_DIRECTORY = re.compile(r'导师|师资|教师名录|师资力量|人物')
 
 
