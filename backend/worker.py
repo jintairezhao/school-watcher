@@ -90,6 +90,7 @@ def schedule_due(owner_id='local'):
     if not lease:
         return False
     try:
+        tasks.recover_discovery_cache_waiters()
         from backend.services.source_onboarding import resume_rule_discovery
         resume_rule_discovery()
         from backend.services.scrape_logs import recover_interrupted_logs
@@ -405,8 +406,12 @@ def execute(app, handle, pause=None):
             logger.info('Discarded stale task execution %s', handle['id'])
         except Exception as exc:
             db.session.rollback()
-            logger.exception('Task %s failed', handle['id'])
-            tasks.finish(handle, error=exc, retryable=getattr(exc, 'retryable', True))
+            if tasks.is_discovery_cache_lock_error(exc):
+                tasks.handoff(handle, tasks.TaskDeferred(phase='cache_wait', delay=1,
+                    reason='发现缓存正在由其他任务使用，已保存进度，稍后继续', error_code='discovery_cache_busy'))
+            else:
+                logger.exception('Task %s failed', handle['id'])
+                tasks.finish(handle, error=exc, retryable=getattr(exc, 'retryable', True))
         finally:
             stop.set()
             db.session.remove()

@@ -224,6 +224,8 @@ class NavigationPersistenceTests(unittest.TestCase):
         def initial(*args, **kwargs):
             result = reply(args[2], role='gateway')
             result['output']['results'][-1]['role'] = 'unknown'
+            result['output']['results'][-1]['value'] = 'unknown'
+            result['output']['results'][-1]['facts'] = []
             return result
         with patch('backend.services.tasks.current_execution', return_value=handle), \
              patch('backend.services.tasks.checkpoint', side_effect=lambda value: handle.update(checkpoint=value)), \

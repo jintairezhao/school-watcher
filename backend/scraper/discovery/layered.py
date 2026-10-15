@@ -146,6 +146,19 @@ def route_structure(parsed, page, html='', root_url='', has_publications=False, 
                 'decision': 'follow' if probe else 'navigation_pending', **({'probe_only': True} if probe else {})})
     unverified = {n.get('locator') for n in parsed['nodes'] if n['relation'] == 'linked_navigation_unverified'}
     for link in parsed['links']:
+        from backend.scraper.http_client import same_school_url
+        if (html and not link.get('publication_route') and link.get('url')
+                and not same_school_url(link['url'], root_url or page['url'])
+                and link['decision'] in ('follow', 'official_external_link', 'navigation_pending', 'external_review')):
+            from .structure import locator_element
+            from .navigation_roles import footer_navigation
+            element = locator_element(soup, link.get('locator'))
+            if element is not None and element.name != 'script' and footer_navigation(element):
+                # Keep the observed resource edge. A footer backlink alone is
+                # not evidence that an unrelated institution belongs to this
+                # school or merits another paid navigation classification.
+                link['decision'] = 'auxiliary_reference'
+                continue
         if (not terminal and page['kind'] in ('unit', 'gateway')
                 and link['kind'] == 'navigation' and link['label'] in PUBLISHING_GATEWAYS
                 and link['decision'] in ('follow', 'navigation_pending')
@@ -206,8 +219,12 @@ def navigation_candidates(html, parsed, page):
 def apply_route(parsed, link, saved):
     """Persist only role decisions; names and relationships come from the DOM."""
     from .structure import node_key
-    link.update({key: saved[key] for key in ('kind', 'decision', 'ai_reviewed', 'ai_value') if key in saved})
+    link.update({key: saved[key] for key in ('kind', 'decision', 'ai_reviewed', 'ai_value', 'ai_role', 'probe_only') if key in saved})
     if not saved.get('ai_reviewed') or link['decision'] not in ('follow', 'official_external_link'):
+        return
+    if saved.get('ai_role') == 'unknown':
+        # A bounded read action is not evidence of a website entrance's owner
+        # or semantic role. Keep the independently observed DOM nodes intact.
         return
     kind = {'unit': 'unit', 'channel': 'channel'}.get(link['kind'], 'group')
     nodes = [node for node in parsed['nodes'] if node.get('url') == link['url']
@@ -237,12 +254,25 @@ def route_priority(link):
         'relevant': -2, 'potential': -1, 'mixed': 0, 'unknown': 0, 'low': 2}.get(link.get('ai_value'), 0)
 
 
-def append_navigation_evidence(evidence, link, context):
+def observed_probe(site, link):
+    """Read a real uncertain entrance without promoting it to a source."""
+    from backend.scraper.http_client import same_school_url
+    return {'url': link['url'], 'kind': 'channel' if link.get('publication_route') else 'gateway',
+            'decision': 'follow' if same_school_url(link['url'], site['root_url']) else 'official_external_link',
+            'ai_role': 'unknown', 'probe_only': True}
+
+
+def append_navigation_evidence(evidence, link, context, *, menu_evidence=True):
     ident = hashlib.sha256(link['url'].encode()).hexdigest()[:20]
     evidence['candidates'].append({'candidate_id': ident, 'name': link['label'][:600],
         'url': link['url'][:3000], 'kind': link['kind'], 'path': ' / '.join(link['path'])[-600:]})
-    evidence['evidence'].append({'candidate_id': ident, 'evidence_id': ident,
-        'text': link['label'] + '\n' + context})
+    proof = {'candidate_id': ident, 'evidence_id': ident, 'text': link['label'] + '\n' + context}
+    material = link.get('_navigation_material') if menu_evidence else None
+    if material:
+        # The validator permits facts to quote only text. Page context can
+        # guide priority without contaminating a reusable menu role's proof.
+        proof.update(text=(material.get('quote_text') or material['text'])[:2000], context=proof['text'])
+    evidence['evidence'].append(proof)
     return ident
 
 
@@ -253,23 +283,26 @@ def legacy_navigation_decision(batch, school_id, max_bytes):
         return None
     from backend.ai.models import AIExecution
     from backend.ai.skill_loader import canonical, digest
-    evidence = {'school_id': school_id, 'candidates': [], 'evidence': []}
     prefixes = {}
-    for index, (link, context) in enumerate(batch):
-        append_navigation_evidence(evidence, link, context)
-        if len(canonical(evidence).encode()) > max_bytes:
-            break
-        # Old evidence could end at the material byte boundary. Match the exact
-        # original input, never merely a URL or an independently cached role.
-        prefixes[digest({'evidence': evidence, 'repair_feedback': None})] = (
-            index + 1, json.loads(json.dumps(evidence)))
+    for menu_evidence in (True, False):
+        evidence = {'school_id': school_id, 'candidates': [], 'evidence': []}
+        for index, (link, context) in enumerate(batch):
+            append_navigation_evidence(evidence, link, context, menu_evidence=menu_evidence)
+            if len(canonical(evidence).encode()) > max_bytes:
+                break
+            # Recover both input formats exactly. Changing the quote boundary
+            # must never purchase a new subset of an unresolved old request.
+            prefixes[digest({'evidence': evidence, 'repair_feedback': None})] = (
+                index + 1, json.loads(json.dumps(evidence)))
     if not prefixes:
         return None
-    row = AIExecution.query.filter(AIExecution.purpose == 'directory',
+    rows = AIExecution.query.filter(AIExecution.purpose == 'directory',
         AIExecution.skill_id == 'student-information', AIExecution.mode == 'navigation',
-        AIExecution.status.in_(('reserved', 'sending', 'uncertain')),
+        AIExecution.status.in_(('reserved', 'sending', 'uncertain', 'failed', 'partial')),
         AIExecution.execution_id.like('routes:%'),
-        AIExecution.input_digest.in_(prefixes)).order_by(AIExecution.created_at).first()
+        AIExecution.input_digest.in_(prefixes)).order_by(AIExecution.created_at).all()
+    row = next((row for row in rows if row.status in ('reserved', 'sending', 'uncertain')
+                or row.request_sent and not (row.usage or {}).get('known')), None)
     if row is None:
         return None
     batch_count, original_evidence = prefixes[row.input_digest]
@@ -278,7 +311,7 @@ def legacy_navigation_decision(batch, school_id, max_bytes):
             'evidence': original_evidence}
 
 
-def assist(site, page, html, parsed):
+def assist(site, page, html, parsed, *, decision_allowed=None):
     from backend.ai.configuration import get_model_binding, AIConfigError
     from backend.ai.runtime import run_skill
     from backend.ai.skill_loader import digest, load_skill, canonical
@@ -313,6 +346,25 @@ def assist(site, page, html, parsed):
         for link in parsed['links']:
             if link['url'] == saved['url']:
                 apply_route(parsed, link, dict(saved, decision=saved.get('decision', 'follow')))
+    if checkpoint.get('unresolved_routes') and not pending_decision:
+        # Older layered jobs recorded a known unknown decision but no read
+        # action. Advance only the already-reviewed, still-observed URLs. This
+        # does not fabricate cache facts or purchase a new subset decision.
+        processed = {link['url']: link for link, _ in candidates[:cursor]}
+        unresolved, admitted = [], list(checkpoint.get('admitted_routes', []))
+        for row in checkpoint['unresolved_routes']:
+            link = processed.get(row['url'])
+            if link is None:
+                unresolved.append(row)
+                continue
+            if not link.get('ai_reviewed'):
+                saved = dict(observed_probe(site, link), ai_reviewed=True, ai_value='unknown')
+                apply_route(parsed, link, saved)
+                admitted = [value for value in admitted if value['url'] != saved['url']]
+                admitted.append(saved)
+        checkpoint.update(unresolved_routes=unresolved, admitted_routes=admitted)
+        if handle:
+            tasks.checkpoint(checkpoint)
     batch = candidates[cursor:cursor + (pending_decision['batch_count'] if pending_decision else batch_size)]
     if not batch:
         return {'status': 'needs_recovery' if checkpoint.get('unresolved_routes') else 'processed',
@@ -378,10 +430,13 @@ def assist(site, page, html, parsed):
     cached_new = 0
     for link, row in reused:
         from backend.scraper.http_client import same_school_url
-        kind = {'directory': 'directory', 'unit': 'unit', 'publishing': 'channel', 'gateway': 'gateway'}[row['role']]
-        saved = {'url': link['url'], 'kind': 'channel' if link.get('publication_route') else kind,
-                 'decision': 'follow' if same_school_url(link['url'], site['root_url']) else 'official_external_link',
-                 'ai_reviewed': True, 'ai_value': row['value']}
+        if row['role'] == 'unknown':
+            saved = observed_probe(site, link)
+        else:
+            kind = {'directory': 'directory', 'unit': 'unit', 'publishing': 'channel', 'gateway': 'gateway'}[row['role']]
+            saved = {'url': link['url'], 'kind': 'channel' if link.get('publication_route') else kind,
+                     'decision': 'follow' if same_school_url(link['url'], site['root_url']) else 'official_external_link'}
+        saved.update(ai_reviewed=True, ai_value=row['value'], ai_role=row['role'])
         apply_route(parsed, link, saved)
         if not any(value['url'] == link['url'] for value in admitted):
             admitted.append(saved)
@@ -398,6 +453,12 @@ def assist(site, page, html, parsed):
             fingerprint = (pending_decision['fingerprint'] if pending_decision else
                 digest({'policy': role_policy, 'skill': skill_digest,
                         'evidence': evidence, 'binding': [binding['id'], binding['version']]}))
+            if decision_allowed is not None and not decision_allowed('routes:' + fingerprint):
+                return {'status': 'branch_stopped', 'error_code': 'no_discovery_progress',
+                        'remaining_routes': len(candidates) - cursor,
+                        'deferred_routes': len(candidates) - cursor,
+                        'reviewed_routes': cursor,
+                        'cached_routes': cached_count + checkpoint.get('cached_navigation_routes', 0)}
             # Persist before dispatch: a process interruption or later cache
             # hit must not change the identity of a possibly paid request.
             checkpoint['route_pending_decision'] = {'material_hash': material_hash, 'cursor': cursor,
@@ -433,27 +494,24 @@ def assist(site, page, html, parsed):
             kind = 'channel'
         if kind:
             saved = {'url': link['url'], 'kind': kind, 'decision': decision}
-        elif valuable and row['role'] == 'unknown':
-            # Uncertainty is a reason for a bounded public read, not a request
-            # for the student to classify their university's website.
-            saved = {'url': link['url'], 'kind': link['kind'] if link['kind'] in
-                     ('directory', 'unit', 'channel', 'gateway') else 'gateway', 'decision': decision}
+        elif row['role'] == 'unknown':
+            # Both route policies advance by inspecting this observed target.
+            # Uncertainty is never promoted to a unit, column or owner verdict.
+            saved = observed_probe(site, link)
         elif valuable:
             # Existing readable routes stay usable even if a short description
             # suggests low student relevance. Value changes priority, not access.
             saved = {'url': link['url'], 'kind': link['kind'], 'decision':
                      link['decision'] if link['decision'] in ('follow', 'official_external_link') else 'route_reference'}
-        elif row['role'] == 'unknown':
-            unresolved.append({'name': link['label'], 'url': link['url']})
-            continue
         else:
             saved = {'url': link['url'], 'kind': link['kind'], 'decision': 'route_reference'}
-        saved.update(ai_reviewed=True, ai_value=row['value'])
+        saved.update(ai_reviewed=True, ai_value=row['value'], ai_role=row['role'])
         apply_route(parsed, link, saved)
         admitted = [value for value in admitted if value['url'] != saved['url']]
         admitted.append(saved)
-        if navigation_roles.supported(row, link.get('_navigation_material')):
-            to_cache.append((cache_keys[id(link)], row))
+        cache_row = navigation_roles.cacheable_result(row, link.get('_navigation_material'))
+        if cache_row:
+            to_cache.append((cache_keys[id(link)], cache_row))
     navigation_roles.save(to_cache)
     checkpoint.pop('route_pending_decision', None)
     if handle:
@@ -461,6 +519,15 @@ def assist(site, page, html, parsed):
         # slice is harmless and the stable AI execution prevents double billing.
         checkpoint.update(route_cursor=cursor + batch_count, admitted_routes=admitted, unresolved_routes=unresolved,
                           cached_navigation_routes=checkpoint.get('cached_navigation_routes', 0))
+        if fingerprint:
+            # Persist the decision before the caller reacquires its writer lock.
+            # Contention or a crash there cannot remove a paid call from the
+            # shared branch clock on the next task claim.
+            unrecorded = list(checkpoint.get('navigation_unrecorded_decisions', []))
+            decision_id = 'routes:' + fingerprint
+            if decision_id not in unrecorded:
+                unrecorded.append(decision_id)
+            checkpoint['navigation_unrecorded_decisions'] = unrecorded
         tasks.checkpoint(checkpoint)
     record_progress(ai_state='succeeded')
     return {'status': 'pending' if cursor + batch_count < len(candidates) else 'needs_recovery' if unresolved else 'processed',

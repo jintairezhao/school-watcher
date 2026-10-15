@@ -17,6 +17,8 @@ _execution = ContextVar('task_execution', default=None)
 _control = ContextVar('task_control', default=False)
 ACTIVE_STATES = ('pending', 'running', 'waiting')
 CAPABILITIES = ('http', 'browser', 'directory')
+DISCOVERY_CACHE_WRITERS = ('directory', 'discover', 'source_baseline', 'navigation_review',
+                           'source_grouping', 'maintenance')
 
 
 class LeaseLost(BaseException):
@@ -176,11 +178,48 @@ def _source_key(kind, payload):
         return 'onboard:' + str(payload['school_id']) + ':' + hashlib.sha256(payload['url'].encode()).hexdigest()[:24]
     if kind == 'source_review':
         return 'source-review:' + str(payload['proposal_id'])
-    if kind in ('directory', 'discover', 'source_baseline', 'navigation_review'):
+    if kind in DISCOVERY_CACHE_WRITERS:
         return 'directory:writer'
     if kind in ('collect', 'source_health') and payload.get('department_id') is not None:
         return f"source:{payload['department_id']}"
     return None
+
+
+def is_discovery_cache_lock_error(error):
+    """Recognize only contention on this instance's shared discovery cache."""
+    from filelock import Timeout
+    from flask import current_app
+    from pathlib import Path
+    path = str(current_app.config['DISCOVERY_CACHE_PATH']) + '.worker.lock'
+    if isinstance(error, str):
+        return error == str(Timeout(path))
+    return isinstance(error, Timeout) and Path(error.lock_file).resolve() == Path(path).resolve()
+
+
+def recover_discovery_cache_waiters():
+    """Resume legacy lock failures without creating a new paid generation."""
+    from backend.services.discovery_control import should_pause
+    now, recovered = datetime.utcnow(), 0
+    for row in BackgroundTask.query.filter(BackgroundTask.kind.in_(DISCOVERY_CACHE_WRITERS),
+            BackgroundTask.state == 'failed', BackgroundTask.error.startswith('The file lock ')).all():
+        if not is_discovery_cache_lock_error(row.error) or should_pause(row.kind, row.payload or {}):
+            continue
+        deadline = row.deadline_at
+        if deadline:
+            # Time spent failed after the lock collision is inactive time. Keep
+            # only the budget remaining when it stopped, including zero.
+            stopped = row.finished_at or row.updated_at
+            deadline = now + max(timedelta(), deadline - stopped)
+        changed = db.session.execute(update(BackgroundTask).where(BackgroundTask.id == row.id,
+            BackgroundTask.generation == row.generation, BackgroundTask.state == 'failed',
+            BackgroundTask.error == row.error).values(
+                state='pending', phase='cache_wait', available_at=now, updated_at=now,
+                token=None, worker_id=None, lease_until=None, finished_at=None,
+                deadline_at=deadline,
+                error='发现缓存正在由其他任务使用，已保存进度，稍后继续', error_code='discovery_cache_busy'))
+        recovered += changed.rowcount
+    db.session.commit()
+    return recovered
 
 
 def _priority(now):

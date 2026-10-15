@@ -12,7 +12,7 @@ from backend.database.source_governance_models import SourceValidation
 from backend.scraper.http_client import same_school_url, validate_public_url
 from backend.services.source_inventory import canonical_url
 
-VALIDATION_VERSION = 5
+VALIDATION_VERSION = 6
 
 
 def sample_failure_kind(samples):
@@ -38,12 +38,19 @@ def sample_failure_kind(samples):
             'access_restricted' if kinds else '')
 
 
-def _remove_article_noise(soup, config=None):
+def _remove_article_noise(soup, config=None, *, title='', page_url=''):
     """Exclude site chrome before either identifying a title or measuring text."""
     # A class containing "header" is not necessarily site chrome: real CMS
     # pages wrap their entire article in .headerpage. Match marker tokens,
     # not arbitrary substrings that can remove the actual notification.
-    noise = re.compile(r'(?:^|[\s_-])(?:nav|navigation|menu|header|footer|sidebar|copyright|breadcrumb|related|recommend|toolbar)(?:$|[\s_-])', re.I)
+    noise = re.compile(r'(?:^|[\s_-])(?:nav|navigation|menu|footer|sidebar|copyright|breadcrumb|related|recommend|toolbar)(?:$|[\s_-])', re.I)
+    header_marker = re.compile(r'(?:^|[\s_-])header(?:$|[\s_-])', re.I)
+    # An article's own headline can live in .article__header. Preserve that
+    # branch only after the title, local publication line and body agree.
+    from backend.scraper.article_observation import article_heading, title_bound_body, prune_unready_article_nodes
+    heading = article_heading(soup, title) if title and title_bound_body(soup, page_url, title) is not None else None
+    headline_branch = {id(node) for node in [heading, *heading.parents]} if heading is not None else set()
+    prune_unready_article_nodes(soup)
     # Some public CMS templates use aside for their main article column. Keep
     # ancestors of an executed, bounded body selector; explicit navigation and
     # sidebar markers still take precedence over any model-proposed selector.
@@ -55,7 +62,8 @@ def _remove_article_noise(soup, config=None):
         if node.attrs is None:
             continue
         markers = ' '.join(node.get('class', [])) + ' ' + node.get('id', '')
-        if (node.name in ('script', 'style', 'nav', 'header', 'footer')
+        if (node.name in ('script', 'style', 'nav', 'footer')
+                or (node.name == 'header' or header_marker.search(markers)) and id(node) not in headline_branch
                 or node.name == 'aside' and id(node) not in body_ancestors or noise.search(markers)):
             node.decompose()
 
@@ -64,6 +72,10 @@ def _article_body_evidence(soup, config, title, page_url):
     """Use executed body regions or non-navigation prose/notice-labelled files."""
     from backend.services.source_governance import _normal
     from backend.scraper.article_resources import has_public_body_resource
+    from backend.scraper.article_observation import (article_heading, publication_nodes,
+                                                     without_publication_metadata)
+    heading = article_heading(soup, title)
+    metadata = publication_nodes(soup, heading)[0] if heading is not None else []
     configured = soup.select(config['content_selector']) if config.get('content_selector') else []
     # An all-page selector cannot promote navigation/files to article evidence.
     bounded = [node for node in configured if node.name not in ('body', 'html', 'head', 'title')]
@@ -78,7 +90,7 @@ def _article_body_evidence(soup, config, title, page_url):
                                for row in table.select('tr'))]
     texts = []
     for node in paragraphs:
-        clean = BeautifulSoup(str(node), 'lxml')
+        clean = without_publication_metadata(node, metadata)
         for link in clean.select('a,button,select'):
             link.decompose()
         text = clean.get_text(' ', strip=True)
@@ -199,7 +211,7 @@ def article_samples(config, records, fetcher):
             sample['reason'] = problem
         else:
             soup = BeautifulSoup(html, 'lxml')
-            _remove_article_noise(soup, config)
+            _remove_article_noise(soup, config, title=record['title'], page_url=final)
             title = _normal(record['title'])
             headings = [_normal(node.get_text(' ', strip=True)) for node in soup.select('h1,h2,h3,title')]
             headings += [_normal(node.get('content')) for node in soup.select('meta[property="og:title"]')]

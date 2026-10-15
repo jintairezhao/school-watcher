@@ -125,16 +125,47 @@ def route_rank(page, incoming=(), parents=None):
             page.get('depth', 0), page.get('url', ''))
 
 
-def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5):
-    """Every trial interval give oldest runnable work a turn; retain every row."""
+def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
+                 branches=None, history=None, slice_size=3):
+    """Read the observed layout, then share exploration across forward branches.
+
+    Branches come from navigation_progress's current evidenced graph, not a
+    second interpretation of names or address prefixes. Their attempt totals
+    are scheduling effort only; they establish no departmental ownership.
+    """
     if not pages:
         return None
     roots = [page for page in pages if page.get('kind') == 'root']
     if roots:
         return min(roots, key=route_rank)
-    if (claim_count + 1) % max(1, int(interval)) == 0:
-        return min(pages, key=lambda page: (page.get('frontier_rowid', 0), page.get('url', '')))
+    parents = parents or {}
     incoming = defaultdict(list)
     for edge in edges:
         incoming[edge['target_url']].append(edge)
+    layout = [page for page in pages
+              if page.get('kind') == 'directory' and page.get('depth') == 1
+              and not page.get('checked_at') and not page.get('attempts')
+              and any(edge.get('decision') in ('follow', 'official_external_link')
+                      and edge.get('kind') == 'directory'
+                      and (parent := parents.get(edge.get('parent_url'), {})).get('kind') == 'root'
+                      and parent.get('state') == 'fetched'
+                      and parent.get('content_hash')
+                      and parent['content_hash'] == edge.get('content_hash')
+                      for edge in incoming[page['url']])]
+    if layout:
+        # Only direct, still-unread homepage directory entrances get this
+        # finite initial pass. Nested profiles cannot preempt columns forever.
+        return min(layout, key=route_rank)
+    if (claim_count + 1) % max(1, int(interval)) == 0:
+        return min(pages, key=lambda page: (page.get('frontier_rowid', 0), page.get('url', '')))
+    if branches and history and (claim_count + 1) % max(1, int(slice_size)) == 0:
+        effort = defaultdict(int)
+        for url, page in history.items():
+            effort[branches.get(url, url)] += page.get('attempts', 0)
+        probes = [page for page in pages
+                  if history.get(branches.get(page['url']), {}).get('kind') == 'unit']
+        if probes:
+            return min(probes, key=lambda page: (
+                effort[branches[page['url']]],
+                route_rank(page, incoming[page['url']], parents)))
     return min(pages, key=lambda page: route_rank(page, incoming[page['url']], parents))

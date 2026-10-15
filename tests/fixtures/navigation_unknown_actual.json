@@ -1,0 +1,23 @@
+{
+  "execution_id": "routes:6b0458783889bac604417e6d0b88f87effbcf0e66f7c7e86d0046b130058b6f9",
+  "usage": {"known": true, "input_tokens": 1429, "output_tokens": 141, "total_tokens": 1570},
+  "output": {
+    "results": [
+      {
+        "candidate_id": "2987129ebf594dfe7b25",
+        "role": "unknown",
+        "value": "unknown",
+        "historical": "unknown",
+        "reason": "仅有菜单名称“信息素养教育”和路径“教学支持 / 图书馆 / 教学支持”，证据不足以判断该入口是持续发布栏目、中间页还是单篇文章，也无法确认其对学生具体用途。",
+        "facts": [
+          {
+            "kind": "relevance",
+            "text": "菜单项显示为图书馆教学支持下的“信息素养教育”，但未提供内容、受众或发布形式信息。",
+            "evidence_id": "2987129ebf594dfe7b25",
+            "quote": "教学支持\n信息素养教育"
+          }
+        ]
+      }
+    ]
+  }
+}

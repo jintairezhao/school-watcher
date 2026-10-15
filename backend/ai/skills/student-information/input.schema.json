@@ -62,6 +62,10 @@
           "text": {
             "type": "string",
             "maxLength": 6000
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 6000
           }
         },
         "required": [

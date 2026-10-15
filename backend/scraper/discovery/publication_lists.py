@@ -401,7 +401,10 @@ def publication_lists(html, url):
             selector += ''.join('.' + soupsieve.escape(c) for c in candidate['item_class'].split())
         configs.append({'list_selector': selector, 'title_selector': 'a', 'link_selector': 'a',
                         'date_selector': 'time, span, em, i, .date, .time',
-                        'content_selector': 'div.v_news_content, div.wp_articlecontent, div.article-content, article',
+                        # Repeated list rows provide no evidence for the CSS of
+                        # a different article page. Its body is verified from
+                        # the observed title and actual sampled material.
+                        'content_selector': '',
                         'method': 'dom_analysis', 'confidence': 0.8})
 
     found = []

@@ -44,30 +44,8 @@ def queue_navigation(site, page):
 
 def navigation_progress(inventory, site_key, school_id, branch_url):
     """Only executed reads and installed information count as branch progress."""
-    from backend.database.models import Announcement, Department
-    from backend.services.source_inventory import canonical_url
-    with inventory.connect() as connection:
-        pages = connection.execute("SELECT url,content_hash FROM pages WHERE site_key=? "
-                                   "AND state='fetched' AND content_hash IS NOT NULL", (site_key,)).fetchall()
-        edges = connection.execute('SELECT parent_url,target_url FROM edges WHERE site_key=?', (site_key,)).fetchall()
-    children = {}
-    for edge in edges:
-        children.setdefault(canonical_url(edge['parent_url']), set()).add(canonical_url(edge['target_url']))
-    branch, pending = set(), [canonical_url(branch_url)]
-    while pending:
-        current = pending.pop()
-        if not current or current in branch:
-            continue
-        branch.add(current)
-        pending.extend(children.get(current, set()) - branch)
-    result = {'page:' + hashlib.sha256((row['url'] + ':' + row['content_hash']).encode()).hexdigest()
-              for row in pages if canonical_url(row['url']) in branch}
-    sources = [source.id for source in Department.query.filter_by(school_id=school_id).all()
-               if source.list_selector and canonical_url(source.list_url) in branch]
-    result.update('source:' + str(ident) for ident in sources)
-    result.update('notice:' + str(ident) for (ident,) in Announcement.query.with_entities(Announcement.id)
-                  .filter(Announcement.department_id.in_(sources)))
-    return result
+    from .navigation_progress import progress_ids
+    return progress_ids(inventory, site_key, school_id, branch_url)
 
 
 def unknown_navigation_execution(checkpoint):
@@ -114,6 +92,7 @@ def process_navigation(payload):
     if discover and payload.get('school_generation', payload['parent_generation']) != discover.generation:
         return {'status': 'stale'}
     path = current_app.config['DISCOVERY_CACHE_PATH']
+    branch = None
     try:
         with FileLock(str(path) + '.worker.lock', timeout=0):
             inventory = DiscoveryCache(path)
@@ -162,10 +141,10 @@ def process_navigation(payload):
                 add_publication_structure(parsed, feed)
                 route_structure(parsed, page, html, site['root_url'], bool(feed), policy=page['discovery_policy'], publication=feed)
                 if page['discovery_policy'] == 'valuable':
-                    # A later bounded round resumes undecided links instead of
-                    # buying the same first 16 classifications again. Freeze
-                    # prior decisions in this job: its own next batch must not
-                    # change the material hash and reset the per-page budget.
+                    # Resume undecided links from the saved batch cursor. Keep
+                    # prior decisions stable within this job so its next batch
+                    # cannot change the material identity or reset that cursor.
+                    # The shared branch state tracks progress across pages.
                     previous = {(row['url'], row['label']): row for row in page.get('navigation_routes', [])}
                     for link in parsed['links']:
                         saved = previous.get((link['url'], link['label']))
@@ -173,15 +152,24 @@ def process_navigation(payload):
                             apply_route(parsed, link, saved)
             before = {(x['url'], x['kind'], x['decision']) for x in parsed['links']}
             handle = tasks.current_execution() or {}
-            if handle and not handle.get('checkpoint', {}).get('navigation_progress'):
-                from backend.services.discovery_policy import progress_state
-                tasks.checkpoint(dict(handle.get('checkpoint') or {}, navigation_progress=progress_state(
-                    navigation_progress(inventory, site['site_key'], payload['school_id'], page['url']))))
+            from .navigation_progress import NavigationBranch
+            owner = discover or parent
+            scope = f'{payload["school_id"]}:{owner.id}:{owner.generation}'
+            candidate_branch = NavigationBranch(inventory, site['site_key'], payload['school_id'], scope, snapshot_url)
+            candidate_branch.lock.acquire(timeout=0)
+            branch = candidate_branch
+            state = branch.state(previous=handle.get('checkpoint', {}).get('navigation_progress'),
+                                 previous_branch_url=handle.get('checkpoint', {}).get('navigation_branch_url'))
+            for execution_id in handle.get('checkpoint', {}).get('navigation_unrecorded_decisions', []):
+                state = branch.state(decision_id=execution_id)
+            if handle:
+                tasks.checkpoint(dict(handle.get('checkpoint') or {}, navigation_progress=state,
+                                      navigation_branch_url=branch.url, navigation_unrecorded_decisions=[]))
         # Model latency must not hold the shared cache writer lock and stall
         # other schools or the next crawl slice.
         if page.get('discovery_policy') in ('layered', 'valuable'):
             from .layered import assist
-            result = assist(site, page, html, parsed) or {}
+            result = assist(site, page, html, parsed, decision_allowed=branch.allows) or {}
         else:
             result = assist_navigation(site, page, html, parsed) or {}
         with FileLock(str(path) + '.worker.lock', timeout=0):
@@ -229,7 +217,7 @@ def process_navigation(payload):
                     inventory.enqueue(site['site_key'], link['url'], link['label'], link['kind'], page['depth'] + 1,
                                       link['path'] + ([page['label']] if page['kind'] == 'unit' else []),
                                       'school_domain' if same_school_url(link['url'], site['root_url']) else 'official_backlink')
-                    if link.get('ai_reviewed') and link['url'] != site['root_url']:
+                    if link.get('ai_reviewed') and link.get('ai_role') != 'unknown' and link['url'] != site['root_url']:
                         from .layered import route_priority
                         priority = route_priority(link)
                         corrected = bool(previous_page and previous_page['kind'] != link['kind'])
@@ -242,18 +230,13 @@ def process_navigation(payload):
                     if changed or not previous_page:
                         added += 1
             handle = tasks.current_execution() or {}
-            if handle and result.get('decision_id'):
-                from backend.services.discovery_policy import advance_progress
+            if handle:
                 checkpoint = dict(handle.get('checkpoint') or {})
-                state = advance_progress(checkpoint.get('navigation_progress'), result['decision_id'],
-                                         navigation_progress(inventory, site['site_key'], payload['school_id'], page['url']))
-                tasks.checkpoint(dict(checkpoint, navigation_progress=state))
-                if state['stopped'] and result.get('remaining_routes'):
-                    result.update(status='branch_stopped', error_code='no_discovery_progress',
-                                  deferred_routes=result['remaining_routes'])
+                state = branch.state(decision_id=result.get('decision_id'))
+                tasks.checkpoint(dict(checkpoint, navigation_progress=state, navigation_unrecorded_decisions=[]))
             from backend.services.discovery_changes import remember_navigation
             remember_navigation(inventory, site['site_key'], page.get('snapshot_url', page['url']), parsed,
-                                result.get('status') in ('processed', 'succeeded', 'branch_stopped'))
+                                result.get('status') in ('processed', 'succeeded'))
             from backend.services.runtime_catalog import RuntimeCatalog
             RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH']).publish(inventory, site['site_key'], merge=True)
             if added:
@@ -308,6 +291,9 @@ def process_navigation(payload):
                     cached_routes=result.get('cached_routes', 0))
     except Timeout:
         tasks.defer(capability='directory', delay=1, reason='等待目录缓存空闲', checkpoint=tasks.current_execution().get('checkpoint'))
+    finally:
+        if branch is not None:
+            branch.lock.release()
 
 
 def assist_navigation(site, page, html, parsed):

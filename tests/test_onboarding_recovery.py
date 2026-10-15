@@ -180,10 +180,13 @@ class OnboardingRecoveryTests(unittest.TestCase):
     def test_legacy_partial_material_resumes_unread_region_on_second_claim(self):
         self._assert_partial_material_resumes()
 
+    def test_v5_validation_replay_resumes_the_original_unread_region_without_repair_calls(self):
+        self._assert_partial_material_resumes(version=5)
+
     def test_existing_rules_handoff_retains_partial_material_on_second_claim(self):
         self._assert_partial_material_resumes(already_handed_off=True)
 
-    def _assert_partial_material_resumes(self, *, already_handed_off=False):
+    def _assert_partial_material_resumes(self, *, already_handed_off=False, version=3):
         import hashlib
         from bs4 import BeautifulSoup
         from backend.ai.skill_loader import digest, load_skill
@@ -211,7 +214,7 @@ class OnboardingRecoveryTests(unittest.TestCase):
         job.checkpoint = {'column_regions': {'hash': digest(regions), 'columns': [first],
             'decision_ids': [paid_id], 'cursor': 1, 'unresolved': []}, 'column_validation': {
             'page_hash': hashlib.sha256((URL + '\\0' + html).encode()).hexdigest(),
-            'validation_version': VALIDATION_VERSION if already_handed_off else 3,
+            'validation_version': VALIDATION_VERSION if already_handed_off else version,
             'stage': 'rules' if already_handed_off else 'done', 'completed': [],
             'department_ids': [], 'new_count': 0, 'material_pending': True, 'material_feedback': [],
             'failures': [{'issue': {'codes': ['article_sample_mismatch']}}],

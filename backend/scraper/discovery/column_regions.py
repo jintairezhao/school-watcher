@@ -22,6 +22,7 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
     from backend.scraper.article_urls import ARTICLE
     date = re.compile(r'(?<!\d)(?:19|20)\d{2}\s*[-./年]\s*\d{1,2}\s*[-./月]\s*\d{1,2}(?!\d)')
     navigation = re.compile(r'(?:^|[-_\s])(?:header|nav|menu)(?:[-_\s]|$)', re.I)
+    banner = re.compile(r'(?:^|[-_\s])header(?:[-_\s]|$)', re.I)
 
     def publication_signal(node):
         if date.search(node.get_text(' ', strip=True)):
@@ -32,13 +33,33 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
     # Navigation was already observed by the separate navigation task. Do not
     # buy another column classification for pure site chrome. Clear rather
     # than detach, preserving every remaining node's original nth-of-type.
+    local_navigation = []
     if soup.head:
         soup.head.clear()
     for node in soup.find_all(True):
         semantic = node.name in ('header', 'nav') or node.get('role') in ('banner', 'navigation')
         chrome = navigation.search(' '.join(node.get('class', [])) + ' ' + str(node.get('id', '')))
         if (semantic or chrome) and not publication_signal(node):
-            node.clear()
+            # A breadcrumb or section menu beside the list is part of the
+            # column evidence. A header/banner remains site chrome. Inspect
+            # actual enclosing content rather than treating every "nav" class
+            # as a global menu and erasing the only visible column name.
+            lineage = [node, *node.parents]
+            global_banner = any(isinstance(parent, Tag) and (parent.name in ('header', 'footer')
+                or parent.get('role') == 'banner' or banner.search(
+                    ' '.join(parent.get('class', [])) + ' ' + str(parent.get('id', '')))) for parent in lineage)
+            region = None
+            if not global_banner:
+                for parent in node.parents:
+                    if not isinstance(parent, Tag) or parent.name in ('html', 'body', '[document]'):
+                        break
+                    if publication_signal(parent):
+                        region = parent
+                        break
+            if region is None:
+                node.clear()
+            else:
+                local_navigation.append((node, region))
     preferred_roots = set()
     for selector in preferred_selectors:
         try:
@@ -50,6 +71,20 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
     heading_selector = 'h1,h2,h3,h4,h5,h6,[role=tab],.title,.tit,.hd'
     region_limit = policy['navigation_batch_size']
     contexts = {}
+    from backend.services.source_inventory import canonical_url, resolve_page_link
+    navigation_locations, seen_navigation = [], set()
+    for navigation_node, region in local_navigation:
+        for anchor in navigation_node.select('a[href]'):
+            try:
+                target = resolve_page_link(url, anchor['href'])
+            except ValueError:
+                continue
+            text = anchor.get_text(' ', strip=True)
+            if id(anchor) in seen_navigation or not target or ARTICLE.search(target) or not 1 <= len(text) <= 200:
+                continue
+            seen_navigation.add(id(anchor))
+            navigation_locations.append((id(region), {'selector': locator(anchor), 'text': text,
+                'url': target, 'containing_region_selector': locator(region)}))
 
     def tab_list(node):
         return node.get('role') == 'tablist' or any(
@@ -57,7 +92,8 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
             for name in node.get('class', []))
 
     def in_article_list(node):
-        return any(parent.name in ('ul', 'ol', 'table') and not tab_list(parent)
+        from .publication_lists import article_heading
+        return article_heading(node, url) or any(parent.name in ('ul', 'ol', 'table') and not tab_list(parent)
                    for parent in node.parents if isinstance(parent, Tag))
 
     # An article's h4/.title is a list item title, not a new publication
@@ -65,6 +101,22 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
     # byte limit permits it. Tab labels use the actual label node, excluding
     # their adjacent "more" link.
     heading_nodes = [node for node in soup.select(heading_selector) if not in_article_list(node)]
+    # The current column can be named by an ordinary linked breadcrumb or
+    # side navigation, with no h1/title class at all. This is observed page
+    # identity, not an assertion that every nearby list belongs to the link.
+    # Keep the real selector so native scope validation still decides that.
+    current_links = set()
+    for node in soup.select('a[href]'):
+        if node.find_parent(['footer', 'header']):
+            continue
+        try:
+            target = resolve_page_link(url, node['href'])
+        except ValueError:
+            continue
+        text = node.get_text(' ', strip=True)
+        if target and canonical_url(target) == canonical_url(url) and 1 <= len(text) <= 200:
+            current_links.add(id(node))
+            heading_nodes.append(node)
     for tabs in soup.find_all(['ul', 'ol']):
         if not tab_list(tabs):
             continue
@@ -80,6 +132,8 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
         key = id(node)
         if key not in heading_rows:
             row = {'selector': locator(node), 'heading': node.get_text(' ', strip=True)[:200]}
+            if key in current_links:
+                row['basis'] = 'observed_current_page_link'
             for parent in node.parents:
                 if not isinstance(parent, Tag) or parent.name in ('[document]', 'html', 'body'):
                     break
@@ -129,6 +183,10 @@ def materials(school_id, url, html, *, max_bytes=None, preferred_selectors=()):
             contained = {id(child) for child in node.descendants if isinstance(child, Tag)} | {id(node)}
             result['heading_locations'] = [heading_location(heading) for heading in heading_nodes
                                            if id(heading) in contained]
+            nearby = contained | {id(parent) for parent in node.parents}
+            observed_navigation = [row for region, row in navigation_locations if region in nearby]
+            if observed_navigation:
+                result['navigation_locations'] = observed_navigation
         if root:
             result['region_context'] = context(node)
             result['ancestor_context'] = [{'selector': locator(parent), 'tag': parent.name,

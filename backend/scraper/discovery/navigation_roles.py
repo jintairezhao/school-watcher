@@ -16,11 +16,21 @@ from backend.services.source_inventory import resolve_page_link, site_key
 
 VERSION = 'observed-navigation-1'
 ROLES = {'directory', 'unit', 'publishing', 'gateway'}
+READ_OBSERVED = 'read_observed'
 
 
 def _navigation(node):
     return isinstance(node, Tag) and node.name != 'a' and (node.name == 'nav' or node.get('role') == 'navigation'
         or bool(re.search(r'nav|menu', ' '.join(node.get('class', [])) + ' ' + node.get('id', ''), re.I)))
+
+
+def footer_navigation(node):
+    """Recognize semantic and template footers without using a link's name."""
+    return node is not None and any(isinstance(parent, Tag) and (
+        parent.name == 'footer' or parent.get('role') == 'contentinfo'
+        or re.search(r'(?:^|[\s_-])(?:footer|foot)(?=$|[\s_-])',
+                     ' '.join(parent.get('class', [])) + ' ' + parent.get('id', ''), re.I))
+        for parent in [node, *node.parents])
 
 
 def region_material(node, page_url, cache=None):
@@ -33,7 +43,7 @@ def region_material(node, page_url, cache=None):
     if node is None:
         return None
     region = next((parent for parent in [node, *node.parents] if _navigation(parent)), None)
-    if region is None or region.find_parent('footer'):
+    if region is None or footer_navigation(region):
         return None
     cache = {} if cache is None else cache
     shared = cache.get(id(region))
@@ -91,7 +101,8 @@ def _candidate_material(node, shared):
     # All material allowed as a supporting quote must participate in the key:
     # a nested submenu's real owner heading can sit outside its own region.
     return {'key': digest([shared['key'], candidate_position, hierarchy, parent_text]),
-            'text': text, 'hierarchy': hierarchy}
+            'text': text, 'hierarchy': hierarchy,
+            'quote_text': '\n'.join([*hierarchy, parent_text])[:2000]}
 
 
 def candidate_key(site, link, material, binding, skill_digest, policy):
@@ -122,12 +133,26 @@ def _connect():
 
 
 def supported(row, material):
-    if not material or row.get('role') not in ROLES or not row.get('facts'):
+    role = row.get('role')
+    if (not material or not row.get('facts') or
+            role not in ROLES and not (role == 'unknown' and row.get('action') == READ_OBSERVED)):
         return False
     corpus = re.sub(r'\s+', ' ', material['text']).strip()
     return all(re.sub(r'\s+', ' ', fact.get('quote', '')).strip()
                and re.sub(r'\s+', ' ', fact.get('quote', '')).strip() in corpus
                for fact in row['facts'])
+
+
+def cacheable_result(row, material):
+    """Cache uncertainty only as permission to read its observed target.
+
+    The semantic role and value remain unknown. No source identity, owner,
+    extraction rule or target-body classification is supplied by this action.
+    """
+    value = dict(row)
+    if value.get('role') == 'unknown':
+        value['action'] = READ_OBSERVED
+    return value if supported(value, material) else None
 
 
 def load(keys):

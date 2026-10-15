@@ -148,7 +148,7 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_a
                 authority = 'reciprocal_official_unit'
             inventory.enqueue(key, target, link['label'], link['kind'], page['depth'] + 1,
                               link['path'] + ([page['label']] if page['kind'] == 'unit' else []), authority)
-            if link.get('ai_reviewed'):
+            if link.get('ai_reviewed') and link.get('ai_role') != 'unknown':
                 from .layered import route_priority
                 with inventory.connect() as connection:
                     connection.execute("UPDATE pages SET priority=? WHERE site_key=? AND url=? AND kind<>'root'",
@@ -186,6 +186,8 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_a
             from backend.services.discovery_round_lifecycle import observe_structure
             school_id = payload_school_id((current_execution() or {}).get('payload') or {})
             observe_structure(school_id, url, change['hash'], content_hash)
+            from .navigation_progress import resume_stopped_navigation
+            resume_stopped_navigation(inventory, key, school_id)
         routes = [link for link in parsed['links'] if link['decision'] in ('follow', 'official_external_link')]
         needed = ({'directory', 'unit'} if page['kind'] in ('root', 'directory') else {'channel'})
         review_routes = focus in ('layered', 'valuable') and bool(

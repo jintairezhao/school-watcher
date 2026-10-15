@@ -1,0 +1,14 @@
+{
+  "url": "https://www.cupk.edu.cn/yjsb/c/2026-10-08/539002.shtml",
+  "observed_at": "2026-10-15T06:54:26Z",
+  "source": "Actual source A/B browser observation, not a simulated page",
+  "html_sha256": "cfe05a0b62a32ec7cf6dd6ad1187263e907f4637ce63668658cb6732b3e9e67f",
+  "full_document": true,
+  "browser_result": {
+    "outcome": "needs_adapter",
+    "error_code": "content_not_recognized",
+    "timings": {
+      "total_ms": 44964
+    }
+  }
+}

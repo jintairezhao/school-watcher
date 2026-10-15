@@ -82,7 +82,7 @@ def remember_navigation(inventory, key, url, parsed, complete):
     if not saved:
         return
     saved['navigation_complete'] = complete
-    saved['routes'] = [{k: l[k] for k in ('url', 'label', 'kind', 'decision', 'ai_reviewed', 'ai_value') if k in l}
+    saved['routes'] = [{k: l[k] for k in ('url', 'label', 'kind', 'decision', 'ai_reviewed', 'ai_value', 'ai_role', 'probe_only') if k in l}
                        for l in parsed['links'] if l['decision'] in ('follow', 'official_external_link', 'route_reference')]
     with inventory.connect() as c:
         c.execute('UPDATE pages SET notes_json=? WHERE site_key=? AND url=?',

@@ -243,14 +243,22 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
     # known CMS class. This cannot relax list/directory contracts or access walls.
     expected_title = request.policy.get('expected_article_title') if request.purpose == 'article' else ''
     if expected_title:
-        from backend.scraper.article_observation import title_bound_body
-        if title_bound_body(soup,raw.final_url or request.url,expected_title) is not None:
-            return _decision(raw,'usable',evidence=('title_bound_article',))
+        from backend.scraper.article_observation import title_bound_material, article_heading, publication_nodes, article_material
+        if not request.readiness_selector:
+            body, body_state = title_bound_material(soup,raw.final_url or request.url,expected_title)
+            if body is not None:
+                return _decision(raw,'usable',evidence=('title_bound_article',))
+            if body_state == 'pending':
+                return _dynamic_material_decision(raw, ('article_material_pending',))
+            heading = article_heading(soup, expected_title)
+            metadata, scope = publication_nodes(soup, heading) if heading is not None else ([], None)
+            if metadata and scope is not None and article_material(scope, raw.final_url or request.url)[1] == 'pending':
+                return _dynamic_material_decision(raw, ('article_material_pending',))
         if request.policy.get('publication_metadata_only'):
             from backend.services.publication_dates import inspect_article_date
             if inspect_article_date(html,raw.final_url or request.url,expected_title)['state']=='verified':
                 return _decision(raw,'usable',evidence=('title_bound_publication_metadata',))
-        elif raw.transport!='browser' and '<script' in lower:
+        elif not request.readiness_selector and raw.transport!='browser' and '<script' in lower:
             from backend.scraper.article_observation import article_heading,publication_nodes
             heading=article_heading(soup,expected_title)
             if heading is not None and publication_nodes(soup,heading)[0]:
@@ -271,11 +279,18 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
                     previously_observed=request.policy.get('dynamic_material_observed') is True, targeted=True)
                 if incomplete:
                     return _dynamic_material_decision(raw, incomplete)
-        from backend.scraper.article_observation import navigation_only_body
+        from backend.scraper.article_observation import navigation_only_body, article_material
+        pending_article = False
+        if request.purpose == 'article':
+            materials = [article_material(node, raw.final_url or request.url) for node in ready]
+            pending_article = any(state == 'pending' for _, state in materials)
+            ready = [node for node, _ in materials if node is not None]
         if any(_visible(node) and (request.purpose != 'article' or not navigation_only_body(str(node), raw.final_url))
                 and (node.get_text(' ', strip=True) or node.select_one('img[src], a[href]')
                 or request.purpose == 'article' and has_public_body_resource([node], raw.final_url)) for node in ready):
             return _decision(raw, 'usable', evidence=('readiness_selector',))
+        if pending_article:
+            return _dynamic_material_decision(raw, ('article_material_pending',))
         if empty_evidence:
             return _decision(raw, 'empty', evidence=empty_evidence)
         # A configured region is a contract, not a hint. A static news widget
@@ -290,11 +305,14 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
         if incomplete:
             return _dynamic_material_decision(raw, incomplete)
     if request.purpose == 'article':
-        from backend.scraper.article_observation import navigation_only_body
+        from backend.scraper.article_observation import navigation_only_body, article_material
+        materials = [article_material(node, raw.final_url or request.url) for node in soup.select(_ARTICLE)]
         if any(not navigation_only_body(str(node), raw.final_url) and (
                len(node.get_text(' ', strip=True)) >= 8 or node.select_one('img[src]')
-               or has_public_body_resource([node], raw.final_url)) for node in soup.select(_ARTICLE)):
+               or has_public_body_resource([node], raw.final_url)) for node, _ in materials if node is not None):
             return _decision(raw, 'usable', evidence=('article_region',))
+        if any(state == 'pending' for _, state in materials):
+            return _dynamic_material_decision(raw, ('article_material_pending',))
     elif request.purpose == 'directory':
         if raw.transport != 'browser' and _missing_script_navigation(html, soup, raw.final_url or request.url):
             return _decision(raw, 'requires_render', 'navigation_not_loaded',

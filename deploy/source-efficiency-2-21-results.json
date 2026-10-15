@@ -1,0 +1,516 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-15",
+  "baseline_version": "2.20",
+  "candidate_version": "2.21",
+  "school": {
+    "name": "中国石油大学（北京）克拉玛依校区",
+    "url": "https://www.cupk.edu.cn/"
+  },
+  "original_other_computer_report": {
+    "version": "2.19",
+    "confirmed_tokens_reported_by_user": "超过180万",
+    "connected_sources_reported_by_user": 4,
+    "local_data_available": false,
+    "same_run_reproduced": false
+  },
+  "real_installed_baseline": {
+    "seconds": 769.181,
+    "actual_model_requests": 94,
+    "provider_confirmed_tokens": 352584,
+    "sources": 2,
+    "notices": 20,
+    "fetched_discovery_pages": 24,
+    "pending_discovery_pages": 121,
+    "stop_reason": "问题证据充分后人工停止；非预算失败",
+    "navigation_requests": 51,
+    "navigation_tokens": 148001,
+    "column_requests": 37,
+    "column_tokens": 190128
+  },
+  "additional_diagnostic_model_usage": {
+    "requests": 3,
+    "provider_confirmed_tokens": 13265,
+    "preflight_separate_requests": 1,
+    "preflight_separate_tokens": 54,
+    "whole_experiment_requests_including_preflight": 198,
+    "whole_experiment_tokens_including_preflight": 829891
+  },
+  "same_paid_results_native_replay": {
+    "method": "离线重放已保留的真实官网HTML及已付费候选；不是新一轮整校运行或在线提速基准",
+    "before_sources": 2,
+    "after_sources": 6,
+    "before_notices": 20,
+    "after_notices": 49,
+    "school_round_requests_before_and_after": 96,
+    "school_round_tokens_before_and_after": 364279,
+    "extra_model_requests": 0,
+    "extra_website_requests": 0,
+    "ledger_unchanged": true,
+    "all_generations_unchanged": true,
+    "remaining_rejections": [
+      "两个栏目范围证据不足，继续拒绝安装",
+      "一个不同的分页范围问题未在本轮改动中自动重试",
+      "未读取的入口仍保留，未宣称全校接入完成"
+    ]
+  },
+  "historical_cross_school_compatibility": {
+    "method": "最终2.21代码重放五校完整保留官网材料；不是新的线上发现对照或新独立样本",
+    "universities": 5,
+    "existing_source_rules": 36,
+    "rules_passed": 34,
+    "known_wrong_column_names_still_rejected": 2,
+    "publication_records_checked": 349,
+    "exact_rule_title_and_URL_confirmed": 324,
+    "independent_literal_title_URL_region_matches": 255,
+    "unchanged_vs_previous_literal_replay": true,
+    "new_identity_conflicts_observed": 0,
+    "new_model_requests": 0,
+    "new_website_requests": 0,
+    "original_data_unchanged": true,
+    "repeated_after_final_repairs": true
+  },
+  "body_reading": {
+    "retained_previous_browser_failures": 9,
+    "previous_sum_wait_seconds": 404.343,
+    "retained_native_validation_after_passed": 9,
+    "live_library_HTTP_seconds": [
+      0.66,
+      0.822
+    ],
+    "live_library_HTTP_article_checks_passed": 2,
+    "single_source_retained_replay": {
+      "installed_sources": 1,
+      "notices": 10,
+      "article_samples_matched": 3,
+      "pagination_verified": true,
+      "extra_model_requests": 0
+    },
+    "live_main_article_HTTP_seconds": 0.726,
+    "warning": "显式直连探针和程序依据已验证路线记忆的自动直连分别记录；未修改用户代理设置，不能据此认定所有VPN都有问题"
+  },
+  "navigation_replay": {
+    "observed_links_before_and_after": 2242,
+    "paid_candidate_count_before": 410,
+    "paid_candidate_count_after": 378,
+    "removed_candidates_preserved_as_auxiliary": 32,
+    "menu_candidates_with_full_quote_cache_support_before": 0,
+    "menu_candidates_with_full_quote_cache_support_after": 249,
+    "new_model_effect_measured": false,
+    "fixture_empty_branch_requests_before": 12,
+    "fixture_empty_branch_requests_after": 8,
+    "warning": "候选和证据重放、模拟时钟回归不是实际节省token或整校速度数据"
+  },
+  "baseline_user_overrides_preserved": {
+    "school_requests": 100,
+    "school_tokens": 20000000,
+    "AI_global_concurrency": 4,
+    "instance_limits_changed": false
+  },
+  "parameter_table": [
+    {
+      "parameter": "官网并发",
+      "key": "fetch_global_concurrency",
+      "starting_value": 2,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "同主机并发",
+      "key": "fetch_host_concurrency",
+      "starting_value": 1,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "同主机启动间隔/秒",
+      "key": "fetch_host_interval_seconds",
+      "starting_value": 1.0,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "浏览器并发",
+      "key": "browser_concurrency",
+      "starting_value": 1,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "AI全局并发",
+      "key": "ai_global_concurrency",
+      "starting_value": 2,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "同校AI并发",
+      "key": "ai_school_concurrency",
+      "starting_value": 1,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "HTTP连接/秒",
+      "key": "http_connect_seconds",
+      "starting_value": 6,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "HTTP空闲读取/秒",
+      "key": "http_read_seconds",
+      "starting_value": 16,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "HTTP总时限/秒",
+      "key": "http_total_seconds",
+      "starting_value": 45,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "浏览器总时限/秒",
+      "key": "browser_total_seconds",
+      "starting_value": 45,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "HTML上限/字节",
+      "key": "html_max_bytes",
+      "starting_value": 3145728,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "发现切片/页",
+      "key": "discovery_slice_pages",
+      "starting_value": 3,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "导航批量/候选",
+      "key": "navigation_batch_size",
+      "starting_value": 8,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "证据上限/UTF8字节",
+      "key": "evidence_max_bytes",
+      "starting_value": 24576,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "普通输出/token",
+      "key": "ai_output_tokens",
+      "starting_value": 4096,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "复杂修复输出/token",
+      "key": "ai_repair_output_tokens",
+      "starting_value": 8192,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "temperature",
+      "key": "ai_temperature",
+      "starting_value": 0.1,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "每决策补读上限",
+      "key": "ai_decision_read_limit",
+      "starting_value": 3,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "进展检查间隔/决策",
+      "key": "progress_check_decisions",
+      "starting_value": 4,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "连续无进展停止/窗口",
+      "key": "progress_no_change_checks",
+      "starting_value": 2,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "每校每轮请求上限",
+      "key": "ai_school_request_limit",
+      "starting_value": 40,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "每校每轮token上限",
+      "key": "ai_school_token_limit",
+      "starting_value": 200000,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "网络总尝试次数",
+      "key": "network_attempts",
+      "starting_value": 3,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "网络重试延后/秒",
+      "key": "network_retry_seconds",
+      "starting_value": [
+        30,
+        120
+      ],
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "重试错峰",
+      "key": "network_retry_jitter",
+      "starting_value": 0.2,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "低频恢复/秒",
+      "key": "recovery_seconds",
+      "starting_value": 21600,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "采集周期/秒",
+      "key": "collection_interval_seconds",
+      "starting_value": 1800,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "采集错峰",
+      "key": "collection_jitter",
+      "starting_value": 0.1,
+      "status": "尚未验证",
+      "scope": "本轮不调整数值；机制回归不等同跨高校参数验收"
+    },
+    {
+      "parameter": "正文默认抽检/条",
+      "key": "article_sample_size",
+      "starting_value": 3,
+      "status": "已实测保留",
+      "scope": "本校真实材料重放验证；不代表跨高校最优"
+    },
+    {
+      "parameter": "正文最多尝试/条",
+      "key": "article_sample_attempts",
+      "starting_value": 5,
+      "status": "已实测保留",
+      "scope": "本校真实材料重放验证；不代表跨高校最优"
+    },
+    {
+      "parameter": "正常最少身份匹配正文/条",
+      "key": "article_sample_matches",
+      "starting_value": 2,
+      "status": "已实测保留",
+      "scope": "本校真实材料重放验证；不代表跨高校最优"
+    }
+  ],
+  "parameters_adjusted_by_measurement": [],
+  "acceptance_limits": {
+    "universities_in_this_live_investigation": 1,
+    "required_5_universities_50_sources_100_notices_completed": false,
+    "two_independent_holdouts_completed": false,
+    "whole_school_before_after_under_same_budget_completed": false,
+    "zero_errors_general_claim": false,
+    "full_regression": {
+      "run": 1641,
+      "passed": 1626,
+      "skipped": 15,
+      "failed": 0,
+      "seconds": 215.698,
+      "source_hashes_unchanged": true,
+      "scope": "最终冻结代码完整回归；真实Edge本地页面检查包含在本次全套内"
+    },
+    "new_installer_size": "pending; Windows target remains soft approximately100MB; no browser/model bundle added",
+    "real_Edge_local_fixtures": {
+      "passed": 9,
+      "Linux_only_skipped": 1,
+      "failed": 0,
+      "included_in_full_regression": true
+    },
+    "remaining_environment_specific_tests": {
+      "PostgreSQL": 14,
+      "Linux": 1
+    },
+    "final_frozen_implementation_fresh_API_comparison_completed": false,
+    "final_AI_retest_limitation": "正式轮已达到本机原有100次请求上限，未为测试提高上限或新开轮次绕过；修复后仅执行明确标注的零模型复验。"
+  },
+  "real_menu_cache_probe": {
+    "new_requests": 1,
+    "provider_confirmed_tokens": 1570,
+    "model_output_role": "unknown",
+    "initial_cache_hit": false,
+    "initial_probe_status": "stopped_before_second_request",
+    "action": "复用原成功模型输出修复不确定读取动作缓存；不再购买相同结果",
+    "after_fix": {
+      "status": "passed",
+      "first_page": "通过正常运行时复用原成功模型执行",
+      "second_page_cache_hits": 1,
+      "different_page_input_digests": true,
+      "new_model_requests": 0,
+      "new_AI_executions": 0,
+      "unknown_role_and_value_preserved": true,
+      "action_is_only_read_observed": true,
+      "school_round_requests_before_and_after": 97,
+      "school_round_tokens_before_and_after": 365849,
+      "ledger_unchanged": true
+    },
+    "scope": "单候选跨页缓存集成验证，不是整校性能对照"
+  },
+  "real_source_ab": {
+    "completed": true,
+    "run_id": "run-20261015-145033",
+    "source_sha256": "5c6b3383b6250d7778cbc84bb0f69e28b4347f1f8d2f0840478a51d1329fe381",
+    "measured_implementation": "初轮2.21候选代码；随后发现并修复了正文容器边界、等价规则重复安装和探索顺序问题",
+    "matches_final_implementation": false,
+    "window_seconds": 769.181,
+    "observed_seconds": 765.969,
+    "actual_model_requests": 100,
+    "provider_confirmed_tokens": 463988,
+    "sources": 8,
+    "source_count_unit": "保存的来源配置行",
+    "distinct_verified_columns": 7,
+    "notices": 125,
+    "distinct_notice_urls": 125,
+    "stop_reason": "user_school_limit_reached",
+    "unknown_sent_count": 0,
+    "baseline_unchanged": true,
+    "at_observation_stop": {
+      "requests": 100,
+      "known_tokens": 460821,
+      "source_rows": 8,
+      "notices": 115
+    },
+    "drain_after_stop": {
+      "additional_tokens": 3167,
+      "additional_notices": 10,
+      "additional_requests": 0
+    },
+    "model_categories": {
+      "navigation": {
+        "requests": 25,
+        "tokens": 56915
+      },
+      "column": {
+        "requests": 55,
+        "tokens": 361039
+      },
+      "source_value": {
+        "requests": 8,
+        "tokens": 13962
+      },
+      "listing": {
+        "requests": 12,
+        "tokens": 32072
+      }
+    },
+    "navigation_task_cache_hits": 205,
+    "identical_paid_input_groups": 0,
+    "interpretation": "相近窗口、同一费用上限下来源覆盖增加，总实际token也增加；不同来源集合不能直接推导等覆盖率提速或费用节省。",
+    "invalid_pre_model_run": {
+      "reason": "Windows诊断文件替换占用；完整失败记录保留，诊断写入已修复",
+      "model_requests": 0,
+      "provider_tokens": 0,
+      "school_rounds": 0
+    }
+  },
+  "post_live_repairs": {
+    "final_frozen_source_sha256": "299acc7844b1b98e9d629286068bad252b479835c493d329d116fcbbf8ce312e",
+    "new_model_requests": 0,
+    "body_observation": {
+      "fixes": [
+        "显式正文规则不被无规则回退提前拒绝",
+        "有界识别标题日期头之后紧邻的正文",
+        "正文副本排除嵌套站点导航与页脚材料"
+      ],
+      "retained_real_HTML_samples_passed": 16,
+      "scope": "保留的真实HTML重新分类并检查正文身份；不是新实网时耗"
+    },
+    "equivalent_source_installation": {
+      "targeted_tests_passed": 108,
+      "basis": "同完整页面实际相同的全部列表、标题、链接节点与验证作用域；不只凭名称或网址",
+      "stable_identity_and_personal_state_preserved": true,
+      "historical_duplicate_rows_deleted": false
+    },
+    "exploration_order": {
+      "starting_URL": "真实官网首页，非随机地址",
+      "initial_layout": "当前首页快照直接观察的目录先用于了解布局",
+      "department_probe_interval": 3,
+      "oldest_entrance_interval": 5,
+      "uses_existing_policy_values": true,
+      "all_pending_entrances_preserved": true,
+      "oldest_turn_takes_precedence_at_overlapping_intervals": true,
+      "retained_graph_replay": {
+        "real_website_requests": 0,
+        "model_requests": 0,
+        "key_directory_positions_before": [
+          15,
+          20
+        ],
+        "key_directory_positions_after": [
+          2,
+          3
+        ],
+        "college_or_graduate_branches_in_first_30_before": 0,
+        "college_or_graduate_branches_in_first_30_after": 7
+      },
+      "production_cost_or_speed_benefit_verified": false
+    },
+    "same_round_candidate_replay": {
+      "task_id": 92,
+      "status": "retained_material_missing",
+      "new_model_requests": 0,
+      "new_website_requests": 0,
+      "additional_sources": 0,
+      "original_request_count": 100,
+      "original_provider_tokens": 463988,
+      "original_round_and_ledger_unchanged": true,
+      "scope": "独立复制环境沿用已保存候选执行正常验证；缺少一篇完整正文即停止，不伪造接通"
+    },
+    "live_article_reader": {
+      "real_articles_checked": 2,
+      "body_identity_passed": 2,
+      "actual_HTTP_attempts": 3,
+      "actual_browser_requests": 0,
+      "model_requests": 0,
+      "first_article": {
+        "initial_proxy_connect_timeout_seconds": 6.03,
+        "normal_durable_retry_wait_approximately_seconds": 33,
+        "successful_HTTP_seconds": 0.475,
+        "total_including_wait_seconds": 39.431
+      },
+      "second_article": {
+        "verified_route_reused": true,
+        "successful_HTTP_seconds": 0.458,
+        "total_reader_seconds": 0.949
+      },
+      "route_forced_or_proxy_settings_changed": false,
+      "original_ledger_unchanged": true,
+      "scope": "最终冻结代码的两篇正文实际读取及身份核验，不是最终版新的整校API费用对照"
+    }
+  }
+}

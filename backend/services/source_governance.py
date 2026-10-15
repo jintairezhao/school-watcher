@@ -163,13 +163,15 @@ class CapturedEvidence:
     bundle: dict
 
 
-def _fetch(url, purpose, *, config=None, exploration=None):
+def _fetch(url, purpose, *, config=None, exploration=None, expected_article_title=''):
     from backend.scraper.engine import _fetch_html
     # Trial rules locate material without turning a sampled article into daily
     # collection. Legacy callers retain their default; trials pass their mode.
     if exploration is None:
         exploration = config is None or purpose == 'directory'
     policy = {'exploration': bool(exploration)}
+    if purpose in ('body', 'article') and expected_article_title:
+        policy['expected_article_title'] = expected_article_title
     config = config or {}
     selector = (config.get('content_selector', '') if purpose in ('body', 'article') else
                 config.get('list_selector', '') if purpose in ('list', 'independent_list') else '')
@@ -839,6 +841,7 @@ def activate_proposal(proposal_id):
         raise ValueError('来源配置已经更新，请重新检查此建议')
     config = json.loads(proposal.candidate_json)
     tasks.assert_owned()
+    reused_equivalent = False
     if department is None:
         existing = Department.query.filter_by(school_id=proposal.school_id, list_url=config['list_url'], list_selector=config['list_selector']).first()
         if existing:
@@ -846,17 +849,25 @@ def activate_proposal(proposal_id):
                 raise ValueError('同一列表已有配置，请作为现有来源修改审核')
             department = existing
         else:
-            department = Department(school_id=proposal.school_id, **config)
-            db.session.add(department)
-            db.session.flush()
+            from backend.services.source_identity import same_observed_column
+            validation = {'status': 'full', 'list_snapshot': bundle['list'], 'region': bundle.get('region') or {}}
+            candidates = Department.query.filter_by(school_id=proposal.school_id,
+                list_url=config['list_url'], kind='column').order_by(Department.id).all()
+            department = next((row for row in candidates if same_observed_column(row, config, validation)), None)
+            reused_equivalent = department is not None
+            if department is None:
+                department = Department(school_id=proposal.school_id, **config)
+                db.session.add(department)
+                db.session.flush()
     else:
         from backend.services.tasks import invalidate_source
         invalidate_source(department.id)
         for field, value in config.items():
             setattr(department, field, value)
     latest = db.session.query(db.func.max(SourceConfigVersion.version)).filter_by(department_id=department.id).scalar() or 0
-    db.session.add(SourceConfigVersion(department_id=department.id, proposal_id=proposal.id,
-        version=latest + 1, config_json=_json(config), config_hash=_hash(config), previous_json=_json(previous)))
+    if not reused_equivalent:
+        db.session.add(SourceConfigVersion(department_id=department.id, proposal_id=proposal.id,
+            version=latest + 1, config_json=_json(config), config_hash=_hash(config), previous_json=_json(previous)))
     proposal.department_id, proposal.state = department.id, 'activated'
     from backend.services.directory_work import resolve_column_material
     resolve_column_material(proposal)
@@ -867,7 +878,8 @@ def activate_proposal(proposal_id):
         sub = Subscription.query.filter_by(school_id=proposal.school_id, user_id=event.actor_id).first()
         if sub and sub.department_ids is not None:
             sub.department_ids = sorted(set(sub.department_ids + [department.id]))
-    db.session.add(SourceReviewEvent(proposal_id=proposal.id, action='activate', detail_json=_json({'version': latest + 1})))
+    db.session.add(SourceReviewEvent(proposal_id=proposal.id, action='activate',
+        detail_json=_json({'version': latest if reused_equivalent else latest + 1})))
     if Subscription.query.filter_by(school_id=proposal.school_id).first():
         collection = tasks.enqueue('collect', department.id, {'school_id': proposal.school_id, 'department_id': department.id},
                                    replace_finished=False, commit=False)
