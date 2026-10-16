@@ -37,6 +37,62 @@ class AIUsageTests(unittest.TestCase):
         self.assertEqual(result['summary']['calls'], 0)
         self.assertEqual(result['summary']['tokens'], 0)
 
+    def test_cache_rate_uses_only_reported_input_and_keeps_total_paid_tokens(self):
+        db.session.add_all([
+            execution('reported', self.now, usage={'known': True, 'input_tokens': 100,
+                'output_tokens': 10, 'total_tokens': 110, 'cache_hit_tokens': 60, 'cache_miss_tokens': 40}),
+            execution('historical', self.now, tokens=100),
+            execution('malformed-cache', self.now, usage={'known': True, 'input_tokens': 100,
+                'output_tokens': 10, 'total_tokens': 110, 'cache_hit_tokens': 600, 'cache_miss_tokens': 40}),
+        ])
+        db.session.commit()
+        summary = usage_dashboard(now=self.now)['summary']
+        self.assertEqual(summary['tokens'], 320)
+        self.assertEqual(summary['cache_hit_rate'], 60)
+        self.assertEqual(summary['cache_hit_tokens'], 60)
+        self.assertEqual(summary['cache_miss_tokens'], 40)
+        self.assertEqual(summary['cache_reported_calls'], 1)
+        self.assertEqual(summary['cache_unreported_calls'], 2)
+
+    def test_no_reported_cache_details_is_unknown_not_zero_hit(self):
+        db.session.add(execution('historical', self.now)); db.session.commit()
+        summary = usage_dashboard(now=self.now)['summary']
+        self.assertIsNone(summary['cache_hit_rate'])
+        self.assertEqual(summary['cache_reported_calls'], 0)
+        self.assertEqual(summary['cache_unreported_calls'], 1)
+
+    def test_partial_results_and_unknown_invoices_are_independent(self):
+        db.session.add_all([
+            execution('complete', self.now),
+            execution('part-known', self.now, status='partial', tokens=40),
+            execution('part-no-usage', self.now, status='partial', usage={'known': False}),
+            execution('uncertain', self.now, status='uncertain', usage={'known': False}),
+            execution('sending', self.now, status='sending', usage={}),
+        ])
+        db.session.commit()
+        result = usage_dashboard(now=self.now)
+        for counts in (result['summary'], result['lifetime'], result['daily'][-1]):
+            self.assertEqual(counts['partial'], 2)
+            self.assertEqual(counts['uncertain'], 1)
+            self.assertEqual(counts['pending'], 1)
+            self.assertEqual(counts['unknown_usage'], 2)
+            self.assertEqual(counts['tokens'], 140)
+            self.assertEqual(sum(counts[k] for k in ('succeeded', 'failed', 'partial', 'uncertain', 'pending')), counts['calls'])
+        self.assertEqual(result['summary']['success_rate'], 33.3)
+
+    def test_output_validation_failure_is_not_reported_as_network_failure(self):
+        bad = execution('invalid-fields', self.now, status='failed', tokens=40)
+        bad.error_code = 'output_validation_failed'
+        other = execution('server-failure', self.now, status='failed', usage={'known': False})
+        other.error_code = 'provider_unavailable'
+        db.session.add_all([bad, other]); db.session.commit()
+        result = usage_dashboard(now=self.now)
+        for counts in (result['summary'], result['lifetime'], result['daily'][-1]):
+            self.assertEqual(counts['validation_failed'], 1)
+            self.assertEqual(counts['other_failed'], 1)
+            self.assertEqual(counts['failed'], 2)
+            self.assertEqual(counts['tokens'], 40)
+
     def test_totals_include_billed_failures_and_tests_without_double_counting(self):
         db.session.add_all([
             execution('one', self.now, tokens=100),

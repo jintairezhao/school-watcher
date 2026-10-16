@@ -5,6 +5,7 @@ different main region, host, link, item or DOM structure remains independent.
 """
 import hashlib
 import json
+from functools import lru_cache
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup, Tag
@@ -53,21 +54,37 @@ def _chrome(soup, selector):
     return node
 
 
+@lru_cache(maxsize=2)
+def _reference_observations(reference_url, reference_html, selectors):
+    """Bound the memory cache; the complete literal HTML is part of its key."""
+    original = BeautifulSoup(reference_html, 'lxml')
+    observed = {}
+    for selector in selectors:
+        node = _chrome(original, selector)
+        if node is not None:
+            observed.setdefault(_signature(node, reference_url), locator(node))
+    return tuple(observed.items())
+
+
 def repeated_navigation_observations(url, html, candidates, *, reference_url,
                                      reference_html, reference_candidates):
     """Return proof of exact chrome reuse; leave every uncertain region alone."""
     if (canonical_url(url) == canonical_url(reference_url)
             or urlsplit(url).hostname != urlsplit(reference_url).hostname):
         return []
-    original = BeautifulSoup(reference_html, 'lxml')
-    observed = {}
-    for candidate in reference_candidates:
-        node = _chrome(original, candidate.get('container_locator'))
-        if node is not None:
-            observed.setdefault(_signature(node, reference_url), locator(node))
+    observed = dict(_reference_observations(reference_url, reference_html,
+        tuple(candidate.get('container_locator') for candidate in reference_candidates)))
     if not observed:
         return []
     page = BeautifulSoup(html, 'lxml')
+    mains = page.find_all('main')
+    if len(mains) == 1:
+        # A list detector can collapse identical article URLs across two DOM
+        # locations. Look at the real main separately before accepting a
+        # shared-only shortcut, so its own publishing placement is preserved.
+        from .structure import publication_evidence
+        if publication_evidence(str(mains[0]), url):
+            return []
     result = []
     for candidate in candidates:
         node = _chrome(page, candidate.get('container_locator'))

@@ -127,7 +127,7 @@ def route_rank(page, incoming=(), parents=None):
 
 def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
                  branches=None, history=None, slice_size=3, attention=None,
-                 receipts=(), foraging_policy=None, explain=None, costs=None):
+                 receipts=(), foraging_policy=None, explain=None, costs=None, structure=()):
     """Read the observed layout, then share exploration across forward branches.
 
     Branches come from navigation_progress's current evidenced graph, not a
@@ -204,6 +204,53 @@ def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
     def explain_selected(page, reason):
         return selected(page, reason, demand.get(page['url']),
                         feedback.features(page) if feedback is not None else None)
+    if demand:
+        from .attention import candidate_attention, complete_material
+        from backend.services.source_relationships import ROSTER_RELATIONS
+        from backend.scraper.http_client import same_school_url
+        members = defaultdict(list)
+        for node in structure:
+            if (node.get('kind') == 'unit' and node.get('url')
+                    and node.get('relation') in ROSTER_RELATIONS - {'non_entity_directory_entry'}):
+                members[node['url']].append(node)
+        primary = []
+        for page in pages:
+            if page.get('content_hash'):
+                continue
+            own = candidate_attention({'url': page['url'], 'label': page.get('label', '')},
+                profiles=attention.get('profiles'), weights=attention.get('weights'))
+            proof = []
+            for edge in incoming[page['url']]:
+                parent = parents.get(edge.get('parent_url'), {})
+                if (edge.get('decision') not in ('follow', 'official_external_link')
+                        or not complete_material(parent)
+                        or edge.get('content_hash') != parent.get('content_hash')
+                        or page['url'] in article_addresses(parent.get('feed_json'))):
+                    continue
+                if (parent.get('kind') == 'root' and page.get('depth') == 1 and own['gains']
+                        and page.get('kind') in ('directory', 'unit', 'gateway', 'channel')
+                        and same_school_url(page['url'], parent['url'])):
+                    proof.append({'basis': 'direct_school_need_entrance', 'url': parent['url'],
+                                  'locator': edge.get('locator'), 'content_hash': parent['content_hash']})
+                for node in members[page['url']]:
+                    if (node.get('reference_url') != parent.get('url')
+                            or node.get('content_hash') != parent.get('content_hash')
+                            or not node.get('locator') or node['locator'] != edge.get('locator')):
+                        continue
+                    academic_roster = academic_collection_label(parent.get('label'))
+                    if own['gains'] or academic_roster:
+                        proof.append({'basis': 'observed_roster_member', 'url': parent['url'],
+                                      'locator': node['locator'], 'content_hash': parent['content_hash']})
+            if proof:
+                demand[page['url']] = dict(demand[page['url']], trunk_evidence=proof)
+                primary.append((page, own['score']))
+        if primary:
+            # This finite pass ends after real material is observed. Broad
+            # inherited menu vocabulary cannot keep one branch ahead of the
+            # remaining actual college/department and direct school entrances.
+            page, _ = min(primary, key=lambda pair: (-pair[1], pair[0].get('depth', 0),
+                pair[0].get('frontier_rowid', 0), pair[0]['url']))
+            return explain_selected(page, 'unread_school_trunk')
     if branches and history and (claim_count + 1) % max(1, int(slice_size)) == 0:
         effort = defaultdict(int)
         for url, page in history.items():

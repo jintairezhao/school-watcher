@@ -1,8 +1,8 @@
 {
-  "sent_requests": 438,
-  "confirmed_tokens": 2089497,
+  "sent_requests": 447,
+  "confirmed_tokens": 2133318,
   "unknown_reserved_tokens": 13972,
-  "confirmed_plus_reserved": 2103469,
+  "confirmed_plus_reserved": 2147290,
   "prior_stage": {
     "requests": 198,
     "confirmed_tokens": 829891
@@ -18,5 +18,42 @@
     "requests": 8,
     "confirmed_tokens": 25420
   },
-  "unknown_paid_execution_was_not_resent": true
+  "unknown_paid_execution_was_not_resent": true,
+  "same_round_ruc_recovery_probe": {
+    "requests": 6,
+    "confirmed_tokens": 34408,
+    "installed_sources_before": 2,
+    "installed_sources_after": 2,
+    "new_installed_sources": 0,
+    "cold_ab_comparison": false,
+    "saved_user_school_request_limit": 300,
+    "process_cumulative_diagnostic_request_cap": 106
+  },
+  "bounded_after_main_trunk": {
+    "revision": "v27",
+    "kind": "Small bounded continuation, not cold A/B acceptance",
+    "active_seconds": 420.37,
+    "requests": 3,
+    "confirmed_tokens": 9413,
+    "statuses": {
+      "succeeded": 3
+    },
+    "input_tokens": 6620,
+    "output_tokens": 2793,
+    "cache_hit_tokens": 3328,
+    "cache_miss_tokens": 3292,
+    "provider_input_cache_hit_percent": 50.3,
+    "request_pages": {
+      "http://ae.ruc.edu.cn/": 3
+    },
+    "sources_before": 6,
+    "sources_after": 7,
+    "saved_content_before": 91,
+    "saved_content_after": 100,
+    "existing_source_ids_retained": true,
+    "original_paid_executions_unchanged": true,
+    "same_school_round_key": true,
+    "unknown_paid_results_not_resent": true,
+    "limitations": "New source can come from parallel retained program work, not necessarily these model calls. All three calls classified separate batches on one college homepage. The diagnostic process cap changed without invoking the existing settings-change wake-up for old AI-budget waiters; not a production-limit-change or fair scheduling comparison. Do not claim provider cache improvement from incomparable small samples."
+  }
 }

@@ -27,14 +27,38 @@ def _source_transport_verdict(request, observed, result):
     """A source GET refusal can describe the HTTP route, not a missing source.
 
     One ordinary browser observation distinguishes that case. Authentication,
-    explicit restrictions, size failures, API profiles and article reads keep
+    explicit restrictions, size failures, API profiles and ordinary article reads keep
     their existing handling; browser responses never trigger another probe.
     """
-    if (request.purpose not in ('directory', 'list') or not request.browser_allowed
-            or observed.transport != 'http' or observed.status not in _SOURCE_NEGOTIATION_STATUSES
+    source_trial = False
+    if request.purpose == 'article' and request.policy.get('exploration') is True:
+        from backend.services.tasks import current_execution
+        source_trial = (current_execution() or {}).get('kind') in ('onboard', 'source_review')
+    source_read = request.purpose in ('directory', 'list') or source_trial
+    if (not source_read or not request.browser_allowed
+            or observed.transport != 'http' or is_sign_in_route(observed.final_url)):
+        return result
+    # Some configured proxies close pinned-IP HTTP requests while their browser
+    # route can read the original public host. Waiting behind every unvisited
+    # unit before trying that route strands a readable university roster.
+    # This is a transport observation, not evidence of JavaScript or bad rules.
+    # Keep DNS/connect/idle/total timeouts and explicit HTTP refusals unchanged.
+    if (observed.status == 0 and observed.outcome == 'network_error'
+            and observed.error_code == 'http_serverdisconnectederror'):
+        return replace(result, outcome='requires_render', error_code='source_http_transport_probe',
+            message='普通读取连接断开，正在尝试浏览器读取这个官网入口',
+            evidence=tuple(result.evidence) + ('http_source_transport_probe:' + observed.error_code,))
+    if (observed.status in (502, 503, 504) and not observed.retry_after
+            and 'proxy_route_retry_available' in observed.evidence
+            and result.outcome == 'network_error'):
+        content = classify_result(request, replace(observed, status=200, error_code='', outcome='needs_adapter'))
+        if content.outcome not in ('denied', 'needs_manual'):
+            return replace(result, outcome='requires_render', error_code='source_http_transport_probe',
+                message='普通读取出现代理网关错误，正在尝试浏览器读取这个官网入口',
+                evidence=tuple(result.evidence) + (f'http_source_transport_probe:proxy_gateway_{observed.status}',))
+    if (observed.status not in _SOURCE_NEGOTIATION_STATUSES
             or result.error_code != f'http_{observed.status}'
-            or observed.error_code not in ('', f'http_{observed.status}')
-            or is_sign_in_route(observed.final_url)):
+            or observed.error_code not in ('', f'http_{observed.status}')):
         return result
     content = classify_result(request, replace(observed, status=200, error_code='', outcome='needs_adapter'))
     if content.outcome in ('denied', 'needs_manual'):

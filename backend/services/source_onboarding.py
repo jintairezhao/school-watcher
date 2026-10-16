@@ -123,10 +123,11 @@ def queue_columns(school_id, inventory, key):
         previous_url = canonical_url(page['url'])
         existing = Department.query.filter(Department.school_id == school_id,
                     Department.list_url.in_({url, previous_url})).all()
-        if page['kind'] == 'directory' and configs and root_page:
-            # A roster may contain the exact school homepage's navigation/news
-            # widget. Its main body still goes through structural discovery;
-            # only that already observed chrome is reused, never a source ID.
+        reused = []
+        if configs and root_page:
+            # Role labels can describe a campus, gateway or list while its
+            # publishing widgets only repeat school navigation. Reuse is
+            # established by the actual DOM, never the page's guessed role.
             if root_html is None:
                 root_html = inventory.snapshot(key, root_page['url']) or ''
             if root_html:
@@ -139,6 +140,8 @@ def queue_columns(school_id, inventory, key):
                 positions = {row['container_locator'] for row in reused}
                 configs = [c for c in configs if c.get('container_locator') not in positions]
                 reused_observations.extend(dict(row, page_url=url) for row in reused)
+        if reused and not configs and not any(d.list_selector for d in existing):
+            continue
         if page['kind'] == 'directory' and not configs and not any(d.list_selector for d in existing):
             # A plain roster is not publication work. Mixed directory pages
             # with actual lists still require the same scope and body checks.
@@ -447,6 +450,50 @@ def _automatic_repair_source(payload, school):
     return source if any(ids is None or source.id in expand_directory_ids(school.id, ids, entries) for ids, in scopes) else None
 
 
+def _shared_navigation_only(school, url, html):
+    """Recheck old queued work without rewriting any original paid decision.
+
+    A source with an installed rule keeps its own identity and repair path.
+    Unknown or active paid calls are fenced before this function is reached.
+    Main-page publishing regions never qualify as shared navigation.
+    """
+    from pathlib import Path
+    from urllib.parse import urlsplit
+    from flask import current_app
+    from backend.services.source_inventory import site_key
+    from backend.services.discovery_cache import DiscoveryCache
+    from backend.scraper.discovery.structure import publication_evidence
+    from backend.scraper.discovery.observation_reuse import repeated_navigation_observations
+    root = canonical_url(school.url)
+    path = current_app.config.get('DISCOVERY_CACHE_PATH')
+    if (url == root or urlsplit(url).hostname != urlsplit(root).hostname or not path
+            or not Path(path).is_file() or Department.query.filter(
+                Department.school_id == school.id, Department.list_url == url,
+                Department.list_selector.isnot(None), Department.list_selector != '').first()):
+        return []
+    inventory = DiscoveryCache(path)
+    key = site_key(root)
+    page = inventory.get_page(key, root)
+    if not page or page['state'] != 'fetched':
+        return []
+    reference = inventory.snapshot(key, root)
+    if not reference:
+        return []
+
+    def columns(document, address):
+        feed = publication_evidence(document, address)
+        return (feed.get('lists') or [feed]) if feed else []
+
+    candidates = columns(html, url)
+    if not candidates:
+        return []
+    reused = repeated_navigation_observations(url, html, candidates,
+        reference_url=page.get('final_url') or root, reference_html=reference,
+        reference_candidates=columns(reference, page.get('final_url') or root))
+    positions = {row['container_locator'] for row in reused}
+    return reused if all(c.get('container_locator') in positions for c in candidates) else []
+
+
 def onboard_page(payload, *, fetcher=None, _force_ai=False):
     from backend.services.source_governance import _snapshot, read_snapshot, _column_scope
     from backend.services.discovery_control import pause_if_requested
@@ -525,6 +572,11 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
         # category/navigation links; existing source/history rows stay intact.
         return {'state': 'not_column', 'department_ids': [], 'new_count': 0,
                 'reason': '该页面为正文、附件详情或搜索结果，继续沿已观察的栏目入口处理'}
+    reused = _shared_navigation_only(school, url, html)
+    if reused:
+        return {'state': 'observation_reused', 'department_ids': [], 'new_count': 0,
+                'reused_navigation_observations': reused,
+                'reason': '本页发布区域重复官网导航中的已有观察，继续处理真实导航入口'}
     from backend.services.source_agent import validation_feedback, selector_observation
     from backend.services.source_governance import _normal, _column_label
     from backend.services.source_validation import article_samples, pagination_sample, empty_region, record_validation, sample_failure_kind, VALIDATION_VERSION

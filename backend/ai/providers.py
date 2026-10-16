@@ -56,7 +56,13 @@ def _usage(payload):
     out = usage.get('completion_tokens', usage.get('output_tokens'))
     if not isinstance(inp, int) or not isinstance(out, int) or inp < 0 or out < 0:
         return {'known': False}
-    return {'known': True, 'input_tokens': inp, 'output_tokens': out, 'total_tokens': inp + out}
+    result = {'known': True, 'input_tokens': inp, 'output_tokens': out, 'total_tokens': inp + out}
+    hit, miss = usage.get('prompt_cache_hit_tokens'), usage.get('prompt_cache_miss_tokens')
+    # The cache is the provider's input-token breakdown, not a local response
+    # cache or a discount to confirmed usage. Never infer zero for old records.
+    if type(hit) is int and type(miss) is int and hit >= 0 and miss >= 0 and hit + miss == inp:
+        result.update(cache_hit_tokens=hit, cache_miss_tokens=miss)
+    return result
 
 
 def _transport_evidence(exc):

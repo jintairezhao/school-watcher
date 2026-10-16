@@ -1,0 +1,41 @@
+{
+  "kind": "Retained real HTML program replay; not a new live onboarding trial",
+  "url": "https://www.ruc.edu.cn/xiaoyuandaolan1924746660785852417.html?index=1",
+  "snapshot_sha256": "5d7eb69dea60101681e4b0f4443938e9953cd5626b835463d689519cbbea8206",
+  "reference_url": "https://www.ruc.edu.cn/",
+  "reference_sha256": "a89dfe98dc60cb4281653423c96a703d9ffd202e073a0391e243f0c4a07c14df",
+  "result": {
+    "state": "observation_reused",
+    "department_ids": [],
+    "new_count": 0,
+    "reused_navigation_observations": [
+      {
+        "container_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "reference_url": "https://www.ruc.edu.cn/",
+        "reference_container_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(6) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "observation_hash": "f586df7521c64d2e9167c3ee94684928bb3c24ed71d92a8c9331d96b764ee8f7",
+        "basis": "identical_observed_chrome"
+      },
+      {
+        "container_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "reference_url": "https://www.ruc.edu.cn/",
+        "reference_container_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(6) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "observation_hash": "687f938e9317f599ae0f8da11e43d0afea92d23346e1c16596e279036246bfd8",
+        "basis": "identical_observed_chrome"
+      },
+      {
+        "container_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "reference_url": "https://www.ruc.edu.cn/",
+        "reference_container_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(6) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)",
+        "observation_hash": "2727f2c58569fab040f373b7529e3be1eb3370da28173e20690bdd5aed67c3a6",
+        "basis": "identical_observed_chrome"
+      }
+    ],
+    "reason": "本页发布区域重复官网导航中的已有观察，继续处理真实导航入口"
+  },
+  "actual_new_provider_requests": 0,
+  "new_website_reads": 0,
+  "original_paid_plan_fields_preserved": true,
+  "original_execution_rows_unchanged": true,
+  "source_ids_merged_or_deleted": false
+}

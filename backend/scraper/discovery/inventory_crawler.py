@@ -218,6 +218,37 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_a
             error=f'{type(exc).__name__}: {str(exc)[:700]}')
 
 
+def _resuming_page(inventory, key):
+    """Bind a durable browser/HTTP handoff to its original inventory page."""
+    from backend.services.tasks import current_execution
+    handle = current_execution() or {}
+    checkpoint = handle.get('checkpoint') or {}
+    active = checkpoint.get('discovery_active_page') or {}
+    if active.get('site_key') == key and active.get('url'):
+        page = inventory.get_page(key, active['url'])
+        if page and page['state'] in ('pending', 'running'):
+            return page['url']
+    # Older checkpoints only recorded the browser request. Match its exact
+    # original digest; a redirect URL or a hostname alone cannot prove which
+    # inventory page was being read. Never discard its result to pick a new URL.
+    pending = checkpoint.get('browser') or {}
+    if not pending.get('original_key') or not pending.get('request'):
+        return None
+    from dataclasses import replace
+    from backend.scraper.acquisition import FetchRequest
+    from backend.services.task_fetch import request_key
+    request = FetchRequest.from_dict(pending['request'])
+    if request.purpose != 'directory':
+        return None
+    request = replace(request, source_id='', request_id='', session_id='')
+    with inventory.connect() as connection:
+        pages = connection.execute("SELECT url FROM pages WHERE site_key=? AND state='pending'", (key,)).fetchall()
+    for page in pages:
+        if request_key(replace(request, url=page['url'])) == pending['original_key']:
+            return page['url']
+    return None
+
+
 def crawl_site(inventory, key, max_pages=250, workers=4, fetcher=fetch_page, progress=None, retry_failed=False, focus='all'):
     assert_current_parser()
     site = next(s for s in inventory.all_sites() if s['site_key'] == key)
@@ -243,10 +274,19 @@ def crawl_site(inventory, key, max_pages=250, workers=4, fetcher=fetch_page, pro
                         pause_if_requested()
                     assert_current_parser()
                     allowance = workers if max_pages is None else min(workers, max_pages - processed)
-                    batch = [p for _ in range(allowance) if (p := inventory.claim(key, focus=focus)) is not None]
+                    resume_url = _resuming_page(inventory, key) if durable else None
+                    if resume_url:
+                        page = inventory.claim(key, focus=focus, resume_url=resume_url)
+                        batch = [page] if page else []
+                    else:
+                        batch = [page for _ in range(allowance)
+                                 if (page := inventory.claim(key, focus=focus)) is not None]
                     if not batch:
                         break
                     if durable:
+                        from backend.services import tasks
+                        tasks.checkpoint(dict(tasks.current_execution().get('checkpoint') or {},
+                            discovery_active_page={'site_key': key, 'url': batch[0]['url']}))
                         from backend.services.onboarding_progress import record_progress
                         record_progress(phase='crawl', current_label=batch[0]['label'])
                     futures = [pool.submit(inspect_page, inventory, site, p, fetcher, focus) for p in batch] if pool else batch
@@ -255,6 +295,11 @@ def crawl_site(inventory, key, max_pages=250, workers=4, fetcher=fetch_page, pro
                             future.result()
                         else:
                             inspect_page(inventory, site, future, fetcher, focus)
+                            from backend.services import tasks
+                            checkpoint = dict(tasks.current_execution().get('checkpoint') or {})
+                            checkpoint.pop('discovery_active_page', None)
+                            checkpoint.pop('browser', None)
+                            tasks.checkpoint(checkpoint)
                         processed += 1
                         if progress:
                             progress(processed, inventory.progress_snapshot(key))

@@ -37,7 +37,8 @@
     }
     function describe(day) {
         return day.date + '\n' + number(day.tokens) + ' Token · ' + number(day.calls) + ' 次调用'
-            + '\n成功 ' + day.succeeded + ' · 失败 ' + day.failed
+            + '\n完整结果 ' + day.succeeded + ' · 失败 ' + day.failed
+            + (day.partial ? ' · 部分结果 ' + day.partial : '')
             + (day.pending ? ' · 进行中 ' + day.pending : '')
             + (day.uncertain ? ' · 结果待确认 ' + day.uncertain : '')
             + (day.unknown_usage ? '\n' + day.unknown_usage + ' 次调用未返回用量' : '');
@@ -93,7 +94,8 @@
             text('aiLifetimeCalls', number(total.calls));
             text('aiLifetimeBreakdown', '输入 ' + number(total.input_tokens) + ' · 输出 ' + number(total.output_tokens)
                 + (total.unclassified_tokens ? ' · 未细分 ' + number(total.unclassified_tokens) : ''));
-            text('aiLifetimeOutcomes', total.succeeded + ' 次成功 · ' + total.failed + ' 次失败'
+            text('aiLifetimeOutcomes', total.succeeded + ' 次完整结果 · ' + total.failed + ' 次失败'
+                + (total.partial ? ' · ' + total.partial + ' 次部分结果' : '')
                 + (total.uncertain ? ' · ' + total.uncertain + ' 次结果待确认' : '')
                 + (total.pending ? ' · ' + total.pending + ' 次进行中' : ''));
             field('aiLifetimeUnknown').hidden = !total.unknown_usage;
@@ -160,7 +162,8 @@
         const rows = field('aiUsageRows'); rows.replaceChildren();
         [...entries].reverse().forEach(day => {
             const row = node('tr');
-            [day.date, number(day.tokens), number(day.calls), number(day.succeeded), number(day.failed), number(day.uncertain)]
+            [day.date, number(day.tokens), number(day.calls), number(day.succeeded), number(day.failed),
+                number(day.partial || 0), number(day.uncertain), number(day.pending)]
                 .forEach(value => row.append(node('td', value)));
             rows.append(row);
         });
@@ -188,10 +191,11 @@
         const entries = data.calendar.slice(-days);
         const summary = {};
         ['tokens', 'input_tokens', 'output_tokens', 'unclassified_tokens', 'calls', 'succeeded',
-            'failed', 'uncertain', 'pending', 'unknown_usage'].forEach(key => {
-            summary[key] = entries.reduce((sum, entry) => sum + entry[key], 0);
+            'failed', 'partial', 'uncertain', 'pending', 'unknown_usage', 'validation_failed', 'other_failed',
+            'cache_hit_tokens', 'cache_miss_tokens', 'cache_reported_calls', 'cache_unreported_calls'].forEach(key => {
+            summary[key] = entries.reduce((sum, entry) => sum + (entry[key] || 0), 0);
         });
-        const completed = summary.succeeded + summary.failed;
+        const completed = summary.succeeded + summary.failed + summary.partial;
         summary.success_rate = completed ? Math.round(summary.succeeded / completed * 1000) / 10 : null;
         const peak = entries.reduce((best, entry) => entry.tokens > best.tokens ? entry : best);
         summary.peak_tokens = peak.tokens; summary.peak_date = peak.tokens ? peak.date : null;
@@ -200,11 +204,24 @@
         text('aiUsageTokenDetail', '输入 ' + compact(summary.input_tokens) + ' · 输出 ' + compact(summary.output_tokens)
             + (summary.unclassified_tokens ? ' · 未细分 ' + compact(summary.unclassified_tokens) : ''));
         text('aiUsageCalls', number(summary.calls));
-        text('aiUsageCallDetail', summary.pending || summary.uncertain
-            ? summary.pending + ' 次进行中 · ' + summary.uncertain + ' 次结果待确认' : '含连接测试');
+        text('aiUsageCallDetail', [summary.partial && summary.partial + ' 次部分结果',
+            summary.pending && summary.pending + ' 次进行中', summary.uncertain && summary.uncertain + ' 次结果待确认']
+            .filter(Boolean).join(' · ') || '含连接测试');
         text('aiUsageSuccess', summary.success_rate === null ? '—' : summary.success_rate + '%');
-        text('aiUsageSuccessDetail', summary.succeeded + ' 次成功 · ' + summary.failed + ' 次失败');
-        field('aiUsageSuccess').title = '成功次数 ÷ 已有明确结果的调用次数；不含进行中和结果待确认的调用';
+        text('aiUsageSuccessDetail', summary.succeeded + ' 次完整结果 · ' + summary.failed + ' 次失败'
+            + (summary.partial ? ' · ' + summary.partial + ' 次部分结果' : ''));
+        field('aiUsageSuccess').title = '完整结果次数 ÷（完整结果＋失败＋部分结果）；不含进行中和结果待确认的调用';
+        field('aiUsageFailureDetail').hidden = !summary.failed;
+        text('aiUsageFailureDetail', '失败分类：' + summary.validation_failed + ' 次结果格式或字段不合要求 · '
+            + summary.other_failed + ' 次其他失败。');
+        const cacheInput = summary.cache_hit_tokens + summary.cache_miss_tokens;
+        text('aiUsageCache', cacheInput
+            ? '服务商输入缓存命中 ' + (Math.round(summary.cache_hit_tokens / cacheInput * 1000) / 10) + '% · 命中 '
+                + number(summary.cache_hit_tokens) + ' Token · 未命中 ' + number(summary.cache_miss_tokens) + ' Token。'
+                + '仅统计 ' + summary.cache_reported_calls + ' 次有明细的调用'
+                + (summary.cache_unreported_calls ? '，另有 ' + summary.cache_unreported_calls + ' 次未返回明细' : '') + '。'
+            : summary.cache_reported_calls ? '已返回的输入缓存明细中输入 Token 为 0，无法计算命中率。'
+                : summary.calls ? '服务商未返回输入缓存明细，命中率未知。' : '暂无输入缓存记录。');
         text('aiUsagePeak', compact(summary.peak_tokens)); field('aiUsagePeak').title = number(summary.peak_tokens) + ' Token';
         text('aiUsagePeakDate', summary.peak_date || '暂无 Token 用量');
         field('aiUsageUnknown').hidden = !summary.unknown_usage;

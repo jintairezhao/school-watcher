@@ -38,6 +38,12 @@ def main():
             execution('today-test', now - timedelta(seconds=30), tokens=12, skill_id='connection-test', purpose='summary'),
             execution('failed', now - timedelta(seconds=20), tokens=80, status='failed'),
             execution('unknown', now - timedelta(seconds=15), status='uncertain', usage={'known': False}),
+            execution('partial-known', now - timedelta(seconds=10), status='partial', usage={'known': True,
+                'total_tokens': 110, 'input_tokens': 100, 'output_tokens': 10,
+                'cache_hit_tokens': 60, 'cache_miss_tokens': 40}),
+            execution('cached-older', now - timedelta(days=11), usage={'known': True,
+                'total_tokens': 110, 'input_tokens': 100, 'output_tokens': 10,
+                'cache_hit_tokens': 20, 'cache_miss_tokens': 80}),
             AIBudget(key='total:' + now.strftime('%Y-%m'), used_tokens=350000, reserved_tokens=50000),
             AppConfig(key='ai_token_limit_total', value='1000000'),
         ])
@@ -64,6 +70,11 @@ def main():
                 expect(page.locator('#aiUsagePanel')).to_have_attribute('aria-busy', 'false')
                 expect(page.locator('#aiUsageContent')).to_be_visible()
                 expect(page.locator('#aiUsageUnknown')).to_contain_text('1 次调用未返回用量')
+                expect(page.locator('#aiUsageCallDetail')).to_have_text('1 次部分结果 · 1 次结果待确认')
+                expect(page.locator('#aiUsageCache')).to_contain_text('服务商输入缓存命中 40%')
+                expect(page.locator('#aiUsageCache')).to_contain_text('仅统计 2 次有明细的调用')
+                expect(page.locator('#aiUsageSuccessDetail')).to_contain_text('1 次部分结果')
+                expect(page.locator('#aiUsageFailureDetail')).to_have_text('失败分类：0 次结果格式或字段不合要求 · 1 次其他失败。')
                 expect(page.locator('#aiUsagePurposes')).to_contain_text('连接测试')
                 expect(page.locator('#aiUsageBudgets')).to_contain_text('50,000')
                 expect(page.locator('#aiActivityGrid button')).to_have_count(365)
@@ -111,6 +122,8 @@ def main():
                 expected_seven=fixture.client(fixture.admin).get('/api/admin/ai/usage?days=7&offset=480').get_json()
                 expect(page.locator('#aiUsageTokens')).to_have_attribute('title', f"{expected_seven['summary']['tokens']:,} Token")
                 expect(page.locator('#aiUsageCalls')).to_have_text(str(expected_seven['summary']['calls']))
+                expect(page.locator('#aiUsageCache')).to_contain_text('服务商输入缓存命中 60%')
+                expect(page.locator('#aiUsageSuccess')).to_have_text(f"{expected_seven['summary']['success_rate']}%")
                 page.evaluate('window.calendarNode=document.querySelector("#aiActivityGrid button"); window.modelsBefore=document.querySelector("#aiUsageModels").textContent')
                 page.locator('[data-usage-days="90"]').click()
                 expect(page.locator('#aiUsageBars button')).to_have_count(30)
@@ -162,6 +175,7 @@ def main():
             expect(page.locator('#aiUsageEmpty')).to_contain_text('还没有调用记录')
             expect(page.locator('#aiUsageTokens')).to_have_text('0')
             expect(page.locator('#aiUsageSuccess')).to_have_text('—')
+            expect(page.locator('#aiUsageCache')).to_have_text('暂无输入缓存记录。')
             page.locator('[data-activity-mode="cumulative"]').click()
             expect(page.locator('#aiLifetimeTokens')).to_have_text('0')
             expect(page.locator('#aiActivityLifetime')).to_have_attribute('aria-label','尚无调用记录')
@@ -172,6 +186,7 @@ def main():
             db.session.add(execution('hostile', datetime.utcnow(), tokens=123456789, model=bad_model)); db.session.commit()
             page.locator('#aiUsageRefresh').click()
             expect(page.locator('#aiUsageModels')).to_contain_text(bad_model)
+            expect(page.locator('#aiUsageCache')).to_have_text('服务商未返回输入缓存明细，命中率未知。')
             expect(page.locator('#aiUsageModels img')).to_have_count(0)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
             assert not errors, errors

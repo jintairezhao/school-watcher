@@ -1,17 +1,17 @@
 {
   "date": "2026-10-16",
   "version": "2.22",
-  "revision": "v22",
+  "revision": "v28",
   "entire_plan_acceptance": "not_passed",
   "released": false,
   "draft_pr": "https://github.com/jintairezhao/school-watcher/pull/3",
   "regression": {
-    "modules": 175,
-    "tests_run": 1910,
+    "modules": 179,
+    "tests_run": 1941,
     "failures": 0,
     "errors": 0,
     "skipped": 15,
-    "seconds": 445.557,
+    "seconds": 226.206,
     "successful": true,
     "source_unchanged": true,
     "external_connections_blocked": 0,
@@ -159,5 +159,131 @@
     "Two complete final-build independent university validations after all fixes",
     "Natural new-notice/redesign observation or explicit limitations",
     "Latest commit cross-platform CI"
-  ]
+  ],
+  "historical_regressions": [
+    {
+      "revision": "v22",
+      "regression": {
+        "modules": 175,
+        "tests_run": 1910,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 15,
+        "seconds": 445.557,
+        "successful": true,
+        "source_unchanged": true,
+        "external_connections_blocked": 0,
+        "actual_provider_requests": 0
+      }
+    },
+    {
+      "revision": "v24",
+      "regression": {
+        "modules": 177,
+        "tests_run": 1929,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 15,
+        "seconds": 233.625,
+        "successful": true,
+        "source_unchanged": true,
+        "external_connections_blocked": 0,
+        "actual_provider_requests": 0
+      }
+    },
+    {
+      "revision": "v25",
+      "regression": {
+        "modules": 178,
+        "tests_run": 1933,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 15,
+        "seconds": 221.564,
+        "successful": true,
+        "source_unchanged": true,
+        "external_connections_blocked": 0,
+        "actual_provider_requests": 0
+      }
+    },
+    {
+      "revision": "v27",
+      "regression": {
+        "modules": 179,
+        "tests_run": 1941,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 15,
+        "seconds": 218.216,
+        "successful": true,
+        "source_unchanged": true,
+        "external_connections_blocked": 0,
+        "actual_provider_requests": 0
+      }
+    }
+  ],
+  "latest_cross_platform_ci": {
+    "revision": "v22",
+    "runtime_postgres": "passed",
+    "windows_onboarding_browser": "failed: expected queued text while actual unleased row can be recovering; fixture fixed in v23 and local browser passed",
+    "windows_native_startup_update": "failed: notification hide check timed out; still requires diagnosis",
+    "macos_x64_build": "passed",
+    "macos_arm64_build": "passed",
+    "latest_v24": "not_yet_uploaded",
+    "latest_v26": "not_yet_uploaded",
+    "latest_v27": "not_yet_uploaded",
+    "latest_v28": "not_yet_uploaded"
+  },
+  "latest_affected_regression": {
+    "revision": "v28-usage-clarity",
+    "tests_run": 19,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "actual_provider_requests": 0,
+    "scope": "Provider cache and usage accounting only; broader structure regression remains separately labeled v27"
+  },
+  "latest_local_native_startup_update": {
+    "revision": "v27",
+    "recorded_at_utc": "2026-10-16T13:52:00.543275+00:00",
+    "command": "tests/smoke/check_startup_updates.py",
+    "status": "passed",
+    "isolated_empty_profile": true,
+    "hidden_native_window": true,
+    "automatic_checks": 1,
+    "automatic_downloads": 0,
+    "user_profile_or_credentials_loaded": false,
+    "limitation": "Local real Windows window passed without production changes. The earlier v22 CI failure is retained; a new CI execution is still required."
+  },
+  "latest_usage_browser": {
+    "revision": "v28-usage-clarity",
+    "status": "passed",
+    "dark_and_light": true,
+    "widths": [
+      1440,
+      390
+    ],
+    "partial_vs_unknown_checked": true,
+    "cache_reported_input_denominator_checked": true,
+    "period_switches_reuse_loaded_data": true,
+    "error_recovery_and_empty_history_checked": true,
+    "actual_provider_requests": 0,
+    "mechanical_detector": "Regex fallback reported no findings; HTML parser dependencies unavailable, computed contrast not evaluated",
+    "visual_inspection": "Actual dark desktop and mobile screenshots inspected; retained existing styling",
+    "verified_again_on_isolated_public_patch": true
+  },
+  "regression_scope": "Isolated public patch: existing draft plus this remediation only; concurrent calendar, saved-attachment and Android edits excluded",
+  "worktree_regression": {
+    "modules": 179,
+    "tests_run": 1943,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 24,
+    "seconds": 214.963,
+    "successful": true,
+    "source_unchanged": true,
+    "external_connections_blocked": 0,
+    "actual_provider_requests": 0
+  },
+  "worktree_regression_note": "Broader local tree includes concurrent out-of-scope edits; 9 local browser skips separately checked with Edge (10 cases, 1 Linux-only skip). Not substituted for the isolated-public result."
 }

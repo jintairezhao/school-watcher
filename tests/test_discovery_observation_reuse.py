@@ -64,10 +64,10 @@ class ObservationQueueTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.tearDown()
 
-    def queue(self, changed=False):
+    def queue(self, changed=False, kind='directory'):
         from backend.services.source_onboarding import queue_columns
         pages = [{'url': ROOT, 'final_url': ROOT, 'kind': 'channel', 'state': 'fetched', 'label': '首页'},
-                 {'url': PAGE, 'final_url': PAGE, 'kind': 'directory', 'state': 'fetched', 'label': '院系设置'}]
+                 {'url': PAGE, 'final_url': PAGE, 'kind': kind, 'state': 'fetched', 'label': '院系设置'}]
         candidate = {'container_locator': '#shared', 'list_selector': '#shared li',
                      'name': '学校新闻', 'group_name': ''}
         configs = [dict(candidate, list_url=p['url']) for p in pages]
@@ -93,6 +93,48 @@ class ObservationQueueTests(unittest.TestCase):
         from backend.database.models import BackgroundTask
         self.queue(changed=True)
         self.assertEqual(BackgroundTask.query.filter_by(kind='onboard').count(), 2)
+
+    def test_shared_chrome_is_not_new_column_work_when_page_role_is_unit(self):
+        from backend.database.models import BackgroundTask
+        result, _ = self.queue(kind='unit')
+        self.assertEqual([r.payload['url'] for r in BackgroundTask.query.filter_by(kind='onboard')], [ROOT])
+        self.assertEqual(len(result['reused_navigation_observations']), 1)
+
+    def test_shared_chrome_is_not_new_column_work_when_page_role_is_channel(self):
+        from backend.database.models import BackgroundTask
+        result, _ = self.queue(kind='channel')
+        self.assertEqual([r.payload['url'] for r in BackgroundTask.query.filter_by(kind='onboard')], [ROOT])
+        self.assertEqual(len(result['reused_navigation_observations']), 1)
+
+    def test_previously_queued_shared_only_page_does_not_buy_more_column_decisions(self):
+        from backend.services.source_onboarding import onboard_page
+        from backend.services.discovery_cache import DiscoveryCache
+        from flask import current_app
+        inventory = DiscoveryCache(current_app.config['DISCOVERY_CACHE_PATH'])
+        key = inventory.ensure_site('测试大学', ROOT)
+        widget = WIDGET.replace('</ul>', '<li><a href="/news/2.htm">关于本学期学校教学活动的重要通知</a><time>2026-10-16</time></li></ul>')
+        root_html = widget + '<main>学校首页</main>'
+        inventory.finish(key, ROOT, state='fetched', html=root_html)
+        page_html = widget + '<main><h1>校园导览</h1><a href="/units/">院系设置</a></main>'
+        with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Shared chrome must not be purchased again')):
+            result = onboard_page({'school_id': self.fixture.school_id, 'url': PAGE,
+                                   'observed_kind': 'unit'}, fetcher=lambda *_:page_html)
+        self.assertEqual(result['state'], 'observation_reused')
+        self.assertEqual(len(result['reused_navigation_observations']), 1)
+
+    def test_shared_only_guard_retains_a_real_main_publication(self):
+        from backend.services.source_onboarding import _shared_navigation_only
+        from backend.services.discovery_cache import DiscoveryCache
+        from backend.database.models import School
+        from flask import current_app
+        widget = WIDGET.replace('</ul>', '<li><a href="/news/2.htm">关于学校招生工作安排的重要通知</a><time>2026-10-16</time></li></ul>')
+        inventory = DiscoveryCache(current_app.config['DISCOVERY_CACHE_PATH'])
+        key = inventory.ensure_site('测试大学', ROOT)
+        inventory.finish(key, ROOT, state='fetched', html=widget + '<main>学校首页</main>')
+        own = widget.replace('id="shared"', 'id="independent"')
+        page = widget + '<main>' + own + '</main>'
+        school = self.fixture.app.extensions['sqlalchemy'].session.get(School, self.fixture.school_id)
+        self.assertEqual(_shared_navigation_only(school, PAGE, page), [])
 
     def test_existing_channel_identity_and_config_are_not_removed_or_merged(self):
         from backend.database.models import BackgroundTask, Department

@@ -236,7 +236,7 @@ class Inventory:
         with self.connect() as c:
             return [dict(r) for r in c.execute('SELECT * FROM structure WHERE site_key=? ORDER BY rowid', (key,))]
 
-    def claim(self, key, focus='all'):
+    def claim(self, key, focus='all', *, resume_url=None):
         if focus not in ('all', 'student', 'layered', 'valuable'):
             raise ValueError('Unknown discovery focus')
         with self.connect() as c:
@@ -285,8 +285,15 @@ class Inventory:
             while True:
                 choice = {}
                 selection = ("SELECT rowid AS frontier_rowid,* FROM pages WHERE site_key=? AND state='pending' "
-                             "AND (retry_at IS NULL OR retry_at<=?) " + condition + 'ORDER BY ' + order)
-                if focus == 'valuable':
+                             "AND (retry_at IS NULL OR retry_at<=?) " + condition +
+                             ('AND url=? ' if resume_url else '') + 'ORDER BY ' + order)
+                if resume_url:
+                    row = c.execute(selection, (key, now(), canonical_url(resume_url))).fetchone()
+                    if row:
+                        claims = c.execute('SELECT coalesce(sum(attempts),0) FROM pages WHERE site_key=?', (key,)).fetchone()[0]
+                        choice.update(version='attention-1', reason='resume_page_read', candidate_count=1,
+                                      claim_number=claims + 1, url=row['url'], label=row['label'])
+                elif focus == 'valuable':
                     from backend.scraper.discovery.frontier import choose_route
                     from backend.scraper.discovery.navigation_progress import branches
                     from backend.services.discovery_policy import get_policy, get_attention_policy
@@ -301,6 +308,9 @@ class Inventory:
                         "AND e.content_hash=parent.content_hash "
                         "AND e.decision IN ('follow','official_external_link')", (key,))]
                     parents = {url: page for url, page in history.items() if page['state'] == 'fetched'}
+                    structure = [dict(node) for node in c.execute(
+                        "SELECT s.* FROM structure s JOIN pages p ON p.site_key=s.site_key AND p.url=s.reference_url "
+                        "WHERE s.site_key=? AND p.state='fetched' AND p.content_hash=s.content_hash", (key,))]
                     claims = c.execute('SELECT coalesce(sum(attempts),0) FROM pages WHERE site_key=?', (key,)).fetchone()[0]
                     policy = get_policy()
                     row = choose_route(candidates, edges=edges, parents=parents, claim_count=claims,
@@ -308,6 +318,7 @@ class Inventory:
                                        slice_size=policy['discovery_slice_pages'],
                                        branches=branch_assignments, history=history,
                                        attention=get_attention_policy(),
+                                       structure=structure,
                                        receipts=load_source_receipts(dict(school)) if school else (),
                                        costs=load_discovery_costs(dict(school)) if school else None,
                                        foraging_policy={'unseen_prior': policy['frontier_unseen_prior'],
