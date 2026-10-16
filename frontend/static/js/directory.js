@@ -11,9 +11,8 @@ root.querySelectorAll('[data-subscribe-name]').forEach(button => {
         button.textContent = '正在订阅…';
         try {
             const schoolId = button.dataset.schoolId;
-            const result = await directoryRequest(schoolId ? '/api/subscriptions' : '/api/catalog/subscribe', 'POST',
-                schoolId ? {school_id: Number(schoolId)} : {name: button.dataset.subscribeName});
-            location.href = '/subscriptions/' + (schoolId || result.school_id);
+            const query = new URLSearchParams(schoolId ? {school_id:schoolId} : {name:button.dataset.subscribeName});
+            location.href = '/collection/setup?' + query;
         } catch (error) {
             showToast('error', error.message);
             button.textContent = '重试订阅';
@@ -120,10 +119,8 @@ document.getElementById('submitSchoolForm')?.addEventListener('submit', async ev
     button.disabled = true;
     feedback.textContent = '正在添加学校…';
     try {
-        const result = await directoryRequest('/api/schools', 'POST', {
-            name: document.getElementById('subName').value.trim(), url: document.getElementById('subUrl').value.trim()
-        });
-        location.href = '/subscriptions/' + result.id;
+        location.href = '/collection/setup?' + new URLSearchParams({add:'1',
+            name:document.getElementById('subName').value.trim(), url:document.getElementById('subUrl').value.trim()});
     } catch (error) {
         feedback.textContent = error.message;
         button.disabled = false;

@@ -31,6 +31,10 @@
     }
     function regions(selected) {
         const provider = settings.providers.find(p => p.id === field('aiProvider').value);
+        if (field('aiKeyLink') && provider) {
+            field('aiKeyLink').href = provider.key_url;
+            field('aiKeyLink').textContent = '获取 API 密钥（' + provider.name + '官网）';
+        }
         field('aiRegion').replaceChildren(...(provider ? provider.regions : []).map(r => option(r, regionNames[r] || r)));
         if (selected) field('aiRegion').value = selected;
         field('aiRegionGroup').hidden = !provider || provider.regions.length <= 1;
@@ -164,6 +168,7 @@
             for (const [id, key] of [['aiTotalLimit', 'total'], ['aiDirectoryLimit', 'directory'], ['aiSchoolLimit', 'school_discovery']]) field(id).value = settings.limits[key];
             field('aiConcurrent').value = settings.max_concurrent;
             field('aiSchoolRequests').value = settings.school_request_limit;
+            document.dispatchEvent(new CustomEvent('ai-settings-updated', {detail:settings}));
         } catch (error) { field('aiStatus').textContent = error.message; }
     };
     field('aiProvider').addEventListener('change', () => regions());
@@ -201,7 +206,10 @@
             if (school && /^\d+$/.test(school) && directory && directory.enabled && directory.tested) {
                 await api('/api/subscriptions/' + school + '/discovery', 'POST', {});
                 location.assign('/subscriptions/' + school);
-            } else field('aiStatus').textContent = '功能设置已保存';
+            } else {
+                field('aiStatus').textContent = '功能设置已保存';
+                document.dispatchEvent(new CustomEvent('ai-settings-updated', {detail:settings}));
+            }
         });
     });
     field('aiLimitsForm').addEventListener('submit', event => {

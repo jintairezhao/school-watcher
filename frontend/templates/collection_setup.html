@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}基础配置 — 学校通知{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/collection-setup.css') }}">{% endblock %}
+{% block content %}
+<div class="collection-setup" id="collectionSetup" data-admin="{{ 'true' if current_user.is_admin else 'false' }}">
+    <a class="surface-back" href="{{ url_for('pages.explore') }}">返回学校目录</a>
+    <header class="surface-heading">
+        <div><h1>基础配置</h1><p>{% if target.kind == 'settings' %}集中管理通知收录范围、更新频率和 AI 服务。{% else %}开始{% if target.kind == 'add' %}添加学校{% else %}订阅{{ target.name }}{% endif %}前，先确认通知收录范围和探索方式。{% endif %}</p></div>
+    </header>
+    <p class="setup-scope">这些设置适用于本机所有学校。已保存的通知会保留。</p>
+    <form id="collectionSetupForm">
+        {% if target.kind == 'add' %}
+        <section class="setup-section" aria-labelledby="setupSchoolTitle">
+            <h2 id="setupSchoolTitle">学校信息</h2>
+            <div class="form-group"><label for="setupSchoolName">学校全称</label><input id="setupSchoolName" class="form-input" value="{{ target.name }}" maxlength="200" required></div>
+            <div class="form-group"><label for="setupSchoolUrl">学校官网</label><input id="setupSchoolUrl" class="form-input" value="{{ target.url }}" type="url" maxlength="500" required placeholder="https://www.example.edu.cn/" aria-describedby="setupSchoolUrlHint"><p id="setupSchoolUrlHint" class="text-muted" role="status"></p></div>
+        </section>
+        {% endif %}
+        <section class="setup-section" aria-labelledby="setupCollectionTitle">
+            <h2 id="setupCollectionTitle">收录与更新</h2>
+            <div class="setup-fields">
+                <div class="form-group"><label for="setupSinceDate">从哪天的通知开始收录</label><input id="setupSinceDate" class="form-input" type="date" value="{{ since_date }}" min="1900-01-01" max="{{ today }}" required {% if not current_user.is_admin %}disabled{% endif %} aria-describedby="setupDateHelp"><p id="setupDateHelp" class="text-muted">包含当天发布的通知。无法确认日期的通知仍会保留。</p></div>
+                <div class="form-group"><label for="setupInterval">自动更新间隔（分钟）</label><input id="setupInterval" class="form-input" type="number" min="5" max="720" step="1" value="{{ interval }}" required {% if not current_user.is_admin %}disabled{% endif %} aria-describedby="setupIntervalHelp"><p id="setupIntervalHelp" class="text-muted">5–720 分钟。开始后先同步一次，再按此间隔检查。</p></div>
+            </div>
+            {% if not current_user.is_admin %}<p>共享抓取设置由管理员维护，你可以确认后继续订阅。</p>{% endif %}
+        </section>
+        <section class="setup-section" aria-labelledby="setupModeTitle">
+            <h2 id="setupModeTitle">官网探索方式</h2>
+            <label class="setup-choice"><input type="radio" name="ai_mode" value="ai" {% if use_ai %}checked{% endif %}><span><strong>使用 AI 寻找新的部门与栏目</strong><small>需要测试通过的 API 服务，调用会产生服务商用量。</small></span></label>
+            <label class="setup-choice"><input type="radio" name="ai_mode" value="rules" {% if not use_ai %}checked{% endif %}><span><strong>暂不使用 AI</strong><small>先按已有采集配置和程序识别结果更新；新官网的来源可能不完整。以后可在来源设置中启用 AI。</small></span></label>
+        </section>
+    </form>
+    <section class="setup-section setup-ai" aria-labelledby="setupAITitle">
+        <h2 id="setupAITitle">AI 服务</h2>
+        <p id="setupAIState" role="status">{% if ai_ready %}已配置：{{ ai_label }}，可直接复用。{% else %}尚未连接学校来源识别服务。可以在下方配置，也可以暂不使用 AI。{% endif %}</p>
+        <p>没有 API 密钥？前往服务商官网获取：</p>
+        <div class="setup-provider-guides">{% for provider in provider_guides %}<a href="{{ provider.url }}" target="_blank" rel="noopener noreferrer">{{ provider.name }}</a>{% endfor %}</div>
+        {% if current_user.is_admin %}
+        <details id="setupAIDetails" {% if use_ai and not ai_ready %}open{% endif %}>
+            <summary>{{ '查看或更换 API 配置' if ai_ready else '连接 API 服务' }}</summary>
+            {% include '_admin_ai.html' %}
+        </details>
+        {% else %}<p>API 服务由管理员配置。个人无需提交密钥。</p>{% endif %}
+    </section>
+    <div class="setup-footer">
+        <p id="setupFeedback" role="status" aria-live="polite" tabindex="-1" hidden></p>
+        <button class="btn btn-primary" type="submit" form="collectionSetupForm" id="setupStart">{% if target.kind == 'settings' %}保存基础配置{% elif target.kind == 'add' %}保存并添加学校{% else %}保存并订阅{% endif %}</button>
+        <a class="btn btn-outline" href="{{ url_for('pages.explore') }}">取消</a>
+    </div>
+    <script id="setupTarget" type="application/json">{{ target|tojson }}</script>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/school-suggestion.js') }}"></script>
+{% if current_user.is_admin %}<script src="{{ url_for('static', filename='js/admin-ai.js') }}"></script>{% endif %}
+<script src="{{ url_for('static', filename='js/collection-setup.js') }}"></script>
+{% endblock %}

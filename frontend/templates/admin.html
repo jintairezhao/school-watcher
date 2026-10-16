@@ -50,6 +50,7 @@
 <!-- ================= 用户 ================= -->
 
 <section class="admin-tab-panel" id="panel-scrape" hidden>
+    <p><a href="{{ url_for('collection_setup.page') }}">基础配置：收录起始日期、更新间隔与 AI 服务</a></p>
     <div class="settings-grid">
         <div class="setting-card">
             <div class="setting-card-header"><h3>抓取设置</h3></div>
@@ -176,17 +177,23 @@ async function loadInterval() {
     document.getElementById('interval').value = s.scrape_interval;
     var month = document.getElementById('sinceMonth');
     month.value = s.scrape_since_month;
+    month.dataset.loadedMonth = s.scrape_since_month;
+    month.dataset.exactDate = s.scrape_since_date || (s.scrape_since_month + '-01');
     var today = new Date();
     month.max = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
 }
 async function saveInterval() {
-    if (!document.getElementById('sinceMonth').reportValidity()) return;
+    var month = document.getElementById('sinceMonth');
+    if (!month.reportValidity()) return;
+    var cutoff = month.value === month.dataset.loadedMonth
+        ? {since_date: month.dataset.exactDate} : {since_month: month.value};
     var resp = await fetch('/api/settings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ interval: document.getElementById('interval').value,
-            since_month: document.getElementById('sinceMonth').value }) });
+            ...cutoff }) });
     var d = await resp.json();
     showToast(d.success ? 'success' : 'error', d.message || d.error);
+    if (d.success) loadInterval();
 }
 async function triggerScrapeAll() {
     var btn = document.getElementById('btnScrapeAll');

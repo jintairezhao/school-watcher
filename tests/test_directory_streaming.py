@@ -127,3 +127,36 @@ class DirectoryStreamingTests(unittest.TestCase):
             with self.assertRaises(ProviderError) as caught:
                 complete(self.profile, 'fixture-key', [], streaming=True)
         self.assertEqual(caught.exception.code, 'read_timeout')
+
+    def test_socket_deadline_can_expire_before_monotonic_clock_reaches_boundary(self):
+        import requests
+        from types import SimpleNamespace
+        response = StreamResponse([event('{"results":[{"candidate_id":"a"},')], requests.ReadTimeout('socket timer'))
+        applied = []
+        response.raw = SimpleNamespace(_connection=SimpleNamespace(sock=SimpleNamespace(settimeout=applied.append)))
+        ticks = iter([0])
+        with patch('backend.ai.providers.requests.Session') as factory, \
+             patch('backend.ai.providers.STREAM_TOTAL_SECONDS', .2), \
+             patch('backend.ai.providers.time.monotonic', side_effect=lambda: next(ticks, .199)):
+            factory.return_value.post.return_value = response
+            with self.assertRaises(ProviderError) as caught:
+                complete(self.profile, 'fixture-key', [], streaming=True)
+        self.assertEqual(caught.exception.code, 'response_deadline')
+        self.assertIn('candidate_id', caught.exception.content)
+        self.assertTrue(caught.exception.uncertain)
+        self.assertTrue(applied and all(0 < value < .002 for value in applied))
+
+    def test_socket_idle_limit_is_still_distinct_from_total_limit(self):
+        import requests
+        from types import SimpleNamespace
+        response = StreamResponse([], requests.ReadTimeout('idle timer'))
+        applied = []
+        response.raw = SimpleNamespace(_connection=SimpleNamespace(sock=SimpleNamespace(settimeout=applied.append)))
+        ticks = iter([0])
+        with patch('backend.ai.providers.requests.Session') as factory, \
+             patch('backend.ai.providers.time.monotonic', side_effect=lambda: next(ticks, 25)):
+            factory.return_value.post.return_value = response
+            with self.assertRaises(ProviderError) as caught:
+                complete(self.profile, 'fixture-key', [], streaming=True)
+        self.assertEqual(caught.exception.code, 'read_timeout')
+        self.assertEqual(applied, [120])

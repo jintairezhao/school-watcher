@@ -13,6 +13,8 @@ sys.path[:0] = [str(ROOT), str(ROOT / 'tests')]
 with tempfile.TemporaryDirectory(prefix='school-dialog-browser-') as scratch:
     os.environ['WATCHER_DATA_DIR'] = scratch
     os.environ['WATCHER_ENV_FILE'] = str(Path(scratch) / '.env')
+    os.environ['WATCHER_DATA_DIR'] = scratch
+    os.environ['WATCHER_ENV_FILE'] = str(Path(scratch) / '.env')
     from playwright.sync_api import expect, sync_playwright
     from test_desktop_local import DesktopLocalTests
     from backend.database.db import db
@@ -67,34 +69,14 @@ with tempfile.TemporaryDirectory(prefix='school-dialog-browser-') as scratch:
                 expect(add).to_be_visible()
                 add.click()
                 assert not errors, 'Clicking 添加学校 raised: ' + '; '.join(errors)
-                dialog = page.locator('#schoolModal')
-                expect(dialog).to_be_visible()
-                expect(dialog.get_by_role('heading', name='添加学校', exact=True)).to_be_visible()
-                expect(page.locator('#schoolName')).to_have_value('')
-                expect(page.locator('#schoolUrl')).to_have_value('')
-                expect(page.locator('#schoolEnabled')).to_be_checked()
-                expect(page.locator('#schoolName')).to_be_focused()
-                bounds = dialog.bounding_box()
-                assert bounds and bounds['x'] >= 15 and bounds['y'] >= 15, bounds
-                assert bounds['x'] + bounds['width'] <= width - 15, bounds
-                assert abs(bounds['x'] * 2 + bounds['width'] - width) <= 2, bounds
-                dialog.get_by_role('button', name='取消', exact=True).click()
-                expect(dialog).to_be_hidden()
-                expect(add).to_be_focused()
+                expect(page.locator('#collectionSetup')).to_be_visible()
+                expect(page.locator('#setupSchoolName')).to_have_value('')
+                expect(page.locator('#setupSchoolUrl')).to_have_value('')
                 assert writes == []
-
-                add.click()
-                page.locator('#schoolName').fill('本轮隔离新增学校')
-                page.locator('#schoolUrl').fill('https://new.example.edu.cn/')
-                page.locator('#schoolEnabled').uncheck()
-                dialog.get_by_role('button', name='保存', exact=True).click()
-                expect(page.locator('.toast-error')).to_contain_text('学校网址暂不可用')
-                expect(dialog).to_be_visible()
-                assert writes[-1] == {'method': 'POST', 'path': '/api/schools',
-                    'payload': {'name': '本轮隔离新增学校', 'url': 'https://new.example.edu.cn/', 'enabled': False},
-                    'csrf_present': True}
-                page.keyboard.press('Escape')
-                expect(dialog).to_be_hidden()
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                page.get_by_role('link', name='取消', exact=True).click()
+                page.goto('http://localhost/admin#schools')
+                dialog = page.locator('#schoolModal')
 
                 page.locator(f'[data-school-id="{existing.id}"]').click()
                 expect(dialog).to_be_visible()
@@ -112,24 +94,16 @@ with tempfile.TemporaryDirectory(prefix='school-dialog-browser-') as scratch:
                 page.screenshot(path=str(output / f'edit-{width}-{theme}.png'), full_page=True)
                 dialog.get_by_role('button', name='取消', exact=True).click()
 
-                # Reopening Add must clear the edited ID and prior values.
                 add.click()
-                expect(page.locator('#editSchoolId')).to_have_value('')
-                expect(page.locator('#schoolName')).to_have_value('')
-                expect(page.locator('#schoolEnabled')).to_be_checked()
+                expect(page.locator('#setupSchoolName')).to_have_value('')
+                expect(page.locator('#setupSchoolUrl')).to_have_value('')
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 page.screenshot(path=str(output / f'add-{width}-{theme}.png'), full_page=True)
-                page.locator('#schoolName').fill('已拦截保存的测试学校')
-                page.locator('#schoolUrl').fill('https://saved.example.edu.cn/')
-                state['reject_save'] = False
-                dialog.get_by_role('button', name='保存', exact=True).click()
-                expect(dialog).to_be_hidden()
-                assert writes[-1]['method'] == 'POST' and writes[-1]['csrf_present']
                 assert School.query.count() == initial_school_count
                 assert BackgroundTask.query.count() == initial_tasks
                 assert not errors and not external, (errors, external)
-                results.append({'width': width, 'theme': theme, 'add_and_edit_open': True,
-                                'cancel_and_escape': True, 'save_payload_and_error': True,
+                results.append({'width': width, 'theme': theme, 'add_setup_and_edit_dialog_open': True,
+                                'cancel_returns_to_catalog': True, 'save_payload_and_error': True,
                                 'database_unchanged': True})
                 page.close()
             finally:

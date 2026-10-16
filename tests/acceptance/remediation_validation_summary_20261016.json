@@ -1,17 +1,17 @@
 {
   "date": "2026-10-16",
   "version": "2.22",
-  "revision": "v28",
+  "revision": "v31",
   "entire_plan_acceptance": "not_passed",
   "released": false,
   "draft_pr": "https://github.com/jintairezhao/school-watcher/pull/3",
   "regression": {
-    "modules": 179,
-    "tests_run": 1941,
+    "modules": 181,
+    "tests_run": 1965,
     "failures": 0,
     "errors": 0,
     "skipped": 15,
-    "seconds": 226.206,
+    "seconds": 220.621,
     "successful": true,
     "source_unchanged": true,
     "external_connections_blocked": 0,
@@ -285,5 +285,64 @@
     "external_connections_blocked": 0,
     "actual_provider_requests": 0
   },
-  "worktree_regression_note": "Broader local tree includes concurrent out-of-scope edits; 9 local browser skips separately checked with Edge (10 cases, 1 Linux-only skip). Not substituted for the isolated-public result."
+  "worktree_regression_note": "Broader local tree includes concurrent out-of-scope edits; 9 local browser skips separately checked with Edge (10 cases, 1 Linux-only skip). Not substituted for the isolated-public result.",
+  "prior_v28_ci": {
+    "desktop_builds": {
+      "run_id": 38914611722,
+      "conclusion": "success"
+    },
+    "standalone_runtime": {
+      "run_id": 38914611321,
+      "conclusion": "failure",
+      "reason": "deadline-bounded idle socket fired slightly before monotonic total deadline; preserved as historical failure; generic classification fixed in v30"
+    }
+  },
+  "new_revision_ci": "Will run on the next draft commit; no release or merge requested by this record",
+  "first_run_setup": {
+    "tested_unit_cases": 13,
+    "external_provider_requests": 0,
+    "scope": "Date, interval, existing AI configuration and no-key choices reviewed before subscription; old installations retain state",
+    "browser_cases": [
+      {
+        "width": 1440,
+        "theme": "dark",
+        "save_precedes_start": true,
+        "cancel_no_work": true,
+        "key_links": 4,
+        "exact_date_retained": true,
+        "legacy_interval_edit_preserves_exact_day": true,
+        "page_errors": []
+      },
+      {
+        "width": 390,
+        "theme": "dark",
+        "save_precedes_start": true,
+        "cancel_no_work": true,
+        "key_links": 4,
+        "exact_date_retained": true,
+        "legacy_interval_edit_preserves_exact_day": true,
+        "page_errors": []
+      },
+      {
+        "width": 1440,
+        "theme": "light",
+        "save_precedes_start": true,
+        "cancel_no_work": true,
+        "key_links": 4,
+        "exact_date_retained": true,
+        "legacy_interval_edit_preserves_exact_day": true,
+        "page_errors": []
+      },
+      {
+        "width": 390,
+        "theme": "light",
+        "save_precedes_start": true,
+        "cancel_no_work": true,
+        "key_links": 4,
+        "exact_date_retained": true,
+        "legacy_interval_edit_preserves_exact_day": true,
+        "page_errors": []
+      }
+    ]
+  }
 }

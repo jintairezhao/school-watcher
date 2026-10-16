@@ -21,7 +21,7 @@ def start_background_scrape(school_id):
     return enqueue('scrape', school_id, {'school_id': school_id})
 
 
-def subscribe_school(school, user_id):
+def subscribe_school(school, user_id, *, ai_assist=None):
     from backend.services.starter_catalog import mark_selected
     mark_selected(school.id)
     result = db.session.execute(insert(Subscription).values(
@@ -35,7 +35,7 @@ def subscribe_school(school, user_id):
     db.session.commit()
     if revived:
         from backend.services.discovery_changes import ensure_initial
-        ensure_initial(school)
+        ensure_initial(school, ai_assist=ai_assist)
         start_background_scrape(school.id)
     return revived
 
@@ -63,7 +63,13 @@ def api_subscribe():
     if not school or not school.enabled:
         return jsonify({'error': '学校不存在或已下架'}), 404
 
-    revived = subscribe_school(school, g.user.id)
+    from backend.services.collection_settings import setup_guard
+    guard = setup_guard()
+    if guard:
+        return guard
+    if 'ai_assist' in data and type(data['ai_assist']) is not bool:
+        return jsonify(error='请选择有效的 AI 探索方式'), 400
+    revived = subscribe_school(school, g.user.id, ai_assist=data.get('ai_assist'))
 
     fresh = db.session.get(School, school.id)
     return jsonify({'success': True, 'subscribed': True,

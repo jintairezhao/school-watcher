@@ -102,8 +102,12 @@ def check():
                 page.get_by_role('button', name='查找学校', exact=True).click()
                 expect(page.locator('.directory-school h2').first).to_contain_text('中国')
                 page.locator('[data-subscribe-name]').first.click()
+                expect(page.locator('#collectionSetup')).to_be_visible()
+                assert not subscriptions, 'opening setup must not subscribe'
+                page.locator('#setupStart').click()
                 expect(page.get_by_text('隔离测试：未实际订阅', exact=True)).to_be_visible()
                 assert subscriptions and '中国' in subscriptions[-1]['name']
+                page.goto('http://localhost/explore')
                 query.fill('不存在的测试学校')
                 expect(page.get_by_text('没有找到匹配的学校', exact=True)).to_be_visible()
                 query.fill('')

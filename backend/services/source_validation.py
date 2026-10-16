@@ -12,7 +12,7 @@ from backend.database.source_governance_models import SourceValidation
 from backend.scraper.http_client import same_school_url, validate_public_url
 from backend.services.source_inventory import canonical_url
 
-VALIDATION_VERSION = 7
+VALIDATION_VERSION = 8
 
 
 def sample_failure_kind(samples):

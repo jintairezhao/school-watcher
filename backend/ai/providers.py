@@ -120,6 +120,7 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
     request_id = None
     request_phase, response_received, exception_type = 'dispatch_started', False, None
     content, usage, received = '', {'known': False}, 0
+    stream_read_deadline_limited = False
     def diagnostics():
         return {'elapsed_seconds': round(time.monotonic() - started, 3), 'received_bytes': received,
                 'streaming': streaming, 'request_phase': request_phase,
@@ -157,6 +158,7 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
                     except AttributeError:
                         pass
                 def bounded_chunks():
+                    nonlocal stream_read_deadline_limited
                     chunks = iter(response.iter_content(chunk_size=1))
                     while True:
                         remaining = STREAM_TOTAL_SECONDS - (time.monotonic() - started)
@@ -164,6 +166,7 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
                             raise failure('response_deadline')
                         if stream_socket is not None:
                             stream_socket.settimeout(min(120, remaining))
+                            stream_read_deadline_limited = remaining <= 120
                         try:
                             chunk = next(chunks)
                         except StopIteration:
@@ -251,7 +254,11 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
         # that the server did not receive/charge the request.
         if proven_before_request:
             code = 'connection_lost'
-        if streaming and time.monotonic() - started >= STREAM_TOTAL_SECONDS:
+        # Windows socket timers may fire just before the monotonic deadline.
+        # Attribute a timed-out read to the limit actually applied to that
+        # socket, rather than mistaking this boundary for the 120s idle limit.
+        if streaming and (time.monotonic() - started >= STREAM_TOTAL_SECONDS
+                          or code == 'read_timeout' and stream_read_deadline_limited):
             code = 'response_deadline'
         raise failure(code if streaming else 'network_result_unknown') from None
     except UnicodeDecodeError:

@@ -45,6 +45,8 @@ def _validation_upgrade_codes(checkpoint):
         # Navigation-named article layouts were pruned by older validators.
         # Replay the retained program trial; do not purchase the rules again.
         fixed.add('article_sample_mismatch')
+    if version < 8 and VALIDATION_VERSION >= 8 and 'column_identity_or_scope_unconfirmed' in codes:
+        fixed.add('column_identity_or_scope_unconfirmed')
     return fixed
 
 
@@ -57,18 +59,49 @@ def _resume_pagination_validation(task, now):
     return _resume_retained_validation(task, now)
 
 
+def _retained_scope_is_correctable(checkpoint):
+    """Prove a scope-only replay on the exact retained page before waking it."""
+    from backend.services.source_governance import read_snapshot
+    from backend.services.source_scope import recover_observed_scope
+    saved = checkpoint.get('column_validation') or {}
+    reference = checkpoint.get('onboarding_page') or {}
+    failures = saved.get('failures') or []
+    if (not failures or not reference.get('url')
+            or any(set(f.get('issue', {}).get('codes', [])) != {'column_identity_or_scope_unconfirmed'}
+                   or f.get('repairable') is False or not f.get('config') for f in failures)):
+        return False
+    try:
+        html = read_snapshot(reference)
+        if saved.get('page_hash') != hashlib.sha256((reference['url'] + r'\0' + html).encode()).hexdigest():
+            return False
+        for failure in failures:
+            config = failure['config']
+            scope = {key: config.get(key, '') for key in ('container_selector', 'heading_selector')}
+            if not recover_observed_scope(config, reference, scope, html=html):
+                return False
+    except (ValueError, OSError, KeyError, TypeError):
+        return False
+    return True
+
+
 def _resume_retained_validation(task, now):
     """Wake corrected program checks without changing paid task identity."""
     from backend.services.discovery_control import should_pause
     previous_state, previous_generation, previous_update = task.state, task.generation, task.updated_at
     checkpoint = task.checkpoint or {}
     validation = checkpoint.get('column_validation') or {}
-    if (task.kind != 'onboard' or task.state not in ('done', 'failed')
-            or task.error_code
-            or validation.get('stage') != 'done'
+    scope_upgrade = (validation.get('validation_version') == 7
+                     and 'column_identity_or_scope_unconfirmed' in _validation_upgrade_codes(checkpoint))
+    budget_wait = (scope_upgrade and task.state == 'waiting' and task.phase == 'ai_budget'
+                   and validation.get('stage') in ('ai', 'repair'))
+    if (task.kind != 'onboard' or task.state not in ('done', 'failed') and not budget_wait
+            or task.error_code and not (budget_wait and task.error_code == 'budget_exhausted')
+            or validation.get('stage') != 'done' and not budget_wait
             or (checkpoint.get('column_pending_decision') or {}).get('blocked') in ('result', 'usage')
             or should_pause(task.kind, task.payload)
             or not RETAINED_VALIDATION_CORRECTIONS.intersection(_validation_upgrade_codes(task.checkpoint))):
+        return False
+    if scope_upgrade and not _retained_scope_is_correctable(checkpoint):
         return False
     for key in ('website_not_before', 'recovery_not_before'):
         if value := (task.result or {}).get(key):
