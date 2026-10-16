@@ -1,0 +1,22 @@
+{
+  "sent_requests": 438,
+  "confirmed_tokens": 2089497,
+  "unknown_reserved_tokens": 13972,
+  "confirmed_plus_reserved": 2103469,
+  "prior_stage": {
+    "requests": 198,
+    "confirmed_tokens": 829891
+  },
+  "unknown_sent_requests": 1,
+  "active_requests": 0,
+  "investigation_history_not_a_single_school_production_cost": true,
+  "final_five_pairs": {
+    "requests": 30,
+    "confirmed_tokens": 101217
+  },
+  "retained_failed_tianjin_pair": {
+    "requests": 8,
+    "confirmed_tokens": 25420
+  },
+  "unknown_paid_execution_was_not_resent": true
+}

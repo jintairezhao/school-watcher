@@ -168,8 +168,8 @@ def status(school):
                               r.result.get('historical') == 'high' for r in source_assessments)
     now = datetime.utcnow()
     live = [t for t in jobs if t.state in ('pending', 'running', 'waiting')]
-    running = [t for t in live if t.state == 'running' and (not t.lease_until or t.lease_until > now)]
-    parent_running = bool(task and task.state == 'running' and (not task.lease_until or task.lease_until > now))
+    running = [t for t in live if t.state == 'running' and t.lease_until and t.lease_until > now]
+    parent_running = bool(task and task.state == 'running' and task.lease_until and task.lease_until > now)
     pause = requested(task)
     busy = bool(parent_running or running) and not pause
     state = task.state if task else 'idle'
@@ -177,7 +177,9 @@ def status(school):
     active = bool(live or task and task.state in ('pending', 'running'))
     retry_at = None
     if pause:
-        state = 'paused' if task.state == 'waiting' and task.phase == 'user_paused' and not any(
+        recoverable = task.state == 'waiting' and task.phase == 'user_paused' or (
+            task.state == 'running' and not parent_running)
+        state = 'paused' if recoverable and not any(
             t.kind in ('onboard', 'navigation_review', 'student_assessment') for t in running) else 'pausing'
         message = '已暂停，进度已保存' if state == 'paused' else '正在暂停，等待当前处理完成'
         active = state == 'pausing'
@@ -286,7 +288,9 @@ def status(school):
     else:
         stage_message = f'正在处理 {len(live)} 个后台任务' if live else '本轮后台处理已结束'
     review_count = SourceProposal.query.filter_by(school_id=school.id, state='needs_review').count()
+    from backend.services.discovery_policy import attention_summary
     return {'state': state, 'message': message, 'stage_message': stage_message, 'phase': data.get('phase', 'fetch'),
+        'value_summary': attention_summary(),
         'busy': busy, 'active': active, 'retry_at': retry_at,
         'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
         'failed_pages': data.get('failed_pages', 0), 'current_label': data.get('current_label', '') if busy else '',

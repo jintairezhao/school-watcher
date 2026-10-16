@@ -1,0 +1,114 @@
+{
+  "captured": "2026-10-16",
+  "scope": "Public official article header excerpts; retained real HTML, not simulated website responses.",
+  "samples": [
+    {
+      "source_url": "https://phi.ruc.edu.cn/xwtz/tzgg/dcec35869474400a923115a7fcf2b3bc.htm",
+      "source_html_sha256": "88f3cf4c727ea44e6bce05352059e39b4f90b078164049cee3d7654ba2428964",
+      "title": "2026年“人文学科十大学术热点”和未来“值得关注的学术议题”征集",
+      "expected_publication_date": "2026-10-12",
+      "observed_header_html": "<h6>2026年“人文学科十大学术热点”和未来“值得关注的学术议题”征集</h6><span>日期：2026-10-12</span>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > h6:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "http://www.law.ruc.edu.cn/home/t/?id=61668",
+      "source_html_sha256": "b7bd7d08be827e0bfaad9f94b6176a6e390ce33387b6786d887d64ad5fcc6f43",
+      "title": "2027年入学中国人民大学法学院涉外法治MBA项目报考通知",
+      "expected_publication_date": "2026-10-10",
+      "observed_header_html": "<h1>2027年入学中国人民大学法学院涉外法治MBA项目报考通知</h1><span>2026/10/10</span>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > h1:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "https://psychology.sjtu.edu.cn/zsxx/659.html",
+      "source_html_sha256": "cecc919e87273da0bf6f6020d5c62f73e8f37363137c47154ee41d581c787ff6",
+      "title": "2027年心理学院招收推免生综合考核实施细则",
+      "expected_publication_date": "2026-09-18",
+      "observed_header_html": "<div class=\"tit\">2027年心理学院招收推免生综合考核实施细则</div><div class=\"jj\">\r\n                        时间：2026-09-18 \r\n                                                                                                                        点击量：1187                    </div>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "http://me.tju.edu.cn/info/1041/54111.htm",
+      "source_html_sha256": "5c3751f18f15625826516bde76adeec47c03207d4636d925a719a3725c2f37bb",
+      "title": "天津大学机械工程学院2027级推免生拟录取名单公示",
+      "expected_publication_date": "2026-10-15",
+      "observed_header_html": "<h1>天津大学机械工程学院2027级推免生拟录取名单公示</h1><p>2026-10-15</p>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > h1:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "http://jyxy.tju.edu.cn/cn/xyfc/20191109/1847.shtml",
+      "source_html_sha256": "21e1020aef688195141c18db2d6a5b4aed37add593bebf4349172e4496bc424c",
+      "title": "活动预告 | 第83期青咖汇——国家自然基金申报政策介绍",
+      "expected_publication_date": "2019-11-09",
+      "observed_header_html": "<p style=\"font-family: 幼圆; color: #8f1562; font-size: 25px; font-weight: 600\">活动预告 | 第83期青咖汇——国家自然基金申报政策介绍</p><p>来源：<span style=\"margin-left: 20px\">发布时间：2019-11-09</span></p>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > p:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "http://jgxy.tju.edu.cn/info/1047/38561.htm",
+      "source_html_sha256": "d131ca04b30039662c2b6b89aad1c0e765222f290da30d928268ee3e00b8c8a8",
+      "title": "建筑工程学院2026年秋季新增研究生导师招生资格认定名单公示",
+      "expected_publication_date": "2026-10-12",
+      "observed_header_html": "<h3 class=\"entry-title text-capitalize mrb-20\" style=\"text-align: center; padding: 20px 0;\"><a>建筑工程学院2026年秋季新增研究生导师招生资格认定名单公示</a></h3><span class=\"entry-date mrr-20\"><i class=\"far fa-calendar-alt mrr-10 text-primary-color\"></i>2026年10月12日</span>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > h3:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "http://arch.tju.edu.cn/info/1166/1154.htm",
+      "source_html_sha256": "cd0ad0ac4d710b15eda01bb14bc7cb4f9ff29bc10b05034bc8aa3b927791ac81",
+      "title": "天津大学建筑学院会议室预定系统使用说明",
+      "expected_publication_date": "2022-11-12",
+      "observed_header_html": "<header class=\"entry-header meta-post seperate-border\">\n<div class=\"entry-meta\">\n<blockquote class=\"blockquote-post\">\n                                                    天津大学建筑学院会议室预定系统使用说明\n                                                    \n                                                </blockquote>\n</div>\n<div class=\"entry-meta\">\n<span class=\"posted-on\"><span class=\"entry-date published\">2022-11-12</span></span>\n</div>\n<!-- .entry-meta -->\n</header>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > article:nth-of-type(1) > header:nth-of-type(1) > div:nth-of-type(1) > blockquote:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "https://psych.bnu.edu.cn/xwzx/tzgg/7af000e3d815470a974ed013d21da92b.htm",
+      "source_html_sha256": "714bc084821ce38b2ce23c88a5988157b5cfc21dddeeee31168d6ec0c97c081b",
+      "title": "【公告】关于校外机构假冒我校名义开展虚假宣传的声明",
+      "expected_publication_date": "2026-07-03",
+      "observed_header_html": "<table><tr><td align=\"center\" class=\"titletxt\" height=\"80\">\n<!--TitleStart-->【公告】关于校外机构假冒我校名义开展虚假宣传的声明\n                                                <!--TitleEnd-->\n</td></tr><tr><tr>\n<td align=\"center\" class=\"titletxt2\" height=\"60\">\n                                                发布时间：2026-07-03      作者：\n                                                <!--AuthorStart-->\n<!--AuthorEnd-->      浏览量：        【<a href=\"javascript:close();\">关闭</a>】\n                                            </td>\n</tr></tr></table>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "https://law.bnu.edu.cn/xwzx/xygg/tzgg/jz/62cb18b5f371403eb0a0f6f3d48fe034.htm",
+      "source_html_sha256": "90012717a43ae44cb8318a0cedca9176eb3e273f3ab853b71cd39762a3977674",
+      "title": "讲座预告丨京师法律实务大讲堂第八十五讲：从“差异性\"到“唯一性\"——刑事辩护的技能与方法",
+      "expected_publication_date": "2026-10-12",
+      "observed_header_html": "<div class=\"listconrc-newsbt\">讲座预告丨京师法律实务大讲堂第八十五讲：从“差异性\"到“唯一性\"——刑事辩护的技能与方法</div><div class=\"listconrc-newssj\">\n<span>发布时间：2026-10-12</span>    \n                        <span>浏览次数：</span>\n</div>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "https://ai.bnu.edu.cn/zszl/yjszs/tzgg3/03f8d2ebb2924ab49aa3ab2f65fe35ab.htm",
+      "source_html_sha256": "af81d0eee07aa0dd35b8b62aceaeaf9593994074a8ead36cc8642cbd8e711479",
+      "title": "北京师范大学人工智能学院2026年专业学位博士生招生复试名单",
+      "expected_publication_date": "2025-12-29",
+      "observed_header_html": "<h3 align=\"center\">北京师范大学人工智能学院2026年专业学位博士生招生复试名单</h3><i>\n      时间：2025-12-29  浏览：</i>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > h3:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "http://icare.hust.edu.cn/info/1066/9419.htm",
+      "source_html_sha256": "677280a0bd7b50b274a2f8539711c29033ffed378b38d18b262ce37f60565056",
+      "title": "ICARE Hosts Academic Lecture on International Hydrogen Energy Research",
+      "expected_publication_date": "2026-09-22",
+      "observed_header_html": "<div class=\"zt1\">ICARE Hosts Academic Lecture on International Hydrogen Energy Research</div><div class=\"zt2\">Source:\r\n     Release:2026-09-22 16:28:40 Writer: Hits:</div>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > form:nth-of-type(1) > div:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    },
+    {
+      "source_url": "http://aup.hust.edu.cn/info/1076/5282.htm",
+      "source_html_sha256": "0ee9ef2ca9bceecfaf587f53cc0518a50745aaeec823362cfb44ea8175c2c1fa",
+      "title": "建筑与城市规划学院关于2027届研究生支教团成员候选人推荐名单公示",
+      "expected_publication_date": "2026-09-04",
+      "observed_header_html": "<h2>建筑与城市规划学院关于2027届研究生支教团成员候选人推荐名单公示</h2><h3>发布时间：2026-09-04   作者:   浏览次数：次</h3>",
+      "source_heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > form:nth-of-type(1) > div:nth-of-type(1) > h2:nth-of-type(1)",
+      "scope": "Exact observed header regions only, assembled in original order; article body omitted."
+    }
+  ]
+}

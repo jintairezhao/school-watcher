@@ -87,6 +87,11 @@ class Inventory:
                     PRIMARY KEY(site_key,url)
                 );
                 CREATE INDEX IF NOT EXISTS frontier ON pages(site_key,state,priority,depth);
+                CREATE TABLE IF NOT EXISTS frontier_choices (
+                    site_key TEXT NOT NULL,url TEXT NOT NULL,first_claim INTEGER NOT NULL,
+                    last_claim INTEGER NOT NULL,selected_at TEXT NOT NULL,choice_json TEXT NOT NULL,
+                    PRIMARY KEY(site_key,url)
+                );
                 CREATE TABLE IF NOT EXISTS edges (
                     site_key TEXT NOT NULL, parent_url TEXT NOT NULL, target_url TEXT NOT NULL,
                     label TEXT NOT NULL, kind TEXT NOT NULL, path_json TEXT NOT NULL,
@@ -238,7 +243,7 @@ class Inventory:
             c.execute('BEGIN IMMEDIATE')
             condition, order = '', 'depth+priority,depth,priority,url'
             from .student_sources import student_priority, college_priority
-            school = c.execute('SELECT name FROM sites WHERE site_key=?', (key,)).fetchone()
+            school = c.execute('SELECT site_key,name,root_url FROM sites WHERE site_key=?', (key,)).fetchone()
             school_name = school['name'] if school else ''
             c.create_function('student_priority', 3, lambda kind, label, path:
                               student_priority(kind, label, path, school_name))
@@ -278,16 +283,19 @@ class Inventory:
                          f"WHEN kind='channel' THEN {column_rank + 3} ELSE {skeleton_rank + 3} END,"
                          f'coalesce({college},20),coalesce(student_priority(kind,label,path_json),20),depth,priority,url')
             while True:
+                choice = {}
                 selection = ("SELECT rowid AS frontier_rowid,* FROM pages WHERE site_key=? AND state='pending' "
                              "AND (retry_at IS NULL OR retry_at<=?) " + condition + 'ORDER BY ' + order)
                 if focus == 'valuable':
                     from backend.scraper.discovery.frontier import choose_route
                     from backend.scraper.discovery.navigation_progress import branches
-                    from backend.services.discovery_policy import get_policy
+                    from backend.services.discovery_policy import get_policy, get_attention_policy
+                    from backend.services.source_path_receipts import load_source_receipts
+                    from backend.services.discovery_costs import load_discovery_costs
                     candidates = [dict(page) for page in c.execute(selection, (key, now()))]
                     history, branch_assignments = branches(self, key)
                     edges = [dict(edge) for edge in c.execute(
-                        "SELECT e.parent_url,e.target_url,e.content_hash,e.decision,e.kind FROM edges e "
+                        "SELECT e.* FROM edges e "
                         "JOIN pages parent ON parent.site_key=e.site_key AND parent.url=e.parent_url "
                         "WHERE e.site_key=? AND parent.state='fetched' "
                         "AND e.content_hash=parent.content_hash "
@@ -298,7 +306,13 @@ class Inventory:
                     row = choose_route(candidates, edges=edges, parents=parents, claim_count=claims,
                                        interval=policy['frontier_exploration_interval'],
                                        slice_size=policy['discovery_slice_pages'],
-                                       branches=branch_assignments, history=history)
+                                       branches=branch_assignments, history=history,
+                                       attention=get_attention_policy(),
+                                       receipts=load_source_receipts(dict(school)) if school else (),
+                                       costs=load_discovery_costs(dict(school)) if school else None,
+                                       foraging_policy={'unseen_prior': policy['frontier_unseen_prior'],
+                                                        'path_credit_weight': policy['frontier_path_credit']},
+                                       explain=choice.update)
                 else:
                     row = c.execute(selection + ' LIMIT 1', (key, now())).fetchone()
                 if row is None:
@@ -314,10 +328,51 @@ class Inventory:
                 break
             row = dict(row)
             row.pop('frontier_rowid', None)
+            if choice:
+                # Last choice per real page is durable progress metadata, not
+                # another queue. First claim remains available after retries.
+                c.execute('INSERT INTO frontier_choices VALUES(?,?,?,?,?,?) '
+                    'ON CONFLICT(site_key,url) DO UPDATE SET last_claim=excluded.last_claim,'
+                    'selected_at=excluded.selected_at,choice_json=excluded.choice_json',
+                    (key, row['url'], choice['claim_number'], choice['claim_number'], now(),
+                     json.dumps(choice, ensure_ascii=False)))
             c.execute("UPDATE pages SET state='running',attempts=attempts+1 WHERE site_key=? AND url=?",
                       (key, row['url']))
             c.execute("UPDATE sites SET state='running',updated_at=? WHERE site_key=?", (now(), key))
             return dict(row)
+
+    def exploration_choices(self, key):
+        """Explain actual claimed work without treating its score as coverage."""
+        with self.connect() as c:
+            return [dict(json.loads(row['choice_json']), first_claim=row['first_claim'],
+                         last_claim=row['last_claim'], selected_at=row['selected_at'])
+                    for row in c.execute('SELECT * FROM frontier_choices WHERE site_key=? '
+                                         'ORDER BY first_claim,url', (key,))]
+
+    def exploration_diagnostics(self, key):
+        """Read exploration evidence and actual costs; never call a model.
+
+        No known whole-school denominator exists here. Local demand cells are
+        observations, not an acceptance rate. Billing remains authoritative in
+        AIExecution rather than duplicated in this progress database.
+        """
+        from backend.scraper.discovery.attention import coverage_state
+        from backend.scraper.discovery.navigation_progress import branches
+        from backend.services.discovery_policy import get_attention_policy
+        from backend.services.source_path_receipts import load_source_receipts
+        from backend.services.discovery_costs import load_discovery_costs
+        with self.connect() as c:
+            row = c.execute('SELECT site_key,name,root_url FROM sites WHERE site_key=?', (key,)).fetchone()
+            if row is None:
+                return None
+            site = dict(row)
+            edges = [dict(edge) for edge in c.execute('SELECT * FROM edges WHERE site_key=?', (key,))]
+        pages, assignments = branches(self, key)
+        return {'site': site, 'attention_policy': get_attention_policy(),
+                'coverage': coverage_state(pages, branches=assignments,
+                    validated_sources=load_source_receipts(site), edges=edges),
+                'coverage_state': 'observed_scopes_only',
+                'choices': self.exploration_choices(key), 'costs': load_discovery_costs(site)}
 
     def reconcile_article_references(self, key):
         """Preserve misclassified article evidence; never erase or treat it as a unit.

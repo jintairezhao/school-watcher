@@ -1,5 +1,6 @@
 """Show executed discovery AI work, including independent navigation workers."""
 import unittest
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from backend.database.db import db
@@ -112,6 +113,7 @@ class DiscoveryAIProgressTests(unittest.TestCase):
         self.waiting_ai('ai_connection', 'provider_connection_paused')
         job = tasks.enqueue('onboard', 'reading-site', {'school_id': self.school.id})
         job.state = 'running'
+        job.lease_until = datetime.utcnow() + timedelta(minutes=2)
         db.session.commit()
         progress = self.progress()
         self.assertEqual(progress['state'], 'running')
@@ -133,6 +135,8 @@ class DiscoveryAIProgressTests(unittest.TestCase):
         job.checkpoint = {'route_cursor': 7, 'ai_connection_resume': 1,
             'discovery_progress': {'ai_state': 'failed', 'ai_error_code': 'provider_connection_paused'}}
         job.state, job.phase, job.error_code = ('running' if running else 'pending'), 'ai_resume', ''
+        if running:
+            job.lease_until = datetime.utcnow() + timedelta(minutes=2)
         db.session.commit()
         return job
 
@@ -258,6 +262,7 @@ class DiscoveryAIProgressTests(unittest.TestCase):
         self.waiting_ai('ai_budget', 'budget_exhausted')
         job = tasks.enqueue('onboard', 'reading-site', {'school_id': self.school.id})
         job.state = 'running'
+        job.lease_until = datetime.utcnow() + timedelta(minutes=2)
         db.session.commit()
         progress = self.progress()
         self.assertEqual(progress['state'], 'running')

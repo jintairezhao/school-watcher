@@ -1,0 +1,2760 @@
+{
+  "date": "2026-10-16",
+  "scope": "Five bounded real API comparisons; not complete-school acceptance",
+  "model": "deepseek-flash",
+  "all_final_pairs_sent_requests": 30,
+  "all_final_pairs_confirmed_tokens": 101217,
+  "known_reference_count_for_these_five_schools": 50,
+  "request_and_page_and_source_denominators_are_distinct": true,
+  "structure_policy_holdouts": [
+    "hust",
+    "ustc"
+  ],
+  "independence_limit": "Holdouts froze v14 structure policy; HUST later informed dates/layout/aliases and USTC later informed placement fixes. No whole-final-build independence claim.",
+  "release_acceptance": "not_passed",
+  "runs": [
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 12873,
+      "installed_source_rows": 17,
+      "notice_rows": 134,
+      "first_passed_source_validation_seconds": 103.875318,
+      "page_state_counts": {
+        "pending": 435,
+        "fetched": 50,
+        "failed": 2
+      },
+      "checked_page_count": 54,
+      "transport_measurements": {
+        "http_transport_attempts": 180,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 179,
+        "logical_http_attempts": 268,
+        "browser_navigation_attempts": 7,
+        "browser_navigation_results": 7,
+        "nonempty_task_fetch_lookups": 158,
+        "task_evidence_cache_hits": 152,
+        "discovery_snapshot_cache_hits": 1103,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.292,
+      "school": "华中科技大学",
+      "school_key": "hust",
+      "arm": "baseline",
+      "limits": {
+        "process_local_request_cap": 3,
+        "process_local_token_cap": 32000,
+        "window_seconds": 480,
+        "comparison": "cold API",
+        "cold_independent": true
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "华中科技大学",
+            "生命科学与技术学院",
+            "通知公告"
+          ],
+          "url": "http://life.hust.edu.cn/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "机械科学与工程学院",
+            "通知公告"
+          ],
+          "url": "http://mse.hust.edu.cn/sylm/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "中欧清洁与可再生能源学院",
+            "News"
+          ],
+          "url": "http://icare.hust.edu.cn/English/News.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "电气与电子工程学院",
+            "通知公告"
+          ],
+          "url": "http://seee.hust.edu.cn/llxx/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "工程科学学院",
+            "学院通知"
+          ],
+          "url": "http://ses.hust.edu.cn/xwzx/xytz.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "计算机科学与技术学院",
+            "行政"
+          ],
+          "url": "http://www.cs.hust.edu.cn/sylm/tzgg/xz.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "建筑与城市规划学院",
+            "通知公告"
+          ],
+          "url": "http://aup.hust.edu.cn/index/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "土木与水利工程学院",
+            "通知公告"
+          ],
+          "url": "http://civil.hust.edu.cn/index/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "党委统战部",
+            "通知公告"
+          ],
+          "url": "http://tzb.hust.edu.cn/index/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "创新研究院",
+            "通知公告"
+          ],
+          "url": "http://ii.hust.edu.cn/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "not_observed_in_this_bounded_window": 10
+      },
+      "at_stop_tasks": {
+        "origin_busy": 8,
+        "done": 67,
+        "budget_exhausted": 58,
+        "pending": 16
+      },
+      "model_request_statuses": {
+        "succeeded": 3
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "column_identity_or_scope_unconfirmed": 119,
+        "article_material_incomplete": 4,
+        "article_sample_mismatch": 8
+      },
+      "page_error_observations": {
+        "官网地址必须是可公开访问的 HTTP 或 HTTPS 地址": 1,
+        "该通知需要登录校内账号才能查看；列表与其余通知不受影响，已有通知仍保留": 1,
+        "连接或读取官网超时，系统稍后自动重试": 1,
+        "官网代理路径拒绝访问，系统保存进度后延后尝试其他网络路径": 1
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 355,
+          "name": "高校专项",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 356,
+          "name": "运动训练",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 357,
+          "name": "保送生",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 358,
+          "name": "普通类型",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 359,
+          "name": "强基计划",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 360,
+          "name": "艺术类",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 361,
+          "name": "高校专项",
+          "url": "https://zsb.hust.edu.cn/index.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 362,
+          "name": "运动训练",
+          "url": "https://zsb.hust.edu.cn/index.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 363,
+          "name": "保送生",
+          "url": "https://zsb.hust.edu.cn/index.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 364,
+          "name": "普通类型",
+          "url": "https://zsb.hust.edu.cn/index.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 365,
+          "name": "强基计划",
+          "url": "https://zsb.hust.edu.cn/index.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 366,
+          "name": "艺术类",
+          "url": "https://zsb.hust.edu.cn/index.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 367,
+          "name": "教学通知",
+          "url": "http://aup.hust.edu.cn/bkjx/jxtz.htm",
+          "department_paths": [
+            [
+              "建筑与城市规划学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 368,
+          "name": "招生政策",
+          "url": "https://zsb.hust.edu.cn/bkzn/zszc.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 369,
+          "name": "教务动态",
+          "url": "http://chem.hust.edu.cn/bksjy/jwdt.htm",
+          "department_paths": [
+            [
+              "化学与化工学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 370,
+          "name": "教务动态",
+          "url": "http://ei.hust.edu.cn/bkjy/jwdt.htm",
+          "department_paths": [
+            [
+              "电子信息与通信学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 371,
+          "name": "新闻资讯",
+          "url": "http://lab.energy.hust.edu.cn/xwzx/xwzx.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 10744,
+      "installed_source_rows": 5,
+      "notice_rows": 40,
+      "first_passed_source_validation_seconds": 407.943958,
+      "page_state_counts": {
+        "pending": 248,
+        "running": 1,
+        "fetched": 69,
+        "failed": 3
+      },
+      "checked_page_count": 75,
+      "transport_measurements": {
+        "http_transport_attempts": 114,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 111,
+        "logical_http_attempts": 164,
+        "browser_navigation_attempts": 7,
+        "browser_navigation_results": 6,
+        "nonempty_task_fetch_lookups": 172,
+        "task_evidence_cache_hits": 168,
+        "discovery_snapshot_cache_hits": 2073,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.305,
+      "school": "华中科技大学",
+      "school_key": "hust",
+      "arm": "candidate",
+      "limits": {
+        "process_local_request_cap": 6,
+        "process_local_token_cap": 44873,
+        "window_seconds": 480,
+        "comparison": "cold API",
+        "cold_independent": true
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "华中科技大学",
+            "生命科学与技术学院",
+            "通知公告"
+          ],
+          "url": "http://life.hust.edu.cn/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "机械科学与工程学院",
+            "通知公告"
+          ],
+          "url": "http://mse.hust.edu.cn/sylm/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "中欧清洁与可再生能源学院",
+            "News"
+          ],
+          "url": "http://icare.hust.edu.cn/English/News.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "电气与电子工程学院",
+            "通知公告"
+          ],
+          "url": "http://seee.hust.edu.cn/llxx/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "工程科学学院",
+            "学院通知"
+          ],
+          "url": "http://ses.hust.edu.cn/xwzx/xytz.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "计算机科学与技术学院",
+            "行政"
+          ],
+          "url": "http://www.cs.hust.edu.cn/sylm/tzgg/xz.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "建筑与城市规划学院",
+            "通知公告"
+          ],
+          "url": "http://aup.hust.edu.cn/index/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "土木与水利工程学院",
+            "通知公告"
+          ],
+          "url": "http://civil.hust.edu.cn/index/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "党委统战部",
+            "通知公告"
+          ],
+          "url": "http://tzb.hust.edu.cn/index/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "华中科技大学",
+            "创新研究院",
+            "通知公告"
+          ],
+          "url": "http://ii.hust.edu.cn/tzgg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "not_observed_in_this_bounded_window": 10
+      },
+      "at_stop_tasks": {
+        "pending": 7,
+        "done": 20,
+        "budget_exhausted": 95,
+        "origin_busy": 3,
+        "running": 1
+      },
+      "model_request_statuses": {
+        "succeeded": 2,
+        "failed": 1
+      },
+      "model_request_errors": {
+        "output_validation_failed": 1
+      },
+      "source_validation_errors": {
+        "article_sample_mismatch": 2,
+        "article_material_incomplete": 3
+      },
+      "page_error_observations": {
+        "官网地址必须是可公开访问的 HTTP 或 HTTPS 地址": 1,
+        "官网代理路径拒绝访问，系统保存进度后延后尝试其他网络路径": 1,
+        "请输入可公开访问的官网地址": 2,
+        "官网域名未能解析到可验证的公网地址，系统稍后自动重试": 1,
+        "浏览器未能完成本次访问": 1
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 313,
+          "name": "高校专项",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 314,
+          "name": "运动训练",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 315,
+          "name": "保送生",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 316,
+          "name": "普通类型",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 317,
+          "name": "强基计划",
+          "url": "https://zsb.hust.edu.cn/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 11709,
+      "installed_source_rows": 8,
+      "notice_rows": 52,
+      "first_passed_source_validation_seconds": 51.206025,
+      "page_state_counts": {
+        "pending": 505,
+        "fetched": 73,
+        "failed": 23
+      },
+      "checked_page_count": 96,
+      "transport_measurements": {
+        "http_transport_attempts": 193,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 193,
+        "logical_http_attempts": 291,
+        "browser_navigation_attempts": 5,
+        "browser_navigation_results": 2,
+        "nonempty_task_fetch_lookups": 87,
+        "task_evidence_cache_hits": 3,
+        "discovery_snapshot_cache_hits": 3462,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.277,
+      "school": "中国科学技术大学",
+      "school_key": "ustc",
+      "arm": "baseline",
+      "limits": {
+        "process_local_request_cap": 3,
+        "process_local_token_cap": 32000,
+        "window_seconds": 480,
+        "comparison": "cold API",
+        "cold_independent": true
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "中国科学技术大学",
+            "少年班学院",
+            "公告"
+          ],
+          "url": "https://sgy.ustc.edu.cn/",
+          "matches": [
+            {
+              "source_id": 142,
+              "installed_name": "公告",
+              "installed_group_name": "少年班学院",
+              "list_url": "https://sgy.ustc.edu.cn/main.htm",
+              "reviewed_membership_urls": [
+                "https://sgy.ustc.edu.cn/2026/0902/c37821a751907/page.htm",
+                "https://sgy.ustc.edu.cn/2026/0914/c37821a753350/page.htm",
+                "https://sgy.ustc.edu.cn/2026/1008/c37821a755374/page.htm"
+              ],
+              "two_memberships_observed": true
+            }
+          ],
+          "reason": "reviewed_memberships_observed; attribution_requires_separate_check",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "recent_publication",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": [
+            {
+              "kind": "onboard",
+              "state": "done",
+              "phase": "complete",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "数学科学学院",
+            "学院新闻"
+          ],
+          "url": "https://math.ustc.edu.cn/",
+          "matches": [],
+          "reason": "pending_onboarding_or_validation",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "date_unknown",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": [
+            {
+              "kind": "onboard",
+              "state": "waiting",
+              "phase": "user_paused",
+              "error_code": "budget_exhausted"
+            }
+          ]
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "数学科学学院",
+            "通知公告"
+          ],
+          "url": "https://math.ustc.edu.cn/",
+          "matches": [],
+          "reason": "pending_onboarding_or_validation",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "date_unknown",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": [
+            {
+              "kind": "onboard",
+              "state": "waiting",
+              "phase": "user_paused",
+              "error_code": "budget_exhausted"
+            }
+          ]
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "数学科学学院",
+            "学术交流"
+          ],
+          "url": "https://math.ustc.edu.cn/",
+          "matches": [],
+          "reason": "pending_onboarding_or_validation",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "date_unknown",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": [
+            {
+              "kind": "onboard",
+              "state": "waiting",
+              "phase": "user_paused",
+              "error_code": "budget_exhausted"
+            }
+          ]
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "计算机科学与技术学院",
+            "新闻"
+          ],
+          "url": "https://cs.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "recent_publication",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "计算机科学与技术学院",
+            "公告通知"
+          ],
+          "url": "https://cs.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "recent_publication",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "计算机科学与技术学院",
+            "学术活动"
+          ],
+          "url": "https://cs.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "recent_publication",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "计算机科学与技术学院",
+            "学生工作"
+          ],
+          "url": "https://cs.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "recent_publication",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "物理学院",
+            "新闻中心",
+            "学院要闻"
+          ],
+          "url": "https://physics.ustc.edu.cn/",
+          "matches": [],
+          "reason": "pending_onboarding_or_validation",
+          "page": {
+            "kind": "unit",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "date_unknown",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": [
+            {
+              "kind": "onboard",
+              "state": "waiting",
+              "phase": "user_paused",
+              "error_code": "budget_exhausted"
+            }
+          ]
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "物理学院",
+            "新闻中心",
+            "通知公告"
+          ],
+          "url": "https://physics.ustc.edu.cn/3584/list.htm",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "reviewed_memberships_observed; attribution_requires_separate_check": 1,
+        "pending_onboarding_or_validation": 4,
+        "observed_page_without_matching_memberships": 5
+      },
+      "at_stop_tasks": {
+        "running": 2,
+        "done": 46,
+        "budget_exhausted": 107,
+        "pending": 7,
+        "origin_busy": 2
+      },
+      "model_request_statuses": {
+        "succeeded": 3
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "article_sample_mismatch": 4,
+        "pagination_scope_unconfirmed": 1,
+        "article_material_incomplete": 1
+      },
+      "page_error_observations": {
+        "该通知需要登录校内账号才能查看；列表与其余通知不受影响，已有通知仍保留": 1,
+        "官网返回异常状态（HTTP 400），请核对来源状态": 21,
+        "官网地址必须是可公开访问的 HTTP 或 HTTPS 地址": 1
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 139,
+          "name": "通知公告 notices",
+          "url": "https://zsb.ustc.edu.cn/main.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 140,
+          "name": "新闻动态 latest news",
+          "url": "https://zsb.ustc.edu.cn/main.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 141,
+          "name": "招生章程",
+          "url": "https://zsb.ustc.edu.cn/zszc_35550/list.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 142,
+          "name": "公告",
+          "url": "https://sgy.ustc.edu.cn/main.htm",
+          "department_paths": [
+            [
+              "少年班学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 143,
+          "name": "学术报告",
+          "url": "https://ess.ustc.edu.cn/main.htm",
+          "department_paths": [
+            [
+              "地球和空间科学学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 144,
+          "name": "科研成果",
+          "url": "https://ess.ustc.edu.cn/main.htm",
+          "department_paths": [
+            [
+              "地球和空间科学学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 145,
+          "name": "招生工作",
+          "url": "https://cs.ustc.edu.cn/20160/list.htm",
+          "department_paths": [
+            [
+              "信息与智能学部",
+              "计算机科学与技术学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 146,
+          "name": "教学动态",
+          "url": "https://cybersec.ustc.edu.cn/bszn/list.htm",
+          "department_paths": [
+            [
+              "信息与智能学部",
+              "网络空间安全学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 8263,
+      "installed_source_rows": 8,
+      "notice_rows": 142,
+      "first_passed_source_validation_seconds": 66.80773,
+      "page_state_counts": {
+        "pending": 302,
+        "fetched": 63,
+        "failed": 16
+      },
+      "checked_page_count": 80,
+      "transport_measurements": {
+        "http_transport_attempts": 231,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 228,
+        "logical_http_attempts": 267,
+        "browser_navigation_attempts": 3,
+        "browser_navigation_results": 1,
+        "nonempty_task_fetch_lookups": 26,
+        "task_evidence_cache_hits": 12,
+        "discovery_snapshot_cache_hits": 2032,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.46,
+      "school": "中国科学技术大学",
+      "school_key": "ustc",
+      "arm": "candidate",
+      "limits": {
+        "process_local_request_cap": 6,
+        "process_local_token_cap": 43709,
+        "window_seconds": 480,
+        "comparison": "cold API",
+        "cold_independent": true
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "中国科学技术大学",
+            "少年班学院",
+            "公告"
+          ],
+          "url": "https://sgy.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "数学科学学院",
+            "学院新闻"
+          ],
+          "url": "https://math.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "数学科学学院",
+            "通知公告"
+          ],
+          "url": "https://math.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "数学科学学院",
+            "学术交流"
+          ],
+          "url": "https://math.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "计算机科学与技术学院",
+            "新闻"
+          ],
+          "url": "https://cs.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "计算机科学与技术学院",
+            "公告通知"
+          ],
+          "url": "https://cs.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "计算机科学与技术学院",
+            "学术活动"
+          ],
+          "url": "https://cs.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "计算机科学与技术学院",
+            "学生工作"
+          ],
+          "url": "https://cs.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "物理学院",
+            "新闻中心",
+            "学院要闻"
+          ],
+          "url": "https://physics.ustc.edu.cn/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国科学技术大学",
+            "物理学院",
+            "新闻中心",
+            "通知公告"
+          ],
+          "url": "https://physics.ustc.edu.cn/3584/list.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "observed_page_without_matching_memberships": 9,
+        "not_observed_in_this_bounded_window": 1
+      },
+      "at_stop_tasks": {
+        "origin_busy": 3,
+        "done": 99,
+        "budget_exhausted": 91,
+        "pending": 9,
+        "running": 1
+      },
+      "model_request_statuses": {
+        "succeeded": 3
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "article_sample_mismatch": 7
+      },
+      "page_error_observations": {
+        "该通知需要登录校内账号才能查看；列表与其余通知不受影响，已有通知仍保留": 1,
+        "官网返回异常状态（HTTP 400），请核对来源状态": 14,
+        "官网地址必须是可公开访问的 HTTP 或 HTTPS 地址": 1,
+        "官网域名未能解析到可验证的公网地址，系统稍后自动重试": 1
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 139,
+          "name": "科研动态",
+          "url": "https://bme.ustc.edu.cn/kydt/list.htm",
+          "department_paths": [
+            [
+              "生命科学与医学部",
+              "生物医学工程学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 156,
+          "name": "党建新闻",
+          "url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "department_paths": [
+            [
+              "核科学技术学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 157,
+          "name": "学术报告",
+          "url": "https://ess.ustc.edu.cn/main.htm",
+          "department_paths": [
+            [
+              "地球和空间科学学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 158,
+          "name": "科研成果",
+          "url": "https://ess.ustc.edu.cn/main.htm",
+          "department_paths": [
+            [
+              "地球和空间科学学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 159,
+          "name": "通知公告 notices",
+          "url": "https://zsb.ustc.edu.cn/main.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 160,
+          "name": "新闻动态 latest news",
+          "url": "https://zsb.ustc.edu.cn/main.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 161,
+          "name": "新通知公告",
+          "url": "https://ess.ustc.edu.cn/xtzgg/list.htm",
+          "department_paths": [
+            [
+              "地球和空间科学学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 162,
+          "name": "博士研究生招生",
+          "url": "https://bme.ustc.edu.cn/bsyjszs/list.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 7469,
+      "installed_source_rows": 3,
+      "notice_rows": 18,
+      "first_passed_source_validation_seconds": 280.174923,
+      "page_state_counts": {
+        "pending": 152,
+        "fetched": 38,
+        "running": 1,
+        "failed": 1
+      },
+      "checked_page_count": 47,
+      "transport_measurements": {
+        "http_transport_attempts": 86,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 60,
+        "logical_http_attempts": 112,
+        "browser_navigation_attempts": 10,
+        "browser_navigation_results": 9,
+        "nonempty_task_fetch_lookups": 36,
+        "task_evidence_cache_hits": 33,
+        "discovery_snapshot_cache_hits": 634,
+        "model_paid_decision_cache_hits": 1,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.318,
+      "school": "中国石油大学（北京）克拉玛依校区",
+      "school_key": "cupk",
+      "arm": "baseline",
+      "limits": {
+        "process_local_request_cap": 81,
+        "process_local_token_cap": 287021,
+        "window_seconds": 480,
+        "comparison": "cold actual API; protected historical unknowns and a genuine connection receipt only",
+        "cold_independent": false
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "教务部",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/jwb/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "教务部",
+            "教学运行",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/jwb/jxyx/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "教务部",
+            "国际教育",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/jwb/gjjy/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "教务部",
+            "教学研究",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/jwb/jxyj/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "研究生部",
+            "通知公告",
+            "培养"
+          ],
+          "url": "https://www.cupk.edu.cn/yjsb/tzgg/py/",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "研究生部",
+            "通知公告",
+            "学位"
+          ],
+          "url": "https://www.cupk.edu.cn/yjsb/tzgg/xw/",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "研究生部",
+            "通知公告",
+            "继续教育"
+          ],
+          "url": "https://www.cupk.edu.cn/yjsb/tzgg/jxjy/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "gateway",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "学生工作与安全保卫部",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/xgybw/tzgg/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "研究生部",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/yjsb/tzgg/",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "创新创业学院",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/cxcy/tzgg/",
+          "matches": [],
+          "reason": "pending_onboarding_or_validation",
+          "page": {
+            "kind": "channel",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "recent_publication",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": [
+            {
+              "kind": "onboard",
+              "state": "waiting",
+              "phase": "user_paused",
+              "error_code": "budget_exhausted"
+            }
+          ]
+        }
+      ],
+      "reference_state_counts": {
+        "observed_page_without_matching_memberships": 6,
+        "not_observed_in_this_bounded_window": 3,
+        "pending_onboarding_or_validation": 1
+      },
+      "at_stop_tasks": {
+        "origin_busy": 1,
+        "done": 30,
+        "budget_exhausted": 43
+      },
+      "model_request_statuses": {
+        "succeeded": 3
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "article_fetch_unavailable": 2,
+        "article_sample_mismatch": 2,
+        "pagination_scope_unconfirmed": 3
+      },
+      "page_error_observations": {
+        "连接或读取官网超时，系统稍后自动重试": 8,
+        "官网返回异常状态（HTTP 488），请核对来源状态": 1
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 1,
+          "name": "最新消息",
+          "url": "https://www.cupk.edu.cn/library/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 2,
+          "name": "最新资源",
+          "url": "https://www.cupk.edu.cn/library/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 50,
+          "name": "教学通知",
+          "url": "https://www.cupk.edu.cn/gxy/bkjy/jxtz/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 8834,
+      "installed_source_rows": 4,
+      "notice_rows": 159,
+      "first_passed_source_validation_seconds": 300.583481,
+      "page_state_counts": {
+        "pending": 228,
+        "fetched": 27,
+        "failed": 1
+      },
+      "checked_page_count": 37,
+      "transport_measurements": {
+        "http_transport_attempts": 86,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 58,
+        "logical_http_attempts": 140,
+        "browser_navigation_attempts": 12,
+        "browser_navigation_results": 11,
+        "nonempty_task_fetch_lookups": 26,
+        "task_evidence_cache_hits": 19,
+        "discovery_snapshot_cache_hits": 201,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.346,
+      "school": "中国石油大学（北京）克拉玛依校区",
+      "school_key": "cupk",
+      "arm": "candidate",
+      "limits": {
+        "process_local_request_cap": 84,
+        "process_local_token_cap": 294490,
+        "window_seconds": 480,
+        "comparison": "cold actual API; protected historical unknowns and a genuine connection receipt only",
+        "cold_independent": false
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "教务部",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/jwb/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "教务部",
+            "教学运行",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/jwb/jxyx/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "教务部",
+            "国际教育",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/jwb/gjjy/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "教务部",
+            "教学研究",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/jwb/jxyj/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "研究生部",
+            "通知公告",
+            "培养"
+          ],
+          "url": "https://www.cupk.edu.cn/yjsb/tzgg/py/",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "研究生部",
+            "通知公告",
+            "学位"
+          ],
+          "url": "https://www.cupk.edu.cn/yjsb/tzgg/xw/",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "研究生部",
+            "通知公告",
+            "继续教育"
+          ],
+          "url": "https://www.cupk.edu.cn/yjsb/tzgg/jxjy/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "学生工作与安全保卫部",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/xgybw/tzgg/tzgg/",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "研究生部",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/yjsb/tzgg/",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国石油大学（北京）克拉玛依校区",
+            "创新创业学院",
+            "通知公告"
+          ],
+          "url": "https://www.cupk.edu.cn/cxcy/tzgg/",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "observed_page_without_matching_memberships": 6,
+        "not_observed_in_this_bounded_window": 4
+      },
+      "at_stop_tasks": {
+        "running": 1,
+        "done": 34,
+        "budget_exhausted": 25,
+        "origin_busy": 2
+      },
+      "model_request_statuses": {
+        "succeeded": 3
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "article_fetch_unavailable": 2
+      },
+      "page_error_observations": {
+        "连接或读取官网超时，系统稍后自动重试": 8,
+        "官网返回异常状态（HTTP 488），请核对来源状态": 1,
+        "官网网络连接失败，系统稍后自动重试": 1
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 77,
+          "name": "最新消息",
+          "url": "https://www.cupk.edu.cn/library/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 78,
+          "name": "最新资源",
+          "url": "https://www.cupk.edu.cn/library/",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 79,
+          "name": "通知公告",
+          "url": "https://www.cupk.edu.cn/szxy/tzgg/",
+          "department_paths": [
+            [
+              "数理与人工智能学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 80,
+          "name": "通知公告",
+          "url": "https://www.cupk.edu.cn/wlxy/tzgg/",
+          "department_paths": [
+            [
+              "人文学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 13804,
+      "installed_source_rows": 5,
+      "notice_rows": 56,
+      "first_passed_source_validation_seconds": 93.115086,
+      "page_state_counts": {
+        "pending": 164,
+        "running": 1,
+        "fetched": 40,
+        "failed": 4
+      },
+      "checked_page_count": 71,
+      "transport_measurements": {
+        "http_transport_attempts": 130,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 106,
+        "logical_http_attempts": 142,
+        "browser_navigation_attempts": 8,
+        "browser_navigation_results": 7,
+        "nonempty_task_fetch_lookups": 56,
+        "task_evidence_cache_hits": 51,
+        "discovery_snapshot_cache_hits": 1964,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.108,
+      "school": "中国人民大学",
+      "school_key": "ruc",
+      "arm": "baseline",
+      "limits": {
+        "process_local_request_cap": 97,
+        "process_local_token_cap": 766921,
+        "window_seconds": 480,
+        "comparison": "cold actual API; protected historical unknowns and a genuine connection receipt only",
+        "cold_independent": false
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "中国人民大学",
+            "马克思主义学院",
+            "通知公告"
+          ],
+          "url": "http://marx.ruc.edu.cn/sy/tzgg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "外国语学院",
+            "通知公告"
+          ],
+          "url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "哲学院",
+            "通知公告"
+          ],
+          "url": "https://phi.ruc.edu.cn/xwtz/tzgg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "财政金融学院",
+            "公告／全部"
+          ],
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "财政金融学院",
+            "招生公告"
+          ],
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "财政金融学院",
+            "硕博教务"
+          ],
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "法学院",
+            "通知公告"
+          ],
+          "url": "http://www.law.ruc.edu.cn/home/xwzx/1/?pid=1",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "信息学院",
+            "学院公告"
+          ],
+          "url": "http://info.ruc.edu.cn/xwgg/xygg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "信息学院",
+            "教育公告"
+          ],
+          "url": "http://info.ruc.edu.cn/rcpy/jygg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "外国语学院",
+            "研究生通知公告"
+          ],
+          "url": "http://fl.ruc.edu.cn/sy/rcpy/sss/tzgg_s/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "not_observed_in_this_bounded_window": 10
+      },
+      "at_stop_tasks": {
+        "origin_busy": 1,
+        "done": 45,
+        "budget_exhausted": 45,
+        "pending": 1
+      },
+      "model_request_statuses": {
+        "succeeded": 3
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "pagination_scope_unconfirmed": 6,
+        "column_identity_or_scope_unconfirmed": 2,
+        "duplicate_list_items": 2,
+        "invalid_list_item": 2,
+        "list_missing": 1
+      },
+      "page_error_observations": {
+        "官网网络连接失败，系统稍后自动重试": 23,
+        "官网返回异常状态（HTTP 422），请核对来源状态": 4,
+        "连接或读取官网超时，系统稍后自动重试": 1,
+        "官网服务暂时不可用（HTTP 502），稍后重试": 3
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 103,
+          "name": "博士招生",
+          "url": "https://pgs.ruc.edu.cn/bszs.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 104,
+          "name": "硕士招生",
+          "url": "https://pgs.ruc.edu.cn/sszs.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 105,
+          "name": "通知快讯",
+          "url": "https://grs.ruc.edu.cn/xxfb/tzkx.htm",
+          "department_paths": [
+            [
+              "■ 研究生院（非全日制研究生教育管理中心）、研究生考试办公室"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 106,
+          "name": "规章制度",
+          "url": "https://grs.ruc.edu.cn/gzzd.htm",
+          "department_paths": [
+            [
+              "■ 研究生院（非全日制研究生教育管理中心）、研究生考试办公室"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 107,
+          "name": "新闻动态",
+          "url": "https://grs.ruc.edu.cn/xxfb/xwdt.htm",
+          "department_paths": [
+            [
+              "■ 研究生院（非全日制研究生教育管理中心）、研究生考试办公室"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 8937,
+      "installed_source_rows": 2,
+      "notice_rows": 24,
+      "first_passed_source_validation_seconds": null,
+      "page_state_counts": {
+        "pending": 144,
+        "running": 1,
+        "fetched": 44
+      },
+      "checked_page_count": 65,
+      "transport_measurements": {
+        "http_transport_attempts": 4,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 4,
+        "logical_http_attempts": 4,
+        "browser_navigation_attempts": 0,
+        "browser_navigation_results": 0,
+        "nonempty_task_fetch_lookups": 1,
+        "task_evidence_cache_hits": 1,
+        "discovery_snapshot_cache_hits": 14,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 57.72,
+      "school": "中国人民大学",
+      "school_key": "ruc",
+      "arm": "candidate",
+      "limits": {
+        "process_local_request_cap": 100,
+        "process_local_token_cap": 780725,
+        "window_seconds": 480,
+        "comparison": "cold actual API; protected historical unknowns and a genuine connection receipt only",
+        "cold_independent": false
+      },
+      "stop_reason": "user_school_limit_reached",
+      "known_reference_sources": [
+        {
+          "path": [
+            "中国人民大学",
+            "马克思主义学院",
+            "通知公告"
+          ],
+          "url": "http://marx.ruc.edu.cn/sy/tzgg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "外国语学院",
+            "通知公告"
+          ],
+          "url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "哲学院",
+            "通知公告"
+          ],
+          "url": "https://phi.ruc.edu.cn/xwtz/tzgg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "财政金融学院",
+            "公告／全部"
+          ],
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "财政金融学院",
+            "招生公告"
+          ],
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "财政金融学院",
+            "硕博教务"
+          ],
+          "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "法学院",
+            "通知公告"
+          ],
+          "url": "http://www.law.ruc.edu.cn/home/xwzx/1/?pid=1",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "信息学院",
+            "学院公告"
+          ],
+          "url": "http://info.ruc.edu.cn/xwgg/xygg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "信息学院",
+            "教育公告"
+          ],
+          "url": "http://info.ruc.edu.cn/rcpy/jygg/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "中国人民大学",
+            "外国语学院",
+            "研究生通知公告"
+          ],
+          "url": "http://fl.ruc.edu.cn/sy/rcpy/sss/tzgg_s/index.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "not_observed_in_this_bounded_window": 10
+      },
+      "at_stop_tasks": {
+        "pending": 3,
+        "done": 4,
+        "running": 1,
+        "budget_exhausted": 2
+      },
+      "model_request_statuses": {
+        "succeeded": 2,
+        "sending": 1
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "pagination_scope_unconfirmed": 6
+      },
+      "page_error_observations": {
+        "官网网络连接失败，系统稍后自动重试": 21
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "segmented_window": {
+        "initial_active_seconds": 57.72,
+        "resumed_active_seconds": 422.28,
+        "requested_total_active_seconds": 480,
+        "wall_pause_not_included": true,
+        "first_segment_stop_reason": "user_school_limit_reached",
+        "saved_school_request_limit_unchanged": true,
+        "cumulative_request_cap": 100,
+        "new_ai_requests": 0,
+        "same_round_and_database": true,
+        "timing_limitation": "Split observation; do not claim a continuous 480-second or directly comparable first-source time."
+      },
+      "timing_note": "Paused between segments; first-source wall time is not comparable.",
+      "resume_fee_delta": {
+        "additional_requests": 0,
+        "additional_known_tokens": 0,
+        "same_school_round_key": true,
+        "original_paid_executions_unchanged": true,
+        "existing_source_ids_retained": true
+      },
+      "initial_segment_sources": 0,
+      "initial_segment_notices": 0,
+      "transport_scope_note": "The displayed transport counters are from the original segment only.",
+      "current_projected_sources": [
+        {
+          "source_id": 103,
+          "name": "硕士招生",
+          "url": "https://pgs.ruc.edu.cn/sszs.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 104,
+          "name": "博士招生",
+          "url": "https://pgs.ruc.edu.cn/bszs.htm",
+          "department_paths": [],
+          "state": "unresolved_department"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 9857,
+      "installed_source_rows": 2,
+      "notice_rows": 59,
+      "first_passed_source_validation_seconds": 232.624065,
+      "page_state_counts": {
+        "pending": 224,
+        "running": 1,
+        "fetched": 50,
+        "failed": 21
+      },
+      "checked_page_count": 71,
+      "transport_measurements": {
+        "http_transport_attempts": 147,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 147,
+        "logical_http_attempts": 139,
+        "browser_navigation_attempts": 12,
+        "browser_navigation_results": 11,
+        "nonempty_task_fetch_lookups": 157,
+        "task_evidence_cache_hits": 149,
+        "discovery_snapshot_cache_hits": 1835,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.473,
+      "school": "上海交通大学",
+      "school_key": "sjtu",
+      "arm": "baseline",
+      "limits": {
+        "process_local_request_cap": 33,
+        "process_local_token_cap": 188999,
+        "window_seconds": 480,
+        "comparison": "cold actual API; protected historical unknowns and a genuine connection receipt only",
+        "cold_independent": false
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "上海交通大学",
+            "药学院",
+            "招生工作"
+          ],
+          "url": "https://pharm.sjtu.edu.cn/zsgz.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "设计学院",
+            "招生资讯"
+          ],
+          "url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "研究生招生网",
+            "博士招生"
+          ],
+          "url": "https://yzb.sjtu.edu.cn/zkxx/bszs",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "心理学院",
+            "招生信息"
+          ],
+          "url": "https://psychology.sjtu.edu.cn/zsxx.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "研究生招生网",
+            "港澳台招生"
+          ],
+          "url": "https://yzb.sjtu.edu.cn/zkxx/gatzs",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "心理学院",
+            "学生培养"
+          ],
+          "url": "https://psychology.sjtu.edu.cn/pyfa.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "船舶海洋与建筑工程学院",
+            "答辩公告"
+          ],
+          "url": "https://naoce.sjtu.edu.cn/dabiangonggao.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "教务处",
+            "面向学生的通知"
+          ],
+          "url": "https://www.jwc.sjtu.edu.cn/index/mxxsdtz.htm",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "电气工程学院",
+            "通知公告"
+          ],
+          "url": "https://see.sjtu.edu.cn/bks_tzgg.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "教务处",
+            "新闻通告"
+          ],
+          "url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "channel",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "not_observed_in_this_bounded_window": 8,
+        "observed_page_without_matching_memberships": 2
+      },
+      "at_stop_tasks": {
+        "pending": 4,
+        "done": 19,
+        "budget_exhausted": 68
+      },
+      "model_request_statuses": {
+        "succeeded": 3
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "invalid_list_item": 3,
+        "article_sample_mismatch": 1
+      },
+      "page_error_observations": {
+        "官网地址必须是可公开访问的 HTTP 或 HTTPS 地址": 21
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 1,
+          "name": "通知公告",
+          "url": "https://see.sjtu.edu.cn/notice.html",
+          "department_paths": [],
+          "state": "unresolved_department"
+        },
+        {
+          "source_id": 2,
+          "name": "党建动态",
+          "url": "https://sais.sjtu.edu.cn/djdt.html",
+          "department_paths": [],
+          "state": "unresolved_department"
+        }
+      ]
+    },
+    {
+      "actual_model_requests": 3,
+      "actual_provider_tokens": 8727,
+      "installed_source_rows": 2,
+      "notice_rows": 15,
+      "first_passed_source_validation_seconds": 281.866394,
+      "page_state_counts": {
+        "pending": 536,
+        "fetched": 47,
+        "failed": 1
+      },
+      "checked_page_count": 48,
+      "transport_measurements": {
+        "http_transport_attempts": 95,
+        "http_definitely_unsent_proxy_failures": 0,
+        "http_response_observed": 95,
+        "logical_http_attempts": 145,
+        "browser_navigation_attempts": 12,
+        "browser_navigation_results": 11,
+        "nonempty_task_fetch_lookups": 181,
+        "task_evidence_cache_hits": 171,
+        "discovery_snapshot_cache_hits": 797,
+        "model_paid_decision_cache_hits": 0,
+        "instrumentation_versions": [
+          2
+        ],
+        "scope": "Official HTTP transport and browser navigations; browser subresources are not counted. Version 1 nonempty task lookups can include browser polling and are not file-cache-hit counts."
+      },
+      "initial_active_seconds": 480.516,
+      "school": "上海交通大学",
+      "school_key": "sjtu",
+      "arm": "candidate",
+      "limits": {
+        "process_local_request_cap": 36,
+        "process_local_token_cap": 198856,
+        "window_seconds": 480,
+        "comparison": "cold actual API; protected historical unknowns and a genuine connection receipt only",
+        "cold_independent": false
+      },
+      "stop_reason": "equal_frozen_arm_observation_window",
+      "known_reference_sources": [
+        {
+          "path": [
+            "上海交通大学",
+            "药学院",
+            "招生工作"
+          ],
+          "url": "https://pharm.sjtu.edu.cn/zsgz.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "设计学院",
+            "招生资讯"
+          ],
+          "url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "研究生招生网",
+            "博士招生"
+          ],
+          "url": "https://yzb.sjtu.edu.cn/zkxx/bszs",
+          "matches": [],
+          "reason": "pending_onboarding_or_validation",
+          "page": {
+            "kind": "channel",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "recent_publication",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": [
+            {
+              "kind": "onboard",
+              "state": "waiting",
+              "phase": "user_paused",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "心理学院",
+            "招生信息"
+          ],
+          "url": "https://psychology.sjtu.edu.cn/zsxx.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "研究生招生网",
+            "港澳台招生"
+          ],
+          "url": "https://yzb.sjtu.edu.cn/zkxx/gatzs",
+          "matches": [],
+          "reason": "pending_onboarding_or_validation",
+          "page": {
+            "kind": "channel",
+            "state": "fetched",
+            "status_code": 200,
+            "health": "recent_publication",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": [
+            {
+              "kind": "onboard",
+              "state": "waiting",
+              "phase": "user_paused",
+              "error_code": "origin_busy"
+            }
+          ]
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "心理学院",
+            "学生培养"
+          ],
+          "url": "https://psychology.sjtu.edu.cn/pyfa.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "船舶海洋与建筑工程学院",
+            "答辩公告"
+          ],
+          "url": "https://naoce.sjtu.edu.cn/dabiangonggao.html",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "教务处",
+            "面向学生的通知"
+          ],
+          "url": "https://www.jwc.sjtu.edu.cn/index/mxxsdtz.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "电气工程学院",
+            "通知公告"
+          ],
+          "url": "https://see.sjtu.edu.cn/bks_tzgg.html",
+          "matches": [],
+          "reason": "observed_page_without_matching_memberships",
+          "page": {
+            "kind": "unit",
+            "state": "pending",
+            "status_code": null,
+            "health": "unverified",
+            "error": null,
+            "network_failures": 0
+          },
+          "tasks": []
+        },
+        {
+          "path": [
+            "上海交通大学",
+            "教务处",
+            "新闻通告"
+          ],
+          "url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+          "matches": [],
+          "reason": "not_observed_in_this_bounded_window",
+          "page": null,
+          "tasks": []
+        }
+      ],
+      "reference_state_counts": {
+        "not_observed_in_this_bounded_window": 7,
+        "pending_onboarding_or_validation": 2,
+        "observed_page_without_matching_memberships": 1
+      },
+      "at_stop_tasks": {
+        "pending": 2,
+        "done": 17,
+        "budget_exhausted": 52,
+        "origin_busy": 5,
+        "running": 1
+      },
+      "model_request_statuses": {
+        "succeeded": 3
+      },
+      "model_request_errors": {},
+      "source_validation_errors": {
+        "invalid_list_item": 1,
+        "article_sample_mismatch": 2,
+        "duplicate_list_items": 1
+      },
+      "page_error_observations": {
+        "官网栏目地址不存在或已撤下（HTTP 404），需要核对来源地址": 1
+      },
+      "independent_department_attribution": "Not accepted as a whole; observed projection is reported separately",
+      "current_projected_sources": [
+        {
+          "source_id": 145,
+          "name": "学生工作办公室",
+          "url": "https://naoce.sjtu.edu.cn/xsbgs_xggg.html",
+          "department_paths": [
+            [
+              "船舶海洋与建筑工程学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        },
+        {
+          "source_id": 146,
+          "name": "通知公告",
+          "url": "https://naoce.sjtu.edu.cn/bsznyjszsgz.html",
+          "department_paths": [
+            [
+              "船舶海洋与建筑工程学院"
+            ]
+          ],
+          "state": "observed_path_projection_requires_independent_ownership_review"
+        }
+      ]
+    }
+  ]
+}

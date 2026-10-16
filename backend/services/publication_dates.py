@@ -11,13 +11,14 @@ from bs4 import BeautifulSoup
 from sqlalchemy import select
 from backend.database.db import db
 from backend.database.models import Announcement, BackgroundTask
-from backend.scraper.article_observation import article_heading, publication_nodes, compact_publication_date
+from backend.scraper.article_observation import compact_publication_date
+from backend.scraper.publication_metadata import publication_headings, publication_header
 
 DATE = re.compile(r'(?<!\d)(\d{4})\s*[年./-]\s*(\d{1,2})\s*[月./-]\s*(\d{1,2})日?(?!\d)')
 PUBLISH = re.compile(r'^(?:发布日期|发布时间|发文日期|发布于)\s*[：:]?\s*')
 META_KEYS = {'pubdate','publishdate','publicationdate','article:published_time','datepublished'}
 EDITOR = re.compile(r'责任编辑|编辑[:：]|作者[:：]|来源[:：]|浏览(?:量|次数)?[:：]')
-PARSER_VERSION = 'title-bound-3'
+PARSER_VERSION = 'title-bound-header-4'
 
 
 def publication_date_stamp(value):
@@ -47,16 +48,20 @@ def inspect_article_date(html, url, title):
     if not html or not unknown['title_key']:
         return unknown
     soup = BeautifulSoup(html,'lxml')
-    for node in soup.select('script,style,nav,aside,footer,blockquote'):
+    for node in soup.select('script,style,nav,aside,footer'):
         node.decompose()
     for node in soup.select('form'):
         if node.select('input:not([type="hidden"]),textarea,select,button'):
             node.decompose()
-    heading = article_heading(soup,title)
-    if heading is None:
+    headings = publication_headings(soup,title)
+    if not headings:
         return dict(unknown,reason='article_heading_not_unique_or_matched')
     candidates=[]
-    nodes, _ = publication_nodes(soup,heading)
+    observed = [(heading, publication_header(heading)) for heading in headings]
+    bound = [(heading, nodes) for heading, nodes in observed if nodes]
+    if len(bound) > 1 or not bound and len(headings) != 1:
+        return dict(unknown,reason='article_heading_not_unique_or_matched')
+    nodes = bound[0][1] if bound else []
     for node,text in nodes:
         date=_date(text)
         if date:

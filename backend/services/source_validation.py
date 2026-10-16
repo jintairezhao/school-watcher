@@ -12,7 +12,7 @@ from backend.database.source_governance_models import SourceValidation
 from backend.scraper.http_client import same_school_url, validate_public_url
 from backend.services.source_inventory import canonical_url
 
-VALIDATION_VERSION = 6
+VALIDATION_VERSION = 7
 
 
 def sample_failure_kind(samples):
@@ -38,6 +38,53 @@ def sample_failure_kind(samples):
             'access_restricted' if kinds else '')
 
 
+def _article_layout_ancestors(soup, config, title, page_url):
+    """Disambiguate a navigation-named layout using its local article proof.
+
+    A CMS may put its main content inside .nav_right. Only an exact visible
+    headline, its verified local publication line and substantive article
+    paragraphs can protect those enclosing layout divs. Actual navigation
+    elements and sidebar/menu/related-content markers remain excluded.
+    """
+    from backend.scraper.article_observation import article_node_state, title_key, prune_unready_article_nodes
+    from backend.services.publication_dates import inspect_article_date
+    nav = re.compile(r'(?:^|[\s_-])(?:nav|navigation)(?:$|[\s_-])', re.I)
+    other = re.compile(r'(?:^|[\s_-])(?:menu|sidebar|breadcrumb|related|recommend|toolbar|footer|copyright)(?:$|[\s_-])', re.I)
+    protected = set()
+    for heading in soup.select('h1,h2,h3,h4,h5,h6,[itemprop="headline"]'):
+        if title_key(heading.get_text(' ', strip=True)) != title_key(title) or not title:
+            continue
+        branch = [heading, *heading.parents]
+        if (article_node_state(heading) != 'ready' or any(node.name in ('a','nav','aside','footer')
+                or node.name == 'form' and node.select('input:not([type="hidden"]),textarea,select,button')
+                or other.search(' '.join(node.get('class', [])) + ' ' + node.get('id', ''))
+                for node in branch if node.attrs is not None)):
+            continue
+        marked = [node for node in branch if node.attrs is not None and
+                  nav.search(' '.join(node.get('class', [])) + ' ' + node.get('id', ''))]
+        if not marked:
+            continue
+        for scope in heading.parents:
+            if scope.name in ('body','html','[document]') or any(scope is node for node in marked):
+                break
+            if not scope.select('p,td,blockquote,pre'):
+                continue
+            material = BeautifulSoup(str(scope), 'lxml')
+            if inspect_article_date(str(material), page_url, title).get('state') != 'verified':
+                continue
+            prune_unready_article_nodes(material)
+            for node in list(material.find_all(True)):
+                if node.attrs is not None and (node.name in ('nav','aside','footer','script','style')
+                        or nav.search(' '.join(node.get('class', [])) + ' ' + node.get('id', ''))
+                        or other.search(' '.join(node.get('class', [])) + ' ' + node.get('id', ''))):
+                    node.decompose()
+            evidence = _article_body_evidence(material, config or {}, title_key(title), page_url)
+            if len(evidence['body_text']) >= 40:
+                protected.update(id(node) for node in marked)
+                break
+    return protected
+
+
 def _remove_article_noise(soup, config=None, *, title='', page_url=''):
     """Exclude site chrome before either identifying a title or measuring text."""
     # A class containing "header" is not necessarily site chrome: real CMS
@@ -45,6 +92,7 @@ def _remove_article_noise(soup, config=None, *, title='', page_url=''):
     # not arbitrary substrings that can remove the actual notification.
     noise = re.compile(r'(?:^|[\s_-])(?:nav|navigation|menu|footer|sidebar|copyright|breadcrumb|related|recommend|toolbar)(?:$|[\s_-])', re.I)
     header_marker = re.compile(r'(?:^|[\s_-])header(?:$|[\s_-])', re.I)
+    layout_ancestors = _article_layout_ancestors(soup, config, title, page_url)
     # An article's own headline can live in .article__header. Preserve that
     # branch only after the title, local publication line and body agree.
     from backend.scraper.article_observation import article_heading, title_bound_body, prune_unready_article_nodes
@@ -64,7 +112,8 @@ def _remove_article_noise(soup, config=None, *, title='', page_url=''):
         markers = ' '.join(node.get('class', [])) + ' ' + node.get('id', '')
         if (node.name in ('script', 'style', 'nav', 'footer')
                 or (node.name == 'header' or header_marker.search(markers)) and id(node) not in headline_branch
-                or node.name == 'aside' and id(node) not in body_ancestors or noise.search(markers)):
+                or node.name == 'aside' and id(node) not in body_ancestors
+                or noise.search(markers) and id(node) not in layout_ancestors):
             node.decompose()
 
 

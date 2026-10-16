@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-16",
+  "version": "2.22",
+  "revision": "v20",
+  "entire_plan_acceptance": "not_passed",
+  "published": false,
+  "regression": {
+    "modules": 106,
+    "tests_run": 1313,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "seconds": 341.715,
+    "successful": true,
+    "source_unchanged": true,
+    "external_connections_blocked": 0,
+    "actual_provider_requests": 0
+  },
+  "windows_candidate": {
+    "assets": [
+      {
+        "name": "School-Watcher-2.22-windows-x64-portable.zip",
+        "bytes": 85265214,
+        "mb": 85.265,
+        "mib": 81.315,
+        "sha256": "1219ca1fff8fe45031408757157692d3db58117f1507655a9dede418da3ca6e0"
+      },
+      {
+        "name": "School-Watcher-2.22-windows-x64-setup.exe",
+        "bytes": 66373423,
+        "mb": 66.373,
+        "mib": 63.299,
+        "sha256": "d5203dda806c93c9a66d26f117876d00ecba730ed797bd7e52f767fbfc514efe"
+      }
+    ],
+    "runtime": "passed",
+    "hidden_native_gui": "passed",
+    "fresh_profile": true,
+    "user_database_copied": false,
+    "api_keys_copied": false,
+    "installer_upgrade_logic": "previous preview of same installer logic passed; no installer-script changes since",
+    "other_platforms": "not built locally"
+  },
+  "remaining_gates": [
+    "Same-budget major reference coverage and independently checked department attribution",
+    "Two complete final-build independent university validations after all fixes",
+    "Natural new-notice and redesign long-running observation or explicit limitations"
+  ],
+  "real_api_date_replay_calls": 0
+}

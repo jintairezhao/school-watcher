@@ -71,6 +71,66 @@ class PublicationHeadingTests(unittest.TestCase):
         self.assertTrue(candidates[0]['source_heading_pending'])
         self.assertEqual(candidates[0]['source_page_label'], '工程学院')
 
+    def test_article_card_heading_is_detected_from_observed_membership(self):
+        # Real layout shape: sibling article cards carry a title CSS class.
+        # Opaque article addresses need no CMS-specific URL convention.
+        html = ('<div class="info-box3"><div class="info-text1">- 讲座信息</div>'
+                '<div class="clear"></div>'
+                '<a class="info-text3 yellow_title" href="talk/alpha.htm">2026/09/16<br>'
+                '关于人工智能前沿发展的学术讲座通知</a>'
+                '<a class="info-text3 yellow_title" href="talk/beta.htm">2026/09/15<br>'
+                '关于计算机科学研究方法的学术讲座通知</a>'
+                '<div class="info-img2"><a href="talk/index.htm"><img src="arrow.png"></a></div></div>')
+        feeds = publication_lists(html, URL)
+        self.assertTrue(feeds)
+        for feed in feeds:
+            self.assertEqual(feed['name'], '')
+            self.assertEqual(feed['column_url'], '')
+            self.assertTrue(feed['heading_article_reference'])
+            self.assertEqual(len(feed['article_urls']), 2)
+
+    def test_article_title_cannot_make_the_whole_region_disappear(self):
+        html = ('<section><h2>关于举办本学期学术交流活动的通知</h2><ul>'
+                '<li><a href="opaque-a.htm">关于举办本学期学术交流活动的通知</a><time>2026-09-16</time></li>'
+                '<li><a href="opaque-b.htm">关于召开研究生培养工作交流会的通知</a><time>2026-09-15</time></li>'
+                '</ul></section>')
+        feeds = publication_lists(html, URL)
+        self.assertTrue(feeds)
+        self.assertTrue(all(not feed['name'] and feed['heading_article_reference'] for feed in feeds))
+
+    def test_opaque_real_column_address_is_not_rejected_by_filename(self):
+        html = '<section><h2><a href="opaque-list.htm">通知公告</a></h2><ul>' + items(10000) + '</ul></section>'
+        feeds = publication_lists(html, URL)
+        self.assertTrue(feeds)
+        self.assertEqual((feeds[0]['name'], feeds[0]['column_url']), ('通知公告', URL + 'opaque-list.htm'))
+
+    def test_shallow_list_does_not_emit_a_document_root_css_selector(self):
+        html = ('<div><h2>通知公告</h2>'
+                '<a href="opaque-a.htm">2026/09/16<br>关于本学期教学安排的重要通知</a>'
+                '<a href="opaque-b.htm">2026/09/15<br>关于研究生培养事项的重要通知</a></div>')
+        feeds = publication_lists(html, URL)
+        self.assertTrue(feeds)
+        self.assertEqual(feeds[0]['name'], '通知公告')
+        self.assertNotIn('[document]', feeds[0]['list_selector'])
+
+    def test_anonymous_neighbour_keeps_its_own_repeated_article_occurrences(self):
+        html = ('<section><h2>通知公告</h2><ul>' + items(10000) + '</ul></section>'
+                '<section><ul>' + items(10000) + '</ul></section>')
+        feeds = publication_lists(html, URL)
+        self.assertEqual(len(feeds), 2)
+        self.assertEqual({feed['name'] for feed in feeds}, {'通知公告', ''})
+        positions = [{link['locator'] for link in feed['article_links']} for feed in feeds]
+        self.assertTrue(positions[0].isdisjoint(positions[1]))
+
+    def test_shared_module_heading_is_group_context_not_each_column_name(self):
+        html = ('<section><h2>文化日历</h2><div><ul>' + items(10000) +
+                '</ul></div><div><ul>' + items(20000) + '</ul></div></section>')
+        feeds = publication_lists(html, URL)
+        self.assertEqual(len(feeds), 2)
+        self.assertTrue(all(not feed['name'] for feed in feeds))
+        self.assertTrue(all(feed['column_group_name'] == '文化日历' for feed in feeds))
+        self.assertTrue(all(feed['heading_ambiguous'] for feed in feeds))
+
 
 if __name__ == '__main__':
     unittest.main()

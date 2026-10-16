@@ -106,6 +106,60 @@ class AcquisitionTests(unittest.TestCase):
         self.assertTrue(caught.exception.retryable)
         browser.assert_not_called()
 
+    def test_source_http_negotiation_refusal_gets_one_browser_read(self):
+        for status in (406, 415, 421, 422):
+            for purpose in ('directory', 'list'):
+                with self.subTest(status=status, purpose=purpose):
+                    browser = Mock(return_value=self.raw(LIST))
+                    result = fetch(FetchRequest(ROOT, purpose=purpose),
+                        http_transport=lambda _: replace(self.raw(''), status=status), browser_transport=browser)
+                    self.assertEqual(result.outcome, 'usable')
+                    self.assertEqual(result.transport, 'browser')
+                    self.assertIn(f'http_source_transport_probe:{status}', result.evidence)
+                    browser.assert_called_once()
+
+    def test_source_transport_probe_preserves_refusals_and_article_behavior(self):
+        for purpose, status, allowed in [('article', 422, True), ('directory', 422, False)] + [
+                ('list', status, True) for status in (401, 403, 404, 407, 410, 429)]:
+            with self.subTest(purpose=purpose, status=status, allowed=allowed):
+                browser = Mock(side_effect=AssertionError('Must not probe this response'))
+                result = fetch(FetchRequest(ROOT, purpose=purpose, browser_allowed=allowed),
+                    http_transport=lambda _: replace(self.raw(''), status=status), browser_transport=browser)
+                self.assertEqual(result.status, status)
+                browser.assert_not_called()
+
+    def test_browser_transport_refusal_is_not_rendered_again(self):
+        browser = Mock(return_value=replace(self.raw(''), status=422))
+        result = fetch(FetchRequest(ROOT, purpose='directory'),
+            http_transport=lambda _: replace(self.raw(''), status=422), browser_transport=browser)
+        self.assertEqual((result.status, result.outcome), (422, 'denied'))
+        browser.assert_called_once()
+
+    def test_cached_http_refusal_is_reused_before_browser_probe(self):
+        from backend.scraper.acquisition import execution_context
+        browser = Mock(return_value=self.raw(LIST))
+        cached = replace(self.raw(''), status=422, outcome='denied', error_code='http_422')
+        with execution_context(cache_lookup=lambda _:cached):
+            result = fetch(FetchRequest(ROOT, purpose='directory'),
+                http_transport=Mock(side_effect=AssertionError('Cached HTTP must not be repeated')),
+                browser_transport=browser)
+        self.assertEqual(result.outcome, 'usable')
+        browser.assert_called_once()
+
+    def test_explicit_permission_wall_is_not_a_transport_probe(self):
+        browser = Mock(side_effect=AssertionError('Permission wall must remain refused'))
+        raw = replace(self.raw('<title>系统提示</title><p>暂无权限，仅限校内访问</p>'), status=422)
+        result = fetch(FetchRequest(ROOT, purpose='list'), http_transport=lambda _:raw, browser_transport=browser)
+        self.assertEqual(result.outcome, 'denied')
+        browser.assert_not_called()
+
+    def test_rejected_response_size_does_not_become_a_transport_probe(self):
+        browser = Mock(side_effect=AssertionError('A size rejection must remain rejected'))
+        raw = replace(self.raw(''), status=422, outcome='denied', error_code='response_too_large')
+        result = fetch(FetchRequest(ROOT, purpose='directory'), http_transport=lambda _:raw, browser_transport=browser)
+        self.assertEqual(result.outcome, 'denied')
+        browser.assert_not_called()
+
     def test_http_denial_never_turns_into_empty_list(self):
         result = classify_result(FetchRequest(ROOT, purpose='list'), replace(self.raw(''), status=403))
         self.assertEqual(result.outcome, 'denied')

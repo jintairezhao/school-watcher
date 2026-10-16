@@ -1,0 +1,1501 @@
+{
+  "date": "2026-10-16",
+  "scope": "Actual observed official roster paths and installed columns sharing one website; source IDs and configurations are not merged.",
+  "samples": [
+    {
+      "school_url": "https://www.ustc.edu.cn",
+      "source": {
+        "id": 156,
+        "school_id": 1,
+        "name": "党建新闻",
+        "group_name": "核科学技术学院",
+        "list_url": "https://www.snst.ustc.edu.cn/3916/list.htm"
+      },
+      "known_groups": [
+        "院系介绍",
+        "管理机构",
+        "科研机构",
+        "机构设置",
+        "核科学技术学院"
+      ],
+      "observed_paths": [
+        {
+          "unit_key": "e0686a4a96a5c452480bbd46",
+          "unit_name": "核科学技术学院",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "e0686a4a96a5c452480bbd46",
+              "name": "核科学技术学院",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(58) > td:nth-of-type(1) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/",
+              "title": "核科学技术学院",
+              "content_hash": "399f3c429485e19a0e9a887b2edab2228946dfe2ecd884d6e4e24071fd72ef72",
+              "checked_at": "2026-10-16T09:42:30+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+              "title": "党建新闻",
+              "content_hash": "46b8e0894557cbaa286083946e4987bfd97dc2b6ea6e350f5c09de1e81db40b5",
+              "checked_at": "2026-10-16T09:43:25+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)"
+              ]
+            }
+          ],
+          "basis": "official_website_entry",
+          "verified": false,
+          "website_identity": {
+            "source": "title",
+            "identity": "核科学技术学院",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+          },
+          "entry_name": "党建新闻",
+          "entry_url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "617e2b04d8d3314df5d9a530",
+              "name": "党建园地",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3916/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://www.snst.ustc.edu.cn/3916/list.htm"
+          ],
+          "entry_names": [
+            "党建新闻"
+          ]
+        },
+        {
+          "unit_key": "7e4f66c8c83bc65cdb16e2f9",
+          "unit_name": "加速器科学与工程物理系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "e0686a4a96a5c452480bbd46",
+              "name": "核科学技术学院",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "7e4f66c8c83bc65cdb16e2f9",
+              "name": "加速器科学与工程物理系",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(58) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(59) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/",
+              "title": "核科学技术学院",
+              "content_hash": "399f3c429485e19a0e9a887b2edab2228946dfe2ecd884d6e4e24071fd72ef72",
+              "checked_at": "2026-10-16T09:42:30+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "党建新闻",
+          "entry_url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "617e2b04d8d3314df5d9a530",
+              "name": "党建园地",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3916/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://www.snst.ustc.edu.cn/3916/list.htm"
+          ],
+          "entry_names": [
+            "党建新闻"
+          ]
+        },
+        {
+          "unit_key": "58bcb3a418e28571e3a89f8b",
+          "unit_name": "等离子体物理与聚变工程系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "e0686a4a96a5c452480bbd46",
+              "name": "核科学技术学院",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "58bcb3a418e28571e3a89f8b",
+              "name": "等离子体物理与聚变工程系",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(58) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(60) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/",
+              "title": "核科学技术学院",
+              "content_hash": "399f3c429485e19a0e9a887b2edab2228946dfe2ecd884d6e4e24071fd72ef72",
+              "checked_at": "2026-10-16T09:42:30+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "党建新闻",
+          "entry_url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "617e2b04d8d3314df5d9a530",
+              "name": "党建园地",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3916/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://www.snst.ustc.edu.cn/3916/list.htm"
+          ],
+          "entry_names": [
+            "党建新闻"
+          ]
+        },
+        {
+          "unit_key": "249afcfe19be95b4a2f9e2cb",
+          "unit_name": "核科学与工程系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "e0686a4a96a5c452480bbd46",
+              "name": "核科学技术学院",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "249afcfe19be95b4a2f9e2cb",
+              "name": "核科学与工程系",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(58) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(61) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/",
+              "title": "核科学技术学院",
+              "content_hash": "399f3c429485e19a0e9a887b2edab2228946dfe2ecd884d6e4e24071fd72ef72",
+              "checked_at": "2026-10-16T09:42:30+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "党建新闻",
+          "entry_url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "617e2b04d8d3314df5d9a530",
+              "name": "党建园地",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3916/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://www.snst.ustc.edu.cn/3916/list.htm"
+          ],
+          "entry_names": [
+            "党建新闻"
+          ]
+        },
+        {
+          "unit_key": "e0686a4a96a5c452480bbd46",
+          "unit_name": "核科学技术学院",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "e0686a4a96a5c452480bbd46",
+              "name": "核科学技术学院",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(58) > td:nth-of-type(1) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/",
+              "title": "核科学技术学院",
+              "content_hash": "399f3c429485e19a0e9a887b2edab2228946dfe2ecd884d6e4e24071fd72ef72",
+              "checked_at": "2026-10-16T09:42:30+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(8) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(8) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/3942/list.htm",
+              "title": "研究生招生",
+              "content_hash": "c54bcbff974af807c7f4a82e6b7366d04441d40d0bcbac1acdcd45dee7717cc0",
+              "checked_at": "2026-10-16T09:42:42+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)"
+              ]
+            }
+          ],
+          "basis": "official_website_entry",
+          "verified": false,
+          "website_identity": {
+            "source": "title",
+            "identity": "核科学技术学院",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+          },
+          "entry_name": "党建新闻",
+          "entry_url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "6418a2bb9a15078f7b5abda8",
+              "name": "招生就业",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3943/list.htm",
+              "relation": "menu_group"
+            },
+            {
+              "node_key": "entry:https://www.snst.ustc.edu.cn/3942/list.htm",
+              "name": "研究生招生",
+              "kind": "group",
+              "url": "https://www.snst.ustc.edu.cn/3942/list.htm",
+              "relation": "publication_group"
+            },
+            {
+              "node_key": "617e2b04d8d3314df5d9a530",
+              "name": "党建园地",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3916/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://www.snst.ustc.edu.cn/3916/list.htm"
+          ],
+          "entry_names": [
+            "党建新闻"
+          ]
+        },
+        {
+          "unit_key": "e0686a4a96a5c452480bbd46",
+          "unit_name": "核科学技术学院",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "e0686a4a96a5c452480bbd46",
+              "name": "核科学技术学院",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(58) > td:nth-of-type(1) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/",
+              "title": "核科学技术学院",
+              "content_hash": "399f3c429485e19a0e9a887b2edab2228946dfe2ecd884d6e4e24071fd72ef72",
+              "checked_at": "2026-10-16T09:42:30+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(8) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(8) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/3943/list.htm",
+              "title": "本科生招生",
+              "content_hash": "30e1519e83bef7b70f611129a1baa693f159733e5474cc86fac2397195aa7c88",
+              "checked_at": "2026-10-16T09:42:54+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)"
+              ]
+            }
+          ],
+          "basis": "official_website_entry",
+          "verified": false,
+          "website_identity": {
+            "source": "title",
+            "identity": "核科学技术学院",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+          },
+          "entry_name": "党建新闻",
+          "entry_url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "6418a2bb9a15078f7b5abda8",
+              "name": "招生就业",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3943/list.htm",
+              "relation": "menu_group"
+            },
+            {
+              "node_key": "entry:https://www.snst.ustc.edu.cn/3943/list.htm",
+              "name": "本科生招生",
+              "kind": "group",
+              "url": "https://www.snst.ustc.edu.cn/3943/list.htm",
+              "relation": "publication_group"
+            },
+            {
+              "node_key": "617e2b04d8d3314df5d9a530",
+              "name": "党建园地",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3916/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://www.snst.ustc.edu.cn/3916/list.htm"
+          ],
+          "entry_names": [
+            "党建新闻"
+          ]
+        },
+        {
+          "unit_key": "e0686a4a96a5c452480bbd46",
+          "unit_name": "核科学技术学院",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "e0686a4a96a5c452480bbd46",
+              "name": "核科学技术学院",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(58) > td:nth-of-type(1) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/",
+              "title": "核科学技术学院",
+              "content_hash": "399f3c429485e19a0e9a887b2edab2228946dfe2ecd884d6e4e24071fd72ef72",
+              "checked_at": "2026-10-16T09:42:30+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+              "title": "党建新闻",
+              "content_hash": "46b8e0894557cbaa286083946e4987bfd97dc2b6ea6e350f5c09de1e81db40b5",
+              "checked_at": "2026-10-16T09:43:25+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(2)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(3)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > span:nth-of-type(1)"
+              ]
+            }
+          ],
+          "basis": "official_website_entry",
+          "verified": false,
+          "website_identity": {
+            "source": "title",
+            "identity": "核科学技术学院",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+          },
+          "entry_name": "党建新闻",
+          "entry_url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "617e2b04d8d3314df5d9a530",
+              "name": "党建园地",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3916/list.htm",
+              "relation": "navigation_entry"
+            },
+            {
+              "node_key": "8adbb72f116ce749d28021e1",
+              "name": "当前位置：",
+              "kind": "group",
+              "url": "",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://www.snst.ustc.edu.cn/3916/list.htm"
+          ],
+          "entry_names": [
+            "党建新闻"
+          ]
+        },
+        {
+          "unit_key": "e0686a4a96a5c452480bbd46",
+          "unit_name": "核科学技术学院",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "e0686a4a96a5c452480bbd46",
+              "name": "核科学技术学院",
+              "kind": "unit",
+              "url": "https://www.snst.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(58) > td:nth-of-type(1) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/",
+              "title": "核科学技术学院",
+              "content_hash": "399f3c429485e19a0e9a887b2edab2228946dfe2ecd884d6e4e24071fd72ef72",
+              "checked_at": "2026-10-16T09:42:30+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(11) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(11) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://www.snst.ustc.edu.cn/xxwj/list.htm",
+              "title": "学校文件",
+              "content_hash": "6e474eb19164253b6cedfb11f1f7e1280de95ae9c7c08baf539645481b8a1b49",
+              "checked_at": "2026-10-16T09:47:05+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)"
+              ]
+            }
+          ],
+          "basis": "official_website_entry",
+          "verified": false,
+          "website_identity": {
+            "source": "title",
+            "identity": "核科学技术学院",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)"
+          },
+          "entry_name": "党建新闻",
+          "entry_url": "https://www.snst.ustc.edu.cn/3916/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "140efa5c47152dca9c310ec7",
+              "name": "资料下载",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/xgzl/list.htm",
+              "relation": "menu_group"
+            },
+            {
+              "node_key": "617e2b04d8d3314df5d9a530",
+              "name": "党建园地",
+              "kind": "group",
+              "url": "http://www.snst.ustc.edu.cn/3916/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://www.snst.ustc.edu.cn/3916/list.htm"
+          ],
+          "entry_names": [
+            "党建新闻"
+          ]
+        }
+      ],
+      "list_page_sha256": "46b8e0894557cbaa286083946e4987bfd97dc2b6ea6e350f5c09de1e81db40b5",
+      "expected_unit_paths": [
+        [
+          "核科学技术学院"
+        ]
+      ],
+      "previous_unit_paths": [
+        [
+          "核科学技术学院"
+        ],
+        [
+          "核科学技术学院",
+          "加速器科学与工程物理系"
+        ],
+        [
+          "核科学技术学院",
+          "等离子体物理与聚变工程系"
+        ],
+        [
+          "核科学技术学院",
+          "核科学与工程系"
+        ]
+      ]
+    },
+    {
+      "school_url": "https://www.ustc.edu.cn",
+      "source": {
+        "id": 157,
+        "school_id": 1,
+        "name": "学术报告",
+        "group_name": "",
+        "list_url": "https://ess.ustc.edu.cn/main.htm"
+      },
+      "known_groups": [
+        "院系介绍",
+        "管理机构",
+        "科研机构",
+        "机构设置",
+        "核科学技术学院"
+      ],
+      "observed_paths": [
+        {
+          "unit_key": "a9336b7cd2c5b96ae310c5ea",
+          "unit_name": "地球和空间科学学院",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "",
+          "entry_url": "https://ess.ustc.edu.cn/",
+          "entry_nodes": [],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/"
+          ],
+          "entry_names": []
+        },
+        {
+          "unit_key": "738f217f99316cd7eac8f99e",
+          "unit_name": "地球物理与空间科学技术系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "738f217f99316cd7eac8f99e",
+              "name": "地球物理与空间科学技术系",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(34) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "",
+          "entry_url": "https://ess.ustc.edu.cn/",
+          "entry_nodes": [],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/"
+          ],
+          "entry_names": []
+        },
+        {
+          "unit_key": "836821f12676067a95bc3623",
+          "unit_name": "地球化学与行星科学系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "836821f12676067a95bc3623",
+              "name": "地球化学与行星科学系",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(35) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "",
+          "entry_url": "https://ess.ustc.edu.cn/",
+          "entry_nodes": [],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/"
+          ],
+          "entry_names": []
+        }
+      ],
+      "list_page_sha256": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+      "expected_unit_paths": [
+        [
+          "地球和空间科学学院"
+        ]
+      ],
+      "previous_unit_paths": [
+        [
+          "地球和空间科学学院"
+        ],
+        [
+          "地球和空间科学学院",
+          "地球物理与空间科学技术系"
+        ],
+        [
+          "地球和空间科学学院",
+          "地球化学与行星科学系"
+        ]
+      ]
+    },
+    {
+      "school_url": "https://www.ustc.edu.cn",
+      "source": {
+        "id": 158,
+        "school_id": 1,
+        "name": "科研成果",
+        "group_name": "",
+        "list_url": "https://ess.ustc.edu.cn/main.htm"
+      },
+      "known_groups": [
+        "院系介绍",
+        "管理机构",
+        "科研机构",
+        "机构设置",
+        "核科学技术学院"
+      ],
+      "observed_paths": [
+        {
+          "unit_key": "a9336b7cd2c5b96ae310c5ea",
+          "unit_name": "地球和空间科学学院",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "",
+          "entry_url": "https://ess.ustc.edu.cn/",
+          "entry_nodes": [],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/"
+          ],
+          "entry_names": []
+        },
+        {
+          "unit_key": "738f217f99316cd7eac8f99e",
+          "unit_name": "地球物理与空间科学技术系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "738f217f99316cd7eac8f99e",
+              "name": "地球物理与空间科学技术系",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(34) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "",
+          "entry_url": "https://ess.ustc.edu.cn/",
+          "entry_nodes": [],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/"
+          ],
+          "entry_names": []
+        },
+        {
+          "unit_key": "836821f12676067a95bc3623",
+          "unit_name": "地球化学与行星科学系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "836821f12676067a95bc3623",
+              "name": "地球化学与行星科学系",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(35) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "",
+          "entry_url": "https://ess.ustc.edu.cn/",
+          "entry_nodes": [],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/"
+          ],
+          "entry_names": []
+        }
+      ],
+      "list_page_sha256": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+      "expected_unit_paths": [
+        [
+          "地球和空间科学学院"
+        ]
+      ],
+      "previous_unit_paths": [
+        [
+          "地球和空间科学学院"
+        ],
+        [
+          "地球和空间科学学院",
+          "地球物理与空间科学技术系"
+        ],
+        [
+          "地球和空间科学学院",
+          "地球化学与行星科学系"
+        ]
+      ]
+    },
+    {
+      "school_url": "https://www.ustc.edu.cn",
+      "source": {
+        "id": 161,
+        "school_id": 1,
+        "name": "新通知公告",
+        "group_name": "",
+        "list_url": "https://ess.ustc.edu.cn/xtzgg/list.htm"
+      },
+      "known_groups": [
+        "院系介绍",
+        "管理机构",
+        "科研机构",
+        "机构设置",
+        "核科学技术学院"
+      ],
+      "observed_paths": [
+        {
+          "unit_key": "a9336b7cd2c5b96ae310c5ea",
+          "unit_name": "地球和空间科学学院",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > dl:nth-of-type(1) > dd:nth-of-type(2) > a:nth-of-type(1)",
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "新通知公告",
+          "entry_url": "https://ess.ustc.edu.cn/xtzgg/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "21f010ae25a996d1c75378a0",
+              "name": "新闻公告",
+              "kind": "group",
+              "url": "http://ess.ustc.edu.cn/xwdt_40033/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/xtzgg/list.htm"
+          ],
+          "entry_names": [
+            "新通知公告"
+          ]
+        },
+        {
+          "unit_key": "738f217f99316cd7eac8f99e",
+          "unit_name": "地球物理与空间科学技术系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "738f217f99316cd7eac8f99e",
+              "name": "地球物理与空间科学技术系",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(34) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > dl:nth-of-type(1) > dd:nth-of-type(2) > a:nth-of-type(1)",
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "新通知公告",
+          "entry_url": "https://ess.ustc.edu.cn/xtzgg/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "21f010ae25a996d1c75378a0",
+              "name": "新闻公告",
+              "kind": "group",
+              "url": "http://ess.ustc.edu.cn/xwdt_40033/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/xtzgg/list.htm"
+          ],
+          "entry_names": [
+            "新通知公告"
+          ]
+        },
+        {
+          "unit_key": "836821f12676067a95bc3623",
+          "unit_name": "地球化学与行星科学系",
+          "nodes": [
+            {
+              "node_key": "21d4a41770a683a65d3cdd5f",
+              "name": "院系介绍",
+              "kind": "group",
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "relation": "page_identity"
+            },
+            {
+              "node_key": "136c2bcc4ef88faba714eca0",
+              "name": "学部/学院",
+              "kind": "group",
+              "url": "",
+              "relation": "directory_entry"
+            },
+            {
+              "node_key": "a9336b7cd2c5b96ae310c5ea",
+              "name": "地球和空间科学学院",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            },
+            {
+              "node_key": "836821f12676067a95bc3623",
+              "name": "地球化学与行星科学系",
+              "kind": "unit",
+              "url": "https://ess.ustc.edu.cn/",
+              "relation": "nested_directory_entry"
+            }
+          ],
+          "references": [
+            {
+              "url": "https://www.ustc.edu.cn/yxjs.htm",
+              "title": "院系介绍-中国科学技术大学",
+              "content_hash": "16499317b705148575b46a698272e80afd6e9985d199aacb09f228b2a584e04d",
+              "checked_at": "2026-10-16T09:40:53+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(33) > td:nth-of-type(1) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > span:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(35) > td:nth-of-type(2) > a:nth-of-type(1)"
+              ]
+            },
+            {
+              "url": "https://ess.ustc.edu.cn/",
+              "title": "地球和空间科学学院-中国科学技术大学",
+              "content_hash": "2d187d5752395c8afcd6a88efc4cb8f3ae4fae9544017070363b5688a625b95c",
+              "checked_at": "2026-10-16T09:43:24+00:00",
+              "locators": [
+                "document",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+                "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > dl:nth-of-type(1) > dd:nth-of-type(2) > a:nth-of-type(1)",
+                "title"
+              ]
+            }
+          ],
+          "basis": "official_directory_navigation",
+          "verified": false,
+          "identity_pending": true,
+          "entry_name": "新通知公告",
+          "entry_url": "https://ess.ustc.edu.cn/xtzgg/list.htm",
+          "entry_nodes": [
+            {
+              "node_key": "21f010ae25a996d1c75378a0",
+              "name": "新闻公告",
+              "kind": "group",
+              "url": "http://ess.ustc.edu.cn/xwdt_40033/list.htm",
+              "relation": "menu_group"
+            }
+          ],
+          "entry_urls": [
+            "https://ess.ustc.edu.cn/xtzgg/list.htm"
+          ],
+          "entry_names": [
+            "新通知公告"
+          ]
+        }
+      ],
+      "list_page_sha256": "08f2f737fbc773fdb93cf765bd719e7ea34830444133d87a5bedcaca6da0815c",
+      "expected_unit_paths": [
+        [
+          "地球和空间科学学院"
+        ]
+      ],
+      "previous_unit_paths": [
+        [
+          "地球和空间科学学院"
+        ],
+        [
+          "地球和空间科学学院",
+          "地球物理与空间科学技术系"
+        ],
+        [
+          "地球和空间科学学院",
+          "地球化学与行星科学系"
+        ]
+      ]
+    }
+  ]
+}

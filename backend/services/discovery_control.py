@@ -122,6 +122,12 @@ def control(school_id, action):
         if not requested(task):
             db.session.commit()
             return
+        # A process may exit after saving pause intent but before its safe
+        # handoff. Recover under the same row lock as a worker claim; waiting
+        # for a new worker would leave startup unable to resume this round.
+        if task.state == 'running' and not _live(task, now):
+            park_requested_claim(task, now)
+            db.session.refresh(task)
         if task.state != 'waiting' or task.phase != 'user_paused' or any(_live(t, now) for t in pending_children):
             raise ValueError('正在保存当前进度，请稍后继续')
         for item in [task, *pending_children]:
@@ -169,7 +175,7 @@ def park_requested_claim(task, now):
     payload[RESUME_KEY] = _resume_values('pending', task.phase, task.capability, task.available_at)
     changed = db.session.execute(update(BackgroundTask).where(BackgroundTask.id == task.id,
         or_(BackgroundTask.state == 'pending', (BackgroundTask.state == 'running') &
-            (BackgroundTask.lease_until <= now))).values(
+            or_(BackgroundTask.lease_until.is_(None), BackgroundTask.lease_until <= now))).values(
                 state='waiting', phase='user_paused', payload=payload, token=None, worker_id=None,
                 lease_until=None, updated_at=now).execution_options(synchronize_session=False))
     if changed.rowcount and task.token:

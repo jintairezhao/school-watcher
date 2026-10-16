@@ -25,6 +25,8 @@ DEFAULTS = {
     'html_max_bytes': 3 * 1024 * 1024,
     'discovery_slice_pages': 3,
     'frontier_exploration_interval': 5,
+    'frontier_unseen_prior': 1,
+    'frontier_path_credit': 1,
     'navigation_batch_size': 8,
     'evidence_max_bytes': 24 * 1024,
     'ai_output_tokens': 4096,
@@ -71,6 +73,40 @@ def get_policy():
             raise ValueError('Discovery policy value must be an integer: ' + key)
     overrides = current_app.config.get('DISCOVERY_POLICY', {}) if has_app_context() else {}
     return dict(DEFAULTS, **dict(shared, **{key: value for key, value in overrides.items() if key in DEFAULTS}))
+
+
+def get_attention_policy():
+    """Shared audience preferences; never a source filter or a budget override.
+
+    Equal category weights are an unvalidated starting preference. Keep these
+    separate from the numeric acquisition limits so model, browser and worker
+    concurrency continue to use exactly their existing settings.
+    """
+    from backend.scraper.discovery.attention import CATEGORY_KEYS, normalize_profiles
+    shared = json.loads(os.environ.get('WATCHER_DISCOVERY_ATTENTION') or '{}')
+    overrides = current_app.config.get('DISCOVERY_ATTENTION', {}) if has_app_context() else {}
+    for value in (shared, overrides):
+        if not isinstance(value, dict) or set(value) - {'profiles', 'weights'}:
+            raise ValueError('Discovery attention must contain profiles and/or weights')
+    configured = dict(shared, **overrides)
+    profiles = normalize_profiles(configured.get('profiles'))
+    weights = dict.fromkeys(CATEGORY_KEYS, 1.0)
+    for value in (shared.get('weights', {}), overrides.get('weights', {})):
+        if not isinstance(value, dict) or set(value) - set(CATEGORY_KEYS):
+            raise ValueError('Unknown discovery attention category')
+        for category, weight in value.items():
+            if (isinstance(weight, bool) or not isinstance(weight, (int, float))
+                    or not math.isfinite(weight) or weight <= 0):
+                raise ValueError('Discovery attention weights must be positive finite numbers')
+            weights[category] = weight
+    return {'profiles': list(profiles), 'weights': weights}
+
+
+def attention_summary():
+    """One reader-facing description of the same configured exploration goal."""
+    labels = {'undergraduate': '本科生', 'graduate': '研究生', 'teacher': '教师'}
+    audience = '、'.join(labels[profile] for profile in get_attention_policy()['profiles'])
+    return f'按{audience}关注的需求，优先探索官网主干、院系部门和信息栏目。'
 
 
 def progress_state(progress_ids=()):

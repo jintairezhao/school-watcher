@@ -63,6 +63,64 @@ class DirectOnboardingTests(unittest.TestCase):
         self.assertEqual(self.reads.count((URL, 'directory')), 1)
         self.assertEqual([t.kind for t in BackgroundTask.query.all()], ['collect'])
 
+    def test_named_native_column_does_not_hide_an_unresolved_neighbouring_column(self):
+        from backend.services.source_onboarding import onboard_page
+        from backend.scraper.discovery.publication_lists import publication_lists
+        other = '<section id="other"><p id="other-heading">资助公告</p><ul>' + ''.join(
+            f'<li><a href="/info/{i}.htm">{title}</a><span>2026-10-01</span></li>'
+            for i, title in enumerate(TITLES)) + '</ul></section>'
+        html = HTML.replace('</body>', other + '</body>')
+        detected = publication_lists(html, URL)
+        self.assertTrue(any(f['name'] == '通知公告' for f in detected))
+        self.assertTrue(any(not f['name'] and 'other' in f['container_locator'] or
+                            not f['name'] and f['samples'] for f in detected))
+        native = self.fetch
+        def reader(url, purpose):
+            return html if url == URL else native(url, purpose)
+        cfg = ai_column(name='资助公告', list_selector='#other li',
+                        container_selector='#other', heading_selector='#other-heading')
+        with patch('backend.ai.configuration.get_model_binding', return_value={'id': 1, 'version': 1}), \
+             patch('backend.ai.runtime.run_skill', return_value={'status': 'succeeded',
+                'output': {'status': 'ready', 'columns': [cfg]}}) as model:
+            result = onboard_page({'school_id': self.school_id, 'url': URL}, fetcher=reader)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual({d.name for d in Department.query.filter_by(school_id=self.school_id)}, {'通知公告', '资助公告'})
+        self.assertEqual(model.call_count, 1)
+
+    def test_unresolved_neighbour_resumes_after_native_success_without_replacing_its_identity(self):
+        from backend.services import tasks
+        from backend.services.source_onboarding import onboard_page
+        other = '<section id="other"><p id="other-heading">资助公告</p><ul>' + ''.join(
+            f'<li><a href="/info/{i}.htm">{title}</a><span>2026-10-01</span></li>'
+            for i, title in enumerate(TITLES)) + '</ul></section>'
+        html = HTML.replace('</body>', other + '</body>')
+        def reader(url, purpose):
+            return html if url == URL else self.fetch(url, purpose)
+        job = tasks.enqueue('onboard', 'unresolved-neighbour', {'school_id': self.school_id, 'url': URL})
+        handle = tasks.claim(capabilities=['http'])
+        with tasks.execution_scope(handle), patch('backend.ai.runtime.run_skill',
+                side_effect=AssertionError('Native first-source success needs no model')):
+            with self.assertRaises(tasks.TaskDeferred) as deferred:
+                onboard_page(handle['payload'], fetcher=reader)
+        tasks.handoff(handle, deferred.exception)
+        db.session.refresh(job)
+        self.assertTrue(job.checkpoint['column_validation']['unresolved_region_plan']['active'])
+        original = Department.query.filter_by(school_id=self.school_id, name='通知公告').one()
+        original_id = original.id
+        handle = tasks.claim(capabilities=['directory'])
+        self.assertEqual(handle['id'], job.id)
+        cfg = ai_column(name='资助公告', list_selector='#other li',
+                        container_selector='#other', heading_selector='#other-heading')
+        with tasks.execution_scope(handle), \
+             patch('backend.ai.configuration.get_model_binding', return_value={'id': 1, 'version': 1}), \
+             patch('backend.ai.runtime.run_skill', return_value={'status': 'succeeded',
+                 'output': {'status': 'ready', 'columns': [cfg]}}) as model:
+            result = onboard_page(handle['payload'], fetcher=reader)
+        self.assertEqual(model.call_count, 1)
+        self.assertEqual(result['state'], 'connected')
+        self.assertEqual(Department.query.filter_by(school_id=self.school_id, name='通知公告').one().id, original_id)
+        self.assertEqual({d.name for d in Department.query.filter_by(school_id=self.school_id)}, {'通知公告', '资助公告'})
+
     def test_attachment_only_notices_can_validate_a_column_without_paid_ai(self):
         from backend.services.source_onboarding import onboard_page
         def fetch(url, purpose):

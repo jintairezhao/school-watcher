@@ -107,13 +107,14 @@ async def read_http(request, permit=None, trace=None, *, capture_binary=False, m
                     address = next((ip for ip in addresses if ':' not in ip), addresses[0])
                     options = dict(headers=headers, timeout=timeout, allow_redirects=False,
                                    server_hostname=host if parsed.scheme == 'https' else None)
+                    sent_url = _pinned_url(target, address)
                     try:
-                        response = await session.get(_pinned_url(target, address), proxy=proxy, **options)
+                        response = await session.get(sent_url, proxy=proxy, **options)
                     except (aiohttp.ClientConnectionError, asyncio.TimeoutError) as exc:
                         if not proxy or required_proxy or not proxy_failed_before_send(exc):
                             raise
                         notes.append('direct_after_unsent_proxy_failure:' + type(exc).__name__)
-                        response = await session.get(_pinned_url(target, address), **options)
+                        response = await session.get(sent_url, **options)
                     async with response:
                         trace['phase'] = 'body'
                         response_headers = dict(response.headers)
@@ -132,7 +133,13 @@ async def read_http(request, permit=None, trace=None, *, capture_binary=False, m
                             cool_origin(target, retry_after if retry_after is not None else 300)
                         if response.status in (301, 302, 303, 307, 308) and response.headers.get('Location'):
                             location = response.headers['Location']
-                            if parsed.scheme == 'http' and parsed.port is None and location == 'https://' + parsed.netloc + target:
+                            # Some frontends append the absolute request URI to
+                            # their HTTPS host. For source exploration accept
+                            # only our exact validated wire URL as that suffix;
+                            # never infer a different address or path.
+                            upgrade_suffixes = (target, sent_url) if request.purpose in ('directory', 'list') else (target,)
+                            if (parsed.scheme == 'http' and parsed.port is None and any(
+                                    location == 'https://' + parsed.netloc + suffix for suffix in upgrade_suffixes)):
                                 target = parsed._replace(scheme='https').geturl()
                                 notes.append('repaired_same_host_https_redirect:' + location)
                             else:

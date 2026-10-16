@@ -115,11 +115,91 @@ class InitialFrontierLayoutTests(unittest.TestCase):
         channel = self.add('notices', '通知公告', 'channel', 1)
         self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], channel)
 
-    def test_already_attempted_direct_directory_waits_for_the_ordinary_rotation(self):
+    def test_already_observed_direct_directory_waits_for_the_ordinary_rotation(self):
         directory = self.add('layout', '院系设置', 'directory', 1, attempts=1)
-        channel = self.add('notices', '通知公告', 'channel', 1)
+        with self.store.connect() as connection:
+            connection.execute('UPDATE pages SET checked_at=?,content_hash=? WHERE url=?',
+                               ('2026-10-01T00:00:00+00:00', 'observed-material', directory))
+        # An actual observation finishes the initial pass. A claim alone does
+        # not: a process can stop between claiming the URL and reading it.
+        channel = self.add('notices', '教务通知', 'channel', 1)
         self.edge(ROOT, directory, 'directory', content_hash='root-current')
         self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], channel)
+
+    def test_interrupt_before_read_keeps_layout_priority_without_inventing_a_failure(self):
+        directory = self.add('layout', '院系设置', 'directory', 1)
+        self.edge(ROOT, directory, 'directory', content_hash='root-current')
+        self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], directory)
+        self.add('other', '教学 招生 就业 国际交流', 'gateway', 1)
+        restored = Inventory(self.path)
+        restored.recover(self.key)
+        self.assertEqual(restored.claim(self.key, focus='valuable')['url'], directory)
+        self.assertEqual(restored.get_page(self.key, directory)['network_failures'], 0)
+
+    def failed_layout(self):
+        directory = self.add('layout', '院系设置', 'directory', 1)
+        self.edge(ROOT, directory, 'directory', content_hash='root-current')
+        self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], directory)
+        self.store.fail_read(self.key, directory, retryable=True,
+                             error='http_connect_timeout', health='unreachable')
+        return directory
+
+    def retry_due(self, url):
+        with self.store.connect() as connection:
+            connection.execute("UPDATE pages SET retry_at='2000-01-01T00:00:00+00:00' WHERE url=?", (url,))
+
+    def test_due_network_retry_keeps_unread_homepage_layout_priority_after_restart(self):
+        directory = self.failed_layout()
+        self.add('gateway', '教学 招生 就业 国际交流', 'gateway', 1)
+        self.retry_due(directory)
+        restored = Inventory(self.path)
+        self.assertEqual(restored.claim(self.key, focus='valuable')['url'], directory)
+        self.assertEqual(restored.get_page(self.key, directory)['network_failures'], 1)
+
+    def test_failed_layout_respects_wait_without_consuming_its_retry(self):
+        directory = self.failed_layout()
+        other = self.add('other', '教学 招生 就业 国际交流', 'gateway', 1)
+        self.assertEqual(Inventory(self.path).claim(self.key, focus='valuable')['url'], other)
+        saved = self.store.get_page(self.key, directory)
+        self.assertEqual((saved['attempts'], saved['network_failures']), (1, 1))
+
+    def test_failed_layout_needs_current_homepage_evidence_to_retain_priority(self):
+        directory = self.failed_layout()
+        other = self.add('other', '教学 招生 就业 国际交流', 'gateway', 1)
+        self.retry_due(directory)
+        self.fetched(ROOT, 'changed-root')
+        self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], other)
+
+    def test_previously_read_layout_does_not_get_initial_priority_from_later_outage(self):
+        directory = self.failed_layout()
+        other = self.add('other', '教学 招生 就业 国际交流', 'gateway', 1)
+        with self.store.connect() as connection:
+            connection.execute('UPDATE pages SET content_hash=? WHERE url=?', ('retained-material', directory))
+        self.retry_due(directory)
+        self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], other)
+
+    def test_initial_layout_retry_is_finite_and_yields_during_low_frequency_recovery(self):
+        directory = self.failed_layout()
+        other = self.add('other', '教学 招生 就业 国际交流', 'gateway', 1)
+        for expected in (2, 3):
+            self.retry_due(directory)
+            self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], directory)
+            self.store.fail_read(self.key, directory, retryable=True,
+                                 error='http_connect_timeout', health='unreachable')
+            self.assertEqual(self.store.get_page(self.key, directory)['network_failures'], expected)
+        self.assertEqual(self.store.get_page(self.key, directory)['state'], 'failed')
+        self.assertEqual(self.store.claim(self.key, focus='valuable')['url'], other)
+
+    def test_layout_still_unread_when_low_frequency_recovery_starts_a_new_network_burst(self):
+        directory = self.failed_layout()
+        self.add('other', '教学 招生 就业 国际交流', 'gateway', 1)
+        for _ in range(2):
+            self.store.fail_read(self.key, directory, retryable=True,
+                                 error='http_connect_timeout', health='unreachable')
+        self.retry_due(directory)
+        self.store.retry(self.key)
+        self.assertEqual(self.store.get_page(self.key, directory)['network_failures'], 0)
+        self.assertEqual(Inventory(self.path).claim(self.key, focus='valuable')['url'], directory)
 
     def test_changed_homepage_role_does_not_promote_an_old_directory_classification(self):
         directory = self.add('old-layout', '组织机构', 'directory', 1)

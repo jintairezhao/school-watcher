@@ -126,7 +126,8 @@ def route_rank(page, incoming=(), parents=None):
 
 
 def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
-                 branches=None, history=None, slice_size=3):
+                 branches=None, history=None, slice_size=3, attention=None,
+                 receipts=(), foraging_policy=None, explain=None, costs=None):
     """Read the observed layout, then share exploration across forward branches.
 
     Branches come from navigation_progress's current evidenced graph, not a
@@ -135,32 +136,74 @@ def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
     """
     if not pages:
         return None
+    def selected(page, reason, demand=None, feedback=None):
+        if explain is not None:
+            explain({'version': 'attention-1', 'reason': reason,
+                     'candidate_count': len(pages), 'claim_number': claim_count + 1,
+                     'url': page['url'], 'label': page.get('label', ''),
+                     'attention': demand or {}, 'foraging': feedback or {}})
+        return page
     roots = [page for page in pages if page.get('kind') == 'root']
     if roots:
-        return min(roots, key=route_rank)
+        return selected(min(roots, key=route_rank), 'school_root')
     parents = parents or {}
     incoming = defaultdict(list)
     for edge in edges:
         incoming[edge['target_url']].append(edge)
+    from .directory_terms import academic_collection_label
+    def layout_hint(record):
+        return (record.get('kind') == 'directory' or record.get('kind') in ('unit', 'navigation', 'gateway')
+                and academic_collection_label(record.get('label')))
     layout = [page for page in pages
-              if page.get('kind') == 'directory' and page.get('depth') == 1
-              and not page.get('checked_at') and not page.get('attempts')
+              if layout_hint(page) and page.get('depth') == 1
+              and not page.get('content_hash')
+              and (not page.get('checked_at') or page.get('network_failures', 0) > 0
+                   or page.get('health') == 'unreachable' and page.get('error'))
               and any(edge.get('decision') in ('follow', 'official_external_link')
-                      and edge.get('kind') == 'directory'
+                      and (edge.get('kind') == 'directory' or academic_collection_label(page.get('label')))
                       and (parent := parents.get(edge.get('parent_url'), {})).get('kind') == 'root'
                       and parent.get('state') == 'fetched'
                       and parent.get('content_hash')
                       and parent['content_hash'] == edge.get('content_hash')
                       for edge in incoming[page['url']])]
     if layout:
-        # Only direct, still-unread homepage directory entrances get this
-        # finite initial pass. Nested profiles cannot preempt columns forever.
+        # A failed transport attempt has not observed the school's layout.
+        # Keep that priority for due retries until usable material is obtained.
+        # Inventory supplies only eligible pages; its retry delays, three actual
+        # failures and low-frequency recovery remain authoritative. Previously
+        # read and nested directories do not regain this initial preference.
         from backend.services.student_sources import college_priority
-        return min(layout, key=lambda page: (
-            college_priority(page['kind'], page.get('label', ''), page.get('path_json', '[]')) != 0,
-            route_rank(page)))
+        return selected(min(layout, key=lambda page: (
+            not (academic_collection_label(page.get('label')) or
+                 college_priority(page['kind'], page.get('label', ''), page.get('path_json', '[]')) == 0),
+            route_rank(page))), 'observed_homepage_layout')
     if (claim_count + 1) % max(1, int(interval)) == 0:
-        return min(pages, key=lambda page: (page.get('frontier_rowid', 0), page.get('url', '')))
+        return selected(min(pages, key=lambda page: (
+            page.get('frontier_rowid', 0), page.get('url', ''))), 'oldest_pending_turn')
+    demand, feedback = {}, None
+    if attention is not None:
+        from .attention import candidate_attention, coverage_state
+        from .foraging import ForagingFeedback
+        known = history or {page['url']: page for page in pages}
+        coverage = coverage_state(known, branches=branches, validated_sources=receipts, edges=edges)
+        demand = {page['url']: candidate_attention(page,
+            profiles=attention.get('profiles'), weights=attention.get('weights'), coverage=coverage,
+            incoming=incoming[page['url']], parents=parents, branches=branches) for page in pages}
+        feedback = ForagingFeedback(known, edges, receipts, branches, costs=costs,
+            **(foraging_policy or {}))
+
+    def rank(page):
+        base = route_rank(page, incoming[page['url']], parents)
+        if not demand:
+            return base
+        # Audience needs and their evidenced coverage precede local route
+        # productivity. A successful busy branch cannot override that tier.
+        return (*demand[page['url']]['rank'], *feedback.rank(page),
+                *feedback.costs.rank(page['url']), *base)
+
+    def explain_selected(page, reason):
+        return selected(page, reason, demand.get(page['url']),
+                        feedback.features(page) if feedback is not None else None)
     if branches and history and (claim_count + 1) % max(1, int(slice_size)) == 0:
         effort = defaultdict(int)
         for url, page in history.items():
@@ -168,7 +211,8 @@ def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
         probes = [page for page in pages
                   if history.get(branches.get(page['url']), {}).get('kind') == 'unit']
         if probes:
-            return min(probes, key=lambda page: (
+            return explain_selected(min(probes, key=lambda page: (
                 effort[branches[page['url']]],
-                route_rank(page, incoming[page['url']], parents)))
-    return min(pages, key=lambda page: route_rank(page, incoming[page['url']], parents))
+                rank(page))), 'unit_scope_rotation')
+    return explain_selected(min(pages, key=rank),
+                            'audience_coverage' if demand else 'observed_route')

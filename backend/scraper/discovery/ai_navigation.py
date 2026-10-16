@@ -285,6 +285,8 @@ def process_navigation(payload):
             defer_connection(get_model_binding('directory'), checkpoint=tasks.current_execution().get('checkpoint'))
         if result.get('status') == 'pending':
             tasks.defer(capability='directory', phase='ai_resource', delay=result.get('next_delay') or 1,
+                        keep_place=result.get('error_code') == 'concurrency_limit',
+                        error_code=result.get('error_code', ''),
                         reason='逐项识别已保存，等待处理剩余材料')
         return dict(result, status=result.get('status', 'processed'), queued_pages=added, deferred_pages=deferred_pages,
                     role_corrections=corrections, reviewed_routes=result.get('reviewed_routes', 0),
