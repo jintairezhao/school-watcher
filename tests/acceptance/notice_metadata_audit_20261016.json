@@ -2093,5 +2093,14 @@
     "Same-document multi-column appearances remain distinct memberships.",
     "No inference of institution ownership from matching names or URLs.",
     "No claim of universal zero errors or complete university coverage."
-  ]
+  ],
+  "latest_replay": {
+    "parser_version": "title-bound-header-5",
+    "reviewed_originals": 100,
+    "correct_verified": 96,
+    "unknown": 4,
+    "date_mismatches": 0,
+    "actual_website_reads": 0,
+    "actual_model_calls": 0
+  }
 }

@@ -1,22 +1,100 @@
 {
   "date": "2026-10-16",
   "version": "2.22",
-  "revision": "v20",
+  "revision": "v22",
   "entire_plan_acceptance": "not_passed",
-  "published": false,
+  "released": false,
+  "draft_pr": "https://github.com/jintairezhao/school-watcher/pull/3",
   "regression": {
-    "modules": 106,
-    "tests_run": 1313,
+    "modules": 175,
+    "tests_run": 1910,
     "failures": 0,
     "errors": 0,
-    "skipped": 1,
-    "seconds": 341.715,
+    "skipped": 15,
+    "seconds": 445.557,
     "successful": true,
     "source_unchanged": true,
     "external_connections_blocked": 0,
     "actual_provider_requests": 0
   },
-  "windows_candidate": {
+  "skipped_cases": [
+    {
+      "test": "tests.test_browser_runtime_real.RealBrowserFixtureTests.test_linux_manual_display_revocation_and_context_reuse",
+      "reason_from_test_guard": "Linux Xvfb/TigerVNC acceptance"
+    },
+    {
+      "test": "tests.test_database_portability.DatabasePortabilityTests.test_fresh_postgres_migrations_and_concurrent_article_identity",
+      "reason_from_test_guard": "requires isolated PostgreSQL database creation"
+    },
+    {
+      "test": "tests.test_database_portability.DatabasePortabilityTests.test_whole_migration_and_native_postgres_restore",
+      "reason_from_test_guard": "requires isolated PostgreSQL database creation"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_body_reads_get_a_turn_before_old_batch_updates",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_browser_poll_handoff_does_not_repeat_http_or_submit",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_checkpoint_and_manual_wait_resume_keep_original_identity",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_configuration_change_invalidates_old_generation",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_handoffs_keep_generation_and_do_not_consume_failure_budget",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_heartbeat_cannot_revive_expired_lease_or_make_completed_data_fresh",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_host_permits_are_shared_and_cooldown_survives_release",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_lost_owner_cannot_commit_business_rows",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_one_hundred_clients_share_identity_and_only_one_worker_claims",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_recovery_does_not_interrupt_another_live_worker",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_scheduler_lease_is_single_owner_and_old_release_is_harmless",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    },
+    {
+      "test": "tests.test_shared_fetch_runtime.PostgresSharedRuntimeTests.test_source_collection_and_health_cannot_run_together",
+      "reason_from_test_guard": "set a dedicated PostgreSQL test database URI"
+    }
+  ],
+  "controlled_browser_checks": [
+    "onboarding progress with and without a live lease at 1280/980/390",
+    "publication correction, list reorder, read/favorite state and unchanged saved body",
+    "source presentation at 1280/390 and dark/light themes"
+  ],
+  "date_metadata_replay": {
+    "parser_version": "title-bound-header-5",
+    "reviewed_originals": 100,
+    "correct_verified": 96,
+    "unknown": 4,
+    "date_mismatches": 0,
+    "actual_website_reads": 0,
+    "actual_model_calls": 0
+  },
+  "local_windows_candidate": {
+    "revision": "v20, before retained-failure replay and raw evidence follow-ups",
     "assets": [
       {
         "name": "School-Watcher-2.22-windows-x64-portable.zip",
@@ -37,14 +115,49 @@
     "hidden_native_gui": "passed",
     "fresh_profile": true,
     "user_database_copied": false,
-    "api_keys_copied": false,
-    "installer_upgrade_logic": "previous preview of same installer logic passed; no installer-script changes since",
-    "other_platforms": "not built locally"
+    "api_keys_copied": false
   },
+  "ci_v20": {
+    "commit": "04961e457fb3c1e1bc72422e5cdc37c2f81a42f1",
+    "workflow": "https://github.com/jintairezhao/school-watcher/actions/runs/38896411382",
+    "build_and_packaged_checks": {
+      "windows-x64": "passed",
+      "macos-arm64": "passed",
+      "macos-x64": "passed"
+    },
+    "assets": [
+      {
+        "name": "School-Watcher-2.22-windows-x64-setup.exe",
+        "bytes": 66370119,
+        "mb": 66.37,
+        "mib": 63.295
+      },
+      {
+        "name": "School-Watcher-2.22-windows-x64-portable.zip",
+        "bytes": 85206709,
+        "mb": 85.207,
+        "mib": 81.259
+      },
+      {
+        "name": "School-Watcher-2.22-macos-arm64.dmg",
+        "bytes": 95529102,
+        "mb": 95.529,
+        "mib": 91.104
+      },
+      {
+        "name": "School-Watcher-2.22-macos-x64.dmg",
+        "bytes": 98420424,
+        "mb": 98.42,
+        "mib": 93.861
+      }
+    ],
+    "full_acceptance": "failed; lease fixture and shared-heading expectations corrected, actual compact-date raw-evidence loss fixed; v22 locally passes full suite"
+  },
+  "latest_ci": "pending draft update, no success claimed",
   "remaining_gates": [
     "Same-budget major reference coverage and independently checked department attribution",
     "Two complete final-build independent university validations after all fixes",
-    "Natural new-notice and redesign long-running observation or explicit limitations"
-  ],
-  "real_api_date_replay_calls": 0
+    "Natural new-notice/redesign observation or explicit limitations",
+    "Latest commit cross-platform CI"
+  ]
 }

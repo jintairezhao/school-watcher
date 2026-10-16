@@ -187,12 +187,22 @@ class SourceValidationTests(unittest.TestCase):
                          [(row[2], 'article') for row in FINANCE_NOTICES])
 
     def test_version_three_failed_finance_trial_recovers_without_new_ai_or_round(self):
+        self._retained_finance_trial(3)
+
+    def test_version_six_layout_failure_recovers_without_new_ai_or_round(self):
+        self._retained_finance_trial(6, navigation_layout=True)
+
+    def _retained_finance_trial(self, version, navigation_layout=False):
         import hashlib
         from backend.services import tasks
         from backend.services.source_governance import _snapshot
         from backend.services.source_onboarding import onboard_page
         from backend.scraper.acquisition import FetchResult
         column, materials = self.finance_materials()
+        if navigation_layout:
+            for _, _, address, _ in FINANCE_NOTICES:
+                materials[address] = materials[address].replace('<body>', '<body><div class="nav_right"><div>') \
+                    .replace('</body>', '</div></div></body>')
         reference = _snapshot(materials[FINANCE_URL], FINANCE_URL, role='list')
         job = tasks.enqueue('onboard', 'retained-finance-trial', {
             'school_id': self.fixture.school_id, 'url': FINANCE_URL})
@@ -200,7 +210,7 @@ class SourceValidationTests(unittest.TestCase):
             'column_regions': {'columns': [column], 'decision_ids': ['original-paid-decision']},
             'column_validation': {
                 'page_hash': hashlib.sha256((FINANCE_URL + '\\0' + materials[FINANCE_URL]).encode()).hexdigest(),
-                'validation_version': 3, 'stage': 'done', 'department_ids': [], 'completed': [],
+                'validation_version': version, 'stage': 'done', 'department_ids': [], 'completed': [],
                 'new_count': 0, 'trial_columns': [column], 'trial_origin_stage': 'ai',
                 'trial_decision_ids': ['original-paid-decision'], 'trial_request_key': 'original-input',
                 'failures': [{'issue': {'codes': ['article_sample_mismatch']}}],

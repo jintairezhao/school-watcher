@@ -80,7 +80,9 @@ def _field_text(node):
             return text[:published.end()] + match.group(0)
         compact = compact_publication_date('发布时间：' + rest)
         if compact:
-            return '发布时间：' + compact.strftime('%Y-%m-%d')
+            # Preserve the observed label and digits in the evidence. Parsing
+            # a compact date must not invent different text for its DOM node.
+            return text[:published.end()] + rest[:8]
     markers = ' '.join(node.get('class', [])) + ' ' + str(node.get('itemprop', ''))
     if NON_PUBLICATION.search(text + ' ' + markers) or TIME_RANGE.search(text):
         return None

@@ -41,6 +41,10 @@ def _validation_upgrade_codes(checkpoint):
         fixed.add('column_identity_or_scope_unconfirmed')
     if version < 6 and VALIDATION_VERSION >= 6 and 'article_sample_mismatch' in codes:
         fixed.add('article_sample_mismatch')
+    if version < 7 and VALIDATION_VERSION >= 7 and 'article_sample_mismatch' in codes:
+        # Navigation-named article layouts were pruned by older validators.
+        # Replay the retained program trial; do not purchase the rules again.
+        fixed.add('article_sample_mismatch')
     return fixed
 
 
