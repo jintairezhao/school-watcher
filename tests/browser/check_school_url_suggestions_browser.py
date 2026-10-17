@@ -43,20 +43,41 @@ def check():
                 context.add_cookies([{'name':'session','value':cookie,'url':base}])
                 # Deliver late responses even after abort to test response fencing.
                 context.add_init_script('''(() => {
+                    window.schoolSuggestionTrace = [];
+                    window.schoolBindingTrace = [];
+                    let bound;
+                    Object.defineProperty(window, 'bindSchoolSuggestion', {
+                        configurable: true,
+                        get: () => bound,
+                        set: binder => { bound = options => {
+                            window.schoolBindingTrace.push({event:'bind', name:options.nameInput.value, url:options.urlInput.value});
+                            options.nameInput.addEventListener('input', () => window.schoolBindingTrace.push({event:'input', name:options.nameInput.value}));
+                            return binder(options);
+                        }; }
+                    });
                     const original = window.fetch;
                     window.fetch = (url, options) => {
-                        if (String(url).includes('/api/schools/suggest-url') && options) {
+                        const suggestion = String(url).includes('/api/schools/suggest-url');
+                        if (suggestion && options) {
                             options = {...options}; delete options.signal;
                         }
-                        return original(url, options);
+                        const pending = original(url, options);
+                        if (suggestion) pending.then(response => {
+                            const item = {url:String(url), status:response.status};
+                            window.schoolSuggestionTrace.push(item);
+                            response.clone().json().then(data => { item.data = data; }).catch(() => {});
+                        }).catch(error => window.schoolSuggestionTrace.push({url:String(url), error:String(error)}));
+                        return pending;
                     };
                 })();''')
-                state={'hold':False,'held':[], 'defer_setup':False, 'setup_script':None}
+                state={'hold':False,'held':[], 'defer_setup':False, 'setup_script':None, 'suggestions':[]}
                 def route_request(route):
                     request=route.request
                     if not request.url.startswith(base+'/'):route.abort();return
                     if request.method not in ('GET','HEAD'):
                         writes.append(request.url);route.abort();return
+                    if urlsplit(request.url).path=='/api/schools/suggest-url':
+                        state['suggestions'].append(request.url)
                     if urlsplit(request.url).path=='/static/js/collection-setup.js' and state['defer_setup']:
                         state['setup_script']=route;return
                     if urlsplit(request.url).path=='/api/schools/suggest-url' and state['hold']:
@@ -109,7 +130,18 @@ def check():
                 page.goto(base+'/admin#schools');add.click()
                 expect(name).to_have_value('');expect(url).to_have_value('');expect(hint).to_have_text('')
                 name.fill(CAMPUS);page.wait_for_load_state('load')
-                expect(url).to_have_value('https://www.cupk.edu.cn')
+                try:
+                    expect(url).to_have_value('https://www.cupk.edu.cn')
+                except AssertionError:
+                    print(json.dumps({'phase':'reopened_setup', 'page_errors':errors,
+                        'hint':hint.inner_text(), 'name':name.input_value(), 'url':url.input_value(),
+                        'attributes':url.evaluate('(el)=>({...el.dataset})'),
+                        'suggestion_requests':state['suggestions'][-8:],
+                        'browser_trace':page.evaluate('window.schoolSuggestionTrace'),
+                        'bindings':page.evaluate('window.schoolBindingTrace'),
+                        'target':page.locator('#setupTarget').text_content(),
+                        'ready':page.evaluate('document.readyState')}, ensure_ascii=False))
+                    raise
                 name.fill('');expect(url).to_have_value('')
                 # The form is visible while its controller is still downloading.
                 # Early user input must be reconciled when binding completes.
