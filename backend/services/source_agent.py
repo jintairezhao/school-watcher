@@ -302,7 +302,51 @@ def _resume_original_column(checkpoint, school_id, url):
             'reason': '已恢复原模型结果，继续验证规则及未完成区域'}
 
 
-def recognize_column(school_id, url, html, *, feedback=None):
+def _column_evidence_layout(checkpoint, school_id, url):
+    """A new format cannot evade an earlier page's paid execution identity."""
+    saved = checkpoint.get('column_evidence_layout')
+    if saved:
+        return saved if saved in ('compact-locations-1', 'focused-repair-2') else 'legacy'
+    validation = checkpoint.get('column_validation') or {}
+    if (checkpoint.get('column_regions') or checkpoint.get('column_pending_decision')
+            or validation.get('trial_decision_ids') or (validation.get('progress') or {}).get('decision_ids')):
+        return 'legacy'
+    from flask import has_app_context
+    if not has_app_context():
+        return 'legacy'
+    from backend.ai.models import AIExecution
+    from backend.database.db import db
+    from backend.services.discovery_costs import _url
+    address = _url(url)
+    with db.session.no_autoflush:
+        rows = AIExecution.query.filter(AIExecution.purpose == 'directory', AIExecution.mode == 'column',
+            db.or_(AIExecution.request_sent.is_(True), AIExecution.status.in_(('reserved', 'sending'))))
+        for row in rows.with_entities(AIExecution.diagnostics, AIExecution.budget_keys, AIExecution.usage).yield_per(100):
+            diagnostics = row.diagnostics if isinstance(row.diagnostics, dict) else {}
+            context = diagnostics.get('discovery_context')
+            context = context if isinstance(context, dict) else {}
+            if type(context.get('school_id')) is int:
+                if context['school_id'] != school_id:
+                    continue
+                observed = {_url(context.get(key)) for key in ('page_url', 'snapshot_url')} - {''}
+                if not observed or address in observed:
+                    return 'legacy'
+            else:
+                if isinstance(row.usage, dict) and row.usage.get('known') is True:
+                    # A settled opaque legacy record is not evidence that a
+                    # newly observed URL has already been processed. Existing
+                    # task cursors above still preserve its completed work.
+                    continue
+                schools = {part[1] for key in row.budget_keys or [] if isinstance(key, str)
+                           and (part := key.split(':'))[0] == 'school-discovery' and len(part) > 1}
+                if not schools or str(school_id) in schools:
+                    # Unattributable legacy inputs remain legacy; do not guess
+                    # a page association merely to obtain a fresh paid key.
+                    return 'legacy'
+    return 'focused-repair-2'
+
+
+def recognize_column(school_id, url, html, *, feedback=None, discovery_selectors=()):
     """Ask for executable selectors, retaining the failed trial on a repair turn."""
     from backend.ai.configuration import get_model_binding, AIConfigError
     from backend.ai.runtime import run_skill
@@ -322,7 +366,14 @@ def recognize_column(school_id, url, html, *, feedback=None):
         binding = get_model_binding('directory')
     except AIConfigError:
         return {'status': 'unsupported', 'columns': [], 'reason': '该页面暂未识别，可启用 AI 辅助解析'}
-    from backend.scraper.discovery.column_regions import materials
+    if 'column_evidence_layout' not in checkpoint:
+        # Old cursors and paid inputs keep their exact partition and selectors.
+        # New work can shorten measured metadata; original subtree positions
+        # and the source validator continue to refer to the original HTML.
+        checkpoint['column_evidence_layout'] = _column_evidence_layout(checkpoint, school_id, url)
+        if handle:
+            tasks.checkpoint(checkpoint)
+    from backend.scraper.discovery.column_regions import materials, repair_scope_selectors
     maximum = get_policy()['evidence_max_bytes']
     if feedback:
         groups, group = [], []
@@ -343,8 +394,10 @@ def recognize_column(school_id, url, html, *, feedback=None):
             trials = [trial for observation in observations for trial in observation.get('article_trials', [])
                       if trial.get('snapshot')]
             available = maximum - overhead
+            focused = (repair_scope_selectors(html, observations)
+                       if checkpoint['column_evidence_layout'] == 'focused-repair-2' else ())
             listing = materials(school_id, url, html, max_bytes=available // 2 if trials else available,
-                                preferred_selectors=preferred)
+                                preferred_selectors=preferred, scope_selectors=focused)
             if trials and listing:
                 from backend.services.source_governance import read_snapshot
                 for index, trial in enumerate(trials):
@@ -374,7 +427,8 @@ def recognize_column(school_id, url, html, *, feedback=None):
                         regions.append(combined)
             regions.extend(dict(region, tool_feedback=observations) for region in listing)
     else:
-        regions = materials(school_id, url, html)
+        selected = discovery_selectors if checkpoint['column_evidence_layout'] == 'focused-repair-2' else ()
+        regions = materials(school_id, url, html, scope_selectors=selected)
     if not regions:
         return {'status': 'unsupported', 'columns': [], 'reason': '尚未定位到可独立读取的发布区域，入口已保留'}
     material_hash = digest(regions)
@@ -440,7 +494,9 @@ def recognize_column(school_id, url, html, *, feedback=None):
                 from backend.ai.connection_recovery import defer_connection
                 defer_connection(binding, checkpoint=checkpoint)
             if exc.code == 'concurrency_limit' and handle:
-                tasks.defer(capability='directory', delay=10, reason='等待 AI 空闲', checkpoint=checkpoint)
+                tasks.defer(capability='directory', phase='ai_resource', delay=10,
+                            keep_place=True, error_code='concurrency_limit',
+                            reason='等待 AI 空闲', checkpoint=checkpoint)
             columns = list({(c['name'], c['list_selector']): c for c in saved['columns']}.values())
             return {'status': 'ready' if columns else 'unsupported', 'columns': columns, 'reason':
                     '本轮 AI 用量已达上限，未完成入口已保留' if exc.code == 'budget_exhausted' else 'AI 辅助暂不可用，其他栏目继续接入',

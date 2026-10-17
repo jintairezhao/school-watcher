@@ -20,9 +20,12 @@
         <dl class="usage-metrics">
             <div><dt>已记录 Token</dt><dd id="aiUsageTokens">—</dd><small id="aiUsageTokenDetail"></small></div>
             <div><dt>调用次数</dt><dd id="aiUsageCalls">—</dd><small id="aiUsageCallDetail"></small></div>
-            <div><dt>调用成功率</dt><dd id="aiUsageSuccess">—</dd><small id="aiUsageSuccessDetail"></small></div>
+            <div><dt>完整结果通过率</dt><dd id="aiUsageSuccess">—</dd><small id="aiUsageSuccessDetail"></small></div>
             <div><dt>单日 Token 峰值</dt><dd id="aiUsagePeak">—</dd><small id="aiUsagePeakDate"></small></div>
         </dl>
+        <p class="text-muted">完整结果通过率表示 AI 返回的结果通过程序校验，不代表已接通栏目的比例。</p>
+        <p id="aiUsageFailureDetail" class="text-muted" hidden></p>
+        <p id="aiUsageCache" class="text-muted"></p>
         <p id="aiUsageUnknown" class="usage-notice" hidden></p>
         </section>
         <section class="usage-activity" aria-labelledby="aiActivityTitle">
@@ -46,7 +49,7 @@
             </div>
             <div id="aiUsageDates" class="usage-dates" aria-hidden="true"></div>
             <p id="aiUsageEmpty" class="usage-empty" hidden>这段时间还没有调用记录。使用 AI 识别学校来源后，会在这里显示。</p>
-            <details class="usage-data-table"><summary>查看每日明细</summary><div class="usage-table-scroll"><table><caption class="sr-only">所选时段的每日 API 用量</caption><thead><tr><th scope="col">日期</th><th scope="col">Token</th><th scope="col">调用</th><th scope="col">成功</th><th scope="col">失败</th><th scope="col">待确认</th></tr></thead><tbody id="aiUsageRows"></tbody></table></div></details>
+            <details class="usage-data-table"><summary>查看每日明细</summary><div class="usage-table-scroll"><table><caption class="sr-only">所选时段的每日 API 用量</caption><thead><tr><th scope="col">日期</th><th scope="col">Token</th><th scope="col">调用</th><th scope="col">完整结果</th><th scope="col">失败</th><th scope="col">部分结果</th><th scope="col">待确认</th><th scope="col">进行中</th></tr></thead><tbody id="aiUsageRows"></tbody></table></div></details>
         </section>
         <div class="usage-breakdowns">
             <section aria-labelledby="aiPurposeTitle"><h3 id="aiPurposeTitle">用在哪些功能 <span class="usage-scope text-muted">近 30 天</span></h3><div id="aiUsagePurposes"></div></section>

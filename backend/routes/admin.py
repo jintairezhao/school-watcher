@@ -58,7 +58,7 @@ def api_admin_stats():
     """后台概览仪表盘数据（单接口聚合，naive utcnow 与存量时间一致）"""
     from backend.scraper.engine import active_schools_query
     from backend.services.starter_catalog import managed_schools
-    from backend.services.collection_settings import since_month
+    from backend.services.collection_settings import since_month, since_date
 
     now = datetime.utcnow()
     d7 = now - timedelta(days=7)
@@ -90,6 +90,7 @@ def api_admin_stats():
         'scrape_new_7d': int(new7),
         'scrape_interval': AppConfig.get('scrape_interval', '30'),
         'scrape_since_month': since_month(),
+        'scrape_since_date': since_date().strftime('%Y-%m-%d'),
         'recent_logs': [log.to_dict() for log in
                         ScrapeLog.query.filter(ScrapeLog.status.in_(finished_statuses))
                         .order_by(ScrapeLog.started_at.desc(), ScrapeLog.id.desc()).limit(10)],

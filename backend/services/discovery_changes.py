@@ -118,17 +118,19 @@ def seed_check(inventory, key, catalog, run_key, extra_pages=()):
         c.execute('INSERT OR REPLACE INTO change_runs VALUES (?,?)', (key, run_key))
 
 
-def ensure_initial(school):
+def ensure_initial(school, *, ai_assist=None):
     """Subscription can bootstrap discovery once; resubscribe is not a rerun."""
     from backend.database.db import db
     from backend.database.dialect import insert
     from backend.database.models import BackgroundTask, AppConfig
     from backend.services import tasks
+    if ai_assist is None:
+        ai_assist = AppConfig.get('collection_ai_mode', 'ai') != 'rules'
     marker = 'discovery_started_' + str(school.id)
     existing = BackgroundTask.query.filter_by(identity=f'discover:{school.id}').first()
     if AppConfig.get(marker):
         return existing
-    job = existing or tasks.enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': True,
+    job = existing or tasks.enqueue('discover', school.id, {'school_id': school.id, 'ai_assist': ai_assist,
                         'trigger': 'first_subscription'}, replace_finished=False, expedite=True)
     # Concurrent first subscribers share both the task and its durable marker.
     db.session.execute(insert(AppConfig).values(key=marker, value='1')

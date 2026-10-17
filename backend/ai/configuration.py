@@ -8,6 +8,12 @@ from backend.ai.models import AIProfile, AIBinding, AIBudget
 from backend.ai.providers import ENDPOINTS, PROVIDER_NAMES, DEFAULT_REGIONS, endpoint_for
 
 PURPOSES = ('directory', 'summary')
+KEY_PAGES = {
+    'deepseek': 'https://platform.deepseek.com/api_keys',
+    'dashscope': 'https://help.aliyun.com/zh/model-studio/get-api-key/',
+    'ark': 'https://console.volcengine.com/ark/apiKey',
+    'bigmodel': 'https://open.bigmodel.cn/usercenter/proj-mgmt/apikeys',
+}
 
 
 class AIConfigError(ValueError):
@@ -91,7 +97,7 @@ def public_settings():
     bindings = {row.purpose: row.profile_id for row in AIBinding.query.all()}
     profiles = [_metadata(p) for p in AIProfile.query.filter_by(deleted_at=None).order_by(AIProfile.id).all()]
     legacy = _legacy_binding() if not AIProfile.query.first() else None
-    return {'providers': [{'id': key, 'name': PROVIDER_NAMES[key], 'regions': list(value)}
+    return {'providers': [{'id': key, 'name': PROVIDER_NAMES[key], 'regions': list(value), 'key_url': KEY_PAGES[key]}
                           for key, value in ENDPOINTS.items()],
             'profiles': profiles, 'bindings': bindings, 'legacy': legacy,
             'encryption_available': encryption_available(),

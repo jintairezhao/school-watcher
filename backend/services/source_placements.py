@@ -92,6 +92,56 @@ def _path_units(path):
             if node.get('kind') == 'unit' and node.get('name', '').strip()]
 
 
+def _shared_website_placements(source, placements):
+    """A roster's shared homepage link is not each unit's publishing scope.
+
+    Keep an already named local owner; otherwise use only an observed common
+    ancestor which shares that website. Unrelated owners remain unresolved.
+    Actual source rows, notices and subscriptions are never merged here.
+    """
+    pools = []
+    for place in placements:
+        address = place['nodes'][-1].get('url')
+        pool = next((items for items in pools if _same_page(
+            items[0]['nodes'][-1].get('url'), address)), None)
+        if pool is None:
+            pools.append([place])
+        else:
+            pool.append(place)
+    result = []
+    for pool in pools:
+        if len({place['nodes'][-1]['key'] for place in pool}) == 1:
+            result.extend(pool)
+            continue
+        named = [place for place in pool if _named_owner(source, place['nodes'])]
+        if named:
+            # A complete child-prefixed column name is more local than its
+            # parent prefix, but competing sibling claims cannot choose owners.
+            specific = [place for place in named if not any(
+                len(other['nodes']) > len(place['nodes']) and
+                [n['key'] for n in other['nodes'][:len(place['nodes'])]] == [n['key'] for n in place['nodes']]
+                for other in named)]
+            if len({place['nodes'][-1]['key'] for place in specific}) == 1:
+                result.extend(specific)
+            continue
+        common = list(pool[0]['nodes'])
+        for place in pool[1:]:
+            count = 0
+            for left, right in zip(common, place['nodes']):
+                if left['key'] != right['key']:
+                    break
+                count += 1
+            common = common[:count]
+        if not common or not _same_page(common[-1].get('url'), pool[0]['nodes'][-1].get('url')):
+            continue
+        seen = set()
+        for place in pool:
+            if place['group'] not in seen:
+                result.append(dict(place, nodes=common))
+                seen.add(place['group'])
+    return result
+
+
 def placements_from_paths(source, school_url, paths, known_groups):
     """Pure evidence filter used by the request adapter and regression fixtures."""
     if not _address(source.list_url) or _same_page(source.list_url, school_url):
@@ -154,7 +204,7 @@ def placements_from_paths(source, school_url, paths, known_groups):
         if identity not in seen:
             seen.add(identity)
             result.append(candidate)
-    return result
+    return _shared_website_placements(source, result)
 
 
 def placements_from_unit_identity(source, school_url, unit_paths, known_groups):

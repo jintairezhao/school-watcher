@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import sys
+from datetime import datetime, timedelta
 from urllib.parse import urlsplit
 from unittest.mock import patch
 
@@ -62,8 +63,17 @@ try:
             assert page.locator('[data-window-action="close"]').count() == 1
             row = BackgroundTask.query.filter_by(kind='discover').one()
             row.state = 'running'
+            row.lease_until = None
             ai_ready.return_value = True
             row.checkpoint = {'discovery_progress': {'phase': 'ai', 'ai_state': 'running', 'checked_pages': 2, 'pending_pages': 6}}
+            db.session.commit()
+            page.locator('#discoveryRefresh').click()
+            unleased = fixture.client.get(f'/api/subscriptions/{fixture.school.id}/discovery').json
+            assert unleased['state'] in ('queued', 'recovering'), unleased['state']
+            page.wait_for_function("message => document.getElementById('discoveryMessage').textContent === message",
+                                   arg=unleased['message'])
+            assert not page.locator('#discoveryProgress').is_visible(), 'an unleased row is not an active worker'
+            row.lease_until = datetime.utcnow() + timedelta(minutes=5)
             db.session.commit()
             page.locator('#discoveryRefresh').click()
             page.wait_for_function("() => document.getElementById('discoveryMessage').textContent.includes('正在查找')")

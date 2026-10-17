@@ -26,6 +26,12 @@ def subscribe_catalog():
     entry = find_entry(data['name'])
     if not entry:
         return jsonify(error='目录中没有这所学校，请使用补充学校入口'), 404
+    from backend.services.collection_settings import setup_guard
+    guard = setup_guard()
+    if guard:
+        return guard
+    if 'ai_assist' in data and type(data['ai_assist']) is not bool:
+        return jsonify(error='请选择有效的 AI 探索方式'), 400
     if not check_rate_limit(f'catalog:{g.user.id}', 30, 3600)[0]:
         return jsonify(error='订阅操作过于频繁，请稍后再试'), 429
     try:
@@ -34,7 +40,7 @@ def subscribe_catalog():
         return jsonify(error=str(exc)), 409
     if school and not school.enabled:
         return jsonify(error='该学校暂未开放订阅'), 409
-    started = subscribe_school(school, g.user.id)
+    started = subscribe_school(school, g.user.id, ai_assist=data.get('ai_assist'))
     from backend.services.source_governance import school_governance_status
     return jsonify(success=True, school_id=school.id, subscribed=True, scrape_started=started,
                    onboarding=school_governance_status(school.id),
@@ -71,11 +77,23 @@ def api_add_school():
     from backend.scraper.http_client import validate_public_url
     base_url = data.get('url')
     try:
-        validate_public_url(base_url)
+        validate_public_url(base_url, resolve=False)
     except ValueError as exc:
         return jsonify(error=str(exc)), 400
     if len(base_url) > 500:
         return jsonify(error='官网地址过长'), 400
+
+    from backend.services.collection_settings import setup_guard
+    guard = setup_guard()
+    if guard:
+        return guard
+    if 'ai_assist' in data and type(data['ai_assist']) is not bool:
+        return jsonify(error='请选择有效的 AI 探索方式'), 400
+
+    try:
+        validate_public_url(base_url)
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400
 
     allowed, _ = check_rate_limit(f'submit:{g.user.id}', 3, 3600)
     if not allowed:
@@ -92,7 +110,7 @@ def api_add_school():
         return jsonify({'error': '学校已存在，请在学校目录中订阅它',
                         'school_id': school.id}), 409
     # An unexamined homepage is not a verified "通知公告" source.
-    subscribe_school(school, g.user.id)
+    subscribe_school(school, g.user.id, ai_assist=data.get('ai_assist'))
     logger.info(f"已提交学校: {school.name}（提交者 {g.user.username}，已订阅并首抓）")
     return jsonify({**school.to_dict(), 'subscribed': True,
                     'scrape_started': True}), 201

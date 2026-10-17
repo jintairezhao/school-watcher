@@ -10,6 +10,7 @@ FILES = (
     'backend/scraper/article_urls.py',
     'backend/scraper/date_elements.py',
     'backend/scraper/discovery/structure.py',
+    'backend/scraper/discovery/directory_terms.py',
     'backend/scraper/discovery/directory_adapters.py',
     'backend/scraper/discovery/academic_directories.py',
     'backend/scraper/discovery/directory_labels.py',

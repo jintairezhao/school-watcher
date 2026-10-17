@@ -227,6 +227,45 @@ class DiscoveryPauseTests(unittest.TestCase):
         self.command('resume')
         self.assertIsNotNone(tasks.claim(capabilities=['directory']))
 
+    def test_resume_recovers_paused_crash_before_any_worker_claims(self):
+        for missing_lease in (False, True):
+            with self.subTest(missing_lease=missing_lease):
+                handle = tasks.claim(capabilities=['directory'])
+                self.assertIsNotNone(handle)
+                self.assertEqual(self.command('pause').json['state'], 'pausing')
+                self.row.lease_until = None if missing_lease else datetime.utcnow() - timedelta(seconds=1)
+                db.session.commit()
+                checkpoint = dict(self.row.checkpoint)
+                identity = self.row.id, self.row.generation, self.row.attempts
+                # The UI must offer resume even when no worker is alive to park
+                # the expired claim. It must not clear or replay paid decisions.
+                progress = self.client.get(self.endpoint).json
+                self.assertEqual(progress['state'], 'paused')
+                self.assertTrue(progress['can_resume'])
+                self.assertEqual(self.command('resume').status_code, 200)
+                db.session.refresh(self.row)
+                self.assertEqual(self.row.state, 'pending')
+                self.assertEqual(self.row.checkpoint, checkpoint)
+                self.assertEqual((self.row.id, self.row.generation, self.row.attempts), identity)
+                self.assertIsNone(self.row.token)
+                self.assertEqual(RuntimeLease.query.filter_by(key='directory:writer').count(), 0)
+                self.assertFalse(tasks.finish(handle, {'stale': True}))
+
+    def test_resume_expired_parent_does_not_revoke_live_child(self):
+        root = tasks.claim(capabilities=['directory'])
+        tasks.enqueue('onboard', 'resume-live-child', {'school_id': self.school_id,
+            'url': 'https://example.edu.cn/notices/'})
+        child = tasks.claim(capabilities=['http'])
+        self.command('pause')
+        self.row.lease_until = datetime.utcnow() - timedelta(seconds=1)
+        db.session.commit()
+        self.assertEqual(self.command('resume').status_code, 409)
+        self.assertTrue(tasks.heartbeat(child))
+        self.assertFalse(tasks.finish(root, {'stale': True}))
+        tasks.handoff(child, tasks.TaskDeferred(capability='http', phase='fetch',
+            checkpoint={'paid_result': 'original-decision'}))
+        self.assertEqual(self.command('resume').status_code, 200)
+
     def test_retry_honors_pause_but_completed_work_remains_done(self):
         handle = tasks.claim(capabilities=['directory']); self.command('pause')
         self.assertTrue(tasks.finish(handle, error='temporary website issue'))

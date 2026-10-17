@@ -5,6 +5,58 @@ import re
 from bs4 import Comment, Tag
 
 
+def _heading_breadcrumbs(heading, name, page_url, article_urls):
+    """Recognize only local, terminal self-link breadcrumbs beside a heading."""
+    from urllib.parse import urlsplit
+    from backend.services.source_inventory import canonical_url, resolve_page_link
+    if heading.name not in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'):
+        return set()
+    result = set()
+    for node in heading.parent.find_all(True):
+        if node is heading or heading in node.descendants:
+            continue
+        marker = ' '.join(node.get('class', [])) + ' ' + node.get('aria-label', '')
+        if not (re.search(r'breadcrumb|crumb|position|(?:^|[\s_-])cur(?:$|[\s_-])', marker, re.I)
+                or node.get_text(' ', strip=True).startswith('当前位置')):
+            continue
+        anchors = node.select('a[href]')
+        if not 2 <= len(anchors) <= 8:
+            continue
+        try:
+            targets = [resolve_page_link(page_url, anchor['href']) for anchor in anchors]
+        except ValueError:
+            continue
+        if (targets[-1] != canonical_url(page_url)
+                or anchors[-1].get_text(' ', strip=True) != name
+                or any(not target or target in article_urls
+                       or urlsplit(target).netloc != urlsplit(page_url).netloc for target in targets)
+                or any(not 1 <= len(anchor.get_text(' ', strip=True)) <= 40 for anchor in anchors)):
+            continue
+        result.add(id(node))
+    return result
+
+
+def _disabled_pagers(region):
+    """An exhausted pager may contain labels only, with no next-page link."""
+    label = re.compile(r'^(?:\d+|首页|尾页|第一页|最后一页|末页|最末页|上一页|下一页|上页|下页|'
+                       r'first|last|previous|prev|next|[<>‹›«»…]+)$', re.I)
+    result = set()
+    for node in region.find_all(True):
+        marker = ' '.join(node.get('class', [])) + ' ' + node.get('id', '')
+        if not re.search(r'(?:^|[\s_-])(?:pages?|paging|pagination|pager|pagebar)(?:$|[\s_-])', marker, re.I):
+            continue
+        if node.select('a[href],button,input,select,textarea,img,script'):
+            continue
+        leaves = [child for child in node.find_all(True) if not child.find(True)]
+        texts = [child.get_text(' ', strip=True) for child in leaves]
+        if (not leaves or any(child.name not in ('span', 'b', 'em', 'strong') for child in leaves)
+                or not all(label.fullmatch(text) for text in texts)
+                or ''.join(node.stripped_strings) != ''.join(texts)):
+            continue
+        result.add(id(node))
+    return result
+
+
 def recover_observed_scope(config, reference, proposed_scope, *, html):
     """Correct only a scope typo for one unambiguous, fully selected list.
 
@@ -72,6 +124,17 @@ def recover_observed_scope(config, reference, proposed_scope, *, html):
             for row in proof.get('heading_locations', []):
                 if _column_matches(config['name'], row['heading'], config.get('group_name', '')):
                     rows[row['selector']] = row
+    # A unique actual section heading and repeated current-page navigation are
+    # different observations. Repeated sidebars/breadcrumbs do not invalidate
+    # that heading; multiple genuine headings still remain ambiguous.
+    if len(rows) > 1:
+        semantic = {selector: row for selector, row in rows.items()
+                    if len(nodes := soup.select(selector)) == 1
+                    and nodes[0].name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6')
+                    and not any(id(parent) in selected_ids for parent in [nodes[0], *nodes[0].parents])}
+        if len(semantic) == 1 and all(selector in semantic or row.get('basis') == 'observed_current_page_link'
+                                      for selector, row in rows.items()):
+            rows = semantic
     # Same-named independent modules need further evidence. Do not choose one
     # by DOM order, URL or the model's preferred name.
     if len(rows) != 1:
@@ -96,19 +159,25 @@ def recover_observed_scope(config, reference, proposed_scope, *, html):
     # Everything between the list and its proposed heading must be accounted
     # for. A plain div/a label is just as capable of marking another column as
     # an h2. Do not infer missing boundaries from a CMS URL pattern.
+    name = _normal(heading.get_text(' ', strip=True))
+    breadcrumbs = _heading_breadcrumbs(heading, name, config['list_url'], {record['url'] for record in records})
+    disabled_pagers = _disabled_pagers(common)
+
     def residual_text(branch, excluded):
         clean = deepcopy(branch)
         pairs = list(zip([branch, *branch.find_all(True)], [clean, *clean.find_all(True)]))
         for original, copied in pairs:
-            if copied.attrs is not None and (original is excluded or original.name in ('script', 'style')):
+            if copied.attrs is not None and (original is excluded or id(original) in breadcrumbs | disabled_pagers
+                                              or original.name in ('script', 'style')):
                 if copied is clean:
                     return ''
                 copied.decompose()
         return _normal(clean.get_text(' ', strip=True))
 
-    name = _normal(heading.get_text(' ', strip=True))
     for anchor in common.select('a[href]'):
         if parent is anchor or parent in anchor.parents:
+            continue
+        if any(id(node) in breadcrumbs for node in [anchor, *anchor.parents]):
             continue
         try:
             target = resolve_page_link(reference['url'], anchor['href'])

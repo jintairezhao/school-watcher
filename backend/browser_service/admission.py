@@ -18,6 +18,8 @@ class OriginAdmission:
         self.identity = identity if re.fullmatch(r'[a-f0-9]{64}', identity) else hashlib.sha256(identity.encode()).hexdigest()
         self.ttl = ttl
         self.tokens = set()
+        self.pending = {}
+        self.closed = False
         self.lock = asyncio.Lock()
         self.client = None
 
@@ -30,20 +32,33 @@ class OriginAdmission:
             return await response.json()
 
     async def admit(self, url):
+        if self.closed:
+            raise OriginBusy(1)
         if not self.url:
             return  # Standalone fixture mode; launchers configure the broker.
         host = (urlsplit(url).hostname or '').lower().rstrip('.')
         token = self.identity if host == self.initial else hashlib.sha256((self.identity + ':' + host).encode()).hexdigest()
         async with self.lock:
-            if token in self.tokens:
+            if self.closed:
+                raise OriginBusy(1)
+            if token in self.tokens and token not in self.pending:
                 return
             if len(self.tokens) >= 32:
                 raise RuntimeError('Too many document origins')
-            result = await self._request('reserve', {'url': url, 'token': token,
-                                                   'execution_id': self.identity, 'ttl': self.ttl})
+            # The broker can commit after a route callback is cancelled. Track
+            # the attempted token before dispatch and keep the RPC alive so
+            # close() can join it before releasing the page's reservations.
+            operation = self.pending.get(token)
+            if operation is None:
+                self.tokens.add(token)
+                operation = asyncio.create_task(self._request('reserve', {'url': url, 'token': token,
+                    'execution_id': self.identity, 'ttl': self.ttl}))
+                self.pending[token] = operation
+            result = await asyncio.shield(operation)
+            self.pending.pop(token, None)
             if not result.get('allowed'):
+                self.tokens.discard(token)
                 raise OriginBusy(result.get('retry_after', 2))
-            self.tokens.add(token)
 
     async def cooldown(self, url, headers, status):
         from backend.scraper.http_client import retry_after_seconds
@@ -53,15 +68,24 @@ class OriginAdmission:
                                             'seconds': seconds if seconds is not None else 300})
 
     async def close(self):
-        if self.url:
-            for token in self.tokens:
-                try:
-                    await self._request('release', {'token': token})
-                except Exception:
-                    pass  # A failed callback cannot keep an expiring lease forever.
-        self.tokens.clear()
-        if self.client:
-            await self.client.close()
+        self.closed = True
+        async with self.lock:
+            if self.pending:
+                # Shielding preserves the broker's acknowledgement even when a
+                # caller cancels cleanup. BrowserRuntime bounds and retries this
+                # cleanup; HTTP failures retain the existing expiring lease.
+                await asyncio.gather(*(asyncio.shield(task) for task in self.pending.values()),
+                                     return_exceptions=True)
+                self.pending.clear()
+            if self.url:
+                for token in tuple(self.tokens):
+                    try:
+                        await self._request('release', {'token': token})
+                    except Exception:
+                        pass  # Lost cleanup callbacks still have bounded leases.
+            self.tokens.clear()
+            if self.client:
+                await self.client.close()
 
 
 class OriginBusy(Exception):

@@ -396,7 +396,9 @@ def publication_lists(html, url):
         # An image and its title often repeat the same article URL; validate distinct articles later.
         if candidate['link_ratio'] < 0.6:
             continue
-        selector = candidate['parent_selector'] + ' > ' + candidate['item_tag']
+        # The analyzer's root sentinel is not an HTML element or CSS selector.
+        # Shallow layouts otherwise lose every candidate before identity checks.
+        selector = candidate['parent_selector'].removeprefix('[document] > ') + ' > ' + candidate['item_tag']
         if candidate['item_class']:
             selector += ''.join('.' + soupsieve.escape(c) for c in candidate['item_class'].split())
         configs.append({'list_selector': selector, 'title_selector': 'a', 'link_selector': 'a',
@@ -454,11 +456,23 @@ def publication_lists(html, url):
             if len(samples) < config.get('minimum_items', 2) or len(samples) / max(1, len(selected)) < 0.6:
                 continue
             heading = heading_evidence(items[0], url, tabs)
+            # Card headings can themselves be article links, with dates or
+            # other prefixes. Membership in this observed list is stronger
+            # evidence than a CMS URL pattern or exact title-string equality.
+            article_urls = {canonical_url(link['url']) for link in article_links}
+            heading_target = canonical_url(heading.get('column_url') or '')
+            heading_is_item = bool(heading_target and heading_target != canonical_url(url)
+                                   and heading_target in article_urls)
+            if heading_is_item or heading.get('name') and any(
+                    heading['name'] == sample['title'] for sample in samples):
+                heading.update(name='', heading_article_reference=True)
+                if heading_is_item:
+                    heading.update(column_url='', column_link_locator='')
             if alias := pagination_identity(items[0], heading, url):
                 heading['listing_alias'] = alias
             name = heading['name']
-            if name and any(name == sample['title'] for sample in samples):
-                continue  # An article headline cannot name its enclosing column.
+            # Preserve the anonymous region for further discovery; a rejected
+            # identity must not silently remove its genuine publication items.
             result = {k: v for k, v in effective.items() if k != 'list_selector'}
             result.update(heading)
             result.update(list_selector=selector,
@@ -490,6 +504,43 @@ def publication_lists(html, url):
             duplicate['article_links'] = list(positions.values())
             continue
         result.append(feed)
+    # A repeated outer layout can span several independently detected lists.
+    # Retain their own scopes, including unnamed ones. Only remove the outer
+    # candidate when every observed article occurrence is covered by actual
+    # descendant lists; matching names or URLs alone cannot establish this.
+    scopes = {feed['container_locator']: soup.select_one(feed['container_locator']) for feed in result}
+    shared_headings = defaultdict(list)
+    for feed in result:
+        if feed['name'] and feed.get('heading_locator'):
+            shared_headings[feed['heading_locator']].append(feed)
+    for position, feeds in shared_headings.items():
+        containers = {feed['container_locator']: scopes[feed['container_locator']] for feed in feeds}
+        leaves = [node for node in containers.values() if node is not None and not any(
+            other is not None and any(parent is node for parent in other.parents)
+            for other in containers.values())]
+        if len(leaves) < 2:
+            continue
+        # One physical heading above separate lists names their shared module.
+        # It cannot prove that every child column has that same name. Keep the
+        # observed group context and all regions for the next bounded decision.
+        for feed in feeds:
+            if not feed.get('column_group_name'):
+                feed.update(column_group_name=feed['name'], column_group_locator=position)
+            feed.update(name='', heading_ambiguous=True, heading_group_reference=True)
+            feed['identity'] = hashlib.sha256((url + '\0\0' + feed['container_locator']).encode()).hexdigest()[:24]
+    independent = []
+    for feed in result:
+        scope = scopes[feed['container_locator']]
+        occurrences = {(link['url'], link['locator']) for link in feed['article_links']}
+        covered = set()
+        if not feed['name'] and scope is not None:
+            for child in result:
+                child_scope = scopes[child['container_locator']]
+                if child_scope is not None and any(parent is scope for parent in child_scope.parents):
+                    covered.update((link['url'], link['locator']) for link in child['article_links'])
+        if feed['name'] or not occurrences or not occurrences <= covered:
+            independent.append(feed)
+    result = independent
     # A single independently detected list may use the document's exact column
     # title. Never apply a whole-page label across several unrelated widgets.
     if len(result) == 1 and not result[0].get('name') and not result[0].get('heading_ambiguous') and soup.title:

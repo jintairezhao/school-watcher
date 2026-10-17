@@ -65,8 +65,16 @@ def check():
                 page.goto(base+'/admin#schools')
                 page.evaluate('(theme)=>document.documentElement.dataset.theme=theme',theme)
                 add=page.get_by_role('button',name='添加学校',exact=True);add.click()
-                name=page.locator('#schoolName');url=page.locator('#schoolUrl');hint=page.locator('#schoolUrlHint')
-                name.fill(PARENT);expect(url).to_have_value('https://www.cup.edu.cn')
+                name=page.locator('#setupSchoolName');url=page.locator('#setupSchoolUrl');hint=page.locator('#setupSchoolUrlHint')
+                page.wait_for_load_state('load')
+                name.fill(PARENT)
+                try:
+                    expect(url).to_have_value('https://www.cup.edu.cn')
+                except AssertionError:
+                    print(json.dumps({'page_errors':errors, 'hint':hint.inner_text(),
+                        'scripts':page.locator('script[src]').evaluate_all('(items)=>items.map(i=>i.src)'),
+                        'ready':page.evaluate('document.readyState')}, ensure_ascii=False))
+                    raise
                 name.fill(CAMPUS);expect(url).to_have_value('')
                 expect(url).to_have_value('https://www.cupk.edu.cn');expect(hint).to_contain_text('克拉玛依校区')
                 page.screenshot(path=str(output/f'campus-{width}.png'))
@@ -95,15 +103,15 @@ def check():
                 old=hold();url.fill('https://manual.example.edu.cn/campus/')
                 deliver(old);expect(url).to_have_value('https://manual.example.edu.cn/campus/')
                 name.fill('其他独立学院');expect(url).to_have_value('https://manual.example.edu.cn/campus/')
-                url.fill('');old=hold()
-                page.get_by_role('button',name='取消',exact=True).first.click();add.click()
-                deliver(old);expect(name).to_have_value('');expect(url).to_have_value('');expect(hint).to_have_text('')
+                page.get_by_role('link',name='取消',exact=True).click()
+                page.goto(base+'/admin#schools');add.click()
+                expect(name).to_have_value('');expect(url).to_have_value('');expect(hint).to_have_text('')
                 name.fill(CAMPUS);expect(url).to_have_value('https://www.cupk.edu.cn')
                 name.fill('');expect(url).to_have_value('')
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
                 checks.append({'width':width,'theme':theme,'actual_address_API':True,
                     'independent_and_shared_sites':True,'unknown_does_not_keep_parent_URL':True,
-                    'late_response_fenced':True,'manual_URL_preserved':True,'reopened_dialog_fenced':True})
+                    'late_response_fenced':True,'manual_URL_preserved':True,'reopened_setup_clean':True})
                 context.close()
             browser.close()
         db.session.expire_all();assert initial==(School.query.count(),BackgroundTask.query.count())

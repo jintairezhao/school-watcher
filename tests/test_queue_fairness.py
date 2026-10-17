@@ -82,6 +82,48 @@ class QueueFairnessTests(unittest.TestCase):
         self.assertEqual(tasks.queue_ahead(ready)[0], 0)
         self.assertEqual(tasks.claim()['id'], ready.id)
 
+    def test_column_fragments_cannot_outrank_untouched_structure_work_for_five_minutes(self):
+        for kind in ('navigation_review', 'discover', 'directory'):
+            with self.subTest(kind=kind):
+                BackgroundTask.query.delete(); db.session.commit()
+                fragments = [tasks.enqueue('onboard', 'fragment-' + str(index),
+                    {'school_id': self.school.id, 'url': f'https://example.edu.cn/page-{index}'})
+                    for index in range(4)]
+                for row in fragments:
+                    row.capability = 'directory'
+                    row.claim_count = 2
+                    row.phase = 'source_material'
+                waiting = tasks.enqueue(kind, 'structure', {'school_id': self.school.id})
+                db.session.commit()
+                self.assertEqual(tasks.queue_ahead(waiting, capability='directory')[0], 0)
+                handle = tasks.claim(capabilities=['directory'])
+                try:
+                    self.assertEqual(handle['id'], waiting.id)
+                finally:
+                    tasks.finish(handle, {'checked': True})
+
+    def test_structure_turn_yields_back_to_a_ready_column_with_less_work(self):
+        navigation = tasks.enqueue('navigation_review', 'structure', {'school_id': self.school.id})
+        navigation.claim_count = 5
+        column = tasks.enqueue('onboard', 'column', {'school_id': self.school.id,
+                                                  'url': 'https://example.edu.cn/notices'})
+        column.capability = 'directory'
+        column.claim_count = 1
+        db.session.commit()
+        self.assertEqual(tasks.queue_ahead(column, capability='directory')[0], 0)
+        self.assertEqual(tasks.claim(capabilities=['directory'])['id'], column.id)
+
+    def test_first_navigation_opportunity_precedes_fresh_column_fragments(self):
+        navigation = tasks.enqueue('navigation_review', 'observed-page', {'school_id': self.school.id})
+        column = tasks.enqueue('onboard', 'same-page', {'school_id': self.school.id,
+                                                     'url': 'https://example.edu.cn/layout'})
+        column.capability = 'directory'; db.session.commit()
+        self.assertEqual(tasks.queue_ahead(navigation, capability='directory')[0], 0)
+        handle = tasks.claim(capabilities=['directory'])
+        self.assertEqual(handle['id'], navigation.id)
+        tasks.handoff(handle, tasks.TaskDeferred(capability='directory', phase='source_material'))
+        self.assertEqual(tasks.claim(capabilities=['directory'])['id'], column.id)
+
     def test_new_column_can_connect_before_old_history_jobs_finish(self):
         older = [tasks.enqueue('collect', i, {'school_id': self.school.id, 'department_id': i})
                  for i in range(10, 30)]

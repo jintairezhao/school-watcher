@@ -331,14 +331,19 @@ class NavigationPersistenceTests(unittest.TestCase):
             # Older releases had the durable AIExecution but no request plan.
             page, html, handle['checkpoint'] = first_page, first_html, {}
             with patch('backend.ai.runtime.run_skill', side_effect=uncertain):
-                assist({'root_url': ROOT}, page, html, parsed())
-            self.assertEqual(calls[0], calls[1])
+                restored = assist({'root_url': ROOT}, page, html, parsed())
+            # The early unknown fence now avoids even constructing another
+            # runtime plan, while preserving the exact original execution.
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(restored['error_code'], 'ai_result_unknown')
+            self.assertEqual(restored['waiting_for_execution'], calls[0][0])
             self.assertEqual(AIExecution.query.count(), 1)
             handle['checkpoint'] = {}
             with patch('backend.ai.configuration.get_model_binding', return_value={'id': 1, 'version': 2}), \
                  patch('backend.ai.runtime.run_skill') as model:
                 changed = assist({'root_url': ROOT}, page, html, parsed())
-            self.assertEqual(changed['error_code'], 'execution_conflict')
+            self.assertEqual(changed['error_code'], 'ai_result_unknown')
+            self.assertEqual(changed['waiting_for_execution'], calls[0][0])
             model.assert_not_called()
 
     def navigation_job(self, html, identity):

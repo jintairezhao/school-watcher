@@ -1,0 +1,67 @@
+{
+  "kind": "Retained actual normal-worker failure; not a passing acceptance",
+  "revision": "v24",
+  "active_seconds": 191.02,
+  "stopped_for_repair": true,
+  "additional_provider_requests": 0,
+  "new_installed_sources": 0,
+  "original_sources_retained": 2,
+  "transport_event_counts": {
+    "browser_navigation_start": 6,
+    "browser_navigation_result": 6,
+    "logical_http_result": 92,
+    "browser_result_lookup": 3
+  },
+  "most_repeated_reads": [
+    {
+      "url": "http://keyan.ruc.edu.cn/Home/zxyj/d601e2f9bd7e4d15a9bb8f494d8dd0a1.htm",
+      "attempts": 32
+    },
+    {
+      "url": "http://slhr.ruc.edu.cn/rcpy/bk/zlpg/9bf4344c888a49e09d262296f5712f2c.htm",
+      "attempts": 14
+    },
+    {
+      "url": "http://keyan.ruc.edu.cn/Home/zxyj/9c6deba4608748b7a05ba64385ca9d88.htm",
+      "attempts": 13
+    },
+    {
+      "url": "http://keyan.ruc.edu.cn/Home/zxyj/92ca639192a54964be8b6971dbd36182.htm",
+      "attempts": 5
+    }
+  ],
+  "root_cause": "A durable discovery handoff recovered the inventory but selected a different frontier URL before consuming the original browser result. Replayed article trial failures also need source-specific route recovery; normal reading is excluded.",
+  "program_fix_offline_checks": {
+    "revision": "v25",
+    "cases": 61,
+    "failed": 0,
+    "legacy_original_digest_recovered": true,
+    "controlled_handoff_http_sends": 1,
+    "controlled_handoff_browser_submits": 1,
+    "controlled_handoff_browser_polls": 1
+  },
+  "real_after_fix": {
+    "revision": "v26",
+    "kind": "Warm incremental normal-worker recovery, not cold A/B acceptance",
+    "additional_active_seconds": 420.039,
+    "additional_provider_requests": 0,
+    "additional_confirmed_tokens": 0,
+    "sources_before": 2,
+    "sources_after": 5,
+    "saved_content_rows_before": 24,
+    "saved_content_rows_after": 89,
+    "transport_event_counts": {
+      "logical_http_result": 37,
+      "browser_navigation_start": 26,
+      "browser_navigation_result": 26,
+      "browser_result_lookup": 26
+    },
+    "highest_http_result_count_for_one_url": 2,
+    "formerly_32_read_article_http_results": 1,
+    "same_school_round_key": true,
+    "original_paid_executions_unchanged": true,
+    "existing_source_ids_retained": true,
+    "old_unknown_paid_result_retained_without_resend": true,
+    "limitations": "Saved rows include older news/research/admissions. New sources still need independent ownership and coverage validation. Different warm windows cannot establish throughput or cost advantage."
+  }
+}

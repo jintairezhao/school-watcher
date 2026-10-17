@@ -11,6 +11,7 @@
         <p id="discoveryValue" class="text-muted">{{ discovery.value_summary|default('优先寻找升学、奖助、实习就业、竞赛和校园办事信息。', true) }}</p>
         <p class="source-path-help text-muted">找到可用的信息后会自动收录，无需逐个确认部门或栏目。收录结果可以直接阅读。</p>
         <div class="discovery-actions">
+            <a class="btn btn-outline" href="{{ url_for('collection_setup.page') }}">基础配置</a>
             <a class="btn btn-primary" id="discoveryNotices" href="{{ url_for('pages.index', school=school.id, period='all') }}">查看通知</a>
             <button type="button" class="btn btn-outline" id="discoveryRetry" {% if not discovery.can_retry %}hidden{% endif %}>再找一次</button>
         </div>

@@ -71,7 +71,11 @@ jobs:
         run: python tests/browser/check_directory_updates_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
-      - name: Verify school creation and editing dialogs
+      - name: Verify first-run collection setup
+        run: python tests/browser/check_collection_setup_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify school setup and editing dialog
         run: python tests/browser/check_admin_school_dialog_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium

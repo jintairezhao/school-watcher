@@ -139,6 +139,28 @@ class PublicationDateTests(unittest.TestCase):
             fetch.assert_not_called()
         self.assertEqual(self.ann.published_at,datetime(2026,9,30))
 
+    def test_parser_upgrade_rechecks_unknown_saved_header_without_touching_body_or_user_state(self):
+        from backend.database.models import BackgroundTask, User
+        from backend.services.publication_dates import resume_date_checks, PARSER_VERSION
+        self.ann.published_at=None
+        self.ann.content_html=f'<article><h6>{TITLE}</h6><span>2026/09/30</span><p>已永久保存的正文。</p></article>'
+        old_body=self.ann.content_html
+        user=User.query.one()
+        db.session.add(UserAnnouncementState(user_id=user.id,announcement_id=self.ann.id,starred=True))
+        db.session.add(BackgroundTask(identity=f'publication_date:{self.ann.id}',kind='publication_date',
+            state='done',payload={'announcement_id':self.ann.id},result={'state':'unknown',
+            'parser_version':'title-bound-3','checked_full':True},checkpoint={}))
+        db.session.commit()
+        with patch('backend.scraper.engine._fetch_html') as fetch:
+            resume_date_checks();resume_date_checks()
+            fetch.assert_not_called()
+        job=BackgroundTask.query.filter_by(kind='publication_date').one()
+        self.assertEqual(self.ann.published_at,datetime(2026,9,30))
+        self.assertEqual(self.ann.content_html,old_body)
+        self.assertTrue(UserAnnouncementState.query.one().starred)
+        self.assertEqual(job.result['parser_version'],PARSER_VERSION)
+        self.assertEqual(job.result['state'],'verified')
+
     def test_date_correction_does_not_grant_another_user_access(self):
         from backend.database.models import User
         from backend.services.publication_dates import reconcile_cached_date

@@ -90,6 +90,17 @@ class SourceInstallIdentityTests(unittest.TestCase):
                                    list_selector='section#notices > ul > li'))
         self.assertNotEqual(first, second)
 
+    def test_shared_list_rows_with_different_article_links_do_not_reuse_source(self):
+        html = self.html
+        for index in range(3):
+            original = f'关于开展学生实践活动的通知{index}</a>'
+            html = html.replace(original, original + f'<a href="/secondary/{index}.htm">另一条真实通知{index}</a>')
+        first_config = dict(self.config, title_selector='a:first-of-type', link_selector='a:first-of-type')
+        first = self.install(first_config, html)
+        second_config = dict(self.config, title_selector='a:last-of-type', link_selector='a:last-of-type')
+        second = self.install(second_config, html)
+        self.assertNotEqual(first, second)
+
     def test_preexisting_duplicate_rows_are_retained_without_a_third_install(self):
         first = self.install()
         duplicate = Department(school_id=self.school_id,

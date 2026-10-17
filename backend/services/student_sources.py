@@ -1,6 +1,7 @@
 """Student discovery order only; these hints never establish unit ownership."""
 import json
 import re
+from backend.scraper.discovery.directory_terms import ACADEMIC_COLLECTION_PATTERN
 
 ACADEMIC = re.compile(r'院系|学院|学部|系部|专业|教学单位|本科生院|研究生院')
 TEACHING = re.compile(r'教务|教学|本科生院|研究生院|培养|选课|课程|考务|考试|学籍|学位|'
@@ -69,7 +70,8 @@ def student_priority(kind, label, path_json='[]', school_name=''):
 
 COLLEGE = re.compile(r'(?:学院|学部|书院|学系|系)(?:[（(].{1,25}[）)])?$')
 COLLEGE_DIRECTORY = re.compile(r'院系|学院设置|教学单位|教学机构|学部设置|二级学院|教学科研单位|'
-                              r'(?:学科|专业)(?:设置|目录|介绍|建设)|学科[、与和/\s]*专业')
+                              r'(?:学科|专业)(?:设置|目录|介绍|建设)|学科[、与和/\s]*专业|'
+                              + ACADEMIC_COLLECTION_PATTERN, re.I)
 PROFILE_DIRECTORY = re.compile(r'导师|师资|教师名录|师资力量|人物')
 
 

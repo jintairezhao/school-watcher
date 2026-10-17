@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup, Tag
 from backend.services.source_inventory import resolve_page_link
 from backend.scraper.http_client import same_school_url
 from backend.scraper.article_urls import ARTICLE
+from .directory_terms import academic_collection_label
 
 DIRECTORIES = ('院系设置', '院系专业', '专业设置', '专业介绍', '专业目录', '本科专业', '系所设置',
                '学院设置', '学院部门', '院系部门', '院系介绍', '教学单位',
@@ -40,7 +41,8 @@ def document_reference(url, label=''):
 
 
 def directory_document(label, kind):
-    return kind == 'directory' or any(name in (label or '') for name in DIRECTORIES)
+    return (kind == 'directory' or academic_collection_label(label)
+            or any(name in (label or '') for name in DIRECTORIES))
 
 
 def clean(text):
@@ -82,7 +84,7 @@ def node_key(kind, label, url):
 
 def classify(label):
     label = label.strip(' *·')
-    if any(word in label for word in DIRECTORIES) or label in (
+    if academic_collection_label(label) or any(word in label for word in DIRECTORIES) or label in (
             '院系', '机构', '学部', '二级学院', '二级院系', '教学学院', '教学院', '学部学院',
             '教学科研内设机构', '教学和科研单位', '教学科研单位', '教学科研机构'):
         return 'directory'

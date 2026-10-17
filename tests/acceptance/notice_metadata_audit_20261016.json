@@ -1,0 +1,2106 @@
+{
+  "date": "2026-10-16",
+  "scope": "100 distinct actual official documents; independent identity review and retained-HTML metadata replay, not 100 installed-source passes",
+  "schools": {
+    "中国人民大学": 20,
+    "华中科技大学": 20,
+    "上海交通大学": 20,
+    "天津大学": 20,
+    "北京师范大学": 20
+  },
+  "samples": [
+    {
+      "school": "中国人民大学",
+      "title": "马克思主义学院学生会、新闻中心2026-2027年度骨干换届名单",
+      "url": "http://marx.ruc.edu.cn/sy/tzgg/1bb7e8eab2384eb384139901118de5cd.htm",
+      "final_url": "http://marx.ruc.edu.cn/sy/tzgg/1bb7e8eab2384eb384139901118de5cd.htm",
+      "html_sha256": "4b893fd2f4f9343326c3f0b08f89c3a253e2c0cfac402ce59e3c7ea3d5f5a885",
+      "source_keys": [
+        "ruc:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-01",
+      "old_product_date": "2026-07-01",
+      "old_product_state": "verified",
+      "new_product_date": "2026-07-01",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "关于2026级新生户档、组织关系迁转信息的说明",
+      "url": "http://marx.ruc.edu.cn/sy/tzgg/d07517665cfd4291a452271b2f3f452f.htm",
+      "final_url": "http://marx.ruc.edu.cn/sy/tzgg/d07517665cfd4291a452271b2f3f452f.htm",
+      "html_sha256": "a5cf4246ef8cfaecccb56a868bcee4f7d2ce2fe5d9350baebb42b36fbe430bed",
+      "source_keys": [
+        "ruc:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-24",
+      "old_product_date": "2026-06-24",
+      "old_product_state": "verified",
+      "new_product_date": "2026-06-24",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "中国人民大学马克思主义学院研究生会2026-2027年度部长团竞聘公告",
+      "url": "http://marx.ruc.edu.cn/sy/tzgg/4d34b7c573c14a6b802f5939fc34740f.htm",
+      "final_url": "http://marx.ruc.edu.cn/sy/tzgg/4d34b7c573c14a6b802f5939fc34740f.htm",
+      "html_sha256": "03c2344c94a2eef5bb63f2d069564f9efd522acb3fb4d8f27d3a13acba2c8b4d",
+      "source_keys": [
+        "ruc:0"
+      ],
+      "public_attachment_urls": [
+        "http://marx.ruc.edu.cn/docs/2026-06/67aa69a0d4a34810a9e3dfb67980783d.docx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-23",
+      "old_product_date": "2026-06-23",
+      "old_product_state": "verified",
+      "new_product_date": "2026-06-23",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "外国语学院2026年学习优秀奖学金、学习进步奖学金推荐名单公示",
+      "url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/920800791e1640bea9aa80a7eed72c44.htm",
+      "final_url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/920800791e1640bea9aa80a7eed72c44.htm",
+      "html_sha256": "5d8e06e4416294d9c530314d201272917a97e771f4e1614b8854078c667b2ca8",
+      "source_keys": [
+        "ruc:1"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-08",
+      "old_product_date": "2026-10-08",
+      "old_product_state": "verified",
+      "new_product_date": "2026-10-08",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "外国语学院2026年综合类奖学金学院拟推荐名单公示",
+      "url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/0c964a40ae4040489046f81a9acf8f11.htm",
+      "final_url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/0c964a40ae4040489046f81a9acf8f11.htm",
+      "html_sha256": "ba147b632a20d21646fda0b41567dabbc25594d3579f101f575e83cc889c298a",
+      "source_keys": [
+        "ruc:1"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-16",
+      "old_product_date": "2026-09-16",
+      "old_product_state": "verified",
+      "new_product_date": "2026-09-16",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "外国语学院2026年优秀学生干部荣誉称号及相关奖学金拟推荐名单公示",
+      "url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/fb671d1970bd441bb4a51e72a49a3318.htm",
+      "final_url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/fb671d1970bd441bb4a51e72a49a3318.htm",
+      "html_sha256": "42d7e52522e3161f19b02a0b9b5e513c6970961c5b4da5f76ac18cd9d7c3ec7c",
+      "source_keys": [
+        "ruc:1"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-11",
+      "old_product_date": "2026-09-11",
+      "old_product_state": "verified",
+      "new_product_date": "2026-09-11",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "2026年“人文学科十大学术热点”和未来“值得关注的学术议题”征集",
+      "url": "https://phi.ruc.edu.cn/xwtz/tzgg/dcec35869474400a923115a7fcf2b3bc.htm",
+      "final_url": "https://phi.ruc.edu.cn/xwtz/tzgg/dcec35869474400a923115a7fcf2b3bc.htm",
+      "html_sha256": "88f3cf4c727ea44e6bce05352059e39b4f90b078164049cee3d7654ba2428964",
+      "source_keys": [
+        "ruc:2"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-12",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-12",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "中国人民大学哲学院2027年应用伦理专业学位研究生招生简章",
+      "url": "https://phi.ruc.edu.cn/zspy/yjs/yjszs/1adf8b3ba19b475cb5f9493adab554ab.htm",
+      "final_url": "https://phi.ruc.edu.cn/zspy/yjs/yjszs/1adf8b3ba19b475cb5f9493adab554ab.htm",
+      "html_sha256": "1818f4c650cc8ca5365b7090defeca1e67f0662dffb5c1794826f5993e0316e1",
+      "source_keys": [
+        "ruc:2"
+      ],
+      "public_attachment_urls": [
+        "https://pgs.ruc.edu.cn/2027/ssjz/zhongguorenmindaxuezhexueyuan2027nianyingyonglunlizhuanyexueweiyanjiushengzhaoshengjianzhang.pdf"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-09",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-09",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "中国人民大学哲学院（系）成立七十周年公告",
+      "url": "https://phi.ruc.edu.cn/xwtz/tzgg/b981829124814dbfa00d93a668b990f8.htm",
+      "final_url": "https://phi.ruc.edu.cn/xwtz/tzgg/b981829124814dbfa00d93a668b990f8.htm",
+      "html_sha256": "b813e31649a4d163a666883dcd8489a15dc2bc5bb70c61b5f51a8e1e33e01b70",
+      "source_keys": [
+        "ruc:2"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-28",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-28",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "【硕博培养】2026年秋季学术型研究生开题安排",
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/1107ced9753a4d9c961ea045f25d4073.htm",
+      "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/1107ced9753a4d9c961ea045f25d4073.htm",
+      "html_sha256": "cc90bedd97e359baa8bf9f9ab6152fe3dc84b593adfb042ee3c3616eebee95b0",
+      "source_keys": [
+        "ruc:3",
+        "ruc:5"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-12",
+      "old_product_date": "2026-10-12",
+      "old_product_state": "verified",
+      "new_product_date": "2026-10-12",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "关于研究生新生资格复审通知",
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+      "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsjw/42adfc0d2af94a3c80c0751d34ec9941.htm",
+      "html_sha256": "7140d945a71168542ea6b8f85b50daf80d38178b54ec33303907ead88d9fb7f9",
+      "source_keys": [
+        "ruc:3"
+      ],
+      "public_attachment_urls": [
+        "http://sf.ruc.edu.cn/docs/2025-09/c647ddbfae9d4b1b92f6ffa9e120b782.xlsx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-28",
+      "old_product_date": "2026-09-28",
+      "old_product_state": "verified",
+      "new_product_date": "2026-09-28",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "【博士】关于博士研究生新生资格复审的通知",
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/5bf88014c2c2426eb1cf6692a4b1d560.htm",
+      "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/5bf88014c2c2426eb1cf6692a4b1d560.htm",
+      "html_sha256": "097ac7001b6c892a0e59e318ef5eb4d801783b1aa116919792d1df5bb8c15d2c",
+      "source_keys": [
+        "ruc:3",
+        "ruc:5"
+      ],
+      "public_attachment_urls": [
+        "http://sf.ruc.edu.cn/docs/2025-09/36fefbe1c7c64fdf8a7e762eec031205.xlsx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-17",
+      "old_product_date": "2026-09-17",
+      "old_product_state": "verified",
+      "new_product_date": "2026-09-17",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "线上专场 | 人大国际金融学院推免生接收工作宣讲",
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+      "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/39a4cee6f253429abea6b61dc341f783.htm",
+      "html_sha256": "7ec9c9f5c6d849233239351040251da6e1b653f11d392558002268d1f9fb49a1",
+      "source_keys": [
+        "ruc:4"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-28",
+      "old_product_date": "2026-06-28",
+      "old_product_state": "verified",
+      "new_product_date": "2026-06-28",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "国际金融学院推免生接收工作宣讲通知",
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+      "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/0e48fcd9b6f94d5abd24c10cfea6349f.htm",
+      "html_sha256": "ee1de7a0a0f4875a88878fc0125935bd5cd7a9f54ebb79e01007bbbbde136031",
+      "source_keys": [
+        "ruc:4"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-25",
+      "old_product_date": "2026-06-25",
+      "old_product_state": "verified",
+      "new_product_date": "2026-06-25",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "中国人民大学国际金融学院2027年推免生接收工作报名通知（直博项目）",
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/57717a9b8c0e4f558e96177eb494e071.htm",
+      "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/57717a9b8c0e4f558e96177eb494e071.htm",
+      "html_sha256": "771e19aa4aa55822a6a2b1afa376113aa2b16fc92db8e03356c07836b4594664",
+      "source_keys": [
+        "ruc:4"
+      ],
+      "public_attachment_urls": [
+        "http://sf.ruc.edu.cn/docs/2026-06/3145316ebf0741d4bcb79263199e74cd.doc",
+        "http://sf.ruc.edu.cn/docs/2026-06/5681038b381e4ca2bcd0d58e08674651.docx",
+        "http://sf.ruc.edu.cn/docs/2026-06/66734fa67ee24cf6b868663ac7e53123.doc",
+        "http://sf.ruc.edu.cn/docs/2026-06/e9a166677fbf475fb39951a6d39897d1.docx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-25",
+      "old_product_date": "2026-06-25",
+      "old_product_state": "verified",
+      "new_product_date": "2026-06-25",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "【硕博培养】财政金融学院2026年“求是学术-栋梁”初评拟推荐项目公示",
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/6c5913a06fce4fd583e25a90dab1c782.htm",
+      "final_url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/6c5913a06fce4fd583e25a90dab1c782.htm",
+      "html_sha256": "5b9e582ff9f130debe50692cc5a67c9b16df166306f8eb27ad89308e5f4cdbf0",
+      "source_keys": [
+        "ruc:5"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-02",
+      "old_product_date": "2026-06-02",
+      "old_product_state": "verified",
+      "new_product_date": "2026-06-02",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "2027年入学中国人民大学法学院涉外法治MBA项目报考通知",
+      "url": "http://www.law.ruc.edu.cn/home/t/?id=61668",
+      "final_url": "http://www.law.ruc.edu.cn/home/t/?id=61668",
+      "html_sha256": "b7bd7d08be827e0bfaad9f94b6176a6e390ce33387b6786d887d64ad5fcc6f43",
+      "source_keys": [
+        "ruc:6"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-10",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-10",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "中国人民大学法学院2027年全日制法律（法学）、法律（非法学）专业学位研究生招生简章",
+      "url": "http://www.law.ruc.edu.cn/home/t/?id=61667",
+      "final_url": "http://www.law.ruc.edu.cn/home/t/?id=61667",
+      "html_sha256": "3c87be40b1af7178941333d95cb4548cb6d497a57233139dfcd21b4743f6c407",
+      "source_keys": [
+        "ruc:6"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-10",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-10",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "人大法硕三十周年校友返校活动“人大法硕人”专题征文公告",
+      "url": "http://www.law.ruc.edu.cn/home/t/?id=61665",
+      "final_url": "http://www.law.ruc.edu.cn/home/t/?id=61665",
+      "html_sha256": "9081154ea7c5dcfd1799c59cca08a5fd37308b777fdfc5b4ad366435771bc21d",
+      "source_keys": [
+        "ruc:6"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-09",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-09",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "中国人民大学",
+      "title": "中国人民大学信息学院2026年度校级智育类奖学金拟推荐名单公示",
+      "url": "http://info.ruc.edu.cn/xwgg/xygg/282c6af92cef4b76a7274a1c07af7d2a.htm",
+      "final_url": "http://info.ruc.edu.cn/xwgg/xygg/282c6af92cef4b76a7274a1c07af7d2a.htm",
+      "html_sha256": "79959365932cd427cc23cdd2bbd12674478cbccec6409010e0445dd4172350eb",
+      "source_keys": [
+        "ruc:7"
+      ],
+      "public_attachment_urls": [
+        "http://info.ruc.edu.cn/docs/2026-10/059c408e3827436f9444fcc829f34ea7.pdf",
+        "http://info.ruc.edu.cn/docs/2026-10/4315e88e93ac4bf797d50195790d998d.pdf",
+        "http://info.ruc.edu.cn/docs/2026-10/45db2a598105428ea3218d00a6f9cb02.pdf",
+        "http://info.ruc.edu.cn/docs/2026-10/9d8046dbeda647659d2e2a126e971379.pdf"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-13",
+      "old_product_date": "2026-10-13",
+      "old_product_state": "verified",
+      "new_product_date": "2026-10-13",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "关于做好中秋、国庆假期安全管理工作的通知",
+      "url": "http://life.hust.edu.cn/info/1725/12660.htm",
+      "final_url": "http://life.hust.edu.cn/info/1725/12660.htm",
+      "html_sha256": "a39280c17d3a7b51d48fac1c2939745234bc9f5a019c776b4fe4808f33e8d413",
+      "source_keys": [
+        "hust:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-24",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-24",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "生命学院关于做好2023级本科生毕业设计（论文）工作的通知",
+      "url": "http://life.hust.edu.cn/info/1849/12646.htm",
+      "final_url": "http://life.hust.edu.cn/info/1849/12646.htm",
+      "html_sha256": "7689399d8681ca5d13a8a4ec030d6d71cd912c174d856c8e36ec264c638e3382",
+      "source_keys": [
+        "hust:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-18",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-18",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "关于生命学院2027年本科生推荐免试研究生资格名单的公示",
+      "url": "http://life.hust.edu.cn/info/1849/12645.htm",
+      "final_url": "http://life.hust.edu.cn/info/1849/12645.htm",
+      "html_sha256": "7a5743b5fd89b2e297492e25a29de36c960a1336d4f2aadb0c6491c4df9f41c6",
+      "source_keys": [
+        "hust:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-17",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-17",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "机械科学与工程学院诚邀全球英才",
+      "url": "http://mse.hust.edu.cn/info/1181/15070.htm",
+      "final_url": "http://mse.hust.edu.cn/info/1181/15070.htm",
+      "html_sha256": "b72aa62ce5cf85945d785c0bcc567b339f3c98f6b0eb3624183aea3c172e6de5",
+      "source_keys": [
+        "hust:6"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-24",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-06-24",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "华中科技大学机械科学与工程学院专任教师科学研究岗位招聘",
+      "url": "http://mse.hust.edu.cn/info/1181/17692.htm",
+      "final_url": "http://mse.hust.edu.cn/info/1181/17692.htm",
+      "html_sha256": "1e922ae7240edb2b5f868c7f787f5687881e0bf06646e86059368dbefee4619a",
+      "source_keys": [
+        "hust:6"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-24",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-06-24",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "ICARE Hosts Academic Lecture on International Hydrogen Energy Research",
+      "url": "http://icare.hust.edu.cn/info/1066/9419.htm",
+      "final_url": "http://icare.hust.edu.cn/info/1066/9419.htm",
+      "html_sha256": "677280a0bd7b50b274a2f8539711c29033ffed378b38d18b262ce37f60565056",
+      "source_keys": [
+        "hust:11"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-22",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-22",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "Encounter Chinese Culture, Explore a Zero-Carbon Future",
+      "url": "http://icare.hust.edu.cn/info/1066/9398.htm",
+      "final_url": "http://icare.hust.edu.cn/info/1066/9398.htm",
+      "html_sha256": "7a40e4931a4349f812ebe8b5afbd51ae17d87953c163840c3e5e68a1a47fd956",
+      "source_keys": [
+        "hust:11"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-14",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-14",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "Breakthrough Achieved by the Research Team of Professor Li Qing, Chinese Supervisor of ICARE from the School of Materials Science and Engineering, in Proton Exchange Membrane Water Electrolysis for Hydrogen Production",
+      "url": "http://icare.hust.edu.cn/info/1066/9404.htm",
+      "final_url": "http://icare.hust.edu.cn/info/1066/9404.htm",
+      "html_sha256": "19f136878184190433a7435b804987bbef777f3d8ad4e9602710a15d835744fe",
+      "source_keys": [
+        "hust:11"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-13",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-13",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "关于校党委巡视“回头看”第一组 结束工作的公告",
+      "url": "http://seee.hust.edu.cn/info/1011/15108.htm",
+      "final_url": "http://seee.hust.edu.cn/info/1011/15108.htm",
+      "html_sha256": "8418dfd6ae121002cd4eff5276a8a1acec86ab203ebf189e8913c7c4ea806920",
+      "source_keys": [
+        "hust:13"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-05-06",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-05-06",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "关于召开中国共产党华中科技大学电气与电子工程学院第三次党员代表大会的通知",
+      "url": "http://seee.hust.edu.cn/info/1011/15109.htm",
+      "final_url": "http://seee.hust.edu.cn/info/1011/15109.htm",
+      "html_sha256": "b4c37a403fd69166681e7b5d150eae64b4c204aa0527269239dee09318b43087",
+      "source_keys": [
+        "hust:13"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-01-20",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-01-20",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "关于校党委对电气与电子工程学院党委开展巡视“回头看”的公告",
+      "url": "http://seee.hust.edu.cn/info/1011/6684.htm",
+      "final_url": "http://seee.hust.edu.cn/info/1011/6684.htm",
+      "html_sha256": "54cc57b40998a32e8dd47378c16c883cee5c563f1a5e26eb78a486e816b2b6ce",
+      "source_keys": [
+        "hust:13"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-12-22",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-12-22",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "工医理交叉国际化实验班2021级校内选拔录取名单公示",
+      "url": "http://ses.hust.edu.cn/info/1037/2074.htm",
+      "final_url": "http://ses.hust.edu.cn/info/1037/2074.htm",
+      "html_sha256": "3387e04ae6146bd3a6dc5b7eacbc2d8015f1fa5d7f7239d9c2e5f53ad5679031",
+      "source_keys": [
+        "hust:14"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2021-09-18",
+      "old_product_date": "2021-09-18",
+      "old_product_state": "verified",
+      "new_product_date": "2021-09-18",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "工程科学学院2022届本科毕业生推免综合成绩排名公示",
+      "url": "http://ses.hust.edu.cn/info/1037/2065.htm",
+      "final_url": "http://ses.hust.edu.cn/info/1037/2065.htm",
+      "html_sha256": "3b42f002bb34a2a43d88fe11a8406a0330fa3e1643175d1bc6df90f2e5a0120b",
+      "source_keys": [
+        "hust:14"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2021-09-17",
+      "old_product_date": "2021-09-17",
+      "old_product_state": "verified",
+      "new_product_date": "2021-09-17",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "工程科学学院推荐2021届本科毕业生免试攻读硕士学位研究生工作细则",
+      "url": "http://ses.hust.edu.cn/info/1037/1954.htm",
+      "final_url": "http://ses.hust.edu.cn/info/1037/1954.htm",
+      "html_sha256": "d7e8ca4ba82c6d1f229acead0bd2fa4ac007db08e167f6192a2c3a20787c1658",
+      "source_keys": [
+        "hust:14"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2020-09-25",
+      "old_product_date": "2020-09-25",
+      "old_product_state": "verified",
+      "new_product_date": "2020-09-25",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "建筑与城市规划学院关于2027届研究生支教团成员候选人推荐名单公示",
+      "url": "http://aup.hust.edu.cn/info/1076/5282.htm",
+      "final_url": "http://aup.hust.edu.cn/info/1076/5282.htm",
+      "html_sha256": "0ee9ef2ca9bceecfaf587f53cc0518a50745aaeec823362cfb44ea8175c2c1fa",
+      "source_keys": [
+        "hust:16"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-04",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-04",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "关于校党委巡视“回头看”第三组结束工作的公告",
+      "url": "http://aup.hust.edu.cn/info/1079/5225.htm",
+      "final_url": "http://aup.hust.edu.cn/info/1079/5225.htm",
+      "html_sha256": "0e94fdd9de007be1cb408430ecc8246b8e1d24349cbcbbe71df0365cf7f96991",
+      "source_keys": [
+        "hust:16"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-05-06",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-05-06",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "建筑与城市规划学院关于推荐参加华中科技大学第十四届“求是杯”大学生创业计划竞赛(“挑战杯”校赛)的公示",
+      "url": "http://aup.hust.edu.cn/info/1077/5204.htm",
+      "final_url": "http://aup.hust.edu.cn/info/1077/5204.htm",
+      "html_sha256": "3b015400129c74ec1c50aa5465461e1cca86db8598d4d400224d959cabc521ec",
+      "source_keys": [
+        "hust:16"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-03-18",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-03-18",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "土木与水利工程学院2027年接收推荐免试研究生第二批直博生复试名单公示",
+      "url": "http://civil.hust.edu.cn/info/1363/18375.htm",
+      "final_url": "http://civil.hust.edu.cn/info/1363/18375.htm",
+      "html_sha256": "9761b9c332d445982561a88b5179310a4ca0f445e54fb32a9cb34ec507b3c027",
+      "source_keys": [
+        "hust:17"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-18",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-18",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "土木与水利工程学院2027年接收推荐免试研究生复试名单公示",
+      "url": "http://civil.hust.edu.cn/info/1363/18373.htm",
+      "final_url": "http://civil.hust.edu.cn/info/1363/18373.htm",
+      "html_sha256": "82d8d3ee48311601f9b7b58bbf3aee8e57d2d43b1245998cb38faf4cbbb25dd8",
+      "source_keys": [
+        "hust:17"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-17",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-17",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "华中科技大学",
+      "title": "关于开展华中科技大学2025年度铸牢中华民族共同体意识中华经典诵读大赛的通知",
+      "url": "http://tzb.hust.edu.cn/info/1074/5878.htm",
+      "final_url": "http://tzb.hust.edu.cn/info/1074/5878.htm",
+      "html_sha256": "ec5f6e162a9504ad9debf7e84fa72dc7ec7f9023878538f913cce3d40d4fbf70",
+      "source_keys": [
+        "hust:19"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": null,
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": null,
+      "new_product_state": "unknown",
+      "reviewed_outcome": "publication_year_century_unconfirmed",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "2027年药学院、生物医药前沿学院招收推免生综合考核实施细则",
+      "url": "https://pharm.sjtu.edu.cn/zsgz/6364.html",
+      "final_url": "https://pharm.sjtu.edu.cn/zsgz/6364.html",
+      "html_sha256": "f05081771e4e495356824841b92c30b67cfbcd9087939301c141e6d7eef2bc9d",
+      "source_keys": [
+        "sjtu:18"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-20",
+      "old_product_date": "2026-09-20",
+      "old_product_state": "verified",
+      "new_product_date": "2026-09-20",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "药学院2026级博士招生（第二批）综合考核结果公示",
+      "url": "https://pharm.sjtu.edu.cn/zsgz/6192.html",
+      "final_url": "https://pharm.sjtu.edu.cn/zsgz/6192.html",
+      "html_sha256": "42c6b3197070c3ef5e5996c4d1e1eac1b307b610980eba33c1b29a5c19ba13a2",
+      "source_keys": [
+        "sjtu:18"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-07",
+      "old_product_date": "2026-07-07",
+      "old_product_state": "verified",
+      "new_product_date": "2026-07-07",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "上海交通大学药学院全国优秀大学生暑期学术交流营报名通知",
+      "url": "https://pharm.sjtu.edu.cn/zsgz/6182.html",
+      "final_url": "https://pharm.sjtu.edu.cn/zsgz/6182.html",
+      "html_sha256": "21f7df1aaadf1afd177ee1341fc0c8edc55ef274fe15bab6a281e6926cf1612f",
+      "source_keys": [
+        "sjtu:18"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-25",
+      "old_product_date": "2026-06-25",
+      "old_product_state": "verified",
+      "new_product_date": "2026-06-25",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "【IIDE】上海交通大学国际工业设计工程项目2025年招生",
+      "url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56/detail/665f2392dc43e76c96e98a60",
+      "final_url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56/detail/665f2392dc43e76c96e98a60",
+      "html_sha256": "5a544262a601127f33b287a32cd663b8c5012d9797fecda0f7c87b636054376b",
+      "source_keys": [
+        "sjtu:20"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": null,
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": null,
+      "new_product_state": "unknown",
+      "reviewed_outcome": "publication_evidence_incomplete",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "上海交通大学2027年“医工交叉平台”博士研究生招生简章",
+      "url": "https://yzb.sjtu.edu.cn/post/3766",
+      "final_url": "https://yzb.sjtu.edu.cn/post/3766",
+      "html_sha256": "5e5cd93428bfca53caf88be0a3afc137704cde72ff6f175fcf34b9de8deb8a31",
+      "source_keys": [
+        "sjtu:21"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-06",
+      "old_product_date": "2026-09-06",
+      "old_product_state": "verified",
+      "new_product_date": "2026-09-06",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "关于2026年秋季博士研究生录取通知书发放及学号查询的通知",
+      "url": "https://yzb.sjtu.edu.cn/post/3755",
+      "final_url": "https://yzb.sjtu.edu.cn/post/3755",
+      "html_sha256": "3d67b1155a4c082dd5ca2a7463a414340863c7bd6f2b7f62c6c19c71e36f7341",
+      "source_keys": [
+        "sjtu:21"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-23",
+      "old_product_date": "2026-07-23",
+      "old_product_state": "verified",
+      "new_product_date": "2026-07-23",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "上海交通大学2027级“明志荣誉博士生”招生简章",
+      "url": "https://yzb.sjtu.edu.cn/post/3744",
+      "final_url": "https://yzb.sjtu.edu.cn/post/3744",
+      "html_sha256": "f54c2f31784c9926c54e9ec2693eeac80179b5c30023ef6026163c901e96ad03",
+      "source_keys": [
+        "sjtu:21"
+      ],
+      "public_attachment_urls": [
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2026/07/5f027602c190eab28be1cedfea3d04c0.pdf",
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2026/07/c85c01fd2ff4ebf058dff86e821d02e7.docx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-09",
+      "old_product_date": "2026-07-09",
+      "old_product_state": "verified",
+      "new_product_date": "2026-07-09",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "2027年心理学院招收推免生综合考核实施细则",
+      "url": "https://psychology.sjtu.edu.cn/zsxx/659.html",
+      "final_url": "https://psychology.sjtu.edu.cn/zsxx/659.html",
+      "html_sha256": "cecc919e87273da0bf6f6020d5c62f73e8f37363137c47154ee41d581c787ff6",
+      "source_keys": [
+        "sjtu:22"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-18",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-18",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "心理学院关于2027年硕士研究生招生专业调整的公告",
+      "url": "https://psychology.sjtu.edu.cn/zsxx/607.html",
+      "final_url": "https://psychology.sjtu.edu.cn/zsxx/607.html",
+      "html_sha256": "54a112990d9aeb865c1f3de99257ed65acbd3a52357e5ad85a6f5ea10ed10a77",
+      "source_keys": [
+        "sjtu:22"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-09",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-07-09",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "上海交通大学心理学院2027年优才夏令营报名通知",
+      "url": "https://psychology.sjtu.edu.cn/zsxx/592.html",
+      "final_url": "https://psychology.sjtu.edu.cn/zsxx/592.html",
+      "html_sha256": "9ab91bd5668c0d12e12810f12e6b287344450325393f44682b2e8be71fbc1945",
+      "source_keys": [
+        "sjtu:22"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-29",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-06-29",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "关于2026年港澳台研究生录取通知书发放的通知",
+      "url": "https://yzb.sjtu.edu.cn/post/3756",
+      "final_url": "https://yzb.sjtu.edu.cn/post/3756",
+      "html_sha256": "4cb09bc4edf97d74d5e4a24eacccdfed3d03448accce2406d7d1556990617bc4",
+      "source_keys": [
+        "sjtu:23"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-23",
+      "old_product_date": "2026-07-23",
+      "old_product_state": "verified",
+      "new_product_date": "2026-07-23",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "上海交通大学2026年研究生新生报到须知",
+      "url": "https://yzb.sjtu.edu.cn/post/3733",
+      "final_url": "https://yzb.sjtu.edu.cn/post/3733",
+      "html_sha256": "d8404b1c54409980afc52d96d677548860f9f0f7171bdfaa155101c98133c97d",
+      "source_keys": [
+        "sjtu:23"
+      ],
+      "public_attachment_urls": [
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2025/07/04064bb9d40b7aeffb01a4cde2098ffe.pdf",
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2025/07/76ce8bd61e820f90cb8cd8b5e335d47a.pdf",
+        "https://yzb.sjtu.edu.cn/storage/gs/web/yzbcn/article/2026/07/d6cf5d8ed43b9648b928da072c0b059a.pdf"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-09",
+      "old_product_date": "2026-07-09",
+      "old_product_state": "verified",
+      "new_product_date": "2026-07-09",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "关于2026年面向港澳台地区研究生录取通知书邮寄地址确认及有关事项的通知",
+      "url": "https://yzb.sjtu.edu.cn/post/3712",
+      "final_url": "https://yzb.sjtu.edu.cn/post/3712",
+      "html_sha256": "cff49e63dbe5f9f5da72f2020c3d436505f047a4117412d78b1f22dc077e261e",
+      "source_keys": [
+        "sjtu:23"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-26",
+      "old_product_date": "2026-06-26",
+      "old_product_state": "verified",
+      "new_product_date": "2026-06-26",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "上海交通大学心理学、应用心理专业2026年博士研究生（2024级）学位论文开题（第二批）日程安排",
+      "url": "https://psychology.sjtu.edu.cn/pyfa/586.html",
+      "final_url": "https://psychology.sjtu.edu.cn/pyfa/586.html",
+      "html_sha256": "33abf33a33c148a73606a108d759d94597c984e29e492119c64bdce38b628144",
+      "source_keys": [
+        "sjtu:24"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-18",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-06-18",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "上海交通大学心理学、应用心理专业 2026年硕士研究生学位论文中期检查考核通知",
+      "url": "https://psychology.sjtu.edu.cn/pyfa/584.html",
+      "final_url": "https://psychology.sjtu.edu.cn/pyfa/584.html",
+      "html_sha256": "6afa3ba11c6739a915b04ff6067adbad967b9232779607a2f4cfb0ba57f9fb69",
+      "source_keys": [
+        "sjtu:24"
+      ],
+      "public_attachment_urls": [
+        "https://psychology.sjtu.edu.cn/upload/ueditor/file/20260616/1781590357422925.docx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-16",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-06-16",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "上海交通大学心理学、应用心理专业2026年博士研究生（2024级）学位论文开题日程安排",
+      "url": "https://psychology.sjtu.edu.cn/pyfa/576.html",
+      "final_url": "https://psychology.sjtu.edu.cn/pyfa/576.html",
+      "html_sha256": "d77419906fb8e0b3a4048673efa10d84d29312217f4b1b071f8f2aef76d6db50",
+      "source_keys": [
+        "sjtu:24"
+      ],
+      "public_attachment_urls": [
+        "https://psychology.sjtu.edu.cn/upload/ueditor/file/20260525/1779712947720024.pdf"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-05-25",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-05-25",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "博士生学位论文答辩公告-闫斌（指导教师：叶冠林）",
+      "url": "https://naoce.sjtu.edu.cn/dabiangonggao/15752.html",
+      "final_url": "https://naoce.sjtu.edu.cn/dabiangonggao/15752.html",
+      "html_sha256": "e60821076df82b5b05e3ba715e9730ec8d2bea67ffea2d225e064e3ba3f4a8e6",
+      "source_keys": [
+        "sjtu:25"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-03",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-03",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "博士生学位论文答辩公告-谢东东（指导教师：杨健）",
+      "url": "https://naoce.sjtu.edu.cn/dabiangonggao/15751.html",
+      "final_url": "https://naoce.sjtu.edu.cn/dabiangonggao/15751.html",
+      "html_sha256": "63370a4869b5b16b4690892d94e0082ef6e8d3b49cc191d16878378eca4c2822",
+      "source_keys": [
+        "sjtu:25"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-03",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-03",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "博士生学位论文答辩公告-张建宏（指导教师：程正顺）",
+      "url": "https://naoce.sjtu.edu.cn/dabiangonggao/15749.html",
+      "final_url": "https://naoce.sjtu.edu.cn/dabiangonggao/15749.html",
+      "html_sha256": "7f57e840c51f21fffad3d7825da770f822acce9e6e64fdd96a4d4b668485669c",
+      "source_keys": [
+        "sjtu:25"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-01",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-01",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "上海交通大学",
+      "title": "关于2026级学生参加“大学物理（荣誉）”课程选拔测试的通知",
+      "url": "https://www.jwc.sjtu.edu.cn/info/1222/128931.htm",
+      "final_url": "https://www.jwc.sjtu.edu.cn/info/1222/128931.htm",
+      "html_sha256": "ede2896766bbe9f8c89e08f6028cb3ba48de75097ad1ab5701e692a4781b62c3",
+      "source_keys": [
+        "sjtu:27"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-24",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-24",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "天津大学机械工程学院2027级推免生拟录取名单公示",
+      "url": "http://me.tju.edu.cn/info/1041/54111.htm",
+      "final_url": "http://me.tju.edu.cn/info/1041/54111.htm",
+      "html_sha256": "5c3751f18f15625826516bde76adeec47c03207d4636d925a719a3725c2f37bb",
+      "source_keys": [
+        "tju:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-15",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-15",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "机械工程学院2027年推荐优秀应届本科毕业生免试攻读硕士学位研究生和直接攻读博士学位研究生招生录取工作办法",
+      "url": "http://me.tju.edu.cn/info/1041/53861.htm",
+      "final_url": "http://me.tju.edu.cn/info/1041/53861.htm",
+      "html_sha256": "44e077a8e83c4263fcb1c26d184fec323b514148b8295f072364faa385672177",
+      "source_keys": [
+        "tju:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-18",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-18",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "天津大学机械工程学院2026 年全国优秀大学生暑期夏令营活动通知",
+      "url": "http://me.tju.edu.cn/info/1041/52721.htm",
+      "final_url": "http://me.tju.edu.cn/info/1041/52721.htm",
+      "html_sha256": "8062ab005f110860c9d1bac3a877e0d81b31f8dcfb7444e3e067bbd5292f56f4",
+      "source_keys": [
+        "tju:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-06-25",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-06-25",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "活动预告 | 第83期青咖汇——国家自然基金申报政策介绍",
+      "url": "http://jyxy.tju.edu.cn/cn/xyfc/20191109/1847.shtml",
+      "final_url": "http://jyxy.tju.edu.cn/cn/xyfc/20191109/1847.shtml",
+      "html_sha256": "21e1020aef688195141c18db2d6a5b4aed37add593bebf4349172e4496bc424c",
+      "source_keys": [
+        "tju:2"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2019-11-09",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2019-11-09",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "活动预告 | 第82期青咖汇——科研与基金申请漫谈",
+      "url": "http://jyxy.tju.edu.cn/cn/xyfc/20191026/1842.shtml",
+      "final_url": "http://jyxy.tju.edu.cn/cn/xyfc/20191026/1842.shtml",
+      "html_sha256": "9bef8f599270978e0888956206d38636954bf9642e2c34866812efb70b8655c3",
+      "source_keys": [
+        "tju:2"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2019-10-26",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2019-10-26",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "讲座预告 | 慕尼黑工业大学Vasilis Ntziachristos教授讲座",
+      "url": "http://jyxy.tju.edu.cn/cn/xyfc/20191018/1836.shtml",
+      "final_url": "http://jyxy.tju.edu.cn/cn/xyfc/20191018/1836.shtml",
+      "html_sha256": "9e5554c2adafe582fb5fbf4ffd359dee87a6aa1b4ce2c4d6a33abe6eceabd5e6",
+      "source_keys": [
+        "tju:2"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2019-10-18",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2019-10-18",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "天津大学香港大学2019国际暑期夏令营志愿者招募通知",
+      "url": "http://jyxy.tju.edu.cn/cn/xsgz/20190516/1795.shtml",
+      "final_url": "http://jyxy.tju.edu.cn/cn/xsgz/20190516/1795.shtml",
+      "html_sha256": "28e2b7b8af3848c520139d66d3bfc8f745f60647eb1224cc511e4417b42e2182",
+      "source_keys": [
+        "tju:3"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": null,
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": null,
+      "new_product_state": "unknown",
+      "reviewed_outcome": "publication_unknown_only_update_observed",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "“精仪星计划”第五期学生骨干培养训练营招募通知",
+      "url": "http://jyxy.tju.edu.cn/cn/xsgz/20190430/1787.shtml",
+      "final_url": "http://jyxy.tju.edu.cn/cn/xsgz/20190430/1787.shtml",
+      "html_sha256": "c969c102edc4896e46d81dc16ad55f2e3f2f5e2918bdafac66e44b470d8510f1",
+      "source_keys": [
+        "tju:3"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": null,
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": null,
+      "new_product_state": "unknown",
+      "reviewed_outcome": "publication_unknown_only_update_observed",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "关于报送学校重要会议及活动的通知",
+      "url": "http://jgxy.tju.edu.cn/info/1073/4191.htm",
+      "final_url": "http://jgxy.tju.edu.cn/info/1073/4191.htm",
+      "html_sha256": "7e5354b628c634e0dae771b81ece03d7557fd30531f4046624b12e944391d2f4",
+      "source_keys": [
+        "tju:4"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2023-04-12",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2023-04-12",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "建筑工程学院2026年秋季新增研究生导师招生资格认定名单公示",
+      "url": "http://jgxy.tju.edu.cn/info/1047/38561.htm",
+      "final_url": "http://jgxy.tju.edu.cn/info/1047/38561.htm",
+      "html_sha256": "d131ca04b30039662c2b6b89aad1c0e765222f290da30d928268ee3e00b8c8a8",
+      "source_keys": [
+        "tju:4",
+        "tju:6"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-12",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-12",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "天津大学建筑工程学院2027年推荐优秀应届本科毕业生免试攻读硕士学位研究生和直接攻读博士学位研究生招生录取工作办法",
+      "url": "http://jgxy.tju.edu.cn/info/1047/38071.htm",
+      "final_url": "http://jgxy.tju.edu.cn/info/1047/38071.htm",
+      "html_sha256": "c30beaa5156dcfe5b6a5f089e8259fa4e84e5819ecdb67b8c34de32e859fb4b6",
+      "source_keys": [
+        "tju:4",
+        "tju:6"
+      ],
+      "public_attachment_urls": [
+        "http://yzb.tju.edu.cn/xwzx/zxxx/201507/W020150724389805979600.doc",
+        "http://yzb.tju.edu.cn/xwzx/zxxx/201507/W020150724389805982026.doc"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-11",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-11",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "2026年（2027届）建筑工程学院推荐优秀应届本科毕业生免试攻读研究生名单公示",
+      "url": "http://jgxy.tju.edu.cn/info/1038/37991.htm",
+      "final_url": "http://jgxy.tju.edu.cn/info/1038/37991.htm",
+      "html_sha256": "659cbc029aa1744d2585795e92693db6d5448300a8c23b143f61314b3ad662a3",
+      "source_keys": [
+        "tju:5"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-10",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-10",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "建筑工程学院“茅以升未来建设工程智慧平台”2026级录取名单公示",
+      "url": "http://jgxy.tju.edu.cn/info/1038/37971.htm",
+      "final_url": "http://jgxy.tju.edu.cn/info/1038/37971.htm",
+      "html_sha256": "3a830bfd5148bb89f4ed6afc0220ccfe5346c0082f7d9fcb56ac4a58486d0930",
+      "source_keys": [
+        "tju:5"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-07",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-09-07",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "建筑工程学院新工科领军班2025级录取名单公示",
+      "url": "http://jgxy.tju.edu.cn/info/1038/35741.htm",
+      "final_url": "http://jgxy.tju.edu.cn/info/1038/35741.htm",
+      "html_sha256": "e69d04c9c824af53d877d76657892f1fdee6b9de52440ead303b3a0f4b9411b9",
+      "source_keys": [
+        "tju:5"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-03-02",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-03-02",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "天津大学建筑工程学院接收2027级校内外推免生告知信",
+      "url": "http://jgxy.tju.edu.cn/info/1047/37521.htm",
+      "final_url": "http://jgxy.tju.edu.cn/info/1047/37521.htm",
+      "html_sha256": "0f0010fb36909ed38fc23b36b0e64321215ee50d073f6e332527718e2d4bcca1",
+      "source_keys": [
+        "tju:6"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-30",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-07-30",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "天津大学建筑学院会议室预定系统使用说明",
+      "url": "http://arch.tju.edu.cn/info/1166/1154.htm",
+      "final_url": "http://arch.tju.edu.cn/info/1166/1154.htm",
+      "html_sha256": "cd0ad0ac4d710b15eda01bb14bc7cb4f9ff29bc10b05034bc8aa3b927791ac81",
+      "source_keys": [
+        "tju:7"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2022-11-12",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2022-11-12",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "天津大学建筑学院硕士研究生招生考试初试用纸、工具要求和考点提示",
+      "url": "http://arch.tju.edu.cn/info/1166/5511.htm",
+      "final_url": "http://arch.tju.edu.cn/info/1166/5511.htm",
+      "html_sha256": "10662f8842c44f4e1b4dc27f4576926b5d7e787fc51f73a7cbb6173ac4af132c",
+      "source_keys": [
+        "tju:7"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-11-27",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-11-27",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "关于发布《天津大学建筑学院实验室安全管理细则》的通知",
+      "url": "http://arch.tju.edu.cn/info/1166/4474.htm",
+      "final_url": "http://arch.tju.edu.cn/info/1166/4474.htm",
+      "html_sha256": "f909a0acf617c8f54a7acfeb4215901329af8e1e39b13a73db1e7426b5b7c46c",
+      "source_keys": [
+        "tju:7"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2024-12-31",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2024-12-31",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "《International Journal of Environmental Research and Public Health》 特刊征稿：交通可达性与健康公平",
+      "url": "http://arch.tju.edu.cn/info/1232/3603.htm",
+      "final_url": "http://arch.tju.edu.cn/info/1232/3603.htm",
+      "html_sha256": "83cf52dc3ba5e6fdf3d37890b290ee5fc11eb3ce2e82385fb0345f079d37ac21",
+      "source_keys": [
+        "tju:8"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2022-12-19",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2022-12-19",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "天津大学",
+      "title": "天津大学建筑学院助理研究员（博士后）招聘启事",
+      "url": "http://arch.tju.edu.cn/info/1232/1806.htm",
+      "final_url": "http://arch.tju.edu.cn/info/1232/1806.htm",
+      "html_sha256": "2aee944f4d2d2ef453e245e6c8e31342d3e951ba7dcc8842e3d025c4d5c3b410",
+      "source_keys": [
+        "tju:8"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2022-10-21",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2022-10-21",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【公告】关于校外机构假冒我校名义开展虚假宣传的声明",
+      "url": "https://psych.bnu.edu.cn/xwzx/tzgg/7af000e3d815470a974ed013d21da92b.htm",
+      "final_url": "https://psych.bnu.edu.cn/xwzx/tzgg/7af000e3d815470a974ed013d21da92b.htm",
+      "html_sha256": "714bc084821ce38b2ce23c88a5988157b5cfc21dddeeee31168d6ec0c97c081b",
+      "source_keys": [
+        "bnu:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-07-03",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-07-03",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【通知】关于规范心理学部学生开展校外心理咨询实践的通知",
+      "url": "https://psych.bnu.edu.cn/xwzx/tzgg/30a7d3eee3a44f6b9d662e00216c3f73.htm",
+      "final_url": "https://psych.bnu.edu.cn/xwzx/tzgg/30a7d3eee3a44f6b9d662e00216c3f73.htm",
+      "html_sha256": "21afd52022974b95413f260043159e74538d67e1f6d62e67dda80145aea0e90f",
+      "source_keys": [
+        "bnu:0"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-12-19",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-12-19",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【通知】关于评选第二十七届北京师范大学十佳大学生的通知",
+      "url": "https://psych.bnu.edu.cn/xwzx/tzgg/d675ce5774724b55a391c07c628540f7.htm",
+      "final_url": "https://psych.bnu.edu.cn/xwzx/tzgg/d675ce5774724b55a391c07c628540f7.htm",
+      "html_sha256": "8964615ea7454583774eb41ab8b28ed2503f9da34307c98b2b4fb6f24013d188",
+      "source_keys": [
+        "bnu:0"
+      ],
+      "public_attachment_urls": [
+        "https://psych.bnu.edu.cn/docs/2026-10/33d4a6858e924a129dae20fff752a4ac.docx",
+        "https://psych.bnu.edu.cn/docs/2026-10/ad931323ff2643699c0fab132459dc70.docx",
+        "https://psych.bnu.edu.cn/docs/2026-10/f026036493b94d4da7494a7fe93d1e76.pdf"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-16",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-16",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【本研】关于2016届毕业生学费补偿和国家助学贷款代偿（第一批）申请工作的通知",
+      "url": "https://psych.bnu.edu.cn/rcpy/tzgg/c3d04b56d6e64e32ae384fdbf3faf49c.htm",
+      "final_url": "https://psych.bnu.edu.cn/rcpy/tzgg/c3d04b56d6e64e32ae384fdbf3faf49c.htm",
+      "html_sha256": "9117cb95a0bfb75a29ee69723534f50c16aad82107fda26576797b37ed783f36",
+      "source_keys": [
+        "bnu:1"
+      ],
+      "public_attachment_urls": [
+        "https://psych.bnu.edu.cn/attachments/6339154829914916bc41209e9eec4161.docx",
+        "https://psych.bnu.edu.cn/attachments/afa5b25b8de543138275cca2ed7ec75a.doc",
+        "https://psych.bnu.edu.cn/attachments/dd6f8c0eb47f4d9cbfc0314fd52b12b1.doc",
+        "https://psych.bnu.edu.cn/attachments/e345b32ffa8d48fcb5a849bb93b49b0c.doc"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2016-05-26",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2016-05-26",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【本】关于启动“美丽家园和谐师大”2016年本科生宿舍文化季系列活动的通知",
+      "url": "https://psych.bnu.edu.cn/rcpy/tzgg/03278e9f0f0b459e9e79fd1558190ec1.htm",
+      "final_url": "https://psych.bnu.edu.cn/rcpy/tzgg/03278e9f0f0b459e9e79fd1558190ec1.htm",
+      "html_sha256": "d0c9ce872d58610e3a8304ed9f0c17e09fcfb196ba26364ea8d1b4e2ea80b2dc",
+      "source_keys": [
+        "bnu:1"
+      ],
+      "public_attachment_urls": [
+        "https://psych.bnu.edu.cn/attachments/2741229efecd40faaebbd8819c0dcd6c.xlsx",
+        "https://psych.bnu.edu.cn/attachments/4407ff640e6b4de9bc5aff352e236e9c.xlsx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2016-05-20",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2016-05-20",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【本】关于开展“致谢怀师恩”——2016届本科生毕业论文最具特色致谢页评选活动的通知",
+      "url": "https://psych.bnu.edu.cn/rcpy/tzgg/348d503981d849fe8e935e270065943f.htm",
+      "final_url": "https://psych.bnu.edu.cn/rcpy/tzgg/348d503981d849fe8e935e270065943f.htm",
+      "html_sha256": "0cee3647592d6174ba2b67009d66ea51bb41acf72ecb1b3f11438d57b8d7b7d7",
+      "source_keys": [
+        "bnu:1"
+      ],
+      "public_attachment_urls": [
+        "https://psych.bnu.edu.cn/attachments/2c698be82f4447d4a50f0b5e02aeb254.doc"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2016-05-20",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2016-05-20",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【国际会议信息汇总】持续更新中……",
+      "url": "https://psych.bnu.edu.cn/gjjl/tzggg/7438f3231a8c4865b1e6bc1b7e9e4869.htm",
+      "final_url": "https://psych.bnu.edu.cn/gjjl/tzggg/7438f3231a8c4865b1e6bc1b7e9e4869.htm",
+      "html_sha256": "67750865603db1bbcb4b461397fab42bd8c56df35090c9e8ac73bc3d1065243a",
+      "source_keys": [
+        "bnu:2"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2024-03-10",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2024-03-10",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【通知】北师大心理学部（本科生）2026寒假牛津大学跨学科+AI时代下学术项目通知",
+      "url": "https://psych.bnu.edu.cn/xwzx/tzgg/2b22233e71bb4722aa29fa20098dce74.htm",
+      "final_url": "https://psych.bnu.edu.cn/xwzx/tzgg/2b22233e71bb4722aa29fa20098dce74.htm",
+      "html_sha256": "fd9adf24cbfc31a209ba8cc7e228bf40d073ac0a1c34e47c73ae556937b8e0af",
+      "source_keys": [
+        "bnu:2"
+      ],
+      "public_attachment_urls": [
+        "https://psych.bnu.edu.cn/docs/2025-10/20fd6ea4d7014662a607ea43e751f1c6.pdf"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-10-16",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-10-16",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "【通知】心理学部2025年国家建设高水平大学公派研究生选派工作安排通知",
+      "url": "https://psych.bnu.edu.cn/xwzx/tzgg/bedbc2e405d243d086af061057616ec4.htm",
+      "final_url": "https://psych.bnu.edu.cn/xwzx/tzgg/bedbc2e405d243d086af061057616ec4.htm",
+      "html_sha256": "68f241941d7995ff47130ce135e087fa94805d10fe6ed5a84110c451f08c0f69",
+      "source_keys": [
+        "bnu:2"
+      ],
+      "public_attachment_urls": [
+        "https://psych.bnu.edu.cn/docs/2025-01/1d7d8923c1354ec79408fd3adb4acf39.xlsx",
+        "https://psych.bnu.edu.cn/docs/2025-01/a2b8206d0a7b429899e65424a1ef76b8.doc",
+        "https://psych.bnu.edu.cn/docs/2025-01/c3e4896c876a4418a296e5ec608961ca.docx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-01-17",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-01-17",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "北京师范大学法学院“京师法学奖学金、助学金”评选通知",
+      "url": "https://law.bnu.edu.cn/xsyd/tzggxs/57d387bb4a3c42058ab8ad26d87889f4.htm",
+      "final_url": "https://law.bnu.edu.cn/xsyd/tzggxs/57d387bb4a3c42058ab8ad26d87889f4.htm",
+      "html_sha256": "9a27879de5fb6eff91be420cf2fa93d762daeed5fb5d00542c7aa82cfff2c23e",
+      "source_keys": [
+        "bnu:3"
+      ],
+      "public_attachment_urls": [
+        "https://law.bnu.edu.cn/docs/2025-12/139a52b15bf844f2bcd36483799d5069.doc",
+        "https://law.bnu.edu.cn/docs/2025-12/5b92efce5bc6460591b980e6a0e6e881.xlsx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-12-11",
+      "old_product_date": "2025-12-11",
+      "old_product_state": "verified",
+      "new_product_date": "2025-12-11",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "北京师范大学法学院“中伦文德法学教育奖学金”评选通知",
+      "url": "https://law.bnu.edu.cn/xsyd/tzggxs/8d7f5f7086d043aab82ea41bba6cc86c.htm",
+      "final_url": "https://law.bnu.edu.cn/xsyd/tzggxs/8d7f5f7086d043aab82ea41bba6cc86c.htm",
+      "html_sha256": "024ee7f02c3aa2fa4b7274fc3fa6c387a0094a36efaa54c02eb936f0b9834224",
+      "source_keys": [
+        "bnu:3"
+      ],
+      "public_attachment_urls": [
+        "https://law.bnu.edu.cn/docs/2025-12/648d0908d30348139d7360ede28effa1.doc",
+        "https://law.bnu.edu.cn/docs/2025-12/d0e035603b434fb28aa73ed6b5f5e7ed.xlsx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-12-11",
+      "old_product_date": "2025-12-11",
+      "old_product_state": "verified",
+      "new_product_date": "2025-12-11",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "北京师范大学法学院“珠仲”仲裁人才奖学金评选通知",
+      "url": "https://law.bnu.edu.cn/xsyd/tzggxs/45231407c38f4fa0aa0b3fdcc3084fcc.htm",
+      "final_url": "https://law.bnu.edu.cn/xsyd/tzggxs/45231407c38f4fa0aa0b3fdcc3084fcc.htm",
+      "html_sha256": "088db8f912f00d7b154b2c730385a74f55a855d50f722c167e9c78cb82ac2869",
+      "source_keys": [
+        "bnu:3"
+      ],
+      "public_attachment_urls": [
+        "https://law.bnu.edu.cn/docs/2025-12/9afa2516eec44597a21ee8455473dee3.xlsx",
+        "https://law.bnu.edu.cn/docs/2025-12/d2a66123b4274e948ed552804ba2f876.docx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-12-04",
+      "old_product_date": "2025-12-04",
+      "old_product_state": "verified",
+      "new_product_date": "2025-12-04",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "讲座预告丨京师法律实务大讲堂第八十五讲：从“差异性\"到“唯一性\"——刑事辩护的技能与方法",
+      "url": "https://law.bnu.edu.cn/xwzx/xygg/tzgg/jz/62cb18b5f371403eb0a0f6f3d48fe034.htm",
+      "final_url": "https://law.bnu.edu.cn/xwzx/xygg/tzgg/jz/62cb18b5f371403eb0a0f6f3d48fe034.htm",
+      "html_sha256": "90012717a43ae44cb8318a0cedca9176eb3e273f3ab853b71cd39762a3977674",
+      "source_keys": [
+        "bnu:4"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": true,
+      "expected_publication_date": "2026-10-12",
+      "old_product_date": "2026-10-12",
+      "old_product_state": "verified",
+      "new_product_date": "2026-10-12",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "讲座预告丨京师法学博士生学术报告——数字时代的刑法前沿问题与刑事归责",
+      "url": "https://law.bnu.edu.cn/xwzx/xygg/tzgg/jz/110b0365dde74046ac36dd0c026a78b5.htm",
+      "final_url": "https://law.bnu.edu.cn/xwzx/xygg/tzgg/jz/110b0365dde74046ac36dd0c026a78b5.htm",
+      "html_sha256": "045dee875ff49baa6f43f166885bcf67e32c0c88a7944fba729f83ce3096d645",
+      "source_keys": [
+        "bnu:4"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-09-29",
+      "old_product_date": "2026-09-29",
+      "old_product_state": "verified",
+      "new_product_date": "2026-09-29",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "关于启动文学院2025-2026学年实践项目申报工作的通知",
+      "url": "https://wxy.bnu.edu.cn/xstd/tzgg/941c8c9f56c344d1bf5b1f3490a3b46f.htm",
+      "final_url": "https://wxy.bnu.edu.cn/xstd/tzgg/941c8c9f56c344d1bf5b1f3490a3b46f.htm",
+      "html_sha256": "9eee0cd10ed8f5b41ad45e74f96dc8f94e6f786a88b78f6ead91c184cbd4c6b2",
+      "source_keys": [
+        "bnu:5"
+      ],
+      "public_attachment_urls": [
+        "https://wxy.bnu.edu.cn/docs/2025-11/ee176b1c551049f9b28b09497088c743.docx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-11-14",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-11-14",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "关于启动文学院2024-2025学年实践项目结项工作的通知",
+      "url": "https://wxy.bnu.edu.cn/xstd/tzgg/6d9549a064aa4fe79ab1667424372a05.htm",
+      "final_url": "https://wxy.bnu.edu.cn/xstd/tzgg/6d9549a064aa4fe79ab1667424372a05.htm",
+      "html_sha256": "f299a4f5222cc499318a842b7239f83bb77188fddd1238e452285049bccbd9a3",
+      "source_keys": [
+        "bnu:5"
+      ],
+      "public_attachment_urls": [
+        "https://wxy.bnu.edu.cn/docs/2025-11/446db988d6ec4a998196e6ff2baa9c0d.docx"
+      ],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-10-23",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-10-23",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "北京师范大学人工智能学院2026年专业学位博士生招生复试名单",
+      "url": "https://ai.bnu.edu.cn/zszl/yjszs/tzgg3/03f8d2ebb2924ab49aa3ab2f65fe35ab.htm",
+      "final_url": "https://ai.bnu.edu.cn/zszl/yjszs/tzgg3/03f8d2ebb2924ab49aa3ab2f65fe35ab.htm",
+      "html_sha256": "af81d0eee07aa0dd35b8b62aceaeaf9593994074a8ead36cc8642cbd8e711479",
+      "source_keys": [
+        "bnu:8"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-12-29",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-12-29",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "北京师范大学人工智能学院2026年学术学位博士生招生复试名单",
+      "url": "https://ai.bnu.edu.cn/zszl/yjszs/tzgg3/acc7cc7630da4abe9def6f4486b112a6.htm",
+      "final_url": "https://ai.bnu.edu.cn/zszl/yjszs/tzgg3/acc7cc7630da4abe9def6f4486b112a6.htm",
+      "html_sha256": "4a0ed8d46df84ea24bb6cc071fe276c928cfaa8b9698567d23d8597dbc538075",
+      "source_keys": [
+        "bnu:8"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-12-29",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-12-29",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "人工智能学院2025年专业学位博士研究生招生复试安排",
+      "url": "https://ai.bnu.edu.cn/ggjxz/tzgg/4b02d0641bfb49a7b1c4468b6c128d92.htm",
+      "final_url": "https://ai.bnu.edu.cn/ggjxz/tzgg/4b02d0641bfb49a7b1c4468b6c128d92.htm",
+      "html_sha256": "f0be74f1d266196e0b8ae84515ab67d6337f0969715f537ecab42a609ca138eb",
+      "source_keys": [
+        "bnu:8"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2025-03-31",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2025-03-31",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    },
+    {
+      "school": "北京师范大学",
+      "title": "京师智能讲堂第五十六期：人工智能时代的科研诚信风险及其防治",
+      "url": "https://ai.bnu.edu.cn/kxyj/xshd1/6e98443e6aed4be7b069216a200551a0.htm",
+      "final_url": "https://ai.bnu.edu.cn/kxyj/xshd1/6e98443e6aed4be7b069216a200551a0.htm",
+      "html_sha256": "2353e5c3b8d4bd0c7c249fc2a8b8fe4bac42044a537dd42c25678dd7c9756c46",
+      "source_keys": [
+        "bnu:9"
+      ],
+      "public_attachment_urls": [],
+      "inconsistent_title_metadata": false,
+      "expected_publication_date": "2026-10-14",
+      "old_product_date": null,
+      "old_product_state": "unknown",
+      "new_product_date": "2026-10-14",
+      "new_product_state": "verified",
+      "reviewed_outcome": "correct_verified",
+      "article_identity_reviewed": true,
+      "automatic_installation_claimed": false
+    }
+  ],
+  "new_date_outcomes": {
+    "correct_verified": 96,
+    "publication_year_century_unconfirmed": 1,
+    "publication_evidence_incomplete": 1,
+    "publication_unknown_only_update_observed": 2
+  },
+  "old_correct_verified": 31,
+  "actual_website_reads_in_metadata_replay": 0,
+  "actual_model_requests_in_metadata_replay": 0,
+  "oracle_correction": "The initial review helper expanded header 25-12-03 to 2025. The original supplies no four-digit century; that assumption is withdrawn for both before and after. Original private observations remain retained.",
+  "limitations": [
+    "Same-document multi-column appearances remain distinct memberships.",
+    "No inference of institution ownership from matching names or URLs.",
+    "No claim of universal zero errors or complete university coverage."
+  ],
+  "latest_replay": {
+    "parser_version": "title-bound-header-5",
+    "reviewed_originals": 100,
+    "correct_verified": 96,
+    "unknown": 4,
+    "date_mismatches": 0,
+    "actual_website_reads": 0,
+    "actual_model_calls": 0
+  }
+}

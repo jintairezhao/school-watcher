@@ -9,7 +9,10 @@ from backend.database.models import AppConfig
 
 def _counter():
     return dict(tokens=0, input_tokens=0, output_tokens=0, unclassified_tokens=0,
-                calls=0, succeeded=0, failed=0, uncertain=0, pending=0, unknown_usage=0)
+                calls=0, succeeded=0, failed=0, partial=0, uncertain=0, pending=0, unknown_usage=0,
+                validation_failed=0, other_failed=0,
+                cache_hit_tokens=0, cache_miss_tokens=0, cache_reported_calls=0,
+                cache_unreported_calls=0)
 
 
 def _integer(value):
@@ -32,7 +35,7 @@ def usage_dashboard(days=30, offset_minutes=0, *, now=None):
     # Only select metadata needed by the charts; prompts, outputs and keys never leave the DB.
     rows = db.session.query(AIExecution.created_at, AIExecution.provider, AIExecution.model,
                             AIExecution.purpose, AIExecution.skill_id, AIExecution.status,
-                            AIExecution.usage, AIExecution.request_sent).filter(
+                            AIExecution.usage, AIExecution.request_sent, AIExecution.error_code).filter(
         AIExecution.created_at <= now).yield_per(1000)
     for row in rows:
         # Reserved requests may not have been dispatched yet.
@@ -51,9 +54,19 @@ def usage_dashboard(days=30, offset_minutes=0, *, now=None):
         counts.update(tokens=tokens, input_tokens=inp, output_tokens=out,
                       unclassified_tokens=tokens - inp - out, calls=1,
                       unknown_usage=int(not known and row.status != 'sending'))
-        status_key = {'sending': 'pending', 'succeeded': 'succeeded',
+        hit, miss = usage.get('cache_hit_tokens'), usage.get('cache_miss_tokens')
+        if (known and type(hit) is int and type(miss) is int and hit >= 0 and miss >= 0
+                and hit + miss == inp):
+            counts.update(cache_hit_tokens=hit, cache_miss_tokens=miss, cache_reported_calls=1)
+        elif row.status != 'sending':
+            counts['cache_unreported_calls'] = 1
+        status_key = {'sending': 'pending', 'succeeded': 'succeeded', 'partial': 'partial',
                       'failed': 'failed', 'uncertain': 'uncertain'}.get(row.status, 'uncertain')
         counts[status_key] = 1
+        if row.status == 'failed':
+            invalid = bool(usage.get('validation_error')) or row.error_code in (
+                'output_validation_failed', 'invalid_json', 'incomplete_model_output')
+            counts['validation_failed' if invalid else 'other_failed'] = 1
         targets = [lifetime]
         if date in calendar:
             targets.append(calendar[date])
@@ -69,8 +82,14 @@ def usage_dashboard(days=30, offset_minutes=0, *, now=None):
                 target[key] += value
     daily = [dict(date=day.isoformat(), **counts) for day, counts in calendar.items()]
     series = daily[-days:]
-    completed = total['succeeded'] + total['failed']
+    # Partial output is a known, incomplete result, not an unknown invoice.
+    # Count it in the denominator rather than inflating complete-result yield.
+    completed = total['succeeded'] + total['failed'] + total['partial']
     total['success_rate'] = round(total['succeeded'] / completed * 100, 1) if completed else None
+    reported_input = total['cache_hit_tokens'] + total['cache_miss_tokens']
+    # The denominator covers reported input only. Missing historical cache
+    # details cannot silently lower a provider's measured cache-hit rate.
+    total['cache_hit_rate'] = round(total['cache_hit_tokens'] / reported_input * 100, 1) if reported_input else None
     peak = max(series, key=lambda item: item['tokens'])
     total.update(peak_tokens=peak['tokens'], peak_date=peak['date'] if peak['tokens'] else None)
     month = now.strftime('%Y-%m')

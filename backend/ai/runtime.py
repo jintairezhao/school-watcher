@@ -166,13 +166,16 @@ def _reserve(execution_id, purpose, binding, skill_id, skill_version, skill_dige
         request_limit = max(0, int(AppConfig.get('ai_request_limit_school_discovery',
             str(policy['ai_school_request_limit'])) or 0))
     _ensure_budgets(keys)
+    from backend.services.discovery_costs import capture_discovery_context
+    context = capture_discovery_context(handle, school_id, school_key) if purpose == 'directory' else {}
     try:
         row = AIExecution(execution_id=execution_id, purpose=purpose,
                           profile_id=binding['id'] or None, config_version=str(binding['version']),
                           provider=binding['provider'], model=binding['model'],
                           skill_id=skill_id, skill_version=skill_version, skill_digest=skill_digest,
                           input_digest=input_digest, mode=mode, reserved_tokens=reservation,
-                          budget_keys=keys)
+                          budget_keys=keys,
+                          diagnostics={'discovery_context': context} if context else {})
         db.session.add(row)
         db.session.flush()
         for index, key in enumerate(keys):
@@ -235,9 +238,16 @@ def _settle(execution_id, *, status, output=None, usage=None, error_code='', req
         return _result(db.session.get(AIExecution, execution_id, populate_existing=True))
     row.status, row.output, row.usage = status, output, usage or {'known': False}
     row.error_code, row.request_id, row.retryable = error_code, request_id, retryable
-    row.diagnostics = diagnostics or row.diagnostics or {}
+    if row.purpose == 'directory' and (row.diagnostics or {}).get('discovery_context'):
+        from backend.services.discovery_costs import preserve_discovery_context
+        row.diagnostics = preserve_discovery_context(row.diagnostics, diagnostics)
+    else:
+        row.diagnostics = diagnostics or row.diagnostics or {}
     row.finished_at = datetime.utcnow()
     _release_active(row)
+    if row.purpose == 'directory':
+        from backend.services.tasks import wake_ai_resource_waiters
+        wake_ai_resource_waiters()
     if not row.request_sent:
         for key in row.budget_keys:
             db.session.execute(update(AIBudget).where(AIBudget.key == key, AIBudget.reserved_requests > 0).values(
@@ -328,8 +338,11 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
         if now - progress_at < 5:
             return
         progress_at = now
+        from backend.services.discovery_costs import preserve_discovery_context
+        saved = db.session.query(AIExecution.diagnostics).filter_by(execution_id=execution_id).one()[0]
         db.session.execute(update(AIExecution).where(AIExecution.execution_id == execution_id,
-            AIExecution.status == 'sending').values(heartbeat_at=datetime.utcnow(), diagnostics=values))
+            AIExecution.status == 'sending').values(heartbeat_at=datetime.utcnow(),
+                diagnostics=preserve_discovery_context(saved, values)))
         db.session.commit()
     try:
         key = credential_for(binding, allow_untested=allow_untested)

@@ -1,0 +1,448 @@
+{
+  "scope": "public structure reading only; no source-acceptance or fee saving claim",
+  "website_page_attempts_including_failures": 20,
+  "actual_model_requests": 0,
+  "initial_timeout_observations": 3,
+  "latest_pairs": [
+    {
+      "url": "https://www.ruc.edu.cn/",
+      "name": "人大官网首页",
+      "observed_entries_equal": true,
+      "unique_entries": 252,
+      "native_seconds": 20.7484,
+      "crawl4ai_seconds": 11.6886,
+      "native_outcome": "usable",
+      "crawl4ai_outcome": "usable",
+      "c4_stage_observations": []
+    },
+    {
+      "url": "https://www.ruc.edu.cn/zuzhijigou.html",
+      "name": "人大组织机构目录",
+      "observed_entries_equal": true,
+      "unique_entries": 256,
+      "native_seconds": 7.1837,
+      "crawl4ai_seconds": 7.1187,
+      "native_outcome": "usable",
+      "crawl4ai_outcome": "usable",
+      "c4_stage_observations": []
+    },
+    {
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+      "name": "人大财金学院公告",
+      "observed_entries_equal": true,
+      "unique_entries": 104,
+      "native_seconds": 3.1187,
+      "crawl4ai_seconds": 6.769,
+      "native_outcome": "usable",
+      "crawl4ai_outcome": "usable",
+      "c4_stage_observations": []
+    },
+    {
+      "url": "https://www.cupk.edu.cn/xgybw/",
+      "name": "中石克学生工作入口",
+      "observed_entries_equal": true,
+      "unique_entries": 49,
+      "native_seconds": 32.952,
+      "crawl4ai_seconds": 38.6289,
+      "native_outcome": "usable",
+      "crawl4ai_outcome": "usable",
+      "c4_stage_observations": [
+        {
+          "stage": "after_goto",
+          "seconds": 36.109,
+          "ready_state": "interactive",
+          "matched_nodes": 52,
+          "first_visible": false,
+          "visible_matches": 36
+        },
+        {
+          "stage": "before_retrieve_html",
+          "seconds": 36.143
+        }
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/xszz/",
+      "name": "中石克学生资助入口",
+      "observed_entries_equal": true,
+      "unique_entries": 89,
+      "native_seconds": 22.3081,
+      "crawl4ai_seconds": 25.0913,
+      "native_outcome": "usable",
+      "crawl4ai_outcome": "usable",
+      "c4_stage_observations": [
+        {
+          "stage": "after_goto",
+          "seconds": 23.864,
+          "ready_state": "interactive",
+          "matched_nodes": 99,
+          "first_visible": false,
+          "visible_matches": 56
+        },
+        {
+          "stage": "before_retrieve_html",
+          "seconds": 23.898
+        }
+      ]
+    },
+    {
+      "url": "https://www.sjtu.edu.cn/",
+      "name": "交大官网首页",
+      "observed_entries_equal": true,
+      "unique_entries": 282,
+      "native_seconds": 22.8191,
+      "crawl4ai_seconds": 15.3243,
+      "native_outcome": "usable",
+      "crawl4ai_outcome": "usable",
+      "c4_stage_observations": []
+    },
+    {
+      "url": "https://news.sjtu.edu.cn/xsjz/index.html",
+      "name": "交大学术讲座栏目",
+      "observed_entries_equal": true,
+      "unique_entries": 13,
+      "native_seconds": 6.5059,
+      "crawl4ai_seconds": 7.9883,
+      "native_outcome": "usable",
+      "crawl4ai_outcome": "usable",
+      "c4_stage_observations": []
+    }
+  ],
+  "all_attempts": [
+    {
+      "run": "engine-public-probe",
+      "name": "人大官网首页",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 20.7484,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-probe",
+      "name": "人大官网首页",
+      "engine": "crawl4ai",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 11.6886,
+      "diagnostics": {
+        "engine_success": true,
+        "engine_error": "",
+        "sandbox_enabled": true,
+        "shared_origin_broker": true,
+        "resource_requests": 206,
+        "document_response_statuses": [
+          200
+        ],
+        "actual_model_requests": 0
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "人大组织机构目录",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 7.1837,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "人大组织机构目录",
+      "engine": "crawl4ai",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 7.1187,
+      "diagnostics": {
+        "engine_success": true,
+        "engine_error": "",
+        "sandbox_enabled": true,
+        "shared_origin_broker": true,
+        "resource_requests": 54,
+        "document_response_statuses": [
+          200
+        ],
+        "actual_model_requests": 0
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "人大财金学院公告",
+      "engine": "crawl4ai",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 6.769,
+      "diagnostics": {
+        "engine_success": true,
+        "engine_error": "",
+        "sandbox_enabled": true,
+        "shared_origin_broker": true,
+        "resource_requests": 19,
+        "document_response_statuses": [
+          200
+        ],
+        "actual_model_requests": 0
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "人大财金学院公告",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 3.1187,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "中石克学生工作入口",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 19.3749,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "中石克学生工作入口",
+      "engine": "crawl4ai",
+      "status": 0,
+      "outcome": "network_error",
+      "seconds": 46.2847,
+      "diagnostics": {
+        "resource_requests": 22,
+        "document_response_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "中石克学生资助入口",
+      "engine": "crawl4ai",
+      "status": 0,
+      "outcome": "network_error",
+      "seconds": 46.1575,
+      "diagnostics": {
+        "resource_requests": 16,
+        "document_response_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "中石克学生资助入口",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 23.741,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "交大官网首页",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 22.8191,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "交大官网首页",
+      "engine": "crawl4ai",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 15.3243,
+      "diagnostics": {
+        "engine_success": true,
+        "engine_error": "",
+        "sandbox_enabled": true,
+        "shared_origin_broker": true,
+        "resource_requests": 90,
+        "document_response_statuses": [
+          200,
+          200
+        ],
+        "actual_model_requests": 0
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "交大学术讲座栏目",
+      "engine": "crawl4ai",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 7.9883,
+      "diagnostics": {
+        "engine_success": true,
+        "engine_error": "",
+        "sandbox_enabled": true,
+        "shared_origin_broker": true,
+        "resource_requests": 33,
+        "document_response_statuses": [
+          200
+        ],
+        "actual_model_requests": 0
+      }
+    },
+    {
+      "run": "engine-public-development",
+      "name": "交大学术讲座栏目",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 6.5059,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-wait-diagnosis",
+      "name": "中石克学生工作入口",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 30.2388,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-wait-diagnosis",
+      "name": "中石克学生工作入口",
+      "engine": "crawl4ai",
+      "status": 0,
+      "outcome": "network_error",
+      "seconds": 46.6714,
+      "diagnostics": {
+        "resource_requests": 22,
+        "document_response_statuses": [
+          200
+        ],
+        "stages": [
+          {
+            "stage": "after_goto",
+            "seconds": 26.612,
+            "ready_state": "interactive",
+            "matched_nodes": 52,
+            "first_visible": false,
+            "visible_matches": 36
+          }
+        ]
+      }
+    },
+    {
+      "run": "engine-public-cupk-after",
+      "name": "中石克学生工作入口",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 32.952,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    },
+    {
+      "run": "engine-public-cupk-after",
+      "name": "中石克学生工作入口",
+      "engine": "crawl4ai",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 38.6289,
+      "diagnostics": {
+        "engine_success": true,
+        "engine_error": "",
+        "sandbox_enabled": true,
+        "shared_origin_broker": true,
+        "resource_requests": 22,
+        "document_response_statuses": [
+          200
+        ],
+        "actual_model_requests": 0,
+        "stages": [
+          {
+            "stage": "after_goto",
+            "seconds": 36.109,
+            "ready_state": "interactive",
+            "matched_nodes": 52,
+            "first_visible": false,
+            "visible_matches": 36
+          },
+          {
+            "stage": "before_retrieve_html",
+            "seconds": 36.143
+          }
+        ]
+      }
+    },
+    {
+      "run": "engine-public-cupk-after",
+      "name": "中石克学生资助入口",
+      "engine": "crawl4ai",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 25.0913,
+      "diagnostics": {
+        "engine_success": true,
+        "engine_error": "",
+        "sandbox_enabled": true,
+        "shared_origin_broker": true,
+        "resource_requests": 16,
+        "document_response_statuses": [
+          200
+        ],
+        "actual_model_requests": 0,
+        "stages": [
+          {
+            "stage": "after_goto",
+            "seconds": 23.864,
+            "ready_state": "interactive",
+            "matched_nodes": 99,
+            "first_visible": false,
+            "visible_matches": 56
+          },
+          {
+            "stage": "before_retrieve_html",
+            "seconds": 23.898
+          }
+        ]
+      }
+    },
+    {
+      "run": "engine-public-cupk-after",
+      "name": "中石克学生资助入口",
+      "engine": "current-browser",
+      "status": 200,
+      "outcome": "usable",
+      "seconds": 22.3081,
+      "diagnostics": {
+        "sandbox_enabled": true,
+        "shared_origin_broker": true
+      }
+    }
+  ],
+  "production_engine_replaced": false
+}

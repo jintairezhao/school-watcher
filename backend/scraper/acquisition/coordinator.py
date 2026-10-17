@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 
 from backend.scraper.fetch_errors import SourceAccessError, describe_fetch_error
 from backend.scraper.http_client import validate_public_url
+from backend.scraper.auth_routes import is_sign_in_route
 from .contracts import FetchRequest, FetchResult
 from .classifier import classify_result
 from .profiles import api_request, configured_request, map_api_response
@@ -19,6 +20,52 @@ _browser_dispatch = ContextVar('acquisition_browser_dispatch', default=None)
 _cache_lookup = ContextVar('acquisition_cache_lookup', default=None)
 _cache_store = ContextVar('acquisition_cache_store', default=None)
 _before_fetch = ContextVar('acquisition_before_fetch', default=None)
+_SOURCE_NEGOTIATION_STATUSES = frozenset((406, 415, 421, 422))
+
+
+def _source_transport_verdict(request, observed, result):
+    """A source GET refusal can describe the HTTP route, not a missing source.
+
+    One ordinary browser observation distinguishes that case. Authentication,
+    explicit restrictions, size failures, API profiles and ordinary article reads keep
+    their existing handling; browser responses never trigger another probe.
+    """
+    source_trial = False
+    if request.purpose == 'article' and request.policy.get('exploration') is True:
+        from backend.services.tasks import current_execution
+        source_trial = (current_execution() or {}).get('kind') in ('onboard', 'source_review')
+    source_read = request.purpose in ('directory', 'list') or source_trial
+    if (not source_read or not request.browser_allowed
+            or observed.transport != 'http' or is_sign_in_route(observed.final_url)):
+        return result
+    # Some configured proxies close pinned-IP HTTP requests while their browser
+    # route can read the original public host. Waiting behind every unvisited
+    # unit before trying that route strands a readable university roster.
+    # This is a transport observation, not evidence of JavaScript or bad rules.
+    # Keep DNS/connect/idle/total timeouts and explicit HTTP refusals unchanged.
+    if (observed.status == 0 and observed.outcome == 'network_error'
+            and observed.error_code == 'http_serverdisconnectederror'):
+        return replace(result, outcome='requires_render', error_code='source_http_transport_probe',
+            message='普通读取连接断开，正在尝试浏览器读取这个官网入口',
+            evidence=tuple(result.evidence) + ('http_source_transport_probe:' + observed.error_code,))
+    if (observed.status in (502, 503, 504) and not observed.retry_after
+            and 'proxy_route_retry_available' in observed.evidence
+            and result.outcome == 'network_error'):
+        content = classify_result(request, replace(observed, status=200, error_code='', outcome='needs_adapter'))
+        if content.outcome not in ('denied', 'needs_manual'):
+            return replace(result, outcome='requires_render', error_code='source_http_transport_probe',
+                message='普通读取出现代理网关错误，正在尝试浏览器读取这个官网入口',
+                evidence=tuple(result.evidence) + (f'http_source_transport_probe:proxy_gateway_{observed.status}',))
+    if (observed.status not in _SOURCE_NEGOTIATION_STATUSES
+            or result.error_code != f'http_{observed.status}'
+            or observed.error_code not in ('', f'http_{observed.status}')):
+        return result
+    content = classify_result(request, replace(observed, status=200, error_code='', outcome='needs_adapter'))
+    if content.outcome in ('denied', 'needs_manual'):
+        return result
+    return replace(result, outcome='requires_render', error_code='source_http_transport_probe',
+        message='普通读取返回异常，正在尝试浏览器读取这个官网入口',
+        evidence=tuple(result.evidence) + (f'http_source_transport_probe:{observed.status}',))
 
 
 class FetchFailure(SourceAccessError):
@@ -115,7 +162,7 @@ def fetch(request: FetchRequest, *, http_transport=None, browser_transport=None)
             # classification. A fixed CMS recognizer must not inherit an old
             # "unrecognized" verdict and pay to read or identify it again.
             # Explicit network/access failures retain their typed error codes.
-            result = classify_result(request, observed)
+            result = _source_transport_verdict(request, observed, classify_result(request, observed))
             if result.outcome != 'requires_render' or not request.browser_allowed:
                 return result
             # The retained HTTP observation may have been called complete by an
@@ -180,7 +227,7 @@ def _fetch(request: FetchRequest, *, http_transport=None, browser_transport=None
         _assert_execution()
         raw = http(replace(request, url=target, timeout_seconds=remaining))
     effective = replace(request, url=raw.final_url or request.url)
-    result = classify_result(effective, raw)
+    result = _source_transport_verdict(effective, raw, classify_result(effective, raw))
     return _render(request, effective, result, browser_transport=browser_transport)
 
 
@@ -208,6 +255,8 @@ def _render(request, effective, result, *, browser_transport=None):
         rendered = FetchResult.from_dict(rendered)
     if not rendered.final_url:
         rendered = replace(rendered, final_url=effective.url)
+    if result.error_code == 'source_http_transport_probe':
+        rendered = replace(rendered, evidence=tuple(dict.fromkeys((*result.evidence, *rendered.evidence))))
     if rendered.outcome in ('busy', 'unavailable', 'network_error', 'needs_manual') and rendered.error_code:
         return rendered
     return classify_result(render_request, replace(rendered, transport='browser'))

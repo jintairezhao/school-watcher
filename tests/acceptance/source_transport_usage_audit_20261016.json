@@ -1,0 +1,657 @@
+{
+  "recorded_at_utc": "2026-10-16T12:34:38.414654Z",
+  "revision": "v23",
+  "website_probe": {
+    "kind": "Real original-address acquisition check, not installed-source acceptance",
+    "records": [
+      {
+        "url": "http://marx.ruc.edu.cn/",
+        "before_http": {
+          "status": 0,
+          "outcome": "network_error",
+          "error_code": "http_serverdisconnectederror",
+          "seconds": 0.667
+        },
+        "standalone_browser": {
+          "status": 200,
+          "final_url": "http://marx.ruc.edu.cn/sy/index.htm",
+          "seconds": 3.484
+        },
+        "after_coordinator": {
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "transport": "browser",
+          "evidence": [
+            "http_source_transport_probe:http_serverdisconnectederror",
+            "visible_directory_content"
+          ],
+          "final_url": "http://marx.ruc.edu.cn/sy/index.htm",
+          "seconds": 10.133,
+          "sha256": "eb0bc9fa23c13b7b404b3694a536a89fd3bb1b95de7d2eed157177facdf2cd90",
+          "observed_publication_regions": [
+            {
+              "name": "活动",
+              "column_url": "http://marx.ruc.edu.cn/sy/xshd/index.htm",
+              "item_count": 5,
+              "samples": 5
+            }
+          ]
+        }
+      },
+      {
+        "url": "http://fl.ruc.edu.cn/sy/index.htm",
+        "before_http": {
+          "status": 0,
+          "outcome": "network_error",
+          "error_code": "http_serverdisconnectederror",
+          "seconds": 0.877
+        },
+        "standalone_browser": {
+          "status": 200,
+          "final_url": "http://fl.ruc.edu.cn/sy/index.htm",
+          "seconds": 5.807
+        },
+        "after_coordinator": {
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "transport": "browser",
+          "evidence": [
+            "http_source_transport_probe:http_serverdisconnectederror",
+            "visible_directory_content"
+          ],
+          "final_url": "http://fl.ruc.edu.cn/sy/index.htm",
+          "seconds": 9.038,
+          "sha256": "f08448b258b458ffb2bbca4b72a0f2c25fedb0c344d94b643e73d8516152a202",
+          "observed_publication_regions": [
+            {
+              "name": "招生信息",
+              "column_url": "http://fl.ruc.edu.cn/sy/zsxx/index.htm",
+              "item_count": 10,
+              "samples": 8
+            },
+            {
+              "name": "通知公告",
+              "column_url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/index.htm",
+              "item_count": 9,
+              "samples": 8
+            },
+            {
+              "name": "",
+              "column_url": "http://fl.ruc.edu.cn/sy/xwtz/mtbd_s/index.htm",
+              "item_count": 5,
+              "samples": 5
+            },
+            {
+              "name": "",
+              "column_url": "http://fl.ruc.edu.cn/sy/xwtz/mtbd_s/index.htm",
+              "item_count": 5,
+              "samples": 5
+            },
+            {
+              "name": "国际交流",
+              "column_url": "http://fl.ruc.edu.cn/sy/hzjl/xwdt/index.htm",
+              "item_count": 3,
+              "samples": 3
+            }
+          ]
+        }
+      },
+      {
+        "url": "http://dsdj.ruc.edu.cn/",
+        "before_http": {
+          "status": 0,
+          "outcome": "network_error",
+          "error_code": "http_serverdisconnectederror",
+          "seconds": 1.139
+        },
+        "standalone_browser": {
+          "status": 200,
+          "final_url": "http://dsdj.ruc.edu.cn/",
+          "seconds": 2.267
+        },
+        "after_coordinator": {
+          "status": 200,
+          "outcome": "usable",
+          "error_code": "",
+          "transport": "browser",
+          "evidence": [
+            "http_source_transport_probe:http_serverdisconnectederror",
+            "visible_directory_content"
+          ],
+          "final_url": "http://dsdj.ruc.edu.cn/",
+          "seconds": 4.587,
+          "sha256": "a018e13507c7fb2df2fc7602fe002ab34331ef21e7b3efe9ca9537c34352050d",
+          "observed_publication_regions": [
+            {
+              "name": "",
+              "column_url": "",
+              "item_count": 4,
+              "samples": 4
+            },
+            {
+              "name": "",
+              "column_url": "",
+              "item_count": 3,
+              "samples": 3
+            },
+            {
+              "name": "",
+              "column_url": "",
+              "item_count": 3,
+              "samples": 3
+            },
+            {
+              "name": "",
+              "column_url": "",
+              "item_count": 2,
+              "samples": 2
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "ai_usage_audit": {
+    "kind": "Read-only live application counters, not isolated A/B trial usage",
+    "local_timezone": "+08:00",
+    "range_start": "2026-09-16T16:00:00Z",
+    "range_end": "2026-10-16T12:34:38.414654Z",
+    "last_30_local_days": {
+      "sent_requests": 4294,
+      "statuses": {
+        "succeeded": 2705,
+        "failed": 1223,
+        "uncertain": 50,
+        "partial": 316
+      },
+      "validation_failures": [
+        {
+          "mode": "classify",
+          "reason": "publisher_missing",
+          "count": 908
+        },
+        {
+          "mode": "extraction",
+          "reason": "unobserved_or_invalid_operation",
+          "count": 222
+        },
+        {
+          "mode": "classify",
+          "reason": "channel_parent_instead_of_publisher",
+          "count": 195
+        },
+        {
+          "mode": "classify",
+          "reason": "identity_missing",
+          "count": 51
+        },
+        {
+          "mode": "extraction",
+          "reason": "unknown_or_duplicate_evidence",
+          "count": 30
+        },
+        {
+          "mode": "classify",
+          "reason": "unsupported_entity_relationship",
+          "count": 29
+        },
+        {
+          "mode": "classify",
+          "reason": "name_without_evidence",
+          "count": 26
+        },
+        {
+          "mode": "assess",
+          "reason": "unsupported_number_or_date",
+          "count": 25
+        },
+        {
+          "mode": "extraction",
+          "reason": "unobserved_url",
+          "count": 10
+        },
+        {
+          "mode": "extraction",
+          "reason": "output_validation_failed",
+          "count": 8
+        },
+        {
+          "mode": "classify",
+          "reason": "unobserved_or_invalid_operation",
+          "count": 6
+        },
+        {
+          "mode": "summary",
+          "reason": "unsupported_number_or_date",
+          "count": 4
+        },
+        {
+          "mode": "classify",
+          "reason": "incomplete_model_output",
+          "count": 3
+        },
+        {
+          "mode": "classify",
+          "reason": "$.results[1]: missing_field",
+          "count": 2
+        },
+        {
+          "mode": "classify",
+          "reason": "action_label_as_name",
+          "count": 2
+        },
+        {
+          "mode": "assess",
+          "reason": "$.results[0]: unknown_field",
+          "count": 2
+        },
+        {
+          "mode": "column",
+          "reason": "$: missing_field",
+          "count": 2
+        },
+        {
+          "mode": "classify",
+          "reason": "output_validation_failed",
+          "count": 1
+        },
+        {
+          "mode": "extraction",
+          "reason": "explore_without_operation",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "Expecting ',' delimiter: line 1 column 3477 (char 3476)",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "Expecting ',' delimiter: line 1 column 3163 (char 3162)",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "$.results[6].evidence: missing_field",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "Expecting ',' delimiter: line 1 column 3016 (char 3015)",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "Expecting ',' delimiter: line 1 column 3058 (char 3057)",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "$.results[2].topics[0].name: enum",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "Expecting ',' delimiter: line 1 column 3069 (char 3068)",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "Expecting ',' delimiter: line 1 column 3085 (char 3084)",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "$.results[1].topics[0].name: enum",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "$.results[0]: unknown_field",
+          "count": 1
+        },
+        {
+          "mode": "classify",
+          "reason": "Expecting ',' delimiter: line 1 column 1790 (char 1789)",
+          "count": 1
+        },
+        {
+          "mode": "column",
+          "reason": "$.columns[0].heading_selector: string_length",
+          "count": 1
+        }
+      ],
+      "partial_with_confirmed_usage": 316
+    },
+    "current_local_day": {
+      "sent_requests": 99,
+      "statuses": {
+        "succeeded": 99
+      },
+      "validation_failures": [],
+      "partial_with_confirmed_usage": 0
+    },
+    "historical_provider_cache_breakdowns_available": 0,
+    "historical_records_modified": false
+  },
+  "provider_cache": {
+    "screenshot_example_hit_tokens": 421120,
+    "screenshot_example_miss_tokens": 447559,
+    "screenshot_input_hit_percent": 48.5,
+    "reference": "https://api-docs.deepseek.com/guides/kv_cache/",
+    "limitations": "Provider prefix cache, local material reuse and installed source counts have different denominators. Cache rates cannot be retroactively reconstructed from historical input/output totals."
+  },
+  "latest_revision": "v27",
+  "initial_read_and_audit_new_model_requests": 0,
+  "proxy_gateway_followup": {
+    "kind": "Real original-address acquisition, not source installation",
+    "new_model_requests": 0,
+    "records": [
+      {
+        "url": "http://phi.ruc.edu.cn/",
+        "before_http_status": 502,
+        "after": {
+          "status": 200,
+          "transport": "browser",
+          "final_url": "https://phi.ruc.edu.cn/",
+          "outcome": "usable",
+          "evidence": [
+            "proxy_route_retry_available",
+            "public_dns_ipv4:106.120.213.247",
+            "http_source_transport_probe:proxy_gateway_502",
+            "visible_directory_content"
+          ],
+          "seconds": 14.522,
+          "sha256": "2d0db74d01bbe77713c6133feb476f6c9fcb95f6a5699429a53763605d6ca74f"
+        }
+      },
+      {
+        "url": "http://sce.ruc.edu.cn/",
+        "before_http_status": 502,
+        "after": {
+          "status": 200,
+          "transport": "browser",
+          "final_url": "https://sce.ruc.edu.cn/",
+          "outcome": "usable",
+          "evidence": [
+            "proxy_route_retry_available",
+            "public_dns_ipv4:106.120.213.245",
+            "http_source_transport_probe:proxy_gateway_502",
+            "visible_directory_content"
+          ],
+          "seconds": 22.464,
+          "sha256": "c355a3b039ee2d25b82a96c94b20a4550ac0cf0373be9ba5ebbe39f678797505"
+        }
+      }
+    ]
+  },
+  "subsequent_paid_recovery_probe": {
+    "requests": 6,
+    "confirmed_tokens": 34408,
+    "all_outputs_passed_contract": true,
+    "new_installed_sources": 0,
+    "input_tokens": 33262,
+    "cache_hit_tokens": 7296,
+    "cache_miss_tokens": 25966,
+    "provider_input_cache_hit_percent": 21.9,
+    "requests_for_campus_guide_page": 5,
+    "scope": "Same saved round, small bounded recovery; not cold A/B acceptance"
+  },
+  "program_only_recovery": {
+    "revision": "v26",
+    "kind": "Warm incremental normal-worker recovery, not cold A/B acceptance",
+    "additional_active_seconds": 420.039,
+    "additional_provider_requests": 0,
+    "additional_confirmed_tokens": 0,
+    "sources_before": 2,
+    "sources_after": 5,
+    "saved_content_rows_before": 24,
+    "saved_content_rows_after": 89,
+    "transport_event_counts": {
+      "logical_http_result": 37,
+      "browser_navigation_start": 26,
+      "browser_navigation_result": 26,
+      "browser_result_lookup": 26
+    },
+    "highest_http_result_count_for_one_url": 2,
+    "formerly_32_read_article_http_results": 1,
+    "same_school_round_key": true,
+    "original_paid_executions_unchanged": true,
+    "existing_source_ids_retained": true,
+    "old_unknown_paid_result_retained_without_resend": true,
+    "limitations": "Saved rows include older news/research/admissions. New sources still need independent ownership and coverage validation. Different warm windows cannot establish throughput or cost advantage."
+  },
+  "main_trunk_program_only_increment": {
+    "revision": "v27",
+    "kind": "Incremental normal-worker recovery on the same paid queue, not cold A/B",
+    "active_seconds": 420.368,
+    "additional_provider_requests": 0,
+    "additional_confirmed_tokens": 0,
+    "sources_before": 5,
+    "sources_after": 6,
+    "saved_content_before": 89,
+    "saved_content_after": 91,
+    "transport_event_counts": {
+      "logical_http_result": 19,
+      "browser_navigation_start": 22,
+      "browser_navigation_result": 21,
+      "browser_result_lookup": 21
+    },
+    "unit_browser_observations": [
+      {
+        "url": "http://xsc.ruc.edu.cn/",
+        "label": "■ 党委学生工作部（党委研究生工作部、党委人民武装部）",
+        "final_url": "http://xsc.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 8.015559200001007,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "recent_publication",
+        "inventory_content_hash": "418434e374bb53f3a76b3a5e83cb95dd1218c80b8af1c97c3ac4cdaa97dfa2d2"
+      },
+      {
+        "url": "http://iso.ruc.edu.cn/",
+        "label": "■ 留学生工作领导小组办公室",
+        "final_url": "http://iso.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 6.954533900003298,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "date_unknown",
+        "inventory_content_hash": "afa3721cf62748c344bd8f99310770fb99ec253a6b0c8d93a113cf0e395ee098"
+      },
+      {
+        "url": "http://marx.ruc.edu.cn/",
+        "label": "■ 马克思主义学院",
+        "final_url": "http://marx.ruc.edu.cn/sy/index.htm",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 6.289364399999613,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "recent_publication",
+        "inventory_content_hash": "b90b29b43c2e10692ec2165b59d67450701a192c35976b61aaf74b86a02d3c5b"
+      },
+      {
+        "url": "http://dsdj.ruc.edu.cn/",
+        "label": "■ 中共党史党建学院",
+        "final_url": "http://dsdj.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 4.685973900006502,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "recent_publication",
+        "inventory_content_hash": "e0e334a3349ac8008ce754bbb05c67a5ca1e514b3e3546c518b5ad17b7eb7786"
+      },
+      {
+        "url": "http://dis.ruc.edu.cn/",
+        "label": "■ 纪检监察学院",
+        "final_url": "http://dis.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 8.149217500002123,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "recent_publication",
+        "inventory_content_hash": "64bb672ddd84c65cf271a2dd7974c8f70827f688bd3c655c19a9525d90709b40"
+      },
+      {
+        "url": "http://fl.ruc.edu.cn/sy/index.htm",
+        "label": "■ 外国语学院",
+        "final_url": "http://fl.ruc.edu.cn/sy/index.htm",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 8.776628699997673,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "recent_publication",
+        "inventory_content_hash": "f08448b258b458ffb2bbca4b72a0f2c25fedb0c344d94b643e73d8516152a202"
+      },
+      {
+        "url": "http://phi.ruc.edu.cn/",
+        "label": "■ 哲学院",
+        "final_url": "https://phi.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 8.055782399998861,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "recent_publication",
+        "inventory_content_hash": "e159e719551c1b01fa86af57a24c3f4d846941edc53bf0994f1d6db4660f7fa4"
+      },
+      {
+        "url": "http://guoxue.ruc.edu.cn/",
+        "label": "■ 国学院",
+        "final_url": "http://guoxue.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 7.296260499999335,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "date_unknown",
+        "inventory_content_hash": "5bd3e21ec48c38c23dcc995b79ed30df0fed6b21d3205ea8f779938df7c72fb3"
+      },
+      {
+        "url": "http://lsxy.ruc.edu.cn/",
+        "label": "■ 历史学院",
+        "final_url": "http://lsxy.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 5.601142300001811,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "date_unknown",
+        "inventory_content_hash": "3b0a22db9edbaf64180a4160cfaeed2c3193f41aae51c57c6c62841b523ee9be"
+      },
+      {
+        "url": "http://wenxueyuan.ruc.edu.cn/",
+        "label": "■ 文学院",
+        "final_url": "http://wenxueyuan.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 5.335228299998562,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "date_unknown",
+        "inventory_content_hash": "5a0b583cd50823fc3273639d70dc776b0515a8d43e10d2febf6070693cee6e4a"
+      },
+      {
+        "url": "http://art.ruc.edu.cn/",
+        "label": "■ 艺术学院",
+        "final_url": "http://art.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 5.308776099998795,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "date_unknown",
+        "inventory_content_hash": "de6d6f84bc649ba23e54315381686f280c8dba80fa2ddcfacf46806aa17c679c"
+      },
+      {
+        "url": "http://scsce.ruc.edu.cn/",
+        "label": "■ 国际文化交流学院",
+        "final_url": "http://scsce.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 5.255269100001897,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "recent_publication",
+        "inventory_content_hash": "ca199289c40a09c446b3fc878c4395f76339b139c8bb4f60d923f58d82383184"
+      },
+      {
+        "url": "http://keyan.ruc.edu.cn/wwsy/kyjg/jybrwskzdyjjd/index.htm",
+        "label": "教育部人文社会科学重点研究基地",
+        "final_url": "http://keyan.ruc.edu.cn/wwsy/kyjg/jybrwskzdyjjd/index.htm",
+        "status": 404,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 0.93813819999923,
+        "inventory_state_after_window": "failed",
+        "inventory_health": "unreachable",
+        "inventory_content_hash": null
+      },
+      {
+        "url": "http://sf.ruc.edu.cn/",
+        "label": "■ 财政金融学院",
+        "final_url": "http://sf.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 8.981634799994936,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "date_unknown",
+        "inventory_content_hash": "1ae23184ffca9e22c30d0f8a8a626dd61fa6c7b6d7d4e98647d40fd2069c824e"
+      },
+      {
+        "url": "http://econ.ruc.edu.cn/",
+        "label": "■ 经济学院",
+        "final_url": "http://econ.ruc.edu.cn/",
+        "status": 200,
+        "outcome": null,
+        "error_code": null,
+        "navigation_seconds": 6.9980866000041715,
+        "inventory_state_after_window": "fetched",
+        "inventory_health": "recent_publication",
+        "inventory_content_hash": "068e84a6ef31ba691579f0d1b7b7e84ccf79e439d43ca67aedec2a256aa11e1a"
+      }
+    ],
+    "original_paid_executions_unchanged": true,
+    "existing_source_ids_retained": true,
+    "same_school_round_key": true,
+    "unknown_paid_results_not_resent": true,
+    "limitations": "Reading a real unit entrance does not establish a usable column, correct ownership or whole-school demand coverage. New AI work was intentionally not admitted in this increment. Newly installed column is older retained work, not automatically credited to the priority change."
+  },
+  "bounded_after_main_trunk": {
+    "revision": "v27",
+    "kind": "Small bounded continuation, not cold A/B acceptance",
+    "active_seconds": 420.37,
+    "requests": 3,
+    "confirmed_tokens": 9413,
+    "statuses": {
+      "succeeded": 3
+    },
+    "input_tokens": 6620,
+    "output_tokens": 2793,
+    "cache_hit_tokens": 3328,
+    "cache_miss_tokens": 3292,
+    "provider_input_cache_hit_percent": 50.3,
+    "request_pages": {
+      "http://ae.ruc.edu.cn/": 3
+    },
+    "sources_before": 6,
+    "sources_after": 7,
+    "saved_content_before": 91,
+    "saved_content_after": 100,
+    "existing_source_ids_retained": true,
+    "original_paid_executions_unchanged": true,
+    "same_school_round_key": true,
+    "unknown_paid_results_not_resent": true,
+    "limitations": "New source can come from parallel retained program work, not necessarily these model calls. All three calls classified separate batches on one college homepage. The diagnostic process cap changed without invoking the existing settings-change wake-up for old AI-budget waiters; not a production-limit-change or fair scheduling comparison. Do not claim provider cache improvement from incomparable small samples."
+  }
+}

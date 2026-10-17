@@ -31,11 +31,14 @@ class NewsCardDatesTests(unittest.TestCase):
         self.assertEqual(feeds[0]['samples'][0]['title'], '研究生教育教学工作会议召开')
         self.assertEqual(feeds[0]['latest_publication'], '2025-09-18')
 
-    def test_carousel_attribute_date_and_shared_top_heading(self):
+    def test_carousel_date_and_shared_group_do_not_invent_column_names(self):
         html = '<div class="Wrapmode01"><div class="listTitle01"><h2><a href="syxw/index.htm">要闻</a></h2></div>' + slides() + '<div class="articleList02">' + cards() + '</div></div>'
         feeds = publication_lists(html, URL)
         self.assertEqual(len(feeds), 2)
-        self.assertEqual({f['name'] for f in feeds}, {'要闻'})
+        self.assertEqual({f['name'] for f in feeds}, {''})
+        self.assertEqual({f['column_group_name'] for f in feeds}, {'要闻'})
+        self.assertTrue(all(f['heading_ambiguous'] for f in feeds))
+        self.assertEqual(len({f['container_locator'] for f in feeds}), 2)
         self.assertEqual({f['column_url'] for f in feeds}, {URL + 'syxw/index.htm'})
         self.assertEqual({f['latest_publication'] for f in feeds}, {'2025-09-12', '2025-09-18'})
 

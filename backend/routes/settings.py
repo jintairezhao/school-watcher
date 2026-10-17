@@ -27,28 +27,12 @@ def api_save_settings():
     if 'api_key' in data:
         return jsonify(error='请在系统管理的 AI 服务中配置、测试并选择用途'), 409
 
-    from backend.services.collection_settings import validate_month, since_month
-    month = None
-    if 'since_month' in data:
-        try:
-            month = validate_month(data['since_month'])
-        except ValueError as exc:
-            return jsonify(error=str(exc)), 400
-    interval = None
-    if 'interval' in data:
-        try:
-            interval = int(data['interval'])
-        except (TypeError, ValueError):
-            return jsonify({'error': '间隔必须为整数（分钟）'}), 400
-        if not 5 <= interval <= 720:
-            return jsonify({'error': '间隔需在 5-720 分钟之间'}), 400
-    if month is not None and month != since_month():
-        # Backfills must not stop at the first already-known page.
-        Department.query.update({Department.last_scraped_at: None})
-        AppConfig.set('scrape_since_month', month)
-    if interval is not None:
-        AppConfig.set('scrape_interval', str(interval))
-        # The independent worker rereads this persisted setting on every tick.
+    from backend.services.collection_settings import validate_settings, save_settings
+    try:
+        cutoff, interval = validate_settings(data)
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400
+    save_settings(cutoff, interval)
 
     return jsonify({'success': True, 'message': '设置已保存'})
 

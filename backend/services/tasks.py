@@ -19,6 +19,7 @@ ACTIVE_STATES = ('pending', 'running', 'waiting')
 CAPABILITIES = ('http', 'browser', 'directory')
 DISCOVERY_CACHE_WRITERS = ('directory', 'discover', 'source_baseline', 'navigation_review',
                            'source_grouping', 'maintenance')
+SOURCE_QUEUE_KINDS = ('collect', 'onboard', 'directory', 'discover', 'navigation_review')
 
 
 class LeaseLost(BaseException):
@@ -225,13 +226,15 @@ def recover_discovery_cache_waiters():
 def _priority(now):
     # Age removes class priority after five minutes, so body reads cannot starve
     # list refreshes. queued_at is retained on every resource/browser handoff.
-    # A large page has many bounded fragments. Its next fragment must rotate
-    # with other directory work rather than outrank every untouched school.
+    # Column fragments and structural discovery share a priority band so turns
+    # actually rotate. A higher column band previously exhausted the school's
+    # model allowance while its already-observed faculty directory waited.
     return case((BackgroundTask.kind == 'content', -3),
                 (or_(and_(BackgroundTask.kind == 'collect', BackgroundTask.phase == 'onboarding_collection'),
-                     and_(BackgroundTask.kind == 'onboard', BackgroundTask.claim_count == 0)), -2),
+                     and_(BackgroundTask.kind.in_(('onboard', 'navigation_review')),
+                          BackgroundTask.claim_count == 0)), -2),
                 (BackgroundTask.queued_at <= now - timedelta(minutes=5), -1),
-                (BackgroundTask.kind == 'content', 0), (BackgroundTask.kind.in_(('collect', 'onboard')), 1), else_=2)
+                (BackgroundTask.kind == 'content', 0), (BackgroundTask.kind.in_(SOURCE_QUEUE_KINDS), 1), else_=2)
 
 
 def _claim_statement(eligible, now):
@@ -286,13 +289,13 @@ def queue_ahead(task, capability=None):
     if row.kind=='content':
         task_priority=-3
     elif (row.kind == 'collect' and row.phase == 'onboarding_collection'
-            or row.kind == 'onboard' and row.claim_count == 0):
+            or row.kind in ('onboard', 'navigation_review') and row.claim_count == 0):
         task_priority = -2
     elif row.queued_at <= now - timedelta(minutes=5):
         task_priority = -1
     elif row.kind == 'content':
         task_priority = 0
-    elif row.kind in ('collect', 'onboard'):
+    elif row.kind in SOURCE_QUEUE_KINDS:
         task_priority = 1
     else:
         task_priority = 2
@@ -423,6 +426,19 @@ def defer(**kwargs):
     raise TaskDeferred(**kwargs)
 
 
+def wake_ai_resource_waiters():
+    """Release confirmed unsent waiters with the slot, within its transaction.
+
+    Paid pending responses, unknown results, user pauses and budget stops are
+    separate states. Waking a waiter never executes it or changes its evidence.
+    """
+    return db.session.execute(update(BackgroundTask).where(
+        BackgroundTask.state == 'pending', BackgroundTask.phase == 'ai_resource',
+        BackgroundTask.error_code == 'concurrency_limit',
+        BackgroundTask.available_at > datetime.utcnow()).values(
+            available_at=datetime.utcnow())).rowcount
+
+
 def handoff(handle, deferred):
     now = datetime.utcnow()
     lane = deferred.capability or handle.get('capability', 'http')
@@ -435,9 +451,9 @@ def handoff(handle, deferred):
             available_at=now + timedelta(seconds=max(0, deferred.delay)), token=None, worker_id=None,
             lease_until=None, error=deferred.reason[:500], error_code=deferred.error_code, updated_at=now)
         if deferred.keep_place:
-            # A person paused this, not the queue, so give the turn back: 继续 must
-            # carry on with the interrupted work rather than queue behind every
-            # task that has never run (see _claim_statement).
+            # A user pause or confirmed pre-dispatch resource wait completed no
+            # work. Give this turn back instead of rewarding repeated polling
+            # less than a competing fragment that actually obtained the model.
             values['claim_count'] = case((BackgroundTask.claim_count > 0, BackgroundTask.claim_count - 1), else_=0)
         if deferred.state == 'waiting' and data.get('verification_id'):
             verified = db.session.execute(select(VerificationSession.id).where(

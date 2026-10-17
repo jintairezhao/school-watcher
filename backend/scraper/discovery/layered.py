@@ -276,39 +276,162 @@ def append_navigation_evidence(evidence, link, context, *, menu_evidence=True):
     return ident
 
 
-def legacy_navigation_decision(batch, school_id, max_bytes):
+def legacy_navigation_decision(batch, school_id, max_bytes, *, batch_size=None):
     """Recover an old unresolved full-batch request before filtering role hits."""
-    from flask import has_app_context
-    if not has_app_context():
+    from flask import current_app, has_app_context
+    if not has_app_context() or 'sqlalchemy' not in current_app.extensions:
         return None
     from backend.ai.models import AIExecution
     from backend.ai.skill_loader import canonical, digest
+    from backend.database.db import db
+    with db.session.no_autoflush:
+        rows = db.session.query(AIExecution.execution_id, AIExecution.profile_id,
+            AIExecution.config_version, AIExecution.skill_digest, AIExecution.status,
+            AIExecution.request_sent, AIExecution.usage, AIExecution.input_digest).filter(
+                AIExecution.purpose == 'directory', AIExecution.skill_id == 'student-information',
+                AIExecution.mode == 'navigation', AIExecution.status.in_(
+                    ('reserved', 'sending', 'uncertain', 'failed', 'partial'))).order_by(
+                        AIExecution.created_at).all()
+    rows = [row for row in rows if _unsettled_navigation_row(row)]
+    if not rows:
+        return None
+    wanted = {row.input_digest for row in rows}
     prefixes = {}
-    for menu_evidence in (True, False):
-        evidence = {'school_id': school_id, 'candidates': [], 'evidence': []}
-        for index, (link, context) in enumerate(batch):
-            append_navigation_evidence(evidence, link, context, menu_evidence=menu_evidence)
-            if len(canonical(evidence).encode()) > max_bytes:
-                break
-            # Recover both input formats exactly. Changing the quote boundary
-            # must never purchase a new subset of an unresolved old request.
-            prefixes[digest({'evidence': evidence, 'repair_feedback': None})] = (
-                index + 1, json.loads(json.dumps(evidence)))
+    size = max(1, int(batch_size or len(batch)))
+    # Earlier byte-limited batches could have advanced the cursor by fewer
+    # than eight items. Every observed starting offset must remain recoverable.
+    offsets = range(len(batch)) if batch_size else (0,)
+    for offset in offsets:
+        for menu_evidence in (True, False):
+            evidence = {'school_id': school_id, 'candidates': [], 'evidence': []}
+            for index, (link, context) in enumerate(batch[offset:offset + size]):
+                append_navigation_evidence(evidence, link, context, menu_evidence=menu_evidence)
+                if len(canonical(evidence).encode()) > max_bytes:
+                    break
+                # Recover both input formats exactly. Changing order or the
+                # quote boundary cannot purchase an unresolved paid subset.
+                signature = digest({'evidence': evidence, 'repair_feedback': None})
+                if signature in wanted:
+                    prefixes[signature] = (offset, index + 1, menu_evidence)
     if not prefixes:
         return None
-    rows = AIExecution.query.filter(AIExecution.purpose == 'directory',
-        AIExecution.skill_id == 'student-information', AIExecution.mode == 'navigation',
-        AIExecution.status.in_(('reserved', 'sending', 'uncertain', 'failed', 'partial')),
-        AIExecution.execution_id.like('routes:%'),
-        AIExecution.input_digest.in_(prefixes)).order_by(AIExecution.created_at).all()
-    row = next((row for row in rows if row.status in ('reserved', 'sending', 'uncertain')
-                or row.request_sent and not (row.usage or {}).get('known')), None)
+    row = next((row for row in rows if row.input_digest in prefixes), None)
     if row is None:
         return None
-    batch_count, original_evidence = prefixes[row.input_digest]
+    offset, batch_count, menu_evidence = prefixes[row.input_digest]
+    original_evidence = {'school_id': school_id, 'candidates': [], 'evidence': []}
+    for link, context in batch[offset:offset + batch_count]:
+        append_navigation_evidence(original_evidence, link, context, menu_evidence=menu_evidence)
     return {'batch_count': batch_count, 'binding': [row.profile_id, row.config_version],
-            'skill_digest': row.skill_digest, 'fingerprint': row.execution_id[len('routes:'):],
-            'evidence': original_evidence}
+            'skill_digest': row.skill_digest,
+            'execution_id': row.execution_id,
+            'fingerprint': (row.execution_id[len('routes:'):] if row.execution_id.startswith('routes:')
+                            else row.execution_id),
+            'evidence': original_evidence, **({'batch_offset': offset} if batch_size else {})}
+
+
+def navigation_execution_id(plan):
+    """The runtime may assign a connection-resume alias to a logical plan."""
+    if isinstance(plan.get('execution_id'), str) and plan['execution_id']:
+        return plan['execution_id']
+    fingerprint = plan.get('fingerprint')
+    return 'routes:' + fingerprint if isinstance(fingerprint, str) and fingerprint else ''
+
+
+def _unsettled_navigation_row(row):
+    # A lost execution record is not proof that a possibly paid request was
+    # unpaid or completed. Keep its saved identity until explicit recovery.
+    usage = row.usage if row is not None and isinstance(row.usage, dict) else {}
+    return (row is None or row.status in ('reserved', 'sending', 'uncertain')
+            or row.request_sent and usage.get('known') is not True)
+
+
+def unsettled_navigation(checkpoint, school_id, page):
+    """Fence saved executions and exact-page requests across material changes."""
+    from flask import current_app, has_app_context
+    saved = checkpoint.get('route_legacy_unsettled')
+    if not has_app_context() or 'sqlalchemy' not in current_app.extensions:
+        return saved
+    from backend.ai.models import AIExecution
+    from backend.database.db import db
+    with db.session.no_autoflush:
+        if saved:
+            execution_id = navigation_execution_id(saved)
+            row = db.session.get(AIExecution, execution_id, populate_existing=True) if execution_id else None
+            if _unsettled_navigation_row(row):
+                return saved
+            checkpoint.pop('route_legacy_unsettled', None)
+            pending = checkpoint.get('route_pending_decision') or {}
+            if pending.get('execution_id') == execution_id:
+                # An early implementation also copied this wait marker into
+                # the dispatch plan. Known settlement releases that marker;
+                # it does not mark the unprocessed candidates completed.
+                checkpoint.pop('route_pending_decision', None)
+        address = canonical_url(page.get('snapshot_url') or page.get('url') or '')
+        if not address:
+            return None
+        # New executions carry a trusted task/page context independently of
+        # the prompt digest. A new job, menu caption or profile must not erase
+        # a still-unknown request for the very same observed page.
+        rows = db.session.query(AIExecution.execution_id, AIExecution.profile_id,
+            AIExecution.config_version, AIExecution.skill_digest, AIExecution.status,
+            AIExecution.request_sent, AIExecution.usage, AIExecution.diagnostics).filter(
+                AIExecution.purpose == 'directory', AIExecution.skill_id == 'student-information',
+                AIExecution.mode == 'navigation',
+                AIExecution.status.in_(('reserved', 'sending', 'uncertain', 'failed', 'partial')))
+        for row in rows:
+            diagnostics = row.diagnostics if isinstance(row.diagnostics, dict) else {}
+            context = diagnostics.get('discovery_context')
+            if not isinstance(context, dict):
+                continue
+            if (context.get('school_id') == school_id
+                    and canonical_url(context.get('snapshot_url') or context.get('page_url') or '') == address
+                    and _unsettled_navigation_row(row)):
+                return {'execution_id': row.execution_id,
+                        'fingerprint': (row.execution_id[len('routes') + 1:] if row.execution_id.startswith('routes:')
+                                        else row.execution_id),
+                        'binding': [row.profile_id, row.config_version], 'skill_digest': row.skill_digest,
+                        'reason': 'unsettled_observed_page_execution'}
+    return None
+
+
+def ordered_navigation(candidates, page, parsed, checkpoint, policy, school_id):
+    """Order a new sequence once; retain every resumed/possibly paid sequence."""
+    unresolved = unsettled_navigation(checkpoint, school_id, page)
+    if unresolved:
+        checkpoint['route_legacy_unsettled'] = unresolved
+        return candidates
+    saved = checkpoint.get('route_candidate_order')
+    if saved:
+        positions = {tuple(value): index for index, value in enumerate(saved)
+                     if isinstance(value, (list, tuple)) and len(value) == 2}
+        return sorted(candidates, key=lambda pair: positions.get(
+            (pair[0]['url'], pair[0]['label']), len(positions)))
+    if (page.get('discovery_policy') != 'valuable' or checkpoint.get('route_material_hash')
+            or checkpoint.get('route_cursor') or checkpoint.get('route_pending_decision')):
+        return candidates
+    # An older worker can have dispatched a later DOM batch before it saved
+    # a checkpoint. Check all original batches in one metadata query before
+    # creating a differently ordered paid sequence. This never resends it.
+    legacy = legacy_navigation_decision(candidates, school_id, int(policy['evidence_max_bytes']),
+                                       batch_size=8)
+    if legacy:
+        # Keeping DOM order alone is insufficient: a larger new batch could
+        # overlap this unresolved paid subset and bill for it a second time.
+        checkpoint['route_legacy_unsettled'] = legacy
+        return candidates
+    checkpoint.pop('route_legacy_unsettled', None)
+    from backend.services.discovery_policy import get_attention_policy
+    from .navigation_order import explain_candidates
+    attention = get_attention_policy()
+    explanations = explain_candidates(candidates,
+        dict(page, observed_structure=parsed.get('nodes', [])), attention)
+    ordered = [candidates[row['original_index']] for row in explanations]
+    checkpoint['route_candidate_order'] = [[link['url'], link['label']] for link, _ in ordered]
+    checkpoint['route_attention'] = dict(attention,
+        reasons=[{'url': row['url'], 'reason': row['reason'], 'needs': list(row['needs'])}
+                 for row in explanations])
+    return ordered
 
 
 def assist(site, page, html, parsed, *, decision_allowed=None):
@@ -327,6 +450,15 @@ def assist(site, page, html, parsed, *, decision_allowed=None):
     policy = get_policy()
     batch_size = max(1, min(8, int(policy['navigation_batch_size'])))
     checkpoint = dict(handle.get('checkpoint') or {})
+    candidates = ordered_navigation(candidates, page, parsed, checkpoint, policy,
+                                   handle.get('payload', {}).get('school_id', 0))
+    if checkpoint.get('route_legacy_unsettled'):
+        if handle:
+            tasks.checkpoint(checkpoint)
+        return {'status': 'needs_recovery', 'error_code': 'ai_result_unknown',
+                'reviewed_routes': checkpoint.get('route_cursor', 0), 'cached_routes': cached_count,
+                'remaining_routes': len(candidates), 'deferred_routes': len(candidates),
+                'waiting_for_execution': navigation_execution_id(checkpoint['route_legacy_unsettled'])}
     material_hash = digest([(l['url'], l['label'], context) for l, context in candidates])
     pending_decision = checkpoint.get('route_pending_decision')
     if checkpoint.get('route_material_hash') != material_hash:
@@ -382,11 +514,15 @@ def assist(site, page, html, parsed, *, decision_allowed=None):
         pending_decision = legacy_navigation_decision(batch, handle.get('payload', {}).get('school_id', 0),
                                                      int(policy['evidence_max_bytes']))
         if pending_decision:
-            pending_decision.update(material_hash=material_hash, cursor=cursor)
-            checkpoint['route_pending_decision'] = pending_decision
+            # A recovered unknown is a wait identity, never a new dispatch
+            # plan. Keep cursor and all candidates before this batch intact.
+            checkpoint['route_legacy_unsettled'] = pending_decision
             if handle:
                 tasks.checkpoint(checkpoint)
-            batch = batch[:pending_decision['batch_count']]
+            return {'status': 'needs_recovery', 'error_code': 'ai_result_unknown',
+                    'reviewed_routes': cursor, 'cached_routes': cached_count,
+                    'remaining_routes': len(candidates) - cursor,
+                    'waiting_for_execution': navigation_execution_id(pending_decision)}
     if pending_decision and (list(map(str, pending_decision.get('binding', []))) !=
                              [str(binding['id']), str(binding['version'])]
                              or pending_decision.get('skill_digest') != skill_digest):
@@ -475,7 +611,7 @@ def assist(site, page, html, parsed, *, decision_allowed=None):
                 if handle:
                     tasks.checkpoint(checkpoint)
             if exc.code == 'concurrency_limit':
-                return {'status': 'pending', 'next_delay': 10}
+                return {'status': 'pending', 'next_delay': 10, 'error_code': 'concurrency_limit'}
             record_progress(ai_state='failed', ai_error_code=exc.code)
             return {'status': 'needs_recovery', 'error_code': exc.code}
         if response['status'] == 'pending':

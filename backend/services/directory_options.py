@@ -1,6 +1,6 @@
 """Publish observed roster units as stable options, preserving shared memberships."""
 from backend.database.db import db
-from backend.database.models import Department, DepartmentDirectoryEntry
+from backend.database.models import Department, DepartmentDirectoryEntry, School
 from backend.scraper.http_client import validate_public_url
 from backend.services.source_inventory import canonical_url, site_key
 
@@ -16,6 +16,21 @@ def expand_directory_ids(school_id, ids, entries=None):
         return None
     expanded = set(ids)
     entries = directory_entries_for(school_id) if entries is None else entries
+    rows = Department.query.filter_by(school_id=school_id).all()
+    by_id = {row.id: row for row in rows}
+    from backend.services.source_placements import official_source_placements, _unit_key
+    placements = official_source_placements([row for row in rows if row.list_selector])
+    if placements:
+        school = db.session.get(School, school_id)
+        allowed = {ident: {node['key'] for place in places for node in place['nodes']}
+                   for ident, places in placements.items()}
+        # Older directory snapshots can retain a broad college column beneath
+        # every child sharing its homepage. Current verified ownership governs
+        # derived subscriptions too; explicitly selected source IDs stay above.
+        entries = [entry for entry in entries if entry.department_id not in allowed
+                   or not (parent := by_id.get(entry.parent_id)) or parent.kind != 'unit'
+                   or _unit_key(school.url, {'name': parent.name, 'url': parent.list_url})
+                   in allowed[entry.department_id]]
     # Bound traversal by stored memberships, including defensive cycle handling.
     while True:
         children = {e.department_id for e in entries if e.parent_id in expanded}
@@ -26,7 +41,6 @@ def expand_directory_ids(school_id, ids, entries=None):
     # persists its directory edge. Department selections must already include
     # those same sources shown beneath that department in the reader tree.
     from backend.services.inbox import source_hierarchy
-    rows=Department.query.filter_by(school_id=school_id).all()
     tree=source_hierarchy(rows,directory_entries=entries,available_only=True,retained_ids=expanded)
     pending=[unit for units in tree.values() for unit in units]
     while pending:

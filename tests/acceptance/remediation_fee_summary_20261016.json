@@ -1,0 +1,163 @@
+{
+  "sent_requests": 450,
+  "confirmed_tokens": 2141451,
+  "unknown_reserved_tokens": 13972,
+  "confirmed_plus_reserved": 2155423,
+  "prior_stage": {
+    "requests": 198,
+    "confirmed_tokens": 829891
+  },
+  "unknown_sent_requests": 1,
+  "active_requests": 0,
+  "investigation_history_not_a_single_school_production_cost": true,
+  "final_five_pairs": {
+    "requests": 30,
+    "confirmed_tokens": 101217
+  },
+  "retained_failed_tianjin_pair": {
+    "requests": 8,
+    "confirmed_tokens": 25420
+  },
+  "unknown_paid_execution_was_not_resent": true,
+  "same_round_ruc_recovery_probe": {
+    "requests": 6,
+    "confirmed_tokens": 34408,
+    "installed_sources_before": 2,
+    "installed_sources_after": 2,
+    "new_installed_sources": 0,
+    "cold_ab_comparison": false,
+    "saved_user_school_request_limit": 300,
+    "process_cumulative_diagnostic_request_cap": 106
+  },
+  "bounded_after_main_trunk": {
+    "revision": "v27",
+    "kind": "Small bounded continuation, not cold A/B acceptance",
+    "active_seconds": 420.37,
+    "requests": 3,
+    "confirmed_tokens": 9413,
+    "statuses": {
+      "succeeded": 3
+    },
+    "input_tokens": 6620,
+    "output_tokens": 2793,
+    "cache_hit_tokens": 3328,
+    "cache_miss_tokens": 3292,
+    "provider_input_cache_hit_percent": 50.3,
+    "request_pages": {
+      "http://ae.ruc.edu.cn/": 3
+    },
+    "sources_before": 6,
+    "sources_after": 7,
+    "saved_content_before": 91,
+    "saved_content_after": 100,
+    "existing_source_ids_retained": true,
+    "original_paid_executions_unchanged": true,
+    "same_school_round_key": true,
+    "unknown_paid_results_not_resent": true,
+    "limitations": "New source can come from parallel retained program work, not necessarily these model calls. All three calls classified separate batches on one college homepage. The diagnostic process cap changed without invoking the existing settings-change wake-up for old AI-budget waiters; not a production-limit-change or fair scheduling comparison. Do not claim provider cache improvement from incomparable small samples."
+  },
+  "normal_limit_wakeup_probe": {
+    "revision": "v28",
+    "requests": 3,
+    "confirmed_tokens": 8133,
+    "active_seconds": 420.104,
+    "sources_before": 7,
+    "sources_after": 7,
+    "input_tokens": 7260,
+    "cache_hit_tokens": 3456,
+    "cache_miss_tokens": 3804,
+    "output_tokens": 873,
+    "scope": "Actual limits save wakeup with a hard process cap of three new requests; not whole-school acceptance"
+  },
+  "warm_program_recovery": {
+    "date": "2026-10-16",
+    "kind": "Warm recovery of original paid candidates; NOT cold equal-budget acceptance",
+    "observations": [
+      {
+        "school": "ruc",
+        "revision": "v29",
+        "active_seconds": 420.486,
+        "sources_before": 7,
+        "sources_after": 11,
+        "saved_rows_before": 100,
+        "saved_rows_after": 242,
+        "additional_provider_requests": 0,
+        "additional_confirmed_tokens": 0,
+        "original_paid_executions_unchanged": true,
+        "existing_source_ids_retained": true,
+        "same_round": true,
+        "cold_comparison": false
+      },
+      {
+        "school": "hust",
+        "revision": "v30",
+        "active_seconds": 420.13,
+        "sources_before": 5,
+        "sources_after": 9,
+        "saved_rows_before": 40,
+        "saved_rows_after": 59,
+        "additional_provider_requests": 0,
+        "additional_confirmed_tokens": 0,
+        "original_paid_executions_unchanged": true,
+        "existing_source_ids_retained": true,
+        "same_round": true,
+        "cold_comparison": false
+      },
+      {
+        "school": "ustc",
+        "revision": "v30",
+        "active_seconds": 420.001,
+        "sources_before": 8,
+        "sources_after": 9,
+        "saved_rows_before": 142,
+        "saved_rows_after": 145,
+        "additional_provider_requests": 0,
+        "additional_confirmed_tokens": 0,
+        "original_paid_executions_unchanged": true,
+        "existing_source_ids_retained": true,
+        "same_round": true,
+        "cold_comparison": false
+      },
+      {
+        "school": "cupk",
+        "revision": "v30",
+        "active_seconds": 420.46,
+        "sources_before": 4,
+        "sources_after": 10,
+        "saved_rows_before": 159,
+        "saved_rows_after": 290,
+        "additional_provider_requests": 0,
+        "additional_confirmed_tokens": 0,
+        "original_paid_executions_unchanged": true,
+        "existing_source_ids_retained": true,
+        "same_round": true,
+        "cold_comparison": false
+      },
+      {
+        "school": "sjtu",
+        "revision": "v30",
+        "active_seconds": 420.195,
+        "sources_before": 2,
+        "sources_after": 4,
+        "saved_rows_before": 15,
+        "saved_rows_after": 31,
+        "additional_provider_requests": 0,
+        "additional_confirmed_tokens": 0,
+        "original_paid_executions_unchanged": true,
+        "existing_source_ids_retained": true,
+        "same_round": true,
+        "cold_comparison": false
+      }
+    ],
+    "provider_requests": 0,
+    "additional_confirmed_tokens": 0,
+    "unknown_paid_request_resent": false,
+    "limit_controls": "Each process capped at the already-used request count; no additional dispatch allowed. User stored 300 is unchanged.",
+    "scope_limitations": [
+      "Saved rows include news and static material, not all are notices.",
+      "Raw installed source rows have not all passed independent department ownership review.",
+      "Reading a directory does not prove it is connected.",
+      "These are additional 420-second windows, not new first-connection timing measurements."
+    ]
+  }
+}

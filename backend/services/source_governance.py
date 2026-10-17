@@ -849,10 +849,11 @@ def activate_proposal(proposal_id):
                 raise ValueError('同一列表已有配置，请作为现有来源修改审核')
             department = existing
         else:
-            from backend.services.source_identity import same_observed_column
+            from backend.services.source_identity import same_observed_column, observed_home_aliases
             validation = {'status': 'full', 'list_snapshot': bundle['list'], 'region': bundle.get('region') or {}}
-            candidates = Department.query.filter_by(school_id=proposal.school_id,
-                list_url=config['list_url'], kind='column').order_by(Department.id).all()
+            candidates = Department.query.filter(Department.school_id == proposal.school_id,
+                Department.list_url.in_(observed_home_aliases(validation)),
+                Department.kind == 'column').order_by(Department.id).all()
             department = next((row for row in candidates if same_observed_column(row, config, validation)), None)
             reused_equivalent = department is not None
             if department is None:

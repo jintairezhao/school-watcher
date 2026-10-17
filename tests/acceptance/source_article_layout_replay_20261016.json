@@ -1,0 +1,27 @@
+{
+  "school": "华中科技大学",
+  "url": "http://ugs.hust.edu.cn/info/1181/7228.htm",
+  "title": "探索生命奥秘，点亮生活美学：我校公选实验课《生命的艺术与创作》圆满收官",
+  "full_html_sha256": "9e6eeba253f1dc599c58bca119ec0cd4a39b929752add0ba87caa9ec1683f8da",
+  "observed_layout": "div.nav_right > div.right_inner, local div.content",
+  "original_publication_field": "作者：　时间：2025-12-09　浏览：",
+  "scope": "Retained full HTML source-validation preprocessing replay, no reinstallation and no body engine change",
+  "actual_website_reads": 0,
+  "actual_model_calls": 0,
+  "results": [
+    {
+      "revision": "before",
+      "retained_paragraphs": 1,
+      "retained_headlines": [],
+      "substantive_body_observed": false
+    },
+    {
+      "revision": "after",
+      "retained_paragraphs": 29,
+      "retained_headlines": [
+        "探索生命奥秘，点亮生活美学：我校公选实验课《生命的艺术与创作》圆满收官"
+      ],
+      "substantive_body_observed": true
+    }
+  ]
+}

@@ -12,6 +12,30 @@ class SourceAgentTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.tearDown()
 
+    def test_new_repair_does_not_classify_unrelated_regions_but_old_plan_keeps_its_format(self):
+        from backend.services.source_agent import recognize_column, validation_feedback
+        from backend.services import tasks
+        from tests.test_direct_onboarding import HTML, URL
+        html = HTML.replace('</body>', '<section>' + '无关整页资料。' * 7000 + '</section></body>')
+        feedback = [validation_feedback({'name': '通知公告', 'container_selector': '#notices',
+            'heading_selector': '#notices h2', 'list_selector': '#missing li'}, ['list_missing'])]
+        response = {'status': 'succeeded', 'output': {'status': 'not_column', 'columns': []}}
+        with patch('backend.ai.configuration.get_model_binding', return_value={'id': 1, 'version': 1}), \
+             patch('backend.ai.runtime.run_skill', return_value=response) as model:
+            recognize_column(self.fixture.school_id, URL, html, feedback=feedback)
+        self.assertEqual(model.call_count, 1)
+        self.assertNotIn('无关整页资料', str(model.call_args.args[2]))
+        # Existing completed/unknown input partitions keep their paid identity.
+        job = tasks.enqueue('onboard', 'old-layout-repair', {'school_id': self.fixture.school_id, 'url': URL})
+        handle = tasks.claim(capabilities=['http'])
+        with tasks.execution_scope(handle), \
+             patch('backend.ai.configuration.get_model_binding', return_value={'id': 1, 'version': 1}), \
+             patch('backend.ai.runtime.run_skill', return_value=response) as model:
+            tasks.checkpoint({'column_evidence_layout': 'compact-locations-1'})
+            result = recognize_column(self.fixture.school_id, URL, html, feedback=feedback)
+        self.assertFalse(result['material_complete'])
+        self.assertGreater(result['remaining_regions'], 0)
+
     def test_body_repair_receives_the_observed_article_dom_and_failed_execution(self):
         from backend.services.source_agent import recognize_column, validation_feedback
         from backend.services.source_validation import article_samples
