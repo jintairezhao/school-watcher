@@ -8,7 +8,7 @@ window.bindSchoolSuggestion = function ({nameInput, urlInput, hint, active = () 
         controller = null;
         hint.textContent = '';
     }
-    nameInput.addEventListener('input', () => {
+    function suggest() {
         reset();
         if (urlInput.dataset.autoFilled === 'true') {
             urlInput.value = '';
@@ -37,8 +37,12 @@ window.bindSchoolSuggestion = function ({nameInput, urlInput, hint, active = () 
                 if (controller === current) controller = null;
             }
         }, 600);
-    });
+    }
+    nameInput.addEventListener('input', suggest);
     urlInput.addEventListener('input', () => { reset(); urlInput.dataset.autoFilled = 'false'; });
     window.addEventListener('pagehide', reset);
+    // A visible form can accept input before its controller has downloaded.
+    // Reconcile that input once; never replace a URL already entered by the user.
+    if (active() && !editing() && nameInput.value.trim() && !urlInput.value.trim()) suggest();
     return {reset};
 };

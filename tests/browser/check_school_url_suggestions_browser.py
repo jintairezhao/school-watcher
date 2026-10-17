@@ -51,12 +51,14 @@ def check():
                         return original(url, options);
                     };
                 })();''')
-                state={'hold':False,'held':[]}
+                state={'hold':False,'held':[], 'defer_setup':False, 'setup_script':None}
                 def route_request(route):
                     request=route.request
                     if not request.url.startswith(base+'/'):route.abort();return
                     if request.method not in ('GET','HEAD'):
                         writes.append(request.url);route.abort();return
+                    if urlsplit(request.url).path=='/static/js/collection-setup.js' and state['defer_setup']:
+                        state['setup_script']=route;return
                     if urlsplit(request.url).path=='/api/schools/suggest-url' and state['hold']:
                         state['held'].append(route);return
                     route.continue_()
@@ -106,12 +108,39 @@ def check():
                 page.get_by_role('link',name='取消',exact=True).click()
                 page.goto(base+'/admin#schools');add.click()
                 expect(name).to_have_value('');expect(url).to_have_value('');expect(hint).to_have_text('')
-                name.fill(CAMPUS);expect(url).to_have_value('https://www.cupk.edu.cn')
+                name.fill(CAMPUS);page.wait_for_load_state('load')
+                expect(url).to_have_value('https://www.cupk.edu.cn')
                 name.fill('');expect(url).to_have_value('')
+                # The form is visible while its controller is still downloading.
+                # Early user input must be reconciled when binding completes.
+                state['defer_setup']=True
+                page.goto(base+'/collection/setup?add=1',wait_until='commit')
+                name.fill(CAMPUS)
+                for _ in range(40):
+                    if state['setup_script']:break
+                    page.wait_for_timeout(25)
+                assert state['setup_script'], 'Expected a delayed setup controller'
+                assert url.input_value()=='', 'No controller should have handled the early input yet'
+                state['defer_setup']=False
+                state['setup_script'].continue_();state['setup_script']=None
+                page.wait_for_load_state('load')
+                expect(url).to_have_value('https://www.cupk.edu.cn')
+                state['defer_setup']=True
+                page.goto(base+'/collection/setup?add=1',wait_until='commit')
+                name.fill(CAMPUS);url.fill('https://manual.example.edu.cn/early/')
+                for _ in range(40):
+                    if state['setup_script']:break
+                    page.wait_for_timeout(25)
+                assert state['setup_script']
+                state['defer_setup']=False
+                state['setup_script'].continue_();state['setup_script']=None
+                page.wait_for_load_state('load')
+                expect(url).to_have_value('https://manual.example.edu.cn/early/')
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
                 checks.append({'width':width,'theme':theme,'actual_address_API':True,
                     'independent_and_shared_sites':True,'unknown_does_not_keep_parent_URL':True,
-                    'late_response_fenced':True,'manual_URL_preserved':True,'reopened_setup_clean':True})
+                    'late_response_fenced':True,'manual_URL_preserved':True,'reopened_setup_clean':True,
+                    'input_before_controller_load_recovered':True,'early_manual_URL_preserved':True})
                 context.close()
             browser.close()
         db.session.expire_all();assert initial==(School.query.count(),BackgroundTask.query.count())
