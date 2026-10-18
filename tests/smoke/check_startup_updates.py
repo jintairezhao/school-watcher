@@ -71,6 +71,14 @@ def check():
                     wait(lambda: len(windows) == 2)
                     wait(lambda: windows[1].run_js('document.getElementById("action")?.textContent === "下载更新"'))
                     assert apis[1].state()['phase'] == 'available'
+                    # The app preference must reach an already-open native
+                    # dialog, its OS title, and the next launch's language cache.
+                    main.run_js('''document.getElementById('languageSelect').value='en';
+                        document.getElementById('languageSelect').dispatchEvent(new Event('change'));''')
+                    wait(lambda: windows[1].run_js('document.documentElement.lang === "en" && document.getElementById("action").textContent === "Download update"'))
+                    assert windows[1].title == 'Check for updates · School Watcher'
+                    assert json.loads((runtime.data_dir / 'desktop-language.json').read_text())['locale'] == 'en'
+                    assert apis[0].set_ui_locale('invalid') is False
                     checker.assert_called_once()
                     downloader.assert_not_called()
                     assert not apis[0].update_notification()['available']
@@ -87,6 +95,8 @@ def check():
                     wait(lambda: not apis[0]._allowed())
                     assert apis[0].update_notification() is None
                     assert apis[0].dismiss_update() is None
+                    assert apis[0].set_ui_locale('zh-CN') is False
+                    assert json.loads((runtime.data_dir / 'desktop-language.json').read_text())['locale'] == 'en'
                     settle(main)
                 except BaseException:
                     failures.append(traceback.format_exc())

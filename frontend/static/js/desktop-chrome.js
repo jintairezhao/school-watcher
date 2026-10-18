@@ -5,7 +5,7 @@
     async function action(name) {
         if (window.pywebview && window.pywebview.api) {
             try {
-                const result = await window.pywebview.api.window_action(name);
+                const result = await window.pywebview.api.window_action(name, window.I18n?.locale());
                 if (result && result.error) window.alert(result.error);
             } catch (_) {
                 if (name === 'uninstall') window.alert(uiT('未能打开卸载向导，请重新打开应用后重试。'));

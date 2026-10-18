@@ -94,13 +94,13 @@ def usage_dashboard(days=30, offset_minutes=0, *, now=None):
     total.update(peak_tokens=peak['tokens'], peak_date=peak['date'] if peak['tokens'] else None)
     month = now.strftime('%Y-%m')
     budgets = []
-    for key, label in (('total', '全部调用'), ('directory', '栏目发现'), ('summary', '通知摘要与连接测试')):
+    for key, label in (('total', '全部调用'), ('directory', '栏目发现'), ('summary', '连接测试与历史摘要用量')):
         row = db.session.get(AIBudget, key + ':' + month)
         budgets.append(dict(key=key, label=label,
                             used_tokens=max(0, row.used_tokens) if row else 0,
                             reserved_tokens=max(0, row.reserved_tokens) if row else 0,
                             limit=_integer(int(AppConfig.get('ai_token_limit_' + key, '0') or 0))))
-    labels = {'directory': '栏目发现', 'summary': '通知摘要', 'test': '连接测试', 'other': '其他调用'}
+    labels = {'directory': '栏目发现', 'summary': '历史摘要调用', 'test': '连接测试', 'other': '其他调用'}
     return dict(days=days, start=selected_first.isoformat(), end=today.isoformat(),
                 offset_minutes=offset_minutes, generated_at=now.isoformat() + 'Z',
                 summary=total, daily=series, calendar=daily,

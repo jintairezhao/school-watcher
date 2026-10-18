@@ -144,6 +144,28 @@ def main():
                 else:
                     page.locator('#aiUsagePanel').screenshot(path=str(folder / f'usage-{theme}-{width}.png'))
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'page overflow'
+            # Populated categories are protocol data, not template literals.
+            # Changing language must relabel existing history without a new AI
+            # request, a new analytics request, or a change in the recorded totals.
+            old_total = page.locator('#aiUsageTokens').inner_text()
+            old_calls = page.locator('#aiUsageCalls').inner_text()
+            request_count = len(usage_requests)
+            page.locator('#languageSelect').select_option('en')
+            expect(page.locator('html')).to_have_attribute('lang', 'en')
+            expect(page.locator('#aiUsagePurposes')).to_contain_text('Source discovery')
+            expect(page.locator('#aiUsagePurposes')).to_contain_text('Historical summary calls')
+            expect(page.locator('#aiUsagePurposes')).to_contain_text('Connection tests')
+            assert not page.locator('#aiUsagePurposes').evaluate('(el)=>/[\\u4e00-\\u9fff]/.test(el.innerText)')
+            expect(page.locator('#aiUsageBudgets')).to_contain_text('Connection tests and historical summaries')
+            page.screenshot(path=str(folder / 'usage-history-en.png'), full_page=True)
+            page.reload()
+            expect(page.locator('#aiUsagePurposes')).to_contain_text('Historical summary calls')
+            request_count += 1
+            page.locator('#languageSelect').select_option('zh-CN')
+            expect(page.locator('#aiUsagePurposes')).to_contain_text('历史摘要调用')
+            expect(page.locator('#aiUsageTokens')).to_have_text(old_total)
+            expect(page.locator('#aiUsageCalls')).to_have_text(old_calls)
+            assert len(usage_requests) == request_count
             page.locator('#aiUsageConfigure').click()
             expect(page).to_have_url(base + '/admin#platform')
             expect(page.locator('#aiProvider')).to_be_visible()

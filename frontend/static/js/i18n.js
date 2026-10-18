@@ -82,6 +82,11 @@
         : value >= 10000 ? number(value/10000,{maximumFractionDigits:1})+' 万' : number(value);
     window.uiT = t;
     window.I18n = {t,apply,dateTime,number,compact,
+        setLocale:locale => {
+            if (!['zh-CN','en'].includes(locale) || prefs.locale === locale) return;
+            prefs = {...prefs,locale}; document.documentElement.lang = locale;
+            apply(); document.dispatchEvent(new CustomEvent('locale-changed',{detail:{...prefs}}));
+        },
         setText:(node,message,variables={}) => {
             node.dataset.i18n=message;node.dataset.i18nVars=JSON.stringify(variables);node.textContent=t(message,variables);
         },
@@ -101,10 +106,21 @@
             const value = await response.json(); prefs = value.preferences;
             document.documentElement.lang = prefs.locale;
             apply(); document.dispatchEvent(new CustomEvent('locale-changed',{detail:{...prefs}}));
+            syncNativeLanguage();
             status.textContent = t('语言已切换');
         } catch (_) { selector.value = original; status.textContent = t('语言保存失败，请重试'); }
         finally { selector.disabled = false; }
     });
+    let nativeSync = Promise.resolve();
+    function syncNativeLanguage() {
+        const api = window.pywebview?.api;
+        if (!api?.set_ui_locale) return;
+        const locale = prefs.locale;
+        nativeSync = nativeSync.catch(() => {}).then(() => api.set_ui_locale(locale));
+        nativeSync.catch(() => {}); // An unavailable bridge never blocks web UI.
+    }
+    window.addEventListener('pywebviewready', syncNativeLanguage);
+    syncNativeLanguage();
     apply();
     // Only explicitly marked UI fragments participate. Official content is never scanned.
     const markers='[data-i18n],[data-i18n-placeholder],[data-i18n-aria-label],[data-i18n-title],[data-i18n-alt],time[data-ui-date],[data-ui-number],[data-ui-group-date]';

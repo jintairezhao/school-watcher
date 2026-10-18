@@ -20,7 +20,7 @@ def application_data(root, build):
     manifest.write_text(revision + '\n', encoding='ascii')
     data.append((str(manifest), 'config'))
     sources = {}
-    for folder in ('backend', 'frontend', 'desktop', 'config', 'migrations', 'scripts'):
+    for folder in ('backend', 'frontend', 'desktop', 'shared', 'config', 'migrations', 'scripts'):
         for source in sorted((root / folder).rglob('*')):
             if source.is_file() and '__pycache__' not in source.parts and source.suffix in ('.py', '.js', '.css', '.html', '.json', '.md', '.yaml') and source.name not in ('desktop-schools.json', 'schools.yaml'):
                 sources[source.relative_to(root).as_posix()] = hashlib.sha256(source.read_bytes()).hexdigest()

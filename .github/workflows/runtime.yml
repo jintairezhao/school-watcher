@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   workflow_call:
   pull_request:
-    paths: ['app.py', 'backend/**', 'frontend/**', 'scripts/**', 'tests/**', 'migrations/**', 'requirements.txt', 'requirements/**', 'config/**', 'deploy/**', '.dockerignore', '.github/workflows/runtime.yml']
+    paths: ['app.py', 'backend/**', 'frontend/**', 'desktop/ui/**', 'shared/**', 'scripts/**', 'tests/**', 'migrations/**', 'requirements.txt', 'requirements/**', 'config/**', 'deploy/**', '.dockerignore', '.github/workflows/runtime.yml']
 permissions:
   contents: read
 concurrency:
@@ -81,6 +81,10 @@ jobs:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify English inbox, discovery and administration workflows
         run: python tests/browser/check_english_workflows_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify localized native update and component dialogs
+        run: python tests/browser/check_native_localization_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify school setup and editing dialog

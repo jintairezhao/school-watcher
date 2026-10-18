@@ -1,21 +1,14 @@
 """Application-wide locale infrastructure, separate from school content and identity."""
-from functools import lru_cache
 import json
-import re
-from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from flask import g, has_request_context, request
+from shared.ui_messages import english_catalog, message_patterns, translate_for_locale
 
 LOCALES = ('zh-CN', 'en')
 DEFAULTS = {'locale':'zh-CN', 'time_zone':None, 'education_system':'cn'}
 PREFIX = 'localization:user:'
-
-
-@lru_cache(maxsize=1)
-def english_catalog():
-    return json.loads((Path(__file__).resolve().parents[2] / 'frontend/static/i18n/en.json').read_text('utf8'))
 
 
 def decode_preferences(raw):
@@ -75,33 +68,7 @@ def stage_preferences(user_id, value):
 
 def translate(message, **variables):
     locale = getattr(g, 'ui_locale', None) if has_request_context() else 'zh-CN'
-    text = english_catalog().get(message, message) if locale == 'en' else message
-    if locale == 'en' and message not in english_catalog() and isinstance(message,str) and len(message)<2000:
-        for key,names,pattern in message_patterns():
-            match = pattern.fullmatch(message)
-            if match:
-                values = dict(zip(names,match.groups()))
-                if 'count' in values and re.fullmatch(r'[\d,]+',values['count']):
-                    values['count'] = int(values['count'].replace(',',''))
-                return translate(key,**values)
-    if isinstance(text, dict):
-        text = text.get('one' if variables.get('count') == 1 else 'other', text.get('other', message))
-    for key,value in variables.items():
-        if locale == 'en' and key == 'audience':
-            value = ', '.join(translate(role.strip()) for role in re.split(r'[、＋,]',str(value)))
-        text = text.replace('{' + key + '}', str(value))
-    return text
-
-
-@lru_cache(maxsize=1)
-def message_patterns():
-    result=[]
-    for key in english_catalog():
-        names=re.findall(r'\{(\w+)\}',key)
-        if names:
-            fragments=re.split(r'\{\w+\}',key)
-            result.append((key,names,re.compile('(.+?)'.join(map(re.escape,fragments)))))
-    return result
+    return translate_for_locale(message, locale, **variables)
 
 
 def date_label(value):

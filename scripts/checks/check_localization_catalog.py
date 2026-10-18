@@ -92,7 +92,7 @@ def audit(root=ROOT):
             if not isinstance(value,str) or not value.strip():problems.append('Empty translation: '+key)
             elif set(PLACEHOLDER.findall(value))!=set(PLACEHOLDER.findall(key)):
                 problems.append('Interpolation mismatch: '+key)
-    for folder,extension in [('frontend/templates','*.html'),('frontend/static/js','*.js')]:
+    for folder,extension in [('frontend/templates','*.html'),('frontend/static/js','*.js'),('desktop/ui','*.html')]:
         for path in (root/folder).glob(extension):
             source=path.read_text('utf8')
             # Locale formatters and the evidence-only graph model contain

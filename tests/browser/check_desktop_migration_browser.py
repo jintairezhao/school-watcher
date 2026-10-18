@@ -7,7 +7,10 @@ from playwright.sync_api import sync_playwright, expect
 ROOT = Path(__file__).resolve().parents[2]
 output = ROOT / '.local/onboarding-checks/migration-review'
 output.mkdir(parents=True, exist_ok=True)
-html = (ROOT / 'desktop/ui/migration.html').read_text(encoding='utf-8')
+import sys
+sys.path.insert(0, str(ROOT))
+from desktop.localization import DesktopLanguage, native_page
+html = native_page('migration', DesktopLanguage(output))
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(channel=os.environ.get('WATCHER_TEST_BROWSER_CHANNEL', 'msedge'), headless=True)
     for theme in ('light', 'dark'):

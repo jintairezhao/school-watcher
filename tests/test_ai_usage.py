@@ -110,6 +110,8 @@ class AIUsageTests(unittest.TestCase):
         self.assertEqual(result['summary']['success_rate'], 75)
         self.assertEqual({r['key']: r['tokens'] for r in result['purposes']},
                          {'directory': 140, 'summary': 20, 'test': 12})
+        self.assertEqual(next(r['label'] for r in result['purposes'] if r['key'] == 'summary'), '历史摘要调用')
+        self.assertEqual(result['budgets'][2]['used_tokens'], 32)
         self.assertEqual(result['budgets'][0]['reserved_tokens'], 900)
         self.assertNotIn('never-return-this-output', str(result))
         self.assertNotIn('input_digest', str(result))

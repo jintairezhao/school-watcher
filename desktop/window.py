@@ -12,7 +12,7 @@ import time
 import urllib.request
 
 from desktop import APP_NAME, VERSION
-from desktop.runtime import resource_root
+from desktop.localization import DesktopLanguage, native_page
 from desktop.updater import UpdateError, check_update, download_update
 
 
@@ -50,10 +50,11 @@ def request_exit(data=None):
 
 
 class UpdateAPI:
-    def __init__(self, data, quit_app, *, install_handoff=None, change_locations=False):
+    def __init__(self, data, quit_app, *, install_handoff=None, change_locations=False, language=None):
         self._data, self._quit = data, quit_app
         self._install_handoff = install_handoff
         self._change_locations = change_locations
+        self._language = language or DesktopLanguage(data)
         self._window = None
         self._update = None
         self._path = None
@@ -64,7 +65,7 @@ class UpdateAPI:
         self._state = {'phase': 'idle', 'message': f'当前版本 {VERSION}', 'current': VERSION, 'progress': 0}
 
     def state(self):
-        return dict(self._state)
+        return self._language.state(self._state)
 
     def startup_check(self):
         """One background check per application launch; never open a modal or download."""
@@ -144,7 +145,7 @@ class UpdateAPI:
                        if request.in_place else '将退出应用并打开安装向导，可选择文件位置。已有数据会保留。')
             if sys.platform == 'darwin':
                 message = '将退出学校通知并打开安装镜像。请把新版拖入 Applications 并替换旧版，已有数据会保留。'
-            if not self._window.create_confirmation_dialog('更新学校通知' if request.in_place else '安装更新', message):
+            if not self._window.create_confirmation_dialog(self._language.tr('更新学校通知' if request.in_place else '安装更新'), self._language.tr(message)):
                 return self.state()
             self._state.update(phase='installing', message='正在关闭服务并准备更新…')
             if not self._install_handoff or not self._install_handoff(request):
@@ -165,6 +166,7 @@ def run_window(runtime, smoke_test=False):
 
     migration = None
     migration_window = None
+    language = DesktopLanguage(runtime.data_dir)
     def quit_app():
         if migration and not migration.done.is_set():
             return False
@@ -190,7 +192,7 @@ def run_window(runtime, smoke_test=False):
             raise
         runtime.requested_update = None
         return False
-    update_api = UpdateAPI(runtime.data_dir, quit_app, install_handoff=install_handoff)
+    update_api = UpdateAPI(runtime.data_dir, quit_app, install_handoff=install_handoff, language=language)
     location_busy = threading.Lock()
     def start_migration(values, release):
         nonlocal migration, migration_window
@@ -201,9 +203,9 @@ def run_window(runtime, smoke_test=False):
 
         class MigrationAPI:
             def state(self):
-                return operation.state()
+                return language.state(operation.state())
             def cancel(self):
-                return operation.cancel()
+                return language.state(operation.cancel())
             def finish(self):
                 if not operation.done.is_set() or finished.is_set():
                     return False
@@ -219,8 +221,8 @@ def run_window(runtime, smoke_test=False):
                 return True
 
         api = MigrationAPI()
-        dialog = webview.create_window('更改文件位置',
-            html=(resource_root() / 'desktop' / 'ui' / 'migration.html').read_text(encoding='utf-8'),
+        dialog = webview.create_window(language.tr('更改文件位置'),
+            html=native_page('migration', language),
             js_api=api, width=560, height=480, min_size=(460, 440), background_color='#f5f5f7')
         migration_window = dialog
         def closing():
@@ -249,7 +251,7 @@ def run_window(runtime, smoke_test=False):
             path = uninstaller_path()
             if path is None:
                 return {'error': '当前是便携版，请退出应用后删除程序文件夹；个人数据会保留。'}
-            if not window.create_confirmation_dialog('卸载学校通知', '将退出应用并打开卸载向导，可选择保留个人数据。'):
+            if not window.create_confirmation_dialog(language.tr('卸载学校通知'), language.tr('将退出应用并打开卸载向导，可选择保留个人数据。')):
                 return {'cancelled': True}
             runtime.requested_uninstaller = path
             quit_app()
@@ -269,12 +271,12 @@ def run_window(runtime, smoke_test=False):
         class ComponentsAPI:
             def state(self):
                 from desktop.browser import read_status
-                return read_status(runtime.data_dir)
+                return language.state(read_status(runtime.data_dir))
             def retry(self):
                 runtime.prepare_browser()
-                return {'phase': 'checking', 'message': '正在重新检测采集组件…'}
-        component_window = webview.create_window('采集组件 · School Watcher',
-            html=(resource_root() / 'desktop' / 'ui' / 'components.html').read_text(encoding='utf-8'),
+                return language.state({'phase': 'checking', 'message': '正在重新检测采集组件…'})
+        component_window = webview.create_window(language.tr('采集组件') + ' · School Watcher',
+            html=native_page('components', language),
             js_api=ComponentsAPI(), width=560, height=390, min_size=(480, 350), background_color='#f5f5f7')
     def updates():
         nonlocal update_window
@@ -284,8 +286,8 @@ def run_window(runtime, smoke_test=False):
             update_window.restore()
             update_window.show()
             return True
-        update_window = webview.create_window('检查更新 · School Watcher',
-            html=(resource_root() / 'desktop' / 'ui' / 'updates.html').read_text(encoding='utf-8'),
+        update_window = webview.create_window(language.tr('检查更新') + ' · School Watcher',
+            html=native_page('updates', language),
             js_api=update_api, width=560, height=500, min_size=(480, 420), background_color='#f5f5f7')
         update_api._window = update_window
         return True
@@ -301,8 +303,18 @@ def run_window(runtime, smoke_test=False):
             expected = urlsplit(runtime.address or '')
             return actual.scheme == 'http' and actual.netloc == expected.netloc and actual.hostname == '127.0.0.1'
 
-        def window_action(self, action):
+        def set_ui_locale(self, locale):
+            if not self._allowed() or not language.set_locale(locale):
+                return False
+            for dialog, title in ((update_window, '检查更新'), (component_window, '采集组件'), (migration_window, '更改文件位置')):
+                if dialog in webview.windows:
+                    dialog.set_title(language.tr(title) + ' · School Watcher')
+            return True
+
+        def window_action(self, action, locale=None):
             if not self._allowed():
+                return False
+            if locale is not None and not self.set_ui_locale(locale):
                 return False
             if migration and not migration.done.is_set():
                 return False
@@ -321,7 +333,7 @@ def run_window(runtime, smoke_test=False):
             elif action == 'locations':
                 locations()
             elif action == 'uninstall':
-                return uninstall()
+                return language.state(uninstall())
             else:
                 return False
             return True
@@ -368,7 +380,7 @@ def run_window(runtime, smoke_test=False):
                     update_locked = update_api._lock.acquire(blocking=False)
                     if not update_locked:
                         return {'error': '安装包正在下载，请完成后再更改位置。'}
-                if not window.create_confirmation_dialog('更改文件位置', '将暂停抓取、迁移数据并重新打开。原目录保留副本。'):
+                if not window.create_confirmation_dialog(language.tr('更改文件位置'), language.tr('将暂停抓取、迁移数据并重新打开。原目录保留副本。')):
                     return {'cancelled': True}
                 def release():
                     if update_locked: update_api._lock.release()
@@ -395,7 +407,7 @@ def run_window(runtime, smoke_test=False):
                 update = check_update(allow_current=True)
                 if not update: raise UpdateError('暂时没有可用的安装程序。')
                 package = download_update(update, runtime.data_dir, download_dir=effective_locations(runtime.data_dir)['downloads'])
-                api = UpdateAPI(runtime.data_dir, quit_app, install_handoff=install_handoff, change_locations=True)
+                api = UpdateAPI(runtime.data_dir, quit_app, install_handoff=install_handoff, change_locations=True, language=language)
                 api._path, api._update, api._window = package, update, window
                 result = api.install()
                 return {'error': result['message']} if result['phase'] in ('error', 'download-error') else result
@@ -414,7 +426,7 @@ def run_window(runtime, smoke_test=False):
     state = {'maximized': False}
     main_api = WindowAPI()
     window = webview.create_window(APP_NAME,
-        html=(resource_root() / 'desktop' / 'ui' / 'loading.html').read_text(encoding='utf-8'),
+        html=native_page('loading', language),
         width=1280, height=820, min_size=(760, 520), text_select=True, zoomable=True,
         background_color='#f5f5f7', hidden=smoke_test, js_api=main_api,
         frameless=os.name == 'nt', easy_drag=False)
@@ -431,8 +443,8 @@ def run_window(runtime, smoke_test=False):
     def main_closing():
         return not migration or migration.done.is_set()
     window.events.closing += main_closing
-    menu = [Menu('School Watcher', [MenuAction('检查更新…', updates), MenuAction('采集组件…', components),
-        MenuAction('文件位置…', locations), MenuAction('打开数据文件夹', open_data), MenuAction('退出', quit_app)])]
+    menu = [Menu('School Watcher', [MenuAction(language.tr('检查更新')+'…', updates), MenuAction(language.tr('采集组件')+'…', components),
+        MenuAction(language.tr('文件位置')+'…', locations), MenuAction(language.tr('打开数据文件夹'), open_data), MenuAction(language.tr('退出'), quit_app)])]
 
     token = secrets.token_hex(32)
     class ActivationHandler(BaseHTTPRequestHandler):
@@ -559,8 +571,9 @@ def run_window(runtime, smoke_test=False):
                 return
             try:
                 import html
-                window.load_html('<html lang="zh-CN"><meta charset="utf-8"><body style="font:16px system-ui;padding:60px">'
-                    '<h2>学校通知暂时无法启动</h2><p>' + html.escape(str(exc)) + '</p><p>可从应用菜单打开数据文件夹查看日志。</p></body></html>')
+                window.load_html('<html lang="' + language.locale + '"><meta charset="utf-8"><body style="font:16px system-ui;padding:60px">'
+                    '<h2>' + html.escape(language.tr('学校通知暂时无法启动')) + '</h2><p>' + html.escape(language.tr(str(exc)))
+                    + '</p><p>' + html.escape(language.tr('可从应用菜单打开数据文件夹查看日志。')) + '</p></body></html>')
             except Exception:
                 pass
         finally:

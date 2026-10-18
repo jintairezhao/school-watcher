@@ -174,7 +174,11 @@
         entries.forEach(entry => {
             const row = node('div', undefined, 'usage-rank');
             const line = node('div', undefined, 'usage-rank-label');
-            line.append(node('strong', model ? entry.model : entry.label), node('span', compact(entry.tokens) + ' Token'));
+            const purposeLabels = {
+                directory:uiT('栏目发现'), summary:uiT('历史摘要调用'),
+                test:uiT('连接测试'), other:uiT('其他调用')
+            };
+            line.append(node('strong', model ? entry.model : (purposeLabels[entry.key] || t(entry.label))), node('span', compact(entry.tokens) + ' Token'));
             line.title = number(entry.tokens) + ' Token';
             const track = node('div', undefined, 'usage-track'), fill = node('span');
             fill.style.width = (data.summary.tokens ? entry.tokens / data.summary.tokens * 100 : 0) + '%';
