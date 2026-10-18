@@ -138,7 +138,7 @@ function showToast(type, message) {
 
     const toast = document.createElement('div');
     toast.className = 'toast toast-' + type;
-    toast.textContent = message;
+    toast.textContent = window.I18n?.t(message) || message;
     container.appendChild(toast);
 
     setTimeout(function() {

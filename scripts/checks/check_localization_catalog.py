@@ -42,7 +42,7 @@ def unregistered_template_copy(source):
     return problems
 
 
-def unregistered_script_copy(source):
+def unregistered_script_copy(source, catalog=None):
     problems, stack = [], []
     tokens = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|'+QUOTED+r'|`(?:\\.|[^`\\])*`|[()]')
     for match in tokens.finditer(source):
@@ -56,7 +56,14 @@ def unregistered_script_copy(source):
             continue
         if raw.startswith('/') or not HAN.search(raw):
             continue
-        if any(call in ('uiT','tr','t','setMessage') for call in stack):
+        if raw.startswith('`') and not HAN.search(re.sub(r'\$\{(?:uiT|tr|t)\([^}]*\)\}', '', raw)):
+            continue
+        if any(call in ('uiT','tr','t','setMessage','setText') for call in stack):
+            if catalog is not None and raw[0] != '`':
+                try: message=ast.literal_eval(raw)
+                except (SyntaxError,ValueError): message=''
+                if HAN.search(message) and message not in catalog:
+                    problems.append('Missing script UI translation: '+message)
             continue
         # Object keys and selectors can be stable protocol identifiers. A ternary
         # value followed by ':' is *not* an object key, including on another line.
@@ -92,7 +99,11 @@ def audit(root=ROOT):
             # canonical date units/navigation names rather than rendered UI copy.
             unregistered = (unregistered_template_copy(source) if extension == '*.html'
                             else [] if path.name in ('i18n.js','discovery-atlas-model.js')
-                            else unregistered_script_copy(source))
+                            else unregistered_script_copy(source,catalog))
+            if extension == '*.html':
+                for script in BeautifulSoup(source,'html.parser').find_all('script'):
+                    if script.get('type') not in ('application/json','importmap'):
+                        unregistered.extend(unregistered_script_copy(script.get_text(),catalog))
             problems.extend(str(path.relative_to(root))+': '+item for item in unregistered)
             messages=[]
             for match in CALL.finditer(source):

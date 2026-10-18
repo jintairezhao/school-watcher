@@ -36,7 +36,7 @@ def check():
                     r=fixture.client.open(p.path+('?' + p.query if p.query else ''),method=req.method,data=req.post_data,headers={k:v for k,v in req.headers.items() if k.lower() in ('content-type','x-csrf-token')})
                     route.fulfill(status=r.status_code,headers=dict(r.headers),body=r.data)
                 page.route('**/*',serve);page.add_init_script('localStorage.setItem("theme",'+json.dumps(theme)+')')
-                routes=[('inbox',f'/?school={fixture.school.id}&period=all&selected={ann.id}'),('directory','/explore'),('sources',f'/subscriptions/{fixture.school.id}'),('structure',f'/schools/{fixture.school.id}/structure'),('monitor',f'/subscriptions/{fixture.school.id}/discovery-monitor'),('admin','/admin'),('ai','/admin#platform'),('usage','/admin/ai-usage'),('storage','/admin/storage')]
+                routes=[('inbox',f'/?school={fixture.school.id}&period=all&selected={ann.id}'),('directory','/explore'),('sources',f'/subscriptions/{fixture.school.id}'),('structure',f'/schools/{fixture.school.id}/structure'),('monitor',f'/subscriptions/{fixture.school.id}/discovery-monitor'),('admin','/admin'),('departments','/admin#schools'),('logs','/admin#logs'),('ai','/admin#platform'),('usage','/admin/ai-usage'),('storage','/admin/storage')]
                 for name,url in routes:
                     response=page.goto('http://localhost'+url)
                     if response:assert response.status==200,(url,response.status)
@@ -44,7 +44,12 @@ def check():
                     expect(page.locator('.language-switch-label')).to_have_text('Language')
                     page.wait_for_timeout(150)
                     if name=='inbox':expect(page.locator('.notice-copy strong')).to_have_text(ann.title)
-                    labels=page.evaluate("""() => [...document.querySelectorAll('body *')].filter(n=>n.getClientRects().length&&!n.closest('script,style,.body-loader-content,.notice-copy,.source-school-name,.reading-header h1,.reader-source,.directory-school')).flatMap(n=>[...n.childNodes].filter(c=>c.nodeType===3&&/[\u4e00-\u9fff]/.test(c.textContent)).map(c=>({tag:n.tagName,id:n.id,cls:n.className,text:c.textContent.trim()}))).filter(n=>n.text)""")
+                    if name=='departments':
+                        page.locator('.school-manage-list [onclick^="manageDept"]').first.click()
+                        expect(page.locator('#deptList [data-dept-action="edit"]')).to_be_visible()
+                        page.locator('#deptList [data-dept-action="edit"]').click()
+                        expect(page.locator('#deptModalTitle')).to_have_text('Edit department')
+                    labels=page.evaluate("""() => [...document.querySelectorAll('body *')].filter(n=>n.getClientRects().length&&!n.closest('script,style,.body-loader-content,.notice-copy,.source-school-name,.reading-header h1,.reader-source,.directory-school,.school-avatar')).flatMap(n=>[...n.childNodes].filter(c=>c.nodeType===3&&/[\u4e00-\u9fff]/.test(c.textContent)).map(c=>({tag:n.tagName,id:n.id,cls:n.className,text:c.textContent.trim()}))).filter(n=>n.text)""")
                     import re
                     unexpected=[item for item in labels if re.search('[\u4e00-\u9fff]',item['text'].replace('测试大学','').replace('学生事务','').replace('Language / 语言',''))]
                     overflow=page.evaluate('document.documentElement.scrollWidth>innerWidth')
@@ -74,6 +79,13 @@ def check():
                         expect(page.locator('#aiTotalLimit')).to_have_value('13579');expect(page.locator('#aiModel')).to_have_value('unsaved-model')
                         page.locator('#languageSelect').select_option('en');expect(page.locator('html')).to_have_attribute('lang','en')
                         expect(page.locator('#aiTotalLimit')).to_have_value('13579')
+                    if name=='departments':
+                        page.locator('#deptName').fill('unsaved-department')
+                        page.evaluate("closeDeptModal()")
+                        page.locator('#deptList [data-dept-action="delete"]').click()
+                        expect(page.locator('#deleteDialogTitle')).to_have_text('Delete department?')
+                        expect(page.locator('#deleteDialogDescription')).not_to_contain_text('将删除')
+                        page.locator('#deleteDialogCancel').click()
                     if name=='storage':
                         page.locator('#policy-body_cache_days').fill('77')
                         page.locator('#languageSelect').select_option('zh-CN');expect(page.locator('html')).to_have_attribute('lang','zh-CN')

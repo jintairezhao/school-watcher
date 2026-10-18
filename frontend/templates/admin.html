@@ -172,7 +172,7 @@ async function loadStats() {
         if (!r.ok) throw new Error('stats unavailable');
         var s = await r.json();
         var failed = (s.recent_logs || []).filter(function (log) { return log.status !== 'success'; }).length;
-        document.getElementById('attentionLogStatus').textContent = failed ? '最近 ' + (s.recent_logs || []).length + ' 条已结束记录中，有 ' + failed + ' 条未完整完成。查看原因。' : uiT('最近已结束记录中未发现异常；完整历史仍可查看。');
+        I18n.setText(document.getElementById('attentionLogStatus'),failed ? '最近 {total} 条已结束记录中，有 {failed} 条未完整完成。查看原因。' : '最近已结束记录中未发现异常；完整历史仍可查看。',{total:(s.recent_logs || []).length,failed});
         var outcomes = s.scrape_outcomes_7d || {};
         var explanation = document.getElementById('scrapeRateExplanation');
         explanation.textContent = uiT('近 7 天：成功 ') + (outcomes.success || 0) + uiT('、部分完成 ') + (outcomes.partial || 0) + uiT('、失败 ') + (outcomes.failed || 0) + uiT('、中断 ') + (outcomes.interrupted || 0) + uiT('。成功率只统计已结束记录，运行与排队不计入，重试分别计数。');

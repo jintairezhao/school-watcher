@@ -17,14 +17,14 @@
 
     window.confirmDeletion = options => {
         if (current) return Promise.resolve(false);
-        current = options;
+        current = {...options,isSchool:options.kind===uiT('学校')};
         opener = document.activeElement;
-        field('Title').textContent = uiT('删除') + options.kind + '？';
+        I18n.setText(field('Title'),current.isSchool?'删除学校？':'删除部门？');
         field('Target').textContent = options.name;
-        field('Description').textContent = options.kind === uiT('学校')
-            ? uiT('将删除这所学校的部门、栏目、订阅和独有通知，以及这些通知的收藏与阅读记录。其他学校共用的通知会保留。')
-            : uiT('将删除这个部门或栏目的独有通知，以及这些通知的收藏与阅读记录。其他栏目共用的通知会保留。');
-        confirm.textContent = uiT('删除') + options.kind;
+        I18n.setText(field('Description'),current.isSchool
+            ? '将删除这所学校的部门、栏目、订阅和独有通知，以及这些通知的收藏与阅读记录。其他学校共用的通知会保留。'
+            : '将删除这个部门或栏目的独有通知，以及这些通知的收藏与阅读记录。其他栏目共用的通知会保留。');
+        I18n.setText(confirm,current.isSchool?'删除学校':'删除部门');
         cancel.disabled = confirm.disabled = false;
         error.hidden = true;
         error.textContent = '';
@@ -59,8 +59,8 @@
         busy = true;
         cancel.disabled = confirm.disabled = true;
         dialog.setAttribute('aria-busy', 'true');
-        confirm.textContent = uiT('正在删除…');
-        field('Status').textContent = uiT('正在删除，请稍候。');
+        I18n.setText(confirm,'正在删除…');
+        I18n.setText(field('Status'),'正在删除，请稍候。');
         error.hidden = true;
         let deleted = false;
         try {
@@ -79,8 +79,8 @@
             busy = false;
             dialog.removeAttribute('aria-busy');
             cancel.disabled = confirm.disabled = false;
-            field('Status').textContent = '';
-            confirm.textContent = deleted ? uiT('删除') + current.kind : uiT('重试删除');
+            I18n.setText(field('Status'),'');
+            I18n.setText(confirm,deleted ? (current.isSchool?'删除学校':'删除部门'):'重试删除');
         }
         if (deleted) close(true);
         else error.focus();

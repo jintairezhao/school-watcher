@@ -108,6 +108,7 @@ class InternationalDiscoveryTermsTests(unittest.TestCase):
         self.assertTrue(unregistered_script_copy("button.setAttribute('aria-label', '待复制的通知');"))
         self.assertTrue(unregistered_script_copy("button.textContent = busy ?\n '正在生成' : uiT('未完成');"))
         self.assertTrue(unregistered_script_copy("button.textContent = `已显示 ${count} 条`;"))
+        self.assertEqual(unregistered_script_copy("button.innerHTML = `<span>${uiT('编辑')}</span>`;"), [])
         self.assertEqual(unregistered_script_copy("button.textContent = uiT(enabled ? '通过' : '未完成');"), [])
         self.assertEqual(unregistered_template_copy('<h1>{{ school.name }}</h1><p data-official-content>{{ article.body }}</p>'), [])
 

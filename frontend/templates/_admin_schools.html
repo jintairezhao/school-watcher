@@ -166,7 +166,7 @@ function showAddSchool() {
 
 function editSchool(id, name, url, enabled) {
     resetSchoolSuggestion();
-    document.getElementById('modalTitle').textContent = uiT('编辑学校');
+    I18n.setText(document.getElementById('modalTitle'),'编辑学校');
     document.getElementById('editSchoolId').value = id;
     document.getElementById('schoolName').value = name;
     document.getElementById('schoolUrl').value = url;
@@ -208,7 +208,7 @@ async function saveSchool() {
             showToast('error', data.error || uiT('操作失败'));
         }
     } catch(e) {
-        showToast('error', '请求失败: ' + e.message);
+        showToast('error', uiT('请求失败: {message}',{message:e.message}));
     }
 }
 
@@ -252,7 +252,7 @@ async function manageDept(schoolId) {
         const schools = await resp.json();
         const school = schools.find(s => s.id === schoolId);
         if (school) {
-            document.getElementById('deptSchoolName').textContent = '📂 ' + school.name + ' — 部门管理';
+            I18n.setText(document.getElementById('deptSchoolName'),'{name} — 部门管理',{name:school.name});
         }
         section.style.display = 'block';
         section.scrollIntoView({behavior: 'smooth'});
@@ -269,7 +269,7 @@ async function loadDepts(schoolId) {
         const container = document.getElementById('deptList');
 
         if (!depts || depts.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>该学校还没有部门，点击“添加部门”手动添加。</p></div>';
+            container.innerHTML = '<div class="empty-state"><p>'+uiT('该学校还没有部门，点击“添加部门”手动添加。')+'</p></div>';
             return;
         }
 
@@ -280,19 +280,19 @@ async function loadDepts(schoolId) {
                         <h4>${escHtml(d.name)} ${d.group_name ? '<span style="font-size:11px;color:#6366F1;background:#EEF2FF;padding:2px 6px;border-radius:4px;">'+escHtml(d.group_name)+'</span>' : ''}</h4>
                         <span class="text-muted">${escHtml(d.list_url || '')}</span>
                         <span class="text-muted">
-                            列表: ${escHtml(d.list_selector || '—')} |
-                            标题: ${escHtml(d.title_selector || '—')} |
-                            日期: ${escHtml(d.date_selector || '—')} |
-                            正文: ${escHtml(d.content_selector || '—')}
+                            ${uiT('列表')}: ${escHtml(d.list_selector || '—')} |
+                            ${uiT('标题')}: ${escHtml(d.title_selector || '—')} |
+                            ${uiT('日期')}: ${escHtml(d.date_selector || '—')} |
+                            ${uiT('正文')}: ${escHtml(d.content_selector || '—')}
                         </span>
                     </div>
                 </div>
                 <div class="manage-actions">
                     <button class="btn btn-sm btn-outline" data-dept-action="edit">
-                        编辑
+                        ${uiT('编辑')}
                     </button>
                     <button class="btn btn-sm btn-danger-outline" data-dept-action="delete">
-                        删除
+                        ${uiT('删除')}
                     </button>
                 </div>
             </div>
@@ -314,7 +314,7 @@ function escHtml(s) {
 }
 
 function editDept(id, name, group_name, list_url, list_sel, title_sel, link_sel, date_sel, content_sel) {
-    document.getElementById('deptModalTitle').textContent = uiT('编辑部门');
+    I18n.setText(document.getElementById('deptModalTitle'),'编辑部门');
     document.getElementById('editDeptId').value = id;
     document.getElementById('deptName').value = name;
     document.getElementById('deptGroupName').value = group_name || '';
@@ -336,7 +336,7 @@ async function deleteDept(id, name) {
 }
 
 function showAddDept() {
-    document.getElementById('deptModalTitle').textContent = uiT('添加部门');
+    I18n.setText(document.getElementById('deptModalTitle'),'添加部门');
     document.getElementById('editDeptId').value = '';
     document.getElementById('deptName').value = '';
     document.getElementById('deptGroupName').value = '';
@@ -382,21 +382,21 @@ async function testCurrentSelectors() {
         const data = await waitForQueuedTask(await resp.json());
         if (resp.ok) {
             if (data.item_count > 0) {
-                resultEl.innerHTML = '<span>匹配 ' + escHtml(String(data.item_count)) + ' 条</span>';
+                resultEl.textContent = uiT('匹配 {count} 条',{count:data.item_count});
                 if (data.items && data.items.length > 0) {
                     resultEl.innerHTML += '<br><small>' + data.items.slice(0,3).map(i => escHtml(String(i.title).substring(0,60))).join('<br>') + '</small>';
                 }
                 if (data.warnings && data.warnings.length > 0) {
-                    resultEl.innerHTML += '<br><span style="color:#d69e2e;">⚠️ ' + escHtml(data.warnings.join('; ')) + '</span>';
+                    resultEl.innerHTML += '<br><span class="text-warning">' + escHtml(data.warnings.map(message=>uiT(message)).join('; ')) + '</span>';
                 }
             } else {
-                resultEl.innerHTML = '<span style="color:#e53e3e;">❌ 未匹配到任何条目</span>';
+                resultEl.textContent = uiT('未匹配到任何条目');
             }
         } else {
-            resultEl.innerHTML = '<span style="color:#e53e3e;">❌ ' + escHtml(data.error || '测试失败') + '</span>';
+            resultEl.textContent = uiT(data.error || uiT('测试失败'));
         }
     } catch(e) {
-        resultEl.innerHTML = '<span style="color:#e53e3e;">❌ ' + escHtml(e.message) + '</span>';
+        resultEl.textContent = uiT(e.message);
     } finally {
         btn.disabled = false;
         btn.textContent = uiT('测试选择器');

@@ -1481,5 +1481,19 @@
   "已保留 {count} 条已加载记录。": "Retained {count} loaded records.",
   "{done} / {total} 条": "{done} / {total} items",
   "已清理 {items}": "Cleaned up: {items}",
-  "已保存到备份目录：{name}": "Saved in the backup folder: {name}"
+  "已保存到备份目录：{name}": "Saved in the backup folder: {name}",
+  "请求失败: {message}": "Request failed: {message}",
+  "{name} — 部门管理": "{name} — Department management",
+  "该学校还没有部门，点击“添加部门”手动添加。": "This university has no departments yet. Select “Add department” to add one.",
+  "未匹配到任何条目": "No items matched",
+  "最近 {total} 条已结束记录中，有 {failed} 条未完整完成。查看原因。": "{failed} of the latest {total} finished collections did not complete fully. View the reasons.",
+  "列表": "List",
+  "标题": "Title",
+  "正文": "Body",
+  "匹配 {count} 条": {
+    "one": "{count} item matched",
+    "other": "{count} items matched"
+  },
+  "删除部门": "Delete department",
+  "删除部门？": "Delete department?"
 }
