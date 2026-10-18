@@ -15,14 +15,14 @@
         if (button) {
             button.hidden = !!result.summary && !busy;
             button.disabled = busy || result.status === 'uncertain';
-            button.textContent = busy ? '正在生成…' : result.status === 'failed' ? uiT('重试生成') : '生成摘要';
+            button.textContent = busy ? uiT('正在生成…') : result.status === 'failed' ? uiT('重试生成') : uiT('生成摘要');
         }
         const force = panel.querySelector('[data-summary-force]');
         if (force) force.hidden = busy || (!result.summary && result.status !== 'uncertain');
         const message = panel.querySelector('[data-summary-message]');
         message.textContent = result.status === 'waiting_content' ? uiT('正在读取官网正文…') : busy ?
-            '正在生成，完成后会显示在这里。' : result.error || (result.summary ?
-            '根据正文生成，附件未纳入摘要。' : '点击后生成，所有读者共享这份摘要。');
+            uiT('正在生成，完成后会显示在这里。') : result.error || (result.summary ?
+            uiT('根据正文生成，附件未纳入摘要。') : uiT('点击后生成，所有读者共享这份摘要。'));
         panel.setAttribute('aria-busy', String(busy));
         if (busy) schedule(panel);
     }
@@ -40,14 +40,14 @@
             const response = await fetch('/api/announcements/' + panel.dataset.summaryPanel + '/summary');
             const result = await response.json();
             if ([401, 403, 404].includes(response.status)) {
-                panel.querySelector('[data-summary-message]').textContent = result.error || '暂时无法读取摘要状态';
+                panel.querySelector('[data-summary-message]').textContent = result.error || uiT('暂时无法读取摘要状态');
                 return;
             }
-            if (!response.ok) throw new Error(result.error || '暂时无法读取摘要状态');
+            if (!response.ok) throw new Error(result.error || uiT('暂时无法读取摘要状态'));
             if (panel.isConnected) show(panel, result);
         } catch (error) {
             if (!panel.isConnected) return;
-            panel.querySelector('[data-summary-message]').textContent = error.message + '，稍后继续检查。';
+            panel.querySelector('[data-summary-message]').textContent = error.message + uiT('，稍后继续检查。');
             schedule(panel);
         }
     }
@@ -60,7 +60,7 @@
         button.disabled = true;
         panel.setAttribute('aria-busy', 'true');
         panel.dataset.summaryCompact = 'false';
-        panel.querySelector('[data-summary-message]').textContent = '正在提交摘要请求…';
+        panel.querySelector('[data-summary-message]').textContent = uiT('正在提交摘要请求…');
         try {
             const response = await fetch('/api/announcements/' + panel.dataset.summaryPanel + '/summary', {
                 method: 'POST', headers: {'Content-Type': 'application/json',
@@ -68,7 +68,7 @@
                 body: JSON.stringify({force: button.hasAttribute('data-summary-force')})
             });
             const result = await response.json();
-            if (!response.ok) throw new Error(result.error || '摘要请求未成功，请重试');
+            if (!response.ok) throw new Error(result.error || uiT('摘要请求未成功，请重试'));
             if (panel.isConnected) show(panel, result);
         } catch (error) {
             if (panel.isConnected) panel.querySelector('[data-summary-message]').textContent = error.message;

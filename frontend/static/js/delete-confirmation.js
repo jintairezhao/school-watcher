@@ -22,8 +22,8 @@
         field('Title').textContent = uiT('删除') + options.kind + '？';
         field('Target').textContent = options.name;
         field('Description').textContent = options.kind === uiT('学校')
-            ? '将删除这所学校的部门、栏目、订阅和独有通知，以及这些通知的收藏与阅读记录。其他学校共用的通知会保留。'
-            : '将删除这个部门或栏目的独有通知，以及这些通知的收藏与阅读记录。其他栏目共用的通知会保留。';
+            ? uiT('将删除这所学校的部门、栏目、订阅和独有通知，以及这些通知的收藏与阅读记录。其他学校共用的通知会保留。')
+            : uiT('将删除这个部门或栏目的独有通知，以及这些通知的收藏与阅读记录。其他栏目共用的通知会保留。');
         confirm.textContent = uiT('删除') + options.kind;
         cancel.disabled = confirm.disabled = false;
         error.hidden = true;

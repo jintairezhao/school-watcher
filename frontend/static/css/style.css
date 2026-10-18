@@ -1468,7 +1468,10 @@ select.form-input { cursor: pointer; }
 
 .manage-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .manage-detail h4 { font-size: var(--text-control); font-weight: var(--weight-semibold); }
-.manage-detail span { display: block; font-size: var(--text-meta); margin-top: 1px; }
+.manage-detail { min-width:0; }
+.manage-detail > span { display:block; font-size:var(--text-meta); margin-top:1px; }
+.manage-detail .manage-meta { display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; }
+.manage-meta > span { white-space:nowrap; }
 .manage-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
 /* ---- 空状态 ---- */

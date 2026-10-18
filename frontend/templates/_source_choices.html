@@ -1,18 +1,19 @@
+{% from '_ui_text.html' import ui_text %}
         {% for group_name, departments in groups.items() %}
         <fieldset class="source-group"><legend>{{ group_name }}</legend>
             {% for dept in departments %}
             <div class="source-entry" data-source-id="{{ dept.id }}">
             <div class="source-choice"><label><input type="checkbox" name="department" value="{{ dept.id }}" {% if subscription.department_ids is none or dept.id in subscription.department_ids %}checked{% endif %}><span>{{ dept.name }}</span></label>{% if dept.list_url %}<a href="{{ dept.list_url }}" target="_blank" rel="noopener noreferrer" data-i18n-aria-label="打开{p0}官网栏目" data-i18n-aria-label-vars='{{ {'p0':(dept.name)}|tojson }}' aria-label="{{ tr('打开{p0}官网栏目',p0=(dept.name)) }}" data-i18n="官网栏目">{{ tr("官网栏目") }}</a>{% endif %}</div>
             {% if source_paths.get(dept.id) %}
-            <details class="source-paths"><summary>官网层级 · {{ source_paths[dept.id]|length }} <span data-i18n="条路径">{{ tr("条路径") }}</span></summary>
+            <details class="source-paths"><summary><span data-i18n="官网层级 ·">{{ tr("官网层级 ·") }}</span> {{ source_paths[dept.id]|length }} <span data-i18n="条路径">{{ tr("条路径") }}</span></summary>
                 {% for path in source_paths[dept.id] %}<div class="source-path">
                     <ol data-i18n-aria-label="官网列示路径" aria-label="{{ tr('官网列示路径') }}">
                         {% for node in path.nodes %}<li>{{ node.name }}{% if node.relation == 'sub_unit' %}<small data-i18n="下属单位">{{ tr("下属单位") }}</small>{% elif node.relation == 'attached_unit' %}<small data-i18n="挂靠单位">{{ tr("挂靠单位") }}</small>{% elif node.relation == 'non_entity_directory_entry' %}<small data-i18n="官网标注：非实体学院">{{ tr("官网标注：非实体学院") }}</small>{% elif node.relation == 'campus_group' %}<small data-i18n="官网校区分组">{{ tr("官网校区分组") }}</small>{% elif node.relation == 'shared_table_row' %}<small data-i18n="官网同列多个单位">{{ tr("官网同列多个单位") }}</small>{% elif node.relation == 'academic_group' %}<small data-i18n="官网教学科研分组">{{ tr("官网教学科研分组") }}</small>{% elif node.relation == 'directory_group' %}<small data-i18n="官网机构分类">{{ tr("官网机构分类") }}</small>{% elif node.relation == 'shared_directory_row' %}<small data-i18n="官网同一条目并列，不代表上下级">{{ tr("官网同一条目并列，不代表上下级") }}</small>{% elif node.relation == 'directory_companion_entry' %}<small data-i18n="官网附加列示">{{ tr("官网附加列示") }}</small>{% endif %}</li>
-                        {% else %}<li>学校主页</li>{% endfor %}
+                        {% else %}<li><span data-i18n="学校主页">{{ tr("学校主页") }}</span></li>{% endfor %}
                         {% for node in path.entry_nodes %}<li>{{ node.name }}<small data-i18n="导航分组">{{ tr("导航分组") }}</small></li>{% endfor %}
                         <li>{{ path.entry_names|join(' / ') if path.entry_names else dept.name }}</li>
                     </ol>
-                    <ul class="source-path-references" data-i18n-aria-label="路径出处" aria-label="{{ tr('路径出处') }}">{% for reference in path.references %}<li><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=reference.url) }}">查看{{ reference.title }}的结构</a> · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer">官网出处</a><span>检查于 {{ reference.checked_at[:10] }}</span></li>{% endfor %}</ul>
+                    <ul class="source-path-references" data-i18n-aria-label="路径出处" aria-label="{{ tr('路径出处') }}">{% for reference in path.references %}<li><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=reference.url) }}">{{ ui_text('查看{name}的结构',{'name':reference.title}) }}</a> · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer"><span data-i18n="官网出处">{{ tr("官网出处") }}</span></a><span><span data-i18n="检查于">{{ tr("检查于") }}</span> {{ reference.checked_at[:10] }}</span></li>{% endfor %}</ul>
                 </div>{% endfor %}
             </details>
             {% endif %}

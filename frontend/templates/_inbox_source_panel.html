@@ -22,7 +22,7 @@
         <div class="source-search">
             <label class="sr-only" for="sourceQuery" data-i18n="搜索当前学校的部门或栏目">{{ tr("搜索当前学校的部门或栏目") }}</label>
             <input id="sourceQuery" type="search" data-i18n-placeholder="搜索部门或栏目" placeholder="{{ tr('搜索部门或栏目') }}" autocomplete="off" maxlength="100">
-            <button class="icon-button" id="clearSourceSearch" type="button" aria-label="清除目录搜索" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+            <button class="icon-button" id="clearSourceSearch" type="button" data-i18n-aria-label="清除目录搜索" aria-label="{{ tr('清除目录搜索') }}" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
         </div>
         {% endif %}
         <div class="filter-label-row source-selection-head">

@@ -47,7 +47,7 @@
                 const value = valueFor(y, button.dataset.month);
                 button.disabled = !validYear || value < min || value > max;
                 button.setAttribute('aria-pressed', String(value === input.value));
-                button.setAttribute('aria-label', window.I18n?.locale() === 'en' ? window.I18n.month(Number(button.dataset.month))+' '+y : `${y}年${button.dataset.month}月`);
+                button.setAttribute('aria-label', window.I18n?.locale() === 'en' ? window.I18n.month(Number(button.dataset.month))+' '+y : uiT("{p0}年{p1}月", {p0:(y), p1:(button.dataset.month)}));
                 const label = button.querySelector('[data-month-label]');
                 if (label && window.I18n) label.textContent = window.I18n.month(Number(button.dataset.month));
                 if (value === max) button.setAttribute('aria-current', 'date');

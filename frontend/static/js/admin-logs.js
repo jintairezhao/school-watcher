@@ -14,9 +14,9 @@
     function time(value) { return window.formatScrapeLogTime(value); }
     function duration(seconds) {
         if (seconds == null) return '—';
-        if (seconds < 60) return seconds + ' 秒';
-        if (seconds < 3600) return Math.floor(seconds / 60) + ' 分 ' + Math.round(seconds % 60) + ' 秒';
-        return Math.floor(seconds / 3600) + ' 小时 ' + Math.floor(seconds % 3600 / 60) + ' 分';
+        if (seconds < 60) return seconds + uiT(' 秒');
+        if (seconds < 3600) return Math.floor(seconds / 60) + uiT(' 分 ') + Math.round(seconds % 60) + uiT(' 秒');
+        return Math.floor(seconds / 3600) + uiT(' 小时 ') + Math.floor(seconds % 3600 / 60) + uiT(' 分');
     }
     async function request(url, options = {}) {
         const response = await fetch(url, {...options, signal: AbortSignal.timeout(15000)});
@@ -39,7 +39,7 @@
             const heading = element('h4', record.school_name), count = element('span', '');
             heading.append(count); section.append(heading);
             const table = element('table', null, 'scrape-log-table');
-            table.append(element('caption', record.school_name + '的抓取记录', 'sr-only'));
+            table.append(element('caption', record.school_name + uiT('的抓取记录'), 'sr-only'));
             const head = element('thead'), tr = element('tr');
             [uiT('开始 / 结束时间'), uiT('学院或栏目'), uiT('结果'), uiT('新增 / 检查'), uiT('耗时')].forEach(text => {
                 const th = element('th', text); th.scope = 'col'; tr.append(th);
@@ -53,23 +53,23 @@
         const row = element('tr'); row.dataset.logId = record.id;
         const times = element('td', null, 'scrape-log-times');
         const started = element('time', time(record.started_at)); started.dateTime = record.started_at || '';
-        times.append(started, element('small', '结束：' + time(record.finished_at)));
+        times.append(started, element('small', uiT('结束：') + time(record.finished_at)));
         const source = element('td', null, 'scrape-log-source');
-        source.append(element('strong', record.source_name), element('small', '记录 #' + record.id));
+        source.append(element('strong', record.source_name), element('small', uiT('记录 #') + record.id));
         if (record.error_message) source.append(element('p', record.error_message, 'scrape-log-message'));
         const status = element('td', null, 'scrape-log-result');
         const badge = element('span', record.status_label, 'scrape-log-badge');
         badge.dataset.status = record.status; status.append(badge);
         const counts = element('td', null, 'scrape-log-counts');
-        counts.append(element('span', '新增 ' + (record.new_count || 0)), element('span', '检查 ' + (record.total_count || 0)));
-        const elapsed = element('td', '耗时 ' + duration(record.duration_seconds), 'scrape-log-duration');
+        counts.append(element('span', uiT('新增 ') + (record.new_count || 0)), element('span', uiT('检查 ') + (record.total_count || 0)));
+        const elapsed = element('td', uiT('耗时 ') + duration(record.duration_seconds), 'scrape-log-duration');
         row.append(times, source, status, counts, elapsed); group.body.append(row);
     }
     async function loadPages(period, all = false) {
         const state = states[period];
         if (!state || state.busy || (state.loaded && !state.cursor)) return;
         if (period === 'archive' && !anchor) {
-            find('#archiveLogStatus').textContent = '正在确认记录的时间范围…';
+            find('#archiveLogStatus').textContent = uiT('正在确认记录的时间范围…');
             return;
         }
         state.busy = true;
@@ -79,7 +79,7 @@
         more.hidden = true;
         try {
             do {
-                status.textContent = state.count ? `已显示 ${state.count} 条，正在继续加载…` : uiT('正在加载记录…');
+                status.textContent = state.count ? uiT('已显示 {count} 条，正在继续加载…',{count:state.count}) : uiT('正在加载记录…');
                 const params = new URLSearchParams({period});
                 if (anchor) params.set('as_of', anchor);
                 if (find('#logSchoolFilter').value) params.set('school_id', find('#logSchoolFilter').value);
@@ -89,19 +89,19 @@
                 anchor = data.as_of;
                 data.rows.forEach(row => appendRow(state, row));
                 state.cursor = data.next_cursor; state.loaded = true;
-                find(period === 'recent' ? '#recentLogCount' : '#archiveLogCount').textContent = `· ${data.total} 条`;
+                find(period === 'recent' ? '#recentLogCount' : '#archiveLogCount').textContent = uiT("· {p0} 条", {p0:(data.total)});
                 if (period === 'recent') {
-                    find('#archiveLogCount').textContent = `· ${data.older_total} 条`;
+                    find('#archiveLogCount').textContent = uiT("· {p0} 条", {p0:(data.older_total)});
                     if (find('#archiveLogSection').open && !states.archive.loaded) loadPages('archive');
                 }
-                status.textContent = data.total ? (state.cursor ? `已显示 ${state.count} / ${data.total} 条记录。` : `已完整显示 ${state.count} 条记录。`) : uiT('这个时间范围暂无记录。');
+                status.textContent = data.total ? (state.cursor ? uiT('已显示 {count} / {total} 条记录。',{count:state.count,total:data.total}) : uiT("已完整显示 {p0} 条记录。", {p0:(state.count)})) : uiT('这个时间范围暂无记录。');
                 if (!all || !state.cursor) break;
             } while (number === generation);
             more.hidden = !state.cursor;
             more.textContent = period === 'recent' ? uiT('继续加载记录') : uiT('加载更早记录');
         } catch (error) {
             if (number !== generation) return;
-            status.textContent = (state.count ? `已保留 ${state.count} 条已加载记录。` : '') + error.message;
+            status.textContent = (state.count ? uiT('已保留 {count} 条已加载记录。',{count:state.count}) : '') + error.message;
             more.textContent = uiT('重试加载'); more.hidden = false;
         } finally {
             state.busy = false;
@@ -128,6 +128,11 @@
         if (!retentionLoaded) loadRetention();
     };
     find('#reloadScrapeLogs').addEventListener('click', reload);
+    document.addEventListener('locale-changed', () => {
+        if (!loaded) return;
+        const archiveOpen=find('#archiveLogSection').open;
+        reload(); find('#archiveLogSection').open=archiveOpen;
+    });
     find('#logSchoolFilter').addEventListener('change', reload);
     find('#retryRecentLogs').addEventListener('click', () => loadPages('recent', true));
     find('#loadMoreArchiveLogs').addEventListener('click', () => loadPages('archive'));
@@ -144,7 +149,7 @@
             retentionLoaded = true;
             find('#logRetentionDays').value = String(data.days);
             find('#logRetentionStatus').textContent = data.days === 0 ? uiT('已设置为永久保留记录。') : data.message;
-        } catch (error) { find('#logRetentionStatus').textContent = '未保存。' + error.message; }
+        } catch (error) { find('#logRetentionStatus').textContent = uiT('未保存。') + error.message; }
         finally { button.disabled = false; }
     });
 })();

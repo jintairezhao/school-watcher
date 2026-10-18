@@ -87,6 +87,8 @@ def translate(message, **variables):
     if isinstance(text, dict):
         text = text.get('one' if variables.get('count') == 1 else 'other', text.get('other', message))
     for key,value in variables.items():
+        if locale == 'en' and key == 'audience':
+            value = ', '.join(translate(role.strip()) for role in re.split(r'[、＋,]',str(value)))
         text = text.replace('{' + key + '}', str(value))
     return text
 

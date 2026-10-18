@@ -1,0 +1,8 @@
+<label class="language-switch">
+    <span class="language-switch-label" aria-hidden="true" data-i18n="语言">{{ tr('语言') }}</span>
+    <select id="languageSelect" data-i18n-aria-label="界面语言" aria-label="{{ tr('界面语言') }}">
+        <option value="zh-CN"{% if ui_locale == 'zh-CN' %} selected{% endif %}>中文</option>
+        <option value="en"{% if ui_locale == 'en' %} selected{% endif %}>English</option>
+    </select>
+</label>
+<span id="languageStatus" class="sr-only" role="status" aria-live="polite"></span>

@@ -126,7 +126,6 @@
             appendGroups(list, rootGroup.children);
         }
         box.replaceChildren(list); box.scrollTop = scroll;
-        if (!selected && nodes.length) selected = nodes[0].id;
         const node = data.nodes.find(item => item.id === selected);
         if (node) choose(node);
     }
@@ -215,6 +214,11 @@
     root.addEventListener('monitor-select-node', event => {
         const node = data?.nodes.find(item => item.id === event.detail.id) || event.detail.node;
         if (node) choose(node, event.detail.focus !== false);
+    });
+    root.addEventListener('monitor-clear-selection', () => {
+        selected=null;
+        el('monitorTree').querySelectorAll('[aria-pressed]').forEach(button=>button.setAttribute('aria-pressed','false'));
+        el('monitorDetail').replaceChildren(create('p',uiT('选择左侧入口，查看路径、状态和接入结果。'),'monitor-empty'));
     });
     el('monitorRefresh').addEventListener('click', refresh);
     el('monitorSchool').addEventListener('change', event => { location.href = event.target.value; });

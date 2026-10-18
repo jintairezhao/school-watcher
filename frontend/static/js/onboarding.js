@@ -47,7 +47,7 @@
             pause.textContent = data.can_resume ? uiT('继续') : data.state === 'pausing' ? uiT('正在暂停…') : uiT('暂停');
         }
         field('discoveryCounts').textContent = uiT(`已收录 ${data.article_count ?? 0} 条通知 · 已接入 ${data.verified_source_count ?? 0} 个信息来源`);
-        if (field('discoveryValue')) field('discoveryValue').textContent = data.value_summary || uiT('优先寻找升学、奖助、实习就业、竞赛和校园办事信息。');
+        if (field('discoveryValue')) field('discoveryValue').textContent = uiT(data.value_summary || '优先寻找升学、奖助、实习就业、竞赛和校园办事信息。');
         if (field('discoveryStages')) field('discoveryStages').textContent = uiT(data.stage_message || '');
         if (field('discoveryChanges')) field('discoveryChanges').textContent = data.changes && Object.keys(data.changes).length
             ? uiT('本轮检查：结构未变 {unchanged} 个 · 有变化 {changed} 个 · 新入口 {added} 个',
@@ -61,7 +61,7 @@
             const gaps = data.coverage?.gaps || [];
             field('discoveryGaps').hidden = gaps.length === 0;
             field('discoveryGapList').replaceChildren(...gaps.map(gap => {
-                const item = document.createElement('li'); item.textContent = uiT(gap.reason || '该项尚未完成');
+                const item = document.createElement('li'); item.textContent = uiT(gap.reason || uiT('该项尚未完成'));
                 if (/^https?:\/\//i.test(gap.url || '')) {
                     const link = document.createElement('a'); link.href = gap.url;
                     link.textContent = gap.name || gap.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
@@ -85,7 +85,7 @@
         // "still working, last update N seconds ago" would be untrue of it.
         if (data.updated_at && data.busy) {
             const elapsed = Math.max(0, Math.floor((Date.now() - Date.parse(data.updated_at)) / 1000));
-            if (elapsed > 30) field('discoveryActivity').textContent = elapsed + ' 秒前更新';
+            if (elapsed > 30) field('discoveryActivity').textContent = uiT('{seconds}秒前更新',{seconds:elapsed});
         }
         return data.active || ['waiting', 'idle', 'ai_connection', 'ai_result'].includes(data.state);
     }
@@ -102,13 +102,13 @@
             const response = await fetch(endpoint, {method: method || 'GET', headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
                 ...(action ? {'Content-Type':'application/json'} : {})}, body: action ? JSON.stringify({action}) : undefined, signal: AbortSignal.timeout(15000)});
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || '无法读取进度');
+            if (!response.ok) throw new Error(data.error || uiT('无法读取进度'));
             again = render(data);
         } catch (error) {
-            field('discoveryError').textContent = error.name === 'TimeoutError' ? '连接超时，正在重新确认状态…'
-                : (action === 'pause' ? '暂停未成功：' : action === 'resume' ? '继续未成功：' : uiT('进度连接中断：')) + error.message;
+            field('discoveryError').textContent = error.name === 'TimeoutError' ? uiT('连接超时，正在重新确认状态…')
+                : (action === 'pause' ? uiT('暂停未成功：') : action === 'resume' ? uiT('继续未成功：') : uiT('进度连接中断：')) + error.message;
             field('discoveryError').hidden = false;
-            field('discoveryActivity').textContent = '连接中断';
+            field('discoveryActivity').textContent = uiT('连接中断');
             field('discoveryProgress').hidden = true;
         } finally {
             busy = false;

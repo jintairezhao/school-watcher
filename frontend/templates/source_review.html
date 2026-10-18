@@ -2,7 +2,7 @@
 {% set admin_section = 'source-review' %}
 {% block title %}{{ tr("自动接入进度 — 学校通知") }}{% endblock %}
 {% block content %}
-<header class="surface-heading"><div><h1 data-i18n="自动接入进度">{{ tr("自动接入进度") }}</h1><p>查看栏目接入进度、卡点和下一步。程序与 AI 自动读取官网并验证，技术问题由程序处理；只有订阅范围需要你的偏好时才提供具体选项。</p></div></header>
+<header class="surface-heading"><div><h1 data-i18n="自动接入进度">{{ tr("自动接入进度") }}</h1><p><span data-i18n="查看栏目接入进度、卡点和下一步。程序与 AI 自动读取官网并验证，技术问题由程序处理；只有订阅范围需要你的偏好时才提供具体选项。">{{ tr("查看栏目接入进度、卡点和下一步。程序与 AI 自动读取官网并验证，技术问题由程序处理；只有订阅范围需要你的偏好时才提供具体选项。") }}</span></p></div></header>
 <div class="source-review-layout">
 <div class="setting-card">
     <div class="setting-card-body">
@@ -12,7 +12,7 @@
             <option value="recognition_incomplete" data-i18n="自动识别未完成">{{ tr("自动识别未完成") }}</option><option value="site_unavailable" data-i18n="官网暂不可用">{{ tr("官网暂不可用") }}</option>
             <option value="login_required" data-i18n="官网要求登录">{{ tr("官网要求登录") }}</option><option value="access_limited" data-i18n="官网限制访问">{{ tr("官网限制访问") }}</option>
             <option value="program_error" data-i18n="程序执行失败">{{ tr("程序执行失败") }}</option><option value="user_choice" data-i18n="需要我选择">{{ tr("需要我选择") }}</option>
-            <option value="activated">已正式接入</option><option value="superseded">已自动整理</option><option value="rejected">已拒绝</option>
+            <option value="activated" data-i18n="已正式接入">{{ tr("已正式接入") }}</option><option value="superseded" data-i18n="已自动整理">{{ tr("已自动整理") }}</option><option value="rejected" data-i18n="已拒绝">{{ tr("已拒绝") }}</option>
             <option value="not_a_column" data-i18n="资料页，无需接入">{{ tr("资料页，无需接入") }}</option>
         </select>
         <p id="reviewStatus" role="status" aria-live="polite" data-i18n="加载中…">{{ tr("加载中…") }}</p>
@@ -36,7 +36,7 @@
         <p class="text-muted" data-i18n="重新检查会复用已保存的材料和调用结果，通过验证后自动接入。">{{ tr("重新检查会复用已保存的材料和调用结果，通过验证后自动接入。") }}</p>
         <div class="header-actions">
             <button class="btn btn-primary" data-review="recheck" data-i18n="自动检查">{{ tr("自动检查") }}</button>
-            <button class="btn btn-ghost" data-review="reject">拒绝此建议</button>
+            <button class="btn btn-ghost" data-review="reject"><span data-i18n="拒绝此建议">{{ tr("拒绝此建议") }}</span></button>
         </div>
 
         </div>

@@ -8,7 +8,7 @@
         const field = document.createElement('textarea');
         field.value = text;
         field.readOnly = true;
-        field.setAttribute('aria-label', '待复制的通知');
+        field.setAttribute('aria-label', uiT('待复制的通知'));
         field.style.cssText = 'position:fixed;top:0;left:-9999px;font-size:16px;';
         document.body.append(field);
         try {

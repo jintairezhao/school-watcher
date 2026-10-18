@@ -2,12 +2,12 @@
 {% block title %}{{ announcement.title|truncate(30) }}{% endblock %}
 {% block main_class %}standalone-reading{% endblock %}
 {% block content %}
-<nav class="standalone-reader-toolbar" aria-label="阅读操作">
+<nav class="standalone-reader-toolbar" data-i18n-aria-label="阅读操作" aria-label="{{ tr('阅读操作') }}">
     <a href="{{ back_url }}" class="back-link">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
         <span data-i18n="返回通知列表">{{ tr("返回通知列表") }}</span>
     </a>
-    {% if announcement.url %}<a class="text-button" href="{{ announcement.url }}" target="_blank" rel="noopener noreferrer">查看原文</a>{% endif %}
+    {% if announcement.url %}<a class="text-button" href="{{ announcement.url }}" target="_blank" rel="noopener noreferrer"><span data-i18n="查看原文">{{ tr("查看原文") }}</span></a>{% endif %}
     {% from '_share_button.html' import share_button %}
     {{ share_button(announcement, display_source) }}
 </nav>

@@ -44,14 +44,14 @@
             <button class="btn btn-primary" onclick="showAddSchool()" data-i18n="添加学校">{{ tr("添加学校") }}</button>
         </div>
     </div>
-    <p><a href="{{ url_for('source_governance.review_page') }}">来源诊断与历史提案（可选）</a></p>
+    <p><a href="{{ url_for('source_governance.review_page') }}"><span data-i18n="来源诊断与历史提案（可选）">{{ tr("来源诊断与历史提案（可选）") }}</span></a></p>
     {% include '_admin_schools.html' %}
 </section>
 
 <!-- ================= 用户 ================= -->
 
 <section class="admin-tab-panel" id="panel-scrape" hidden>
-    <p><a href="{{ url_for('collection_setup.page') }}">基础配置：收录起始日期、更新间隔与 AI 服务</a></p>
+    <p><a href="{{ url_for('collection_setup.page') }}"><span data-i18n="基础配置：收录起始日期、更新间隔与 AI 服务">{{ tr("基础配置：收录起始日期、更新间隔与 AI 服务") }}</span></a></p>
     <div class="settings-grid">
         <div class="setting-card">
             <div class="setting-card-header"><h3 data-i18n="抓取设置">{{ tr("抓取设置") }}</h3></div>
@@ -81,12 +81,12 @@
                             </div>
                             <p class="month-picker-hint" id="sinceMonthYearHelp" data-i18n="可直接输入年份">{{ tr("可直接输入年份") }}</p>
                             <div class="month-picker-months" role="group" data-i18n-aria-label="月份" aria-label="{{ tr('月份') }}">
-                                {% for month in range(1, 13) %}<button type="button" class="month-picker-month" data-month="{{ month }}" aria-pressed="false"><span data-month-label>{{ month }}月</span><svg class="month-picker-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>{% endfor %}
+                                {% for month in range(1, 13) %}<button type="button" class="month-picker-month" data-month="{{ month }}" aria-pressed="false"><span data-month-label>{{ tr('{month}月',month=month) }}</span><svg class="month-picker-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>{% endfor %}
                             </div>
                             <div class="month-picker-shortcuts" role="group" data-i18n-aria-label="快捷选择" aria-label="{{ tr('快捷选择') }}">
                                 <button type="button" data-month-shortcut="year" data-i18n="今年一月">{{ tr("今年一月") }}</button>
                                 <button type="button" data-month-shortcut="last-year" data-i18n="去年一月">{{ tr("去年一月") }}</button>
-                                <button type="button" data-month-shortcut="current">本月</button>
+                                <button type="button" data-month-shortcut="current"><span data-i18n="本月">{{ tr("本月") }}</span></button>
                             </div>
                         </div>
                     </div>
@@ -97,7 +97,7 @@
             </div>
         </div>
         <div class="setting-card">
-            <div class="setting-card-header"><h3>手动任务</h3><p data-i18n="立即更新已接通的学校来源">{{ tr("立即更新已接通的学校来源") }}</p></div>
+            <div class="setting-card-header"><h3><span data-i18n="手动任务">{{ tr("手动任务") }}</span></h3><p data-i18n="立即更新已接通的学校来源">{{ tr("立即更新已接通的学校来源") }}</p></div>
             <div class="setting-card-body manual-actions">
                 <button class="btn btn-primary" onclick="triggerScrapeAll()" id="btnScrapeAll" data-i18n="立即抓取全部（活跃学校）">{{ tr("立即抓取全部（活跃学校）") }}</button>
             </div>
@@ -107,7 +107,7 @@
 
 <!-- ================= 平台设置 ================= -->
 <section class="admin-tab-panel" id="panel-platform" hidden>
-    {% if onboarding_school %}<p class="ai-onboarding-return"><a href="{{ url_for('subscriptions.manage_sources', school_id=onboarding_school.id) }}"><span data-i18n="返回">{{ tr("返回") }}</span>{{ onboarding_school.name }}</a> · 保存目录识别用途后继续发现栏目</p>{% endif %}
+    {% if onboarding_school %}<p class="ai-onboarding-return"><a href="{{ url_for('subscriptions.manage_sources', school_id=onboarding_school.id) }}"><span data-i18n="返回">{{ tr("返回") }}</span>{{ onboarding_school.name }}</a> <span data-i18n="· 保存目录识别用途后继续发现栏目">{{ tr("· 保存目录识别用途后继续发现栏目") }}</span></p>{% endif %}
     <div class="settings-grid">
         {% include '_admin_ai.html' %}
 

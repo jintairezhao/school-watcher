@@ -16,7 +16,7 @@
     {% set cleanup_modes = {'调查缓存':'discovery', '网页抓取缓存':'fetch', '栏目核实证据':'governance', '备份与回退资料':'backups'} %}
     {% for name, size in groups.items() %}
     <tr><th scope="row" data-i18n="{{ name }}">{{ tr(name) }}</th><td data-storage-group="{{ name }}">{{ '%.1f'|format(size / 1048576) }} MB</td>
-        <td>{% if name in cleanup_modes %}<button class="btn btn-outline btn-sm" type="button" data-cleanup="{{ cleanup_modes[name] }}" data-i18n-aria-label="清理{p0}" data-i18n-aria-label-vars='{{ {'p0':(name)}|tojson }}' aria-label="{{ tr('清理{p0}',p0=(name)) }}" data-i18n="清理">{{ tr("清理") }}</button>{% endif %}</td></tr>
+        <td>{% if name in cleanup_modes %}<button class="btn btn-outline btn-sm" type="button" data-cleanup="{{ cleanup_modes[name] }}" data-i18n-aria-label="清理{p0}" data-i18n-aria-label-vars='{{ {'p0':name}|tojson }}' data-i18n-aria-label-ui-vars='["p0"]' aria-label="{{ tr('清理{p0}',p0=tr(name)) }}" data-i18n="清理">{{ tr("清理") }}</button>{% endif %}</td></tr>
     {% endfor %}
     <tr><th scope="row" data-i18n="未收藏正文">{{ tr("未收藏正文") }}</th><td></td><td><button class="btn btn-outline btn-sm" type="button" data-cleanup="body" data-i18n="清理">{{ tr("清理") }}</button></td></tr>
     <tr><th scope="row" data-i18n="已结束的抓取记录">{{ tr("已结束的抓取记录") }}</th><td></td><td><button class="btn btn-outline btn-sm" type="button" data-cleanup="logs" data-i18n="清理">{{ tr("清理") }}</button></td></tr>
@@ -31,12 +31,12 @@
     <div id="locationRows">
     {% for key, label in [('program','程序'),('data','个人数据'),('cache','缓存'),('backups','备份'),('downloads','更新包')] %}
         <div class="storage-location"><label for="location-{{ key }}" data-i18n="{{ label }}">{{ tr(label) }}</label>
-        <input class="form-input" id="location-{{ key }}" data-location="{{ key }}" readonly data-i18n-aria-label="{p0}位置" data-i18n-aria-label-vars='{{ {'p0':(label)}|tojson }}' aria-label="{{ tr('{p0}位置',p0=(label)) }}" placeholder="正在读取…">
+        <input class="form-input" id="location-{{ key }}" data-location="{{ key }}" readonly data-i18n-aria-label="{p0}位置" data-i18n-aria-label-vars='{{ {'p0':label}|tojson }}' data-i18n-aria-label-ui-vars='["p0"]' aria-label="{{ tr('{p0}位置',p0=tr(label)) }}" data-i18n-placeholder="正在读取…" placeholder="{{ tr('正在读取…') }}">
         <button class="btn btn-outline btn-sm" type="button" data-location-open="{{ key }}" data-i18n="打开">{{ tr("打开") }}</button>
         <button class="btn btn-outline btn-sm" type="button" data-location-change="{{ key }}" data-i18n="更改">{{ tr("更改") }}</button></div>
     {% endfor %}
     </div>
-    <div class="storage-actions"><button class="btn btn-primary" id="saveLocations" type="button" hidden>迁移并重启</button><button class="btn btn-outline" id="resetLocations" type="button" hidden data-i18n="取消更改">{{ tr("取消更改") }}</button></div>
+    <div class="storage-actions"><button class="btn btn-primary" id="saveLocations" type="button" hidden><span data-i18n="迁移并重启">{{ tr("迁移并重启") }}</span></button><button class="btn btn-outline" id="resetLocations" type="button" hidden data-i18n="取消更改">{{ tr("取消更改") }}</button></div>
     <p id="locationStatus" class="storage-status" role="status" aria-live="polite"></p>
 </section>
 {% endif %}

@@ -140,3 +140,34 @@ jobs:
           find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' \) -exec cp '{}' release/ \;
           (cd release && sha256sum *.exe *.dmg *.zip > SHA256SUMS.txt)
           gh release create "$TAG" release/* --target "$GITHUB_SHA" --title "School Watcher $TAG" --notes-file desktop/RELEASE_NOTES.md --latest
+      - name: Withdraw superseded release containing the private diagram
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          from desktop import VERSION
+          if VERSION != '2.24':
+              raise SystemExit(0)
+          repo = 'jintairezhao/school-watcher'
+          expected = '367c402e72bdd3c09b34929f5e6b50b9840c8fde'
+          def read(endpoint):
+              result = subprocess.run(['gh', 'api', 'repos/'+repo+'/'+endpoint], capture_output=True, text=True)
+              if result.returncode:
+                  if 'HTTP 404' in result.stderr:
+                      return None
+                  raise RuntimeError(result.stderr)
+              return json.loads(result.stdout)
+          replacement = read('releases/tags/v2.24')
+          assert replacement and not replacement['draft'] and not replacement['prerelease']
+          assert len(replacement['assets']) == 5, 'Replacement installers and checksums must be published first'
+          old = read('releases/tags/v2.23')
+          tag = read('git/ref/tags/v2.23')
+          if old is None and tag is None:
+              print('Superseded release and tag already withdrawn.')
+              raise SystemExit(0)
+          assert old and old['target_commitish'] == expected, 'Unexpected old release target; leave it untouched'
+          assert tag and tag['object']['sha'] == expected, 'Unexpected old tag target; leave it untouched'
+          subprocess.run(['gh', 'release', 'delete', 'v2.23', '--repo', repo, '--cleanup-tag', '--yes'], check=True)
+          print('Withdrew v2.23 installers and tag after validated v2.24 replacement.')
+          PY

@@ -22,7 +22,11 @@
         }
         let value = prefs.locale === 'en' ? (boot.english[message] ?? message) : message;
         if (value && typeof value === 'object') value = value[new Intl.PluralRules(prefs.locale).select(Number(variables.count))] || value.other;
-        for (const [key, replacement] of Object.entries(variables)) value = value.split('{' + key + '}').join(String(replacement));
+        for (const [key, replacement] of Object.entries(variables)) {
+            const label = prefs.locale === 'en' && key === 'audience'
+                ? String(replacement).split(/[、＋,]/).map(role => t(role.trim())).join(', ') : replacement;
+            value = value.split('{' + key + '}').join(String(label));
+        }
         return value;
     }
     function apply(scope = document) {
@@ -37,6 +41,8 @@
             const selector = '[data-i18n-' + attribute + ']';
             for (const node of [...(scope.matches?.(selector) ? [scope] : []), ...scope.querySelectorAll(selector)]) if (!official(node)) {
                 let vars={};try {vars=JSON.parse(node.getAttribute('data-i18n-'+attribute+'-vars') || '{}');} catch (_) {}
+                let uiVars=[];try {uiVars=JSON.parse(node.getAttribute('data-i18n-'+attribute+'-ui-vars') || '[]');} catch (_) {}
+                for (const name of uiVars) if (Object.hasOwn(vars,name)) vars[name]=t(vars[name]);
                 node.setAttribute(attribute,t(node.getAttribute('data-i18n-'+attribute),vars));
             }
         }

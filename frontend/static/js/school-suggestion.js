@@ -22,16 +22,16 @@ window.bindSchoolSuggestion = function ({nameInput, urlInput, hint, active = () 
             const timeout = setTimeout(() => current.abort(), 15000);
             try {
                 const response = await fetch('/api/schools/suggest-url?name=' + encodeURIComponent(name), {signal:current.signal});
-                if (!response.ok) throw new Error('地址查询暂未完成');
+                if (!response.ok) throw new Error(uiT('地址查询暂未完成'));
                 const data = await response.json();
                 if (expected !== version || name !== nameInput.value.trim() || !active() || editing()) return;
                 if (data.found && data.url && (!urlInput.value.trim() || urlInput.dataset.autoFilled === 'true')) {
                     urlInput.value = data.url;
                     urlInput.dataset.autoFilled = 'true';
-                    hint.textContent = data.message || '已匹配学校官网地址';
-                } else if (!urlInput.value.trim()) hint.textContent = data.message || '未找到确切匹配，可填写官网地址';
+                    hint.textContent = data.message || uiT('已匹配学校官网地址');
+                } else if (!urlInput.value.trim()) hint.textContent = data.message || uiT('未找到确切匹配，可填写官网地址');
             } catch (_) {
-                if (expected === version && active() && !urlInput.value.trim()) hint.textContent = '地址查询暂未完成，可继续填写官网地址';
+                if (expected === version && active() && !urlInput.value.trim()) hint.textContent = uiT('地址查询暂未完成，可继续填写官网地址');
             } finally {
                 clearTimeout(timeout);
                 if (controller === current) controller = null;

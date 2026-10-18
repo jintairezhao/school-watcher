@@ -23,7 +23,7 @@
             <fieldset class="setup-profiles" aria-describedby="setupProfileHelp"><legend data-i18n="选择身份（至少一项）">{{ tr("选择身份（至少一项）") }}</legend>
                 {% for profile in profile_choices %}<label class="setup-profile-choice"><input type="checkbox" name="profiles" value="{{ profile.id }}"{% if profile.id in selected_profiles %} checked{% endif %}><span data-i18n="{{ profile.label }}">{{ tr(profile.label) }}</span></label>{% endfor %}
             </fieldset>
-            <div class="setup-profile-preview" role="status" aria-live="polite" aria-atomic="true"><strong id="setupProfileLabel">请选择你的身份</strong><p id="setupProfileSummary"></p><p id="setupProfileOverlap"></p></div>
+            <div class="setup-profile-preview" role="status" aria-live="polite" aria-atomic="true"><strong id="setupProfileLabel"><span data-i18n="请选择你的身份">{{ tr("请选择你的身份") }}</span></strong><p id="setupProfileSummary"></p><p id="setupProfileOverlap"></p></div>
             <p class="setup-profile-scope" data-i18n="多身份会合并为一个画像，同一入口不会按身份重复探索。多人共享时，探索会兼顾本校已设置画像的订阅者。">{{ tr("多身份会合并为一个画像，同一入口不会按身份重复探索。多人共享时，探索会兼顾本校已设置画像的订阅者。") }}</p>
         </section>
         <section class="setup-section" aria-labelledby="setupLocalizationTitle">

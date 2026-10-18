@@ -7,7 +7,7 @@
     let timer, busy = false, started = false, stopped = false;
     function paint(state) {
         notice.hidden = !state?.available;
-        if (state?.available) message.textContent = `发现新版本 ${state.version}`;
+        if (state?.available) message.textContent = uiT("发现新版本 {p0}", {p0:(state.version)});
     }
     async function refresh() {
         if (busy || stopped) return;
@@ -32,13 +32,13 @@
         try {
             const opened = await window.pywebview.api.window_action('updates');
             if (opened === true) paint(await window.pywebview.api.dismiss_update());
-        } catch (_) { message.textContent = '暂时无法打开更新，请重试'; }
+        } catch (_) { message.textContent = uiT('暂时无法打开更新，请重试'); }
         finally { open.disabled = false; }
     });
     dismiss.addEventListener('click', async () => {
         dismiss.disabled = true;
         try { paint(await window.pywebview.api.dismiss_update()); }
-        catch (_) { message.textContent = '暂时无法关闭提醒，请重试'; }
+        catch (_) { message.textContent = uiT('暂时无法关闭提醒，请重试'); }
         finally { dismiss.disabled = false; }
     });
     window.addEventListener('pywebviewready', start);

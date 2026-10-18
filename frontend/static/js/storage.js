@@ -51,18 +51,18 @@
             const byteStage = ['uploading', 'staging', 'reading', 'writing', 'downloading'].includes(event.phase);
             node.querySelector('[data-count]').textContent = byteStage
                 ? `${bytesText(event.done || 0)}${event.total ? ' / ' + bytesText(event.total) : ''}`
-                : (event.total ? `${event.done} / ${event.total} 条` : '');
-            node.querySelector('[data-speed]').textContent = event.speed == null ? '正在计算速度…'
-                : isBytes ? `${bytesText(event.speed)}/s` : `${Math.round(event.speed)} 条/s`;
+                : (event.total ? uiT('{done} / {total} 条',{done:event.done,total:event.total}) : '');
+            node.querySelector('[data-speed]').textContent = event.speed == null ? uiT('正在计算速度…')
+                : isBytes ? `${bytesText(event.speed)}/s` : uiT("{p0} 条/s", {p0:(Math.round(event.speed))});
             if (!event.total && event.processed_bytes == null)
-                node.querySelector('[data-speed]').textContent = '处理中';
+                node.querySelector('[data-speed]').textContent = uiT('处理中');
         }
         update({phase:'preparing'});
         const timer = setInterval(() => {
             const seconds = Math.floor((performance.now() - started) / 1000);
-            node.querySelector('[data-elapsed]').textContent = `已用时 ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+            node.querySelector('[data-elapsed]').textContent = uiT("已用时 {p0}:{p1}", {p0:(Math.floor(seconds / 60)), p1:(String(seconds % 60).padStart(2, '0'))});
             if (active && performance.now() - lastUpdate > 3000)
-                node.querySelector('[data-speed]').textContent = '处理中，等待下一批数据';
+                node.querySelector('[data-speed]').textContent = uiT('处理中，等待下一批数据');
         }, 500);
         return {update, finish(success) {
             active = false;
@@ -117,10 +117,10 @@
                     reject(new Error(message)); return;
                 }
                 try { consume(); } catch (_) { failure = uiT('进度响应异常'); }
-                if (failure || !result) reject(new Error(failure || '连接中断，未收到完成结果，请检查后重试'));
+                if (failure || !result) reject(new Error(failure || uiT('连接中断，未收到完成结果，请检查后重试')));
                 else resolve(result);
             };
-            xhr.onerror = () => reject(new Error('连接中断，未收到完成结果，请检查后重试'));
+            xhr.onerror = () => reject(new Error(uiT('连接中断，未收到完成结果，请检查后重试')));
             xhr.send(data || null);
         });
     }
@@ -177,7 +177,7 @@
             status(id, message);
             if (refresh) {
                 try { await refreshUsage(); }
-                catch (_) { status(id, `${message} 用量刷新失败，可刷新页面查看。`); }
+                catch (_) { status(id, uiT("{p0} 用量刷新失败，可刷新页面查看。", {p0:(message)})); }
             }
         } catch (error) {
             status(id, error.message || uiT('网络连接中断，请稍后重试'), true);
@@ -190,7 +190,7 @@
         event.preventDefault();
         const submitted = new FormData(policyForm);
         const values = Object.fromEntries([...submitted].map(([key, value]) => [key, Number(value)]));
-        run('policyStatus', '正在保存保留规则…', async () => {
+        run('policyStatus', uiT('正在保存保留规则…'), async () => {
             await jsonRequest('/api/storage/policy', {
                 method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(values)
             });
@@ -218,11 +218,11 @@
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({mode: button.dataset.cleanup})
                 });
-                const counts = [[result.evicted,'条正文缓存'],[result.discovery_snapshots_deleted,uiT('份调查缓存')],
-                    [result.fetch_evidence?.removed,uiT('份抓取缓存')],[result.scrape_logs_deleted,'条抓取记录'],
+                const counts = [[result.evicted,uiT('条正文缓存')],[result.discovery_snapshots_deleted,uiT('份调查缓存')],
+                    [result.fetch_evidence?.removed,uiT('份抓取缓存')],[result.scrape_logs_deleted,uiT('条抓取记录')],
                     [result.backups_deleted,uiT('份自动备份')],[result.governance_evidence?.removed,uiT('份闲置证据')]]
                     .filter(([count]) => count > 0).map(([count, label]) => `${count} ${label}`);
-                return counts.length ? `已清理 ${counts.join('、')}` : uiT('没有可清理的内容');
+                return counts.length ? uiT('已清理 {items}',{items:counts.join(window.I18n.locale()==='en'?', ':'、')}) : uiT('没有可清理的内容');
             }, true);
         });
     });
@@ -235,7 +235,7 @@
                 const result = await transfer('/api/storage/export?progress=1' + (desktop ? '&save=1' : ''), null, view);
                 if (!result.saved) await download(result, view);
                 success = true;
-                return result.saved ? `已保存到备份目录：${result.name}` : uiT('数据备份已生成，请在下载列表中查看');
+                return result.saved ? uiT('已保存到备份目录：{name}',{name:result.name}) : uiT('数据备份已生成，请在下载列表中查看');
             } finally {
                 view.finish(success);
             }
@@ -254,7 +254,7 @@
         try {
             originalLocations = await window.pywebview.api.location_state();
             if (originalLocations) fillLocations(originalLocations);
-        } catch (_) { status('locationStatus', '无法读取文件位置，请重新打开应用。', true); }
+        } catch (_) { status('locationStatus', uiT('无法读取文件位置，请重新打开应用。'), true); }
     }
     window.addEventListener('pywebviewready', loadLocations);
     loadLocations();
@@ -265,10 +265,10 @@
         if (!window.pywebview?.api || !originalLocations) return;
         const kind = button.dataset.locationChange;
         if (kind === 'program') {
-            run('locationStatus', '正在下载并校验安装程序…', async () => {
+            run('locationStatus', uiT('正在下载并校验安装程序…'), async () => {
                 const result = await window.pywebview.api.reinstall();
                 if (result.error) throw new Error(result.error);
-                return result.cancelled ? uiT('已取消') : '请在安装向导中选择新位置';
+                return result.cancelled ? uiT('已取消') : uiT('请在安装向导中选择新位置');
             });
             return;
         }
@@ -285,16 +285,16 @@
         }
         field.value = chosen;
         saveLocations.hidden = resetLocations.hidden = false;
-        status('locationStatus', '选择空文件夹；保存后迁移并重启。');
+        status('locationStatus', uiT('选择空文件夹；保存后迁移并重启。'));
     }));
     resetLocations?.addEventListener('click', () => { fillLocations(originalLocations); status('locationStatus', ''); });
     saveLocations?.addEventListener('click', () => {
         const values = Object.fromEntries(locationFields.filter(input => input.dataset.location !== 'program')
             .map(input => [input.dataset.location, input.value]));
-        run('locationStatus', '正在准备迁移…', async () => {
+        run('locationStatus', uiT('正在准备迁移…'), async () => {
             const result = await window.pywebview.api.change_locations(values);
             if (result.error) throw new Error(result.error);
-            return result.cancelled ? uiT('已取消') : '正在迁移，完成后会重新打开';
+            return result.cancelled ? uiT('已取消') : uiT('正在迁移，完成后会重新打开');
         });
     });
     const importForm = document.getElementById('storageImportForm');
@@ -309,7 +309,7 @@
         }
         if (file.size > expanded * 1048576) {
             document.querySelector('.storage-import-options').open = true;
-            status('importStatus', `文件为 ${bytesText(file.size)}，请提高允许的展开大小后重试`, true);
+            status('importStatus', uiT("文件为 {p0}，请提高允许的展开大小后重试", {p0:(bytesText(file.size))}), true);
             return;
         }
         const data = new FormData(importForm);
@@ -321,7 +321,7 @@
                 const result = await transfer(url, data, view);
                 document.getElementById('storageBackupFile').value = '';
                 success = true;
-                return `合并完成：新增 ${result.added} 条通知，去重 ${result.duplicates} 条，补回 ${result.bodies_restored} 条正文。`;
+                return uiT("合并完成：新增 {p0} 条通知，去重 {p1} 条，补回 {p2} 条正文。", {p0:(result.added), p1:(result.duplicates), p2:(result.bodies_restored)});
             } finally {
                 view.finish(success);
             }

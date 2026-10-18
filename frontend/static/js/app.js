@@ -165,10 +165,10 @@ function timeAgo(dateStr) {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return '刚刚';
-    if (minutes < 60) return window.I18n?.relative(-minutes,'minute') || minutes + '分钟前';
-    if (hours < 24) return window.I18n?.relative(-hours,'hour') || hours + '小时前';
-    if (days < 7) return window.I18n?.relative(-days,'day') || days + '天前';
+    if (minutes < 1) return uiT('刚刚');
+    if (minutes < 60) return window.I18n?.relative(-minutes,'minute') || minutes + uiT('分钟前');
+    if (hours < 24) return window.I18n?.relative(-hours,'hour') || hours + uiT('小时前');
+    if (days < 7) return window.I18n?.relative(-days,'day') || days + uiT('天前');
     return window.I18n?.dateTime(dateStr,{dateStyle:'medium',timeStyle:undefined}) || date.toLocaleDateString();
 }
 

@@ -8,7 +8,7 @@
             <h4 id="aiFormTitle" class="ai-section-title" data-i18n="添加 AI 服务">{{ tr("添加 AI 服务") }}</h4>
             <input id="aiProfileId" type="hidden">
             <div class="form-group"><label for="aiProvider" data-i18n="服务商">{{ tr("服务商") }}</label><select id="aiProvider" class="form-input" required></select></div>
-            <a id="aiKeyLink" class="setup-provider-link" href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">获取 API 密钥（服务商官网）</a>
+            <a id="aiKeyLink" class="setup-provider-link" href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer"><span data-i18n="获取 API 密钥（服务商官网）">{{ tr("获取 API 密钥（服务商官网）") }}</span></a>
             <div class="form-group" id="aiRegionGroup" hidden><label for="aiRegion" data-i18n="API 密钥所属区域">{{ tr("API 密钥所属区域") }}</label><select id="aiRegion" class="form-input" required aria-describedby="aiRegionHelp"></select><p id="aiRegionHelp" class="text-muted" data-i18n="选择创建这把密钥时在百炼控制台使用的区域。不同区域的密钥不能混用。">{{ tr("选择创建这把密钥时在百炼控制台使用的区域。不同区域的密钥不能混用。") }}</p></div>
             <div class="form-group"><label for="aiModel" data-i18n="模型名称">{{ tr("模型名称") }}</label><input id="aiModel" class="form-input" maxlength="160" required aria-describedby="aiModelHelp" data-i18n-placeholder="复制服务商提供的模型名称" placeholder="{{ tr('复制服务商提供的模型名称') }}"><p id="aiModelHelp" class="text-muted"></p></div>
             <div class="form-group">

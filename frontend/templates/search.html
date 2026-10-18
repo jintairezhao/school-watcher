@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}搜索「{{ q }}」 — 学校通知{% endblock %}
+{% from '_ui_text.html' import ui_text %}
+{% block title %}{{ tr('搜索“{query}” — 学校通知',query=q) }}{% endblock %}
 
 {% macro ann_card(ann, show_school=False) %}
 {% set source = display_sources.get(ann.id) %}
@@ -19,7 +20,7 @@
             {% endif %}
             <div class="ann-meta">
                 <span class="ann-dept">{{ source|channel_breadcrumb if source else tr('未分类') }}</span>
-                {% if announcement_sources.get(ann.id, [])|length > 1 %}<span>{{ announcement_sources[ann.id]|length }} 个官网栏目</span>{% endif %}
+                {% if announcement_sources.get(ann.id, [])|length > 1 %}<span>{{ ui_text('{count} 个官网栏目',{'count':announcement_sources[ann.id]|length}) }}</span>{% endif %}
                 {% if ann.published_at %}
                 <span class="ann-date">{{ ann.published_at.strftime('%Y-%m-%d') }}</span>
                 {% endif %}
@@ -46,7 +47,7 @@
     <h1 data-i18n="搜索结果">{{ tr("搜索结果") }}</h1>
     {% if q %}
     <p class="page-subtitle">
-        找到 <strong>{{ total }}</strong> 条匹配「{{ q }}」的通知{% if school %}（{{ school.name }}）{% endif %}
+        {{ ui_text('找到{count}条匹配“{query}”的通知',{'count':total,'query':q}) }}{% if school %}（{{ school.name }}）{% endif %}
     </p>
     {% endif %}
 </div>
@@ -55,10 +56,10 @@
     <form action="{{ url_for('search.search') }}" method="get" class="search-form" role="search">
         {% if school_id %}<input type="hidden" name="school_id" value="{{ school_id }}">{% endif %}
         <svg class="search-form-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="search" name="q" value="{{ q }}" placeholder="输入关键词，空格分隔多个词" autofocus autocomplete="off">
+        <input type="search" name="q" value="{{ q }}" data-i18n-placeholder="输入关键词，空格分隔多个词" placeholder="{{ tr('输入关键词，空格分隔多个词') }}" autofocus autocomplete="off">
         <button type="submit" class="btn btn-primary" data-i18n="搜索">{{ tr("搜索") }}</button>
     </form>
-    <span class="form-hint">匹配标题、内容摘要与正文；多个关键词用空格分隔（需全部命中）</span>
+    <span class="form-hint"><span data-i18n="匹配标题、内容摘要与正文；多个关键词用空格分隔（需全部命中）">{{ tr("匹配标题、内容摘要与正文；多个关键词用空格分隔（需全部命中）") }}</span></span>
 </div>
 
 {% if q and results %}
@@ -75,7 +76,7 @@
     <div class="search-school-group">
         <a href="{{ url_for('pages.school_detail', school_id=school_obj.id) }}" class="search-school-title">
             {{ school_obj.name }}
-            <span class="month-count">{{ anns|length }} 条</span>
+            <span class="month-count">{{ ui_text('{count} 条通知',{'count':anns|length}) }}</span>
         </a>
         <div class="announcement-list">
             {% for ann in anns %}
@@ -101,7 +102,7 @@
 {% elif q %}
 <div class="empty-state">
     <h3 data-i18n="没有找到匹配的通知">{{ tr("没有找到匹配的通知") }}</h3>
-    <p>换个关键词试试，或用空格分隔多个关键词缩小范围</p>
+    <p><span data-i18n="换个关键词试试，或用空格分隔多个关键词缩小范围">{{ tr("换个关键词试试，或用空格分隔多个关键词缩小范围") }}</span></p>
 </div>
 {% endif %}
 {% endblock %}

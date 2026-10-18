@@ -18,8 +18,8 @@
 {% set selected_columns = selectable|map(attribute='department.id')|select('in', selected)|list %}
 <div class="source-unit" data-source-unit="{{ unit.key }}" data-source-unit-name="{{ unit.name }}">
     <div class="source-unit-row">
-        <label class="unit-select" {% if not selectable %}title="暂未找到可用信息；后续来源会自动加入"{% endif %}>
-            <input type="checkbox" data-unit-select aria-label="选择{{ unit.name }}的全部{{ tr('单位') if unit.directory else tr('栏目') }}" {% if not selectable %}disabled{% elif selected_columns|length == selectable|length %}checked{% endif %}>
+        <label class="unit-select" {% if not selectable %}data-i18n-title="暂未找到可用信息；后续来源会自动加入" title="{{ tr('暂未找到可用信息；后续来源会自动加入') }}"{% endif %}>
+            <input type="checkbox" data-unit-select data-i18n-aria-label="选择{name}的全部来源" data-i18n-aria-label-vars='{{ {'name':unit.name}|tojson }}' aria-label="{{ tr('选择{name}的全部来源',name=unit.name) }}" {% if not selectable %}disabled{% elif selected_columns|length == selectable|length %}checked{% endif %}>
             <span class="checkbox-mark" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6"/></svg></span>
         </label>
         <button type="button" class="source-unit-toggle" aria-expanded="{{ 'true' if selected_columns else 'false' }}" aria-controls="unit-columns-{{ unit.key }}">
@@ -46,11 +46,11 @@
     <section class="inbox-source-group" data-source-group="{{ group }}" aria-label="{{ group }}">
         <h3><button type="button" class="source-group-toggle" aria-expanded="{{ 'true' if expanded else 'false' }}" aria-controls="source-group-{{ loop.index }}">
             <span>{{ group }}</span>
-            <small data-group-selection {% if not selected_ids %}hidden{% endif %}>已选 {{ selected_ids|length }}</small>
+            <small data-group-selection {% if not selected_ids %}hidden{% endif %}><span data-i18n="已选">{{ tr("已选") }}</span> {{ selected_ids|length }}</small>
             <svg class="group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
         </button></h3>
         <div class="source-group-items" id="source-group-{{ loop.index }}" {% if not expanded %}hidden{% endif %}>
-        <button type="button" class="text-button source-group-all" data-source-group-filter="{{ group }}" aria-pressed="{{ 'true' if current_group == group else 'false' }}">查看本组全部</button>
+        <button type="button" class="text-button source-group-all" data-source-group-filter="{{ group }}" aria-pressed="{{ 'true' if current_group == group else 'false' }}"><span data-i18n="查看本组全部">{{ tr("查看本组全部") }}</span></button>
         {% for unit in units %}{{ unit_view(unit, selected, counts, sync_states) }}{% endfor %}
         </div>
     </section>

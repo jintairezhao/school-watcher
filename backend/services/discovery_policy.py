@@ -117,11 +117,6 @@ def attention_summary(school_id=None):
     groups = policy['profile_context'].get('groups', [])
     if groups:
         audience = '、'.join(group['label'] for group in groups)
-    from flask import has_request_context, g
-    if has_request_context() and getattr(g, 'ui_locale', None) == 'en':
-        from backend.services.localization import translate
-        audience = ', '.join(translate(labels[profile]) for profile in policy['profiles'])
-        return f'Prioritize website navigation, academic departments and sources for {audience} interests.'
     return f'按{audience}关注的需求，优先探索官网主干、院系部门和信息栏目。'
 
 

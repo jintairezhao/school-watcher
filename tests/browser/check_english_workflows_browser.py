@@ -41,6 +41,7 @@ def check():
                     response=page.goto('http://localhost'+url)
                     if response:assert response.status==200,(url,response.status)
                     expect(page.locator('html')).to_have_attribute('lang','en')
+                    expect(page.locator('.language-switch-label')).to_have_text('Language')
                     page.wait_for_timeout(150)
                     if name=='inbox':expect(page.locator('.notice-copy strong')).to_have_text(ann.title)
                     labels=page.evaluate("""() => [...document.querySelectorAll('body *')].filter(n=>n.getClientRects().length&&!n.closest('script,style,.body-loader-content,.notice-copy,.source-school-name,.reading-header h1,.reader-source,.directory-school')).flatMap(n=>[...n.childNodes].filter(c=>c.nodeType===3&&/[\u4e00-\u9fff]/.test(c.textContent)).map(c=>({tag:n.tagName,id:n.id,cls:n.className,text:c.textContent.trim()}))).filter(n=>n.text)""")
@@ -50,11 +51,21 @@ def check():
                     report.append({'width':width,'theme':theme,'page':name,'residual':labels,'overflow':overflow,'errors':list(errors)})
                     (out/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),'utf8')
                     assert not unexpected,(name,unexpected)
+                    attributes=page.evaluate('''() => [...document.querySelectorAll('[title],[aria-label],[placeholder],[alt]')]
+                        .filter(n=>!n.closest('[data-official-content],.body-loader-content'))
+                        .flatMap(n=>['title','aria-label','placeholder','alt'].filter(a=>n.hasAttribute(a)).map(a=>({id:n.id,attribute:a,text:n.getAttribute(a)})))''')
+                    allowed=[ann.title,fixture.school.name,dept.name]+page.locator('.directory-school h2').all_text_contents()
+                    residual=[item for item in attributes if re.search('[\u4e00-\u9fff]',__import__('functools').reduce(lambda s,v:s.replace(v,''),allowed,item['text']))]
+                    assert not residual,(name,'attributes',residual)
                     assert not overflow,(width,name)
                     if name=='inbox':
+                        expect(page.locator('[data-share-notice]')).to_have_attribute('title','Copy the title and official notice link')
                         page.evaluate("() => {const body=document.querySelector('.body-loader-content');const p=document.createElement('p');p.dataset.i18n='收藏';p.id='protectedOriginal';p.textContent='收藏';body.append(p);}")
                         page.locator('#languageSelect').select_option('zh-CN');expect(page.locator('html')).to_have_attribute('lang','zh-CN')
+                        expect(page.locator('.language-switch-label')).to_have_text('语言')
+                        expect(page.locator('[data-share-notice]')).to_have_attribute('title','复制标题和官网原文链接')
                         page.locator('#languageSelect').select_option('en');expect(page.locator('html')).to_have_attribute('lang','en')
+                        expect(page.locator('[data-share-notice]')).to_have_attribute('title','Copy the title and official notice link')
                         expect(page.locator('.notice-copy strong')).to_have_text(ann.title)
                     if name=='ai':
                         page.locator('#aiLimitsForm').evaluate('(node) => {node.closest("details").open=true;}')

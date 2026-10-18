@@ -3,7 +3,7 @@
     <p id="desktopUpdateMessage" role="status" aria-live="polite"></p>
     <div class="desktop-update-actions">
         <button id="desktopUpdateOpen" type="button" class="btn btn-primary btn-sm" data-i18n="查看更新">{{ tr("查看更新") }}</button>
-        <button id="desktopUpdateDismiss" type="button" class="btn btn-outline btn-sm">稍后</button>
+        <button id="desktopUpdateDismiss" type="button" class="btn btn-outline btn-sm"><span data-i18n="稍后">{{ tr("稍后") }}</span></button>
     </div>
 </aside>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/desktop-updates.css') }}">

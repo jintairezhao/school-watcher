@@ -1,16 +1,16 @@
 {% macro student_insight(ann, insight, user) %}
-<aside class="student-insight" aria-label="信息用途与时间" data-student-information="{{ ann.id }}">
+<aside class="student-insight" data-i18n-aria-label="信息用途与时间" aria-label="{{ tr('信息用途与时间') }}" data-student-information="{{ ann.id }}">
     {% if insight %}
     <p><strong>{{ insight.value_label }}</strong> · {{ insight.time_label }}</p>
-    {% if insight.historical in ('high', 'possible') %}<p>可作历史参考：用于了解往年的条件、材料或流程。往年安排不代表今年安排。</p>{% endif %}
+    {% if insight.historical in ('high', 'possible') %}<p><span data-i18n="可作历史参考：用于了解往年的条件、材料或流程。往年安排不代表今年安排。">{{ tr("可作历史参考：用于了解往年的条件、材料或流程。往年安排不代表今年安排。") }}</span></p>{% endif %}
     <details><summary data-i18n="查看判断依据">{{ tr("查看判断依据") }}</summary>
-        <p>个人是否符合条件、政策目前是否有效，仍需结合原文和后续通知核实。</p>
-        {% for fact in insight.facts %}<blockquote><p>{{ fact.text }}</p><small>原文：{{ fact.quote }}</small></blockquote>{% endfor %}
+        <p><span data-i18n="个人是否符合条件、政策目前是否有效，仍需结合原文和后续通知核实。">{{ tr("个人是否符合条件、政策目前是否有效，仍需结合原文和后续通知核实。") }}</span></p>
+        {% for fact in insight.facts %}<blockquote><p>{{ fact.text }}</p><small><span data-i18n="原文：">{{ tr("原文：") }}</span>{{ fact.quote }}</small></blockquote>{% endfor %}
     </details>
-    <a href="{{ url_for('pages.index', school=ann.school_id, period='all') }}">查看已收录的历年通知</a>
+    <a href="{{ url_for('pages.index', school=ann.school_id, period='all') }}"><span data-i18n="查看已收录的历年通知">{{ tr("查看已收录的历年通知") }}</span></a>
     {% elif user %}
-    <button type="button" class="btn btn-sm btn-outline" data-student-analyze>分析用途与时间</button>
-    <p class="text-muted">按需使用 AI 分析申请条件、时间和历史参考价值。同一正文的分析结果会复用。</p>
+    <button type="button" class="btn btn-sm btn-outline" data-student-analyze><span data-i18n="分析用途与时间">{{ tr("分析用途与时间") }}</span></button>
+    <p class="text-muted"><span data-i18n="按需使用 AI 分析申请条件、时间和历史参考价值。同一正文的分析结果会复用。">{{ tr("按需使用 AI 分析申请条件、时间和历史参考价值。同一正文的分析结果会复用。") }}</span></p>
     <p data-student-status role="status" hidden></p>
     {% endif %}
 </aside>

@@ -126,9 +126,45 @@ def check():
                 # Tour is a local presentation, not a task control.
                 page.locator('#atlasPlay').click()
                 expect(page.locator('#atlasPlay')).to_have_attribute('aria-pressed','true')
-                page.locator('#atlasScrubber').fill('3')
+                page.locator('#atlasScrubber').fill('1')
                 expect(page.locator('#atlasPlay')).to_have_attribute('aria-pressed','false')
                 page.locator('#atlasOverview').click()
+                # Repeated zoom out keeps actual sphere geometry visible and away from clipping.
+                for _ in range(9): page.locator('#atlasZoomOut').click()
+                page.wait_for_timeout(1200)
+                assert page.evaluate('''() => {
+                    const a=discoveryMonitor.discoveryAtlas;
+                    return a.scene.fog===null && a.camera.far>a.camera.position.distanceTo(a.controls.target)
+                        && a.nodes.every(n=>n.growth===1 && n.drawRadius>0);
+                }''')
+                page.locator('#atlasViewport').screenshot(path=str(output/f'{theme}-{width}-zoom.png'))
+                page.locator('#atlasOverview').click()
+                # No selected node means the whole saved graph grows continuously.
+                page.emulate_media(reduced_motion='no-preference')
+                page.locator('#atlasPlay').click()
+                page.wait_for_function('() => discoveryMonitor.discoveryAtlas.progress>.1 && discoveryMonitor.discoveryAtlas.progress<.8')
+                assert page.evaluate('discoveryMonitor.discoveryAtlas.current===null')
+                assert page.evaluate('discoveryMonitor.discoveryAtlas.nodes.some(n=>n.growth>0&&n.growth<1)')
+                progress=page.evaluate('discoveryMonitor.discoveryAtlas.progress')
+                page.wait_for_timeout(170)
+                assert page.evaluate('discoveryMonitor.discoveryAtlas.progress')>progress
+                page.locator('#atlasPlay').click()
+                page.locator('#atlasOverview').click()
+                page.emulate_media(reduced_motion='reduce')
+                if width==1586 and theme=='dark':
+                    # New bridge evidence inserts a bubble between retained pages.
+                    changed=[dict(item) for item in pages]
+                    for item in changed:
+                        if item['url']==base+'/unit/0' or item['url'].startswith(base+'/unit/0/'):
+                            path=item['path_json'];item['path_json']=path[:2]+['新增导航桥梁']+path[2:]
+                    changed.append({'url':base+'/bridge','label':'新增导航桥梁','kind':'navigation','path_json':['学校官网','组织机构'],'state':'fetched'})
+                    page.emulate_media(reduced_motion='no-preference')
+                    fixture.publish(changed);page.locator('#monitorRefresh').click()
+                    page.wait_for_function("() => discoveryMonitor.discoveryAtlas.nodes.some(n=>n.label==='新增导航桥梁'&&n.baseScale>0&&n.baseScale<1)")
+                    page.wait_for_timeout(900)
+                    assert page.evaluate("discoveryMonitor.discoveryAtlas.nodes.find(n=>n.label==='新增导航桥梁').baseScale===1")
+                    fixture.publish(pages);page.locator('#monitorRefresh').click()
+                    page.emulate_media(reduced_motion='reduce')
                 # Existing theme switch recolors the same WebGL scene.
                 page.locator('#themeToggle').click()
                 flipped = 'light' if theme=='dark' else 'dark'

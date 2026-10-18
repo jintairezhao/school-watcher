@@ -8,7 +8,7 @@
                 const result = await window.pywebview.api.window_action(name);
                 if (result && result.error) window.alert(result.error);
             } catch (_) {
-                if (name === 'uninstall') window.alert('未能打开卸载向导，请重新打开应用后重试。');
+                if (name === 'uninstall') window.alert(uiT('未能打开卸载向导，请重新打开应用后重试。'));
             }
         }
     }

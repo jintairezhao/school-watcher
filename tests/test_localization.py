@@ -93,6 +93,24 @@ class LocaleFrameworkTests(unittest.TestCase):
 
 
 class InternationalDiscoveryTermsTests(unittest.TestCase):
+    def test_conditional_tooltips_cannot_hide_an_unregistered_branch(self):
+        from scripts.checks.check_localization_catalog import unregistered_template_copy
+        source = '''<button {% if url %}title="复制标题和官网原文链接"{% else %}
+          data-i18n-title="暂无可分享的官网原文链接" title="{{ tr('暂无可分享的官网原文链接') }}"{% endif %}
+          data-i18n="分享">{{ tr('分享') }}</button>'''
+        self.assertEqual(unregistered_template_copy(source), ['Unregistered title: 复制标题和官网原文链接'])
+        self.assertEqual(unregistered_template_copy(source.replace('title="复制标题',
+            'data-i18n-title="复制标题和官网原文链接" title="复制标题')), [])
+
+    def test_audit_catches_new_text_and_dynamic_accessible_labels(self):
+        from scripts.checks.check_localization_catalog import unregistered_template_copy,unregistered_script_copy
+        self.assertTrue(unregistered_template_copy('<p>尚未接入API</p>'))
+        self.assertTrue(unregistered_script_copy("button.setAttribute('aria-label', '待复制的通知');"))
+        self.assertTrue(unregistered_script_copy("button.textContent = busy ?\n '正在生成' : uiT('未完成');"))
+        self.assertTrue(unregistered_script_copy("button.textContent = `已显示 ${count} 条`;"))
+        self.assertEqual(unregistered_script_copy("button.textContent = uiT(enabled ? '通过' : '未完成');"), [])
+        self.assertEqual(unregistered_template_copy('<h1>{{ school.name }}</h1><p data-official-content>{{ article.body }}</p>'), [])
+
     def test_registered_ui_messages_have_complete_catalog_entries(self):
         from scripts.checks.check_localization_catalog import audit
         self.assertEqual(audit()['problems'],[])

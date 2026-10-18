@@ -7,7 +7,7 @@ const cancel = document.getElementById('verification-cancel');
 let active = null;
 let remote = null;
 let timer = null;
-const labels = {required: uiT('需要验证'), opening: '正在打开', active: uiT('等待验证'), verified: uiT('已完成'), cancelled: uiT('已结束'), expired: '已过期', failed: uiT('未完成')};
+const labels = () => ({required: uiT('需要验证'), opening: uiT('正在打开'), active: uiT('等待验证'), verified: uiT('已完成'), cancelled: uiT('已结束'), expired: uiT('已过期'), failed: uiT('未完成')});
 
 async function api(path, method = 'GET') {
     const response = await fetch('/api/admin/browser-sessions' + path, {method,
@@ -31,7 +31,7 @@ async function refresh() {
     const data = await api('');
     list.replaceChildren();
     const rows = data.sessions.filter(row => row.status !== 'verified' && row.status !== 'cancelled');
-    message.textContent = rows.length ? '选择一个来源处理验证。同一时间可以处理一个来源。' : uiT('当前没有需要处理的访问验证。');
+    message.textContent = rows.length ? uiT('选择一个来源处理验证。同一时间可以处理一个来源。') : uiT('当前没有需要处理的访问验证。');
     for (const row of rows) {
         const item = document.createElement('li');
         const source = document.createElement('div');
@@ -39,7 +39,7 @@ async function refresh() {
         const name = document.createElement('strong');
         name.textContent = row.url;
         const status = document.createElement('p');
-        status.textContent = row.error || labels[row.status] || uiT('等待处理');
+        status.textContent = row.error || labels()[row.status] || uiT('等待处理');
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'btn btn-outline';
         button.textContent = row.status === 'active' ? uiT('继续验证') : uiT('处理访问验证');
@@ -66,7 +66,7 @@ async function open(row, button) {
             url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             remote = new RFB(screen, url.href, {shared: true});
             remote.scaleViewport = true; remote.resizeSession = false;
-            remote.addEventListener('disconnect', () => { if (active) message.textContent = '验证连接已关闭。如未完成，请重新打开验证。'; });
+            remote.addEventListener('disconnect', () => { if (active) message.textContent = uiT('验证连接已关闭。如未完成，请重新打开验证。'); });
         }
         message.textContent = uiT('验证窗口已打开。');
         workspace.scrollIntoView({block: 'start', behavior: 'auto'});
@@ -90,11 +90,12 @@ async function act(action) {
     try {
         await api('/' + active + '/' + action, 'POST');
         disconnect(); await refresh();
-        message.textContent = action === 'verify' ? uiT('验证已通过，系统将继续更新该来源。') : '本次验证已结束，已有通知已保留。';
+        message.textContent = action === 'verify' ? uiT('验证已通过，系统将继续更新该来源。') : uiT('本次验证已结束，已有通知已保留。');
     } catch (error) { message.textContent = error.message; }
     finally { complete.disabled = cancel.disabled = false; }
 }
 complete.addEventListener('click', () => act('verify'));
 cancel.addEventListener('click', () => act('cancel'));
 window.addEventListener('pagehide', disconnect);
+document.addEventListener('locale-changed', () => refresh().catch(error => { message.textContent=error.message; }));
 refresh().catch(error => { message.textContent = error.message; });

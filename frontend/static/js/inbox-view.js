@@ -41,7 +41,7 @@
             const toggle = find('[data-toggle-reading-view]');
             if (toggle) {
                 toggle.setAttribute('aria-pressed', String(focused));
-                toggle.setAttribute('aria-label', focused ? '返回通知列表，退出专注阅读' : uiT('专注阅读'));
+                toggle.setAttribute('aria-label', focused ? uiT('返回通知列表，退出专注阅读') : uiT('专注阅读'));
                 toggle.querySelector('span').textContent = focused ? uiT('返回列表') : uiT('专注阅读');
             }
             if (restore) {

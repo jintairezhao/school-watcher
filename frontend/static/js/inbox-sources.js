@@ -109,11 +109,11 @@
             });
             const count = new Set([...find('#sourcePanel').querySelectorAll('[data-department]:checked:not(:disabled)')].map(i => i.value)).size;
             find('#clearDepartments').hidden = !count && !find('[data-source-group-filter][aria-pressed="true"]');
-            find('#sourceSelectionCount').textContent = count ? ' · 已选 ' + count : '';
+            find('#sourceSelectionCount').textContent = count ? uiT(' · 已选 ') + count : '';
             find('#sourcePanel').querySelectorAll('[data-source-group]').forEach(group => {
                 const selected = new Set([...group.querySelectorAll('[data-department]:checked:not(:disabled)')].map(i => i.value)).size;
                 const label = group.querySelector('[data-group-selection]');
-                label.textContent = '已选 ' + selected;
+                label.textContent = uiT('已选 ') + selected;
                 label.hidden = !selected;
             });
         }

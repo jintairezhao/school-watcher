@@ -101,7 +101,7 @@
             element.append(document.createTextNode(text.slice(end)));
         }
         function matches(data, query) {
-            begin('匹配通知', data.items.length ? '当前筛选范围内，按最新发布排序' : uiT('当前范围没有匹配通知，可调整来源或时间条件。'));
+            begin(uiT('匹配通知'), data.items.length ? uiT('当前筛选范围内，按最新发布排序') : uiT('当前范围没有匹配通知，可调整来源或时间条件。'));
             data.items.forEach((item, index) => {
                 const link = row(document.createElement('a'), index);
                 link.href = item.url; link.dataset.searchResult = '';
@@ -114,7 +114,7 @@
                 }
                 find('#inboxSearchOptions').append(link);
             });
-            find('#submitInboxSearch').textContent = data.has_more ? uiT('查看全部匹配通知') : '在列表中查看搜索结果';
+            find('#submitInboxSearch').textContent = data.has_more ? uiT('查看全部匹配通知') : uiT('在列表中查看搜索结果');
             position();
         }
         async function fetchMatches(query, number) {
@@ -132,14 +132,14 @@
                 if (!Array.isArray(data.items)) throw new Error('invalid suggestions');
                 matches(data, query);
             } catch (_) {
-                if (number === generation && opened) begin('匹配通知', uiT('暂时无法加载匹配结果，可以按回车搜索。'));
+                if (number === generation && opened) begin(uiT('匹配通知'), uiT('暂时无法加载匹配结果，可以按回车搜索。'));
             } finally { clearTimeout(timeout); }
         }
         function update(immediate = false) {
             cancel();
             const query = normalize(find('#inboxQuery').value);
             if (!query) { history(); return; }
-            begin('匹配通知', uiT('正在查找…'));
+            begin(uiT('匹配通知'), uiT('正在查找…'));
             const number = generation;
             if (immediate) fetchMatches(query, number);
             else timer = setTimeout(() => fetchMatches(query, number), 250);

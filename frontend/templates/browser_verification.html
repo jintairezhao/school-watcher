@@ -4,10 +4,10 @@
 {% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/browser-verification.css') }}">{% endblock %}
 {% block content %}
 <section class="verification-page" aria-labelledby="verification-title">
-    <a href="{{ url_for('admin.admin_page') }}#logs" class="verification-back">返回抓取记录</a>
+    <a href="{{ url_for('admin.admin_page') }}#logs" class="verification-back"><span data-i18n="返回抓取记录">{{ tr("返回抓取记录") }}</span></a>
     <header class="surface-heading"><div><h1 id="verification-title" data-i18n="处理访问验证">{{ tr("处理访问验证") }}</h1>
     <p class="verification-intro" data-i18n="部分官网需要管理员完成访问验证。验证通过后，系统会继续更新该来源，已有通知会保留。">{{ tr("部分官网需要管理员完成访问验证。验证通过后，系统会继续更新该来源，已有通知会保留。") }}</p></div></header>
-    <p id="verification-message" role="status" aria-live="polite">正在读取待处理来源…</p>
+    <p id="verification-message" role="status" aria-live="polite"><span data-i18n="正在读取待处理来源…">{{ tr("正在读取待处理来源…") }}</span></p>
     <ul id="verification-list" class="verification-list" data-i18n-aria-label="需要处理的来源" aria-label="{{ tr('需要处理的来源') }}"></ul>
     <section id="verification-workspace" hidden aria-labelledby="verification-current">
         <h2 id="verification-current" data-i18n="官网验证">{{ tr("官网验证") }}</h2>

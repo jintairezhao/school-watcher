@@ -37,7 +37,7 @@
     }
     function describe(day) {
         return day.date + '\n' + number(day.tokens) + ' Token · ' + number(day.calls) + uiT(' 次调用')
-            + '\n完整结果 ' + day.succeeded + uiT(' · 失败 ') + day.failed
+            + uiT('\n完整结果 ') + day.succeeded + uiT(' · 失败 ') + day.failed
             + (day.partial ? uiT(' · 部分结果 ') + day.partial : '')
             + (day.pending ? uiT(' · 进行中 ') + day.pending : '')
             + (day.uncertain ? uiT(' · 结果待确认 ') + day.uncertain : '')

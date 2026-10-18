@@ -1,3 +1,4 @@
+{% from '_ui_text.html' import ui_text %}
 {% macro column_choice(column) %}
 {% set dept = column.department %}
 <div class="source-entry" data-source-id="{{ dept.id }}">
@@ -7,11 +8,11 @@
     <details class="source-paths"><summary data-i18n="官网层级与出处">{{ tr("官网层级与出处") }}</summary>
         {% for path in source_paths[dept.id] %}<div class="source-path">
             <ol data-i18n-aria-label="官网列示路径" aria-label="{{ tr('官网列示路径') }}">
-                {% for node in path.nodes %}<li>{{ node.name }}</li>{% else %}<li>学校主页</li>{% endfor %}
+                {% for node in path.nodes %}<li>{{ node.name }}</li>{% else %}<li><span data-i18n="学校主页">{{ tr("学校主页") }}</span></li>{% endfor %}
                 {% for node in path.entry_nodes %}<li>{{ node.name }}</li>{% endfor %}
                 <li>{{ path.entry_names|join(' / ') if path.entry_names else dept.name }}</li>
             </ol>
-            <ul class="source-path-references" data-i18n-aria-label="路径出处" aria-label="{{ tr('路径出处') }}">{% for reference in path.references %}<li><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=reference.url) }}">查看{{ reference.title }}的结构</a> · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer">官网出处</a><span>检查于 {{ reference.checked_at[:10] }}</span></li>{% endfor %}</ul>
+            <ul class="source-path-references" data-i18n-aria-label="路径出处" aria-label="{{ tr('路径出处') }}">{% for reference in path.references %}<li><a href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=reference.url) }}">{{ ui_text('查看{name}的结构',{'name':reference.title}) }}</a> · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer"><span data-i18n="官网出处">{{ tr("官网出处") }}</span></a><span><span data-i18n="检查于">{{ tr("检查于") }}</span> {{ reference.checked_at[:10] }}</span></li>{% endfor %}</ul>
         </div>{% endfor %}
     </details>
     {% endif %}
@@ -22,12 +23,12 @@
 <details class="source-unit" data-unit-key="{{ unit.key }}" {% if depth == 0 %}open{% endif %}>
     <summary>
         {% if unit.department_id is defined %}<label><input type="checkbox" name="department" value="{{ unit.department_id }}" data-source-unit {% if selected_ids is none or unit.department_id in selected_ids %}checked{% endif %}><span>{{ unit.name }}</span></label>{% else %}<span>{{ unit.name }}</span>{% endif %}
-        <span class="source-unit-count">{{ unit.columns|length }} 个栏目</span>
+        <span class="source-unit-count">{{ ui_text('{count} 个栏目',{'count':unit.columns|length}) }}</span>
     </summary>
     <div class="source-unit-contents">
         {% for column in unit.own_columns %}{{ column_choice(column) }}{% endfor %}
         {% for child in unit.children %}{{ unit_choice(child, depth + 1) }}{% endfor %}
-        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">{% if not unit.url %}<span data-i18n="尚未识别到官网入口">{{ tr("尚未识别到官网入口") }}</span>{% else %}<span data-i18n="该单位的栏目尚未接通">{{ tr("该单位的栏目尚未接通") }}</span>{% endif %}，已发现的进度会保留。</p>{% endif %}
+        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">{% if not unit.url %}<span data-i18n="尚未识别到官网入口">{{ tr("尚未识别到官网入口") }}</span>{% else %}<span data-i18n="该单位的栏目尚未接通">{{ tr("该单位的栏目尚未接通") }}</span>{% endif %} <span data-i18n="已发现的进度会保留。">{{ tr('已发现的进度会保留。') }}</span></p>{% endif %}
     </div>
 </details>
 {% else %}

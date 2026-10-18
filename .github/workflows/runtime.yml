@@ -123,12 +123,18 @@ jobs:
         run: |
           node tests/js/test_discovery_atlas_model.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tests/js/test_discovery_atlas_motion.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/browser/check_discovery_atlas_browser.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify localized collection month controls
         run: python tests/browser/check_month_picker_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify responsive language controls, school rows and desktop menus
+        run: python tests/browser/check_interface_layout_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify AI recovery status and cumulative usage explanations

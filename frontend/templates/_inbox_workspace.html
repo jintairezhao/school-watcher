@@ -72,7 +72,7 @@
                     <select id="yearFilter" data-i18n-aria-label="按年份筛选" aria-label="{{ tr('按年份筛选') }}">
                         <option value="" data-i18n="年份">{{ tr("年份") }}</option>
                         {% if period == 'archive' and current_year and current_year not in available_years %}
-                        <option value="{{ current_year }}" selected>{{ current_year }} 年（暂无该年份通知）</option>
+                        <option value="{{ current_year }}" selected>{{ tr('{year}年（暂无该年份通知）',year=current_year) }}</option>
                         {% endif %}
                         {% for year in available_years %}
                         <option value="{{ year }}" {% if period == 'archive' and current_year == year %}selected{% endif %}>{{ year }} <span data-i18n="年">{{ tr("年") }}</span></option>
@@ -134,7 +134,7 @@
                             <span class="notice-copy">
                                 <strong>{{ ann.title }}</strong>
                                 {% set row_source = display_sources.get(ann.id, ann.department) %}
-                                <span class="notice-meta"><span class="notice-source-label" title="{{ row_source|channel_breadcrumb }}">{{ row_source|channel_breadcrumb }}{% if announcement_sources.get(ann.id, [])|length > 1 %} · {{ announcement_sources[ann.id]|length }} 个官网栏目{% endif %}</span><time datetime="{{ ann.published_at.isoformat() if ann.published_at else '' }}">{{ ann.published_at.strftime('%Y-%m-%d') if ann.published_at else tr('时间未知') }}</time></span>
+                                <span class="notice-meta"><span class="notice-source-label" title="{{ row_source|channel_breadcrumb }}">{{ row_source|channel_breadcrumb }}{% if announcement_sources.get(ann.id, [])|length > 1 %} · {{ ui_text('{count} 个官网栏目',{'count':announcement_sources[ann.id]|length}) }}{% endif %}</span><time datetime="{{ ann.published_at.isoformat() if ann.published_at else '' }}">{{ ann.published_at.strftime('%Y-%m-%d') if ann.published_at else tr('时间未知') }}</time></span>
                                 {% set row_value = (announcement_values|default({})).get(ann.id) %}
                                 {% if row_value %}<span class="notice-value"{% if row_value.reason %} title="{{ row_value.reason }}"{% endif %}>{% if row_value.basis == 'title' %}<span data-i18n="按标题判断 ·">{{ tr("按标题判断 ·") }} </span>{% endif %}{{ row_value.label }}{% if row_value.reason %}<span> · {{ row_value.reason }}</span>{% endif %}</span>{% endif %}
                                 <span class="notice-summary">{{ (summary_texts.get(ann.id) or excerpts.get(ann.id) or tr('打开官网原文查看详情'))|striptags|truncate(110) }}</span>

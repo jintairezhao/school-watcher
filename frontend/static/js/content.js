@@ -124,7 +124,7 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
                     return;
                 }
                 phase('loading');
-                setMessage(data.progress_message || '正文正在后台处理，完成后会自动显示，也可以先打开官网原文。');
+                setMessage(data.progress_message || uiT('正文正在后台处理，完成后会自动显示，也可以先打开官网原文。'));
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         } catch (error) {
@@ -151,7 +151,7 @@ async function waitForQueuedTask(data) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         const response = await fetch('/api/tasks/' + data.task_id);
         const task = await response.json();
-        if (!response.ok) throw new Error(task.error || '无法读取任务状态');
+        if (!response.ok) throw new Error(task.error || uiT('无法读取任务状态'));
         if (task.state === 'done') return task.result;
         if (task.state === 'failed') throw new Error(task.error || uiT('任务未完成'));
     }

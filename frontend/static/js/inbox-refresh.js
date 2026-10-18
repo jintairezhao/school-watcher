@@ -39,10 +39,10 @@
         else if (sending) text = uiT('正在提交更新…');
         else if (submissionUncertain) text = uiT('本次抓取请求未确认，可重新尝试抓取');
         else if (tracked && total) {
-            if (busy) text = `${scopeLabel} · 更新中 ${completed}/${total}`;
-            else if (state.failed) text = `${scopeLabel} · ${state.failed} 个来源暂未成功`;
-            else if (state.done === total) text = `更新完成 · ${total} 个来源`;
-            else text = `${scopeLabel} · 部分来源尚未更新`;
+            if (busy) text = uiT("{p0} · 更新中 {p1}/{p2}", {p0:(scopeLabel), p1:(completed), p2:(total)});
+            else if (state.failed) text = uiT("{p0} · {p1} 个来源暂未成功", {p0:(scopeLabel), p1:(state.failed)});
+            else if (state.done === total) text = uiT("更新完成 · {p0} 个来源", {p0:(total)});
+            else text = uiT("{p0} · 部分来源尚未更新", {p0:(scopeLabel)});
         }
         status.textContent = uiT(text) || uiT('暂无更新任务');
         status.dataset.state = reconnecting ? 'reconnecting' : busy || sending || recovering ? 'running' : state?.failed ? 'error' : 'idle';
@@ -57,7 +57,7 @@
             progress.setAttribute('aria-valuemax', String(Math.max(1, total)));
             if (total) progress.setAttribute('aria-valuenow', String(Math.min(total, completed)));
             else progress.removeAttribute('aria-valuenow');
-            progress.setAttribute('aria-valuetext', !total ? uiT('正在查询更新进度') : reconnecting ? `连接中断，最近确认 ${completed}/${total} 个来源完成` : `${completed}/${total} 个来源完成`);
+            progress.setAttribute('aria-valuetext', !total ? uiT('正在查询更新进度') : reconnecting ? uiT('连接中断，最近确认 {completed}/{total} 个来源完成', {completed,total}) : uiT("{p0}/{p1} 个来源完成", {p0:(completed), p1:(total)}));
         }
         const refreshButton = find('#refreshCurrentSources');
         if (refreshButton) {
@@ -76,7 +76,7 @@
             if (label) {
                 label.textContent = uiT(source.status_label || '');
                 label.hidden = !source.status_label;
-                row.title = source.name + (source.status_label ? ' · ' + source.status_label : '') + (source.message ? '：' + source.message : '');
+                row.title = source.name + (source.status_label ? ' · ' + uiT(source.status_label) : '') + (source.message ? ': ' + uiT(source.message) : '');
             }
             const count = row.querySelector('.department-count');
             if (count) {
@@ -92,7 +92,7 @@
         const items = (state?.sources || []).map(source => {
             const item = document.createElement('li');
             const label = {pending: uiT('等待更新'), running: uiT('正在更新'), done: uiT('已更新'), saved: uiT('已保存'), failed: uiT('更新失败'), unloaded: uiT('尚未采集')}[source.state] || uiT('尚未更新');
-            item.textContent = source.name + '：' + label + (source.state === 'done' ? ` · 最近一次新增 ${source.new_count || 0} 条` : '') + (source.message ? ' · ' + source.message : '');
+            item.textContent = source.name + ': ' + label + (source.state === 'done' ? ' · ' + uiT('最近一次新增 {count} 条', {count:source.new_count || 0}) : '') + (source.message ? ' · ' + uiT(source.message) : '');
             return item;
         });
         if (reconnecting || (!items.length && message)) {
@@ -220,6 +220,7 @@
     window.addEventListener('pagehide', () => { clearTimeout(timer); ++generation; suspended = true; checking = sending = refreshingView = false; });
     window.addEventListener('pageshow', event => { if (event.persisted) recover(); });
     window.addEventListener('online', () => recover());
+    document.addEventListener('locale-changed',render);
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) clearTimeout(timer);
         else if (!suspended) recover();

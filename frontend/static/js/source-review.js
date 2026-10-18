@@ -3,14 +3,14 @@
     let page = 1, selected = null;
     let selectedDepartment = null;
     const field = id => document.getElementById(id);
-    const errorLabels = {
-        article_instead_of_column: '这是一篇通知，已按官网提供的链接查找所属栏目，无需逐篇确认。',
-        search_instead_of_column: '这是搜索结果页，已按官网提供的链接整理所属栏目。',
+    const errorLabels = () => ({
+        article_instead_of_column: uiT('这是一篇通知，已按官网提供的链接查找所属栏目，无需逐篇确认。'),
+        search_instead_of_column: uiT('这是搜索结果页，已按官网提供的链接整理所属栏目。'),
         source_login_required: uiT('这个栏目要求学校登录，当前无法自动访问。AI 无法解除登录限制。'),
-        publisher_requires_review: 'AI 尚未取得足够的官方发布部门依据。',
+        publisher_requires_review: uiT('AI 尚未取得足够的官方发布部门依据。'),
         publisher_conflict: uiT('栏目填写的发布部门与官网显示的不一致。'),
         column_identity_or_scope_unconfirmed: uiT('AI 尚未确认栏目名称与发布范围。'),
-        publisher_unconfirmed: 'AI 尚未确认发布部门，所需官网材料由程序读取。',
+        publisher_unconfirmed: uiT('AI 尚未确认发布部门，所需官网材料由程序读取。'),
         publisher_mismatch: uiT('发布部门与官网证据不一致。'),
         evidence_missing: uiT('程序尚未取得足够的网页材料。'),
         article_body_missing: uiT('尚未取得可核对的通知正文。'),
@@ -27,7 +27,7 @@
         independent_sample_missing: uiT('程序尚未完成独立页面复核。'),
         pagination_unverified: uiT('程序尚未完成分页核对。'),
         config_changed: uiT('栏目配置已变化，需要程序重新验证。')
-    };
+    });
     async function api(url, payload) {
         const response = await fetch(url, payload ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)} : {});
         const data = await response.json();
@@ -38,27 +38,27 @@
         try {
             const data = await api('/api/admin/source-proposals/' + id); selected = id;
             selectedDepartment = data.department_id;
-            field('proposalTitle').textContent = data.candidate.name + ' · 官网证据';
+            field('proposalTitle').textContent = data.candidate.name + uiT(' · 官网证据');
             const flow = data.workflow || {};
-            const owners = {program: uiT('程序处理'), ai: 'AI 识别与程序适配', developer: '开发者处理', website: uiT('受官网访问条件限制'), user: '由你选择'};
+            const owners = {program: uiT('程序处理'), ai: uiT('AI 识别与程序适配'), developer: uiT('开发者处理'), website: uiT('受官网访问条件限制'), user: uiT('由你选择')};
             field('proposalWorkflow').textContent = (flow.label || data.state) + ' · ' + (owners[flow.owner] || '');
             field('proposalNext').textContent = (flow.user_action || '') + '。' + (flow.next_step || '');
-            const aiLabels = {succeeded: uiT('调用成功'), running: '正在调用', waiting: uiT('正在排队'), not_needed: '本次无需调用', not_configured: uiT('尚未配置'), uncertain: uiT('结果未知，未重复调用'), failed: uiT('调用失败'), limit_reached: '已达尝试上限', budget_exhausted: uiT('已达用量上限')};
-            field('proposalStages').textContent = 'AI：' + (aiLabels[flow.stages?.ai] || uiT('尚未完成')) + ' · 栏目验证：' +
-                (flow.stages?.validation === 'passed' ? '通过' : '尚未通过') + ' · 正式接入：' +
+            const aiLabels = {succeeded: uiT('调用成功'), running: uiT('正在调用'), waiting: uiT('正在排队'), not_needed: uiT('本次无需调用'), not_configured: uiT('尚未配置'), uncertain: uiT('结果未知，未重复调用'), failed: uiT('调用失败'), limit_reached: uiT('已达尝试上限'), budget_exhausted: uiT('已达用量上限')};
+            field('proposalStages').textContent = 'AI: ' + (aiLabels[flow.stages?.ai] || uiT('尚未完成')) + uiT(' · 栏目验证：') +
+                (flow.stages?.validation === 'passed' ? uiT('通过') : uiT('尚未通过')) + uiT(' · 正式接入：') +
                 (flow.stages?.activation === 'activated' ? uiT('完成') : uiT('未完成'));
-            field('proposalErrors').textContent = flow.reason || (data.validation.errors || []).map(code => errorLabels[code] || code).join('；');
-            if (flow.ai_reason && flow.ai_reason !== flow.reason) field('proposalErrors').textContent += '。AI 判断：' + flow.ai_reason;
-            const historyLabels = {exploration_step_v2: 'AI 判断与执行', exploration_read: uiT('读取补充材料'), automatic_review_v5: '修复后自动重检', automatic_review_v6: uiT('通用接入流程更新后重检'),
-                validate: '栏目验证', activate: uiT('正式接入'), reject: '用户拒绝', resolved_to_columns: '整理到所属栏目',
-                fetch_failed: uiT('官网读取未完成'), program_failed: '程序故障', access_retry: '官网访问重试', select_observed_option: '用户选择'};
+            field('proposalErrors').textContent = uiT(flow.reason || '') || (data.validation.errors || []).map(code => errorLabels()[code] || code).join('; ');
+            if (flow.ai_reason && flow.ai_reason !== flow.reason) field('proposalErrors').textContent += uiT('。AI 判断：') + flow.ai_reason;
+            const historyLabels = {exploration_step_v2: uiT('AI 判断与执行'), exploration_read: uiT('读取补充材料'), automatic_review_v5: uiT('修复后自动重检'), automatic_review_v6: uiT('通用接入流程更新后重检'),
+                validate: uiT('栏目验证'), activate: uiT('正式接入'), reject: uiT('用户拒绝'), resolved_to_columns: uiT('整理到所属栏目'),
+                fetch_failed: uiT('官网读取未完成'), program_failed: uiT('程序故障'), access_retry: uiT('官网访问重试'), select_observed_option: uiT('用户选择')};
             field('proposalHistory').replaceChildren(...(data.history || []).map(item => {
                 const li = document.createElement('li');
                 li.textContent = item.created_at.replace('T', ' ').slice(0, 19) + ' · ' + (historyLabels[item.action] || uiT('已保存处理记录')) +
                     (item.detail?.reason ? ' · ' + item.detail.reason : ''); return li;
             }));
             field('proposalMissing').replaceChildren(...(flow.needed_evidence || []).map(text => {
-                const li = document.createElement('li'); li.textContent = '待补材料：' + text; return li;
+                const li = document.createElement('li'); li.textContent = uiT('待补材料：') + text; return li;
             }));
             field('proposalQuestion').replaceChildren();
             if (flow.requires_user && flow.question) {
@@ -77,7 +77,7 @@
                     row.append(button);
                     (option.evidence_urls || []).forEach(url => {
                         if (!/^https?:\/\//i.test(url)) return;
-                        const link = document.createElement('a'); link.href = url; link.textContent = ' 官网依据'; link.target = '_blank'; link.rel = 'noopener noreferrer'; row.append(link);
+                        const link = document.createElement('a'); link.href = url; link.textContent = uiT(' 官网依据'); link.target = '_blank'; link.rel = 'noopener noreferrer'; row.append(link);
                     });
                     field('proposalQuestion').append(row);
                 });
@@ -87,7 +87,7 @@
             (data.validation.related_columns || []).forEach(column => {
                 const button = document.createElement('button');
                 button.className = 'btn btn-sm btn-outline';
-                button.textContent = '查看所属栏目：' + column.name;
+                button.textContent = uiT('查看所属栏目：') + column.name;
                 button.addEventListener('click', () => inspect(column.id));
                 field('proposalRelated').append(button);
             });
@@ -111,13 +111,13 @@
         field('sourceVersionStatus').textContent = versions.length ? '' : uiT('尚无已发布的配置版本。');
         versions.forEach(version => {
             const row = document.createElement('p');
-            const label = document.createElement('span'); label.textContent = '版本 ' + version.version + ' · ' + version.config.name + ' ';
-            const button = document.createElement('button'); button.className = 'btn btn-sm btn-outline'; button.textContent = '检查并恢复此版本';
+            const label = document.createElement('span'); label.textContent = uiT('版本 ') + version.version + ' · ' + version.config.name + ' ';
+            const button = document.createElement('button'); button.className = 'btn btn-sm btn-outline'; button.textContent = uiT('检查并恢复此版本');
             button.addEventListener('click', async () => {
                 button.disabled = true;
                 try {
                     await api('/api/admin/departments/' + departmentId + '/rollback', {version: version.version});
-                    field('sourceVersionStatus').textContent = '已安排复核，通过后恢复该版本。';
+                    field('sourceVersionStatus').textContent = uiT('已安排复核，通过后恢复该版本。');
                 } catch (error) { field('sourceVersionStatus').textContent = error.message; }
                 finally { button.disabled = false; }
             });
@@ -127,7 +127,7 @@
     async function load() {
         try {
             const data = await api('/api/admin/source-proposals?state=' + field('proposalState').value + '&page=' + page);
-            field('reviewStatus').textContent = data.total ? '共 ' + data.total + ' 项 · 第 ' + page + ' 页' : uiT('此状态下没有待处理来源。');
+            field('reviewStatus').textContent = data.total ? uiT('共 {count} 项 · 第 {page} 页', {count:data.total,page}) : uiT('此状态下没有待处理来源。');
             field('reviewPrev').disabled = page <= 1; field('reviewNext').disabled = page >= data.pages;
             field('proposalList').replaceChildren();
             data.items.forEach(item => {
@@ -149,10 +149,11 @@
         try {
             await api('/api/admin/source-proposals/' + selected + '/review', {action: button.dataset.review});
             field('proposalDetail').hidden = true; await load();
-            field('reviewStatus').textContent = button.dataset.review === 'reject' ? '建议已拒绝，已有通知保留。' : '已加入检查队列，通过后自动启用。';
+            field('reviewStatus').textContent = button.dataset.review === 'reject' ? uiT('建议已拒绝，已有通知保留。') : uiT('已加入检查队列，通过后自动启用。');
         } catch (error) { field('reviewStatus').textContent = error.message; }
         finally { buttons.forEach(b => { b.disabled = false; }); }
     });
+    document.addEventListener('locale-changed', () => {load(); if(selected) inspect(selected,false);});
     load();
     setInterval(async () => {
         if (document.hidden) return;

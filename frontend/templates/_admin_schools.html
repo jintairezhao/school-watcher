@@ -1,4 +1,5 @@
 {# 学校管理功能块（admin 后台「学校管理」标签页 include 使用） #}
+{% from '_ui_text.html' import ui_text %}
 <div class="school-manage-list">
     {% if schools %}
     {% for school in schools %}
@@ -8,30 +9,30 @@
             <div class="manage-detail">
                 <h4>{{ school.name }}</h4>
                 <span class="text-muted">{{ school.url|truncate(50) }}</span>
-                <span class="text-muted">
-                    {{ school.departments.count() }} <span data-i18n="个部门 ·">{{ tr("个部门 ·") }}</span>
-                    {{ school.announcements.count() }} <span data-i18n="条通知 ·">{{ tr("条通知 ·") }}</span>
-                    {{ school.subscriber_count or 0 }} <span data-i18n="人订阅 ·">{{ tr("人订阅 ·") }}</span>
+                <span class="text-muted manage-meta">
+                    {{ ui_text('{count} 个部门', {'count':school.departments.count()}) }}
+                    {{ ui_text('{count} 条通知', {'count':school.announcements.count()}) }}
+                    {{ ui_text('{count} 人订阅', {'count':school.subscriber_count or 0}) }}
                     {% if school.enabled %}
                     <span class="text-success" data-i18n="已上架">{{ tr("已上架") }}</span>
                     {% else %}
                     <span class="text-muted" data-i18n="已下架">{{ tr("已下架") }}</span>
                     {% endif %}
                     {% if school.enabled and (school.subscriber_count or 0) == 0 %}
-                    <span class="text-muted">（暂无订阅 · 暂停抓取）</span>
+                    <span class="text-muted" data-i18n="暂无订阅 · 暂停抓取">{{ tr('暂无订阅 · 暂停抓取') }}</span>
                     {% endif %}
                 </span>
             </div>
         </div>
         <div class="manage-actions">
-            <button class="btn btn-sm btn-outline" onclick="manageDept({{ school.id }})" title="管理部门" data-i18n="部门">
+            <button class="btn btn-sm btn-outline" onclick="manageDept({{ school.id }})" data-i18n-title="管理部门" title="{{ tr('管理部门') }}" data-i18n="部门">
                 {{ tr("部门") }}
             </button>
             <button class="btn btn-sm btn-outline" data-school-id="{{ school.id }}" data-school-name="{{ school.name }}" data-school-url="{{ school.url }}" data-school-enabled="{{ school.enabled|lower }}" onclick="editSchool(Number(this.dataset.schoolId), this.dataset.schoolName, this.dataset.schoolUrl, this.dataset.schoolEnabled === 'true')" data-i18n="编辑">
                 {{ tr("编辑") }}
             </button>
             <a href="{{ url_for('pages.school_detail', school_id=school.id) }}" class="btn btn-sm btn-outline">
-                查看
+                <span data-i18n="查看">{{ tr('查看') }}</span>
             </a>
             <button class="btn btn-sm btn-danger-outline" data-school-name="{{ school.name }}" onclick="deleteSchool({{ school.id }}, this.dataset.schoolName)" data-i18n="删除">
                 {{ tr("删除") }}

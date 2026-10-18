@@ -4,7 +4,7 @@
     const uiT = (message,variables) => window.I18n?.t(message,variables) || message;
     const zone = () => window.I18n?.preferences().time_zone || (window.I18n?.locale() === 'en' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Asia/Shanghai');
     const caption = () => document.querySelectorAll('[data-log-timezone]').forEach(node => {
-        node.textContent = window.I18n?.locale() !== 'en' && zone()==='Asia/Shanghai' ? '北京时间 (Asia/Shanghai)'
+        node.textContent = window.I18n?.locale() !== 'en' && zone()==='Asia/Shanghai' ? uiT('北京时间 (Asia/Shanghai)')
             : uiT('日志时间显示：{zone}',{zone:zone()});
     });
     const formatter = () => new Intl.DateTimeFormat(window.I18n?.locale() || 'zh-CN', {

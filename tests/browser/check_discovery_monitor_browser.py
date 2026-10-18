@@ -139,10 +139,8 @@ def check():
                 queued.state='pending'; queued.phase='fetch'; queued.payload={'school_id':fixture.school.id,
                     'page':{'url':base + '/unit/5/notice','label':'研究生培养','path_json':['学校官网','院系设置','哲学院']}}
                 db.session.commit()
-            diagram = browser.new_page(viewport={'width':1600,'height':1100}, device_scale_factor=1)
-            diagram.goto((ROOT / 'frontend/static/img/discovery-system.svg').as_uri())
-            diagram.screenshot(path=str(output / 'discovery-system.png'))
-            diagram.close()
+            assert fixture.client.get('/static/img/discovery-system.svg').status_code == 404
+            assert not (ROOT / 'frontend/static/img/discovery-system.svg').exists()
         finally:
             fixture.tearDown(); browser.close()
     (output / 'browser-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),'utf8')

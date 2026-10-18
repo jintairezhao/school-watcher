@@ -1,14 +1,15 @@
 {% extends "base.html" %}
-{% block title %}{{ school.name }} · 来源设置{% endblock %}
+{% from '_ui_text.html' import ui_text %}
+{% block title %}{{ school.name }} · {{ tr('来源设置') }}{% endblock %}
 {% block content %}
 <div class="sources-page">
     {% from '_school_header.html' import school_header with context %}
     {{ school_header(school, 'sources', tr('自动从官网寻找与你的学习、申请和校园生活有关的信息。')) }}
-    <section class="discovery-status" id="discoveryStatus" data-school-id="{{ school.id }}" aria-label="来源接入进度">
+    <section class="discovery-status" id="discoveryStatus" data-school-id="{{ school.id }}" data-i18n-data-i18n-aria-label="来源接入进度" aria-label="{{ tr('来源接入进度') }}" aria-label="{{ tr('来源接入进度') }}">
         <div class="discovery-status-heading"><h2 id="discoveryMessage" role="status">{{ tr(discovery.message) }}</h2><span id="discoveryActivity"></span></div>
-        <progress id="discoveryProgress" aria-label="来源接入进度" {% if not discovery.busy %}hidden{% endif %}></progress>
-        <p id="discoveryCounts">已收录 {{ discovery.article_count|default(0) }} 条通知 · 已接入 {{ discovery.verified_source_count }} <span data-i18n="个信息来源">{{ tr("个信息来源") }}</span></p>
-        <p id="discoveryValue" class="text-muted">{{ discovery.value_summary|default('优先寻找升学、奖助、实习就业、竞赛和校园办事信息。', true) }}</p>
+        <progress id="discoveryProgress" data-i18n-data-i18n-aria-label="来源接入进度" aria-label="{{ tr('来源接入进度') }}" aria-label="{{ tr('来源接入进度') }}" {% if not discovery.busy %}hidden{% endif %}></progress>
+        <p id="discoveryCounts">{{ ui_text('已收录{articles}条通知 · 已接入{sources}个信息来源', {'articles':discovery.article_count|default(0),'sources':discovery.verified_source_count}) }}</p>
+        <p id="discoveryValue" class="text-muted">{{ tr(discovery.value_summary|default('优先寻找升学、奖助、实习就业、竞赛和校园办事信息。', true)) }}</p>
         <p class="source-path-help text-muted" data-i18n="找到可用的信息后会自动收录，无需逐个确认部门或栏目。收录结果可以直接阅读。">{{ tr("找到可用的信息后会自动收录，无需逐个确认部门或栏目。收录结果可以直接阅读。") }}</p>
         <div class="discovery-actions">
             <a class="btn btn-outline" href="{{ url_for('discovery.monitor', school_id=school.id) }}" data-i18n="实时查看信源发掘">{{ tr("实时查看信源发掘") }}</a>
@@ -22,23 +23,23 @@
         <p id="discoveryChanges" class="text-muted"></p>
         <p id="discoveryAI" class="text-muted">{{ tr(discovery.ai_message) }}</p>
         <p id="discoveryAIUsage" class="text-muted"{% if not discovery.ai_usage_message %} hidden{% endif %}>{{ discovery.ai_usage_message }}</p>
-        <details id="discoveryGaps"{% if not discovery.incomplete_reasons %} hidden{% endif %}><summary>暂未读取的页面</summary><ul id="discoveryGapList">{% for reason in discovery.incomplete_reasons %}<li>{{ reason }}</li>{% endfor %}</ul></details>
+        <details id="discoveryGaps"{% if not discovery.incomplete_reasons %} hidden{% endif %}><summary><span data-i18n="暂未读取的页面">{{ tr("暂未读取的页面") }}</span></summary><ul id="discoveryGapList">{% for reason in discovery.incomplete_reasons %}<li>{{ reason }}</li>{% endfor %}</ul></details>
         <p id="discoveryCurrent" class="text-muted"></p>
         <div class="discovery-actions">
             {% if current_user.is_admin %}<button type="button" class="btn btn-outline" id="discoveryPause" data-action="{{ 'resume' if discovery.can_resume else 'pause' }}" {% if not discovery.can_pause and not discovery.can_resume and discovery.state != 'pausing' %}hidden{% endif %} {% if discovery.state == 'pausing' %}disabled{% endif %}>{{ tr('继续') if discovery.can_resume else tr('正在暂停…') if discovery.state == 'pausing' else tr('暂停') }}</button>{% endif %}
-            {% if current_user.is_admin %}<a id="discoveryVerify" class="btn btn-outline" href="{{ url_for('browser_sessions.page') }}" hidden>完成访问验证</a>{% endif %}
+            {% if current_user.is_admin %}<a id="discoveryVerify" class="btn btn-outline" href="{{ url_for('browser_sessions.page') }}" hidden><span data-i18n="完成访问验证">{{ tr("完成访问验证") }}</span></a>{% endif %}
             <button type="button" class="btn btn-ghost" id="discoveryRefresh" data-i18n="刷新进度">{{ tr("刷新进度") }}</button>
         </div>
         </details>
     </section>
     <details class="source-preferences" id="sourcePreferences" {% if subscription.department_ids is not none %}open{% endif %}>
-    <summary><span data-i18n="调整接收范围">{{ tr("调整接收范围") }}</span><span>{{ '已自定义' if subscription.department_ids is not none else tr('默认接收自动找到的信息') }}</span></summary>
+    <summary><span data-i18n="调整接收范围">{{ tr("调整接收范围") }}</span><span data-i18n="{{ '已自定义' if subscription.department_ids is not none else '默认接收自动找到的信息' }}">{{ tr('已自定义') if subscription.department_ids is not none else tr('默认接收自动找到的信息') }}</span></summary>
     <form method="post" class="sources-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <fieldset class="source-mode" {% if not groups %}hidden{% endif %}><legend data-i18n="接收范围">{{ tr("接收范围") }}</legend>
             <label><input type="radio" name="mode" value="all" {% if subscription.department_ids is none %}checked{% endif %}> <span data-i18n="自动接收本校信息，包含后续新来源">{{ tr("自动接收本校信息，包含后续新来源") }}</span></label>
             <label><input type="radio" name="mode" value="selected" {% if subscription.department_ids is not none %}checked{% endif %}> <span data-i18n="只接收指定来源">{{ tr("只接收指定来源") }}</span></label>
-            <button type="button" class="btn btn-ghost" id="sourceClearSelection" {% if subscription.department_ids is none %}hidden{% endif %}>清空选择</button>
+            <button type="button" class="btn btn-ghost" id="sourceClearSelection" {% if subscription.department_ids is none %}hidden{% endif %}><span data-i18n="清空选择">{{ tr("清空选择") }}</span></button>
         </fieldset>
         {% if groups %}<p class="source-path-help text-muted" data-i18n="选择整个部门，会自动接收它下面现有和后续新增栏目的通知。">{{ tr("选择整个部门，会自动接收它下面现有和后续新增栏目的通知。") }}</p>{% endif %}
         <div id="sourceChoices">
