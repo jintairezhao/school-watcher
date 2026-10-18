@@ -242,7 +242,9 @@ class AIUsageTests(unittest.TestCase):
         page = client.get('/admin/ai-usage')
         self.assertEqual(page.status_code, 200)
         self.assertIn(b'id="aiUsagePanel"', page.data)
-        self.assertIn(b'aria-current="page">API', page.data)
+        from bs4 import BeautifulSoup
+        active = BeautifulSoup(page.data, 'html.parser').select_one('a[aria-current="page"]')
+        self.assertEqual(active.get_text(strip=True), 'API 用量')
         self.assertNotIn(b'id="aiProfileForm"', page.data)
         settings = client.get('/admin')
         self.assertIn(b'id="aiProfileForm"', settings.data)

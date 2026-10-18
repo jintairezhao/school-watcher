@@ -1,34 +1,35 @@
 {% extends "admin_base.html" %}
-{% block title %}系统管理 — 学校通知{% endblock %}
+{% block title %}{{ tr("系统管理 — 学校通知") }}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-logs.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/delete-confirmation.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/month-picker.css') }}">
 {% endblock %}
 
 
 
 {% block content %}
 <header class="surface-heading admin-page-header">
-    <div><h1 id="adminPageTitle">系统概览</h1><p id="adminPageDescription">先处理需要介入的事项，再查看近期运行情况。</p></div>
+    <div><h1 id="adminPageTitle" data-i18n="系统概览">{{ tr("系统概览") }}</h1><p id="adminPageDescription" data-i18n="先处理需要介入的事项，再查看近期运行情况。">{{ tr("先处理需要介入的事项，再查看近期运行情况。") }}</p></div>
 
 </header>
 
 <!-- ================= 概览 ================= -->
 <section class="admin-tab-panel" id="panel-overview">
     <section class="admin-attention" aria-labelledby="attentionTitle">
-        <h2 id="attentionTitle">需要关注</h2>
+        <h2 id="attentionTitle" data-i18n="需要关注">{{ tr("需要关注") }}</h2>
         <div class="attention-list">
-            <a href="{{ url_for('source_governance.review_page') }}"><span><strong>来源诊断与历史提案</strong><small>按需查看官网依据与历史提案，已收录通知可直接阅读。</small></span><span aria-hidden="true">→</span></a>
-            <a href="{{ url_for('browser_sessions.page') }}"><span><strong>处理访问验证</strong><small>查看需要人工验证的官网，完成后继续同步。</small></span><span aria-hidden="true">→</span></a>
-            <a href="#logs"><span><strong>检查抓取异常</strong><small id="attentionLogStatus">查看未完成的任务与具体原因。</small></span><span aria-hidden="true">→</span></a>
+            <a href="{{ url_for('source_governance.review_page') }}"><span><strong data-i18n="来源诊断与历史提案">{{ tr("来源诊断与历史提案") }}</strong><small data-i18n="按需查看官网依据与历史提案，已收录通知可直接阅读。">{{ tr("按需查看官网依据与历史提案，已收录通知可直接阅读。") }}</small></span><span aria-hidden="true">→</span></a>
+            <a href="{{ url_for('browser_sessions.page') }}"><span><strong data-i18n="处理访问验证">{{ tr("处理访问验证") }}</strong><small data-i18n="查看需要人工验证的官网，完成后继续同步。">{{ tr("查看需要人工验证的官网，完成后继续同步。") }}</small></span><span aria-hidden="true">→</span></a>
+            <a href="#logs"><span><strong data-i18n="检查抓取异常">{{ tr("检查抓取异常") }}</strong><small id="attentionLogStatus" data-i18n="查看未完成的任务与具体原因。">{{ tr("查看未完成的任务与具体原因。") }}</small></span><span aria-hidden="true">→</span></a>
         </div>
     </section>
-    <h2 class="admin-section-title">运行概况</h2>
-    <div class="stat-grid" id="statGrid"><p class="text-muted">加载中…</p></div>
+    <h2 class="admin-section-title" data-i18n="运行概况">{{ tr("运行概况") }}</h2>
+    <div class="stat-grid" id="statGrid"><p class="text-muted" data-i18n="加载中…">{{ tr("加载中…") }}</p></div>
     <p class="text-muted" id="scrapeRateExplanation" hidden></p>
     <div class="setting-card">
-        <div class="setting-card-header"><h3>最近抓取</h3><p>最近 10 条已结束的抓取记录 · 北京时间 · <a href="#logs">查看完整记录</a></p></div>
-        <div class="setting-card-body"><div id="recentLogs" class="log-list"><p class="text-muted">加载中…</p></div></div>
+        <div class="setting-card-header"><h3 data-i18n="最近抓取">{{ tr("最近抓取") }}</h3><p><span data-i18n="最近 10 条已结束的抓取记录">{{ tr("最近 10 条已结束的抓取记录") }}</span> · <span data-log-timezone></span> · <a href="#logs" data-i18n="查看完整记录">{{ tr("查看完整记录") }}</a></p></div>
+        <div class="setting-card-body"><div id="recentLogs" class="log-list"><p class="text-muted" data-i18n="加载中…">{{ tr("加载中…") }}</p></div></div>
     </div>
 </section>
 
@@ -40,7 +41,7 @@
 <section class="admin-tab-panel" id="panel-schools" hidden>
     <div class="admin-section-actions">
         <div class="header-actions">
-            <button class="btn btn-primary" onclick="showAddSchool()">添加学校</button>
+            <button class="btn btn-primary" onclick="showAddSchool()" data-i18n="添加学校">{{ tr("添加学校") }}</button>
         </div>
     </div>
     <p><a href="{{ url_for('source_governance.review_page') }}">来源诊断与历史提案（可选）</a></p>
@@ -53,25 +54,52 @@
     <p><a href="{{ url_for('collection_setup.page') }}">基础配置：收录起始日期、更新间隔与 AI 服务</a></p>
     <div class="settings-grid">
         <div class="setting-card">
-            <div class="setting-card-header"><h3>抓取设置</h3></div>
+            <div class="setting-card-header"><h3 data-i18n="抓取设置">{{ tr("抓取设置") }}</h3></div>
             <div class="setting-card-body">
                 <div class="form-group">
-                    <label for="interval">检查间隔（分钟）</label>
+                    <label for="interval" data-i18n="检查间隔（分钟）">{{ tr("检查间隔（分钟）") }}</label>
                     <input type="number" id="interval" class="form-input" min="5" max="720" step="1" value="30" aria-describedby="interval-help">
-                    <p id="interval-help" class="text-muted">5–720 分钟</p>
+                    <p id="interval-help" class="text-muted" data-i18n="5–720 分钟">{{ tr("5–720 分钟") }}</p>
                 </div>
                 <div class="form-group">
-                    <label for="sinceMonth">起始发布年月</label>
-                    <input type="month" id="sinceMonth" class="form-input" min="1900-01" required aria-describedby="sinceMonthHelp">
-                    <p id="sinceMonthHelp" class="text-muted">下次抓取生效，已保存的通知保留。</p>
+                    <label for="sinceMonth" data-i18n="起始发布年月">{{ tr("起始发布年月") }}</label>
+                    <div class="month-field" data-month-picker>
+                        <input type="text" id="sinceMonth" class="form-input" inputmode="numeric" autocomplete="off" maxlength="7" pattern="[0-9]{4}-(0[1-9]|1[0-2])" min="1900-01" data-i18n-placeholder="例如 2023-01" placeholder="{{ tr('例如 2023-01') }}" required disabled aria-describedby="sinceMonthHelp sinceMonthError">
+                        <button class="month-field-toggle" type="button" popovertarget="sinceMonthPicker" data-i18n-aria-label="选择起始年月" aria-label="{{ tr('选择起始年月') }}" aria-haspopup="dialog" aria-controls="sinceMonthPicker" aria-expanded="false" disabled>
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/></svg>
+                        </button>
+                        <div class="month-picker" id="sinceMonthPicker" popover="auto" role="dialog" aria-labelledby="sinceMonthPickerTitle">
+                            <span class="sr-only" id="sinceMonthPickerTitle" data-i18n="选择起始发布年月">{{ tr("选择起始发布年月") }}</span>
+                            <div class="month-picker-year">
+                                <button type="button" class="month-picker-nav" data-year-step="-1" data-i18n-aria-label="上一年" aria-label="{{ tr('上一年') }}">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
+                                </button>
+                                <label class="month-picker-year-field"><span class="sr-only" data-i18n="年份">{{ tr("年份") }}</span><input type="number" inputmode="numeric" step="1" aria-describedby="sinceMonthYearHelp"><span aria-hidden="true" data-i18n="年">{{ tr("年") }}</span></label>
+                                <button type="button" class="month-picker-nav" data-year-step="1" data-i18n-aria-label="下一年" aria-label="{{ tr('下一年') }}">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg>
+                                </button>
+                            </div>
+                            <p class="month-picker-hint" id="sinceMonthYearHelp" data-i18n="可直接输入年份">{{ tr("可直接输入年份") }}</p>
+                            <div class="month-picker-months" role="group" data-i18n-aria-label="月份" aria-label="{{ tr('月份') }}">
+                                {% for month in range(1, 13) %}<button type="button" class="month-picker-month" data-month="{{ month }}" aria-pressed="false"><span data-month-label>{{ month }}月</span><svg class="month-picker-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>{% endfor %}
+                            </div>
+                            <div class="month-picker-shortcuts" role="group" data-i18n-aria-label="快捷选择" aria-label="{{ tr('快捷选择') }}">
+                                <button type="button" data-month-shortcut="year" data-i18n="今年一月">{{ tr("今年一月") }}</button>
+                                <button type="button" data-month-shortcut="last-year" data-i18n="去年一月">{{ tr("去年一月") }}</button>
+                                <button type="button" data-month-shortcut="current">本月</button>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="sinceMonthError" class="month-picker-error" aria-live="polite" hidden></p>
+                    <p id="sinceMonthHelp" class="text-muted" data-i18n="可直接输入年月，如 2023-01。下次抓取生效，已保存的通知保留。">{{ tr("可直接输入年月，如 2023-01。下次抓取生效，已保存的通知保留。") }}</p>
                 </div>
-                <button class="btn btn-primary" onclick="saveInterval()">保存设置</button>
+                <button class="btn btn-primary" onclick="saveInterval()" data-i18n="保存设置">{{ tr("保存设置") }}</button>
             </div>
         </div>
         <div class="setting-card">
-            <div class="setting-card-header"><h3>手动任务</h3><p>立即更新已接通的学校来源</p></div>
+            <div class="setting-card-header"><h3>手动任务</h3><p data-i18n="立即更新已接通的学校来源">{{ tr("立即更新已接通的学校来源") }}</p></div>
             <div class="setting-card-body manual-actions">
-                <button class="btn btn-primary" onclick="triggerScrapeAll()" id="btnScrapeAll">立即抓取全部（活跃学校）</button>
+                <button class="btn btn-primary" onclick="triggerScrapeAll()" id="btnScrapeAll" data-i18n="立即抓取全部（活跃学校）">{{ tr("立即抓取全部（活跃学校）") }}</button>
             </div>
         </div>
     </div>
@@ -79,7 +107,7 @@
 
 <!-- ================= 平台设置 ================= -->
 <section class="admin-tab-panel" id="panel-platform" hidden>
-    {% if onboarding_school %}<p class="ai-onboarding-return"><a href="{{ url_for('subscriptions.manage_sources', school_id=onboarding_school.id) }}">返回{{ onboarding_school.name }}</a> · 保存目录识别用途后继续发现栏目</p>{% endif %}
+    {% if onboarding_school %}<p class="ai-onboarding-return"><a href="{{ url_for('subscriptions.manage_sources', school_id=onboarding_school.id) }}"><span data-i18n="返回">{{ tr("返回") }}</span>{{ onboarding_school.name }}</a> · 保存目录识别用途后继续发现栏目</p>{% endif %}
     <div class="settings-grid">
         {% include '_admin_ai.html' %}
 
@@ -89,15 +117,16 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/log-time.js') }}"></script>
+<script src="{{ url_for('static', filename='js/month-picker.js') }}"></script>
 <script>
 // ---- 标签页切换（hash 记忆） ----
-function showTab(name) {
+function showTab(name, load = true) {
     var headings = {
-        overview: ['系统概览', '先处理需要介入的事项，再查看近期运行情况。'],
-        schools: ['学校与部门', '维护学校、官网栏目与来源关系。'],
-        scrape: ['抓取任务', '设置检查间隔，或主动更新已订阅的来源。'],
-        logs: ['抓取记录', '按学校查看同步结果、时间和未完成的原因。'],
-        platform: ['平台设置', '配置本机使用的 AI 服务。']
+        overview: [uiT('系统概览'), uiT('先处理需要介入的事项，再查看近期运行情况。')],
+        schools: [uiT('学校与部门'), uiT('维护学校、官网栏目与来源关系。')],
+        scrape: [uiT('抓取任务'), uiT('设置检查间隔，或主动更新已订阅的来源。')],
+        logs: [uiT('抓取记录'), uiT('按学校查看同步结果、时间和未完成的原因。')],
+        platform: [uiT('平台设置'), uiT('配置本机使用的 AI 服务。')]
     };
     var heading = headings[name] || headings.overview;
     document.getElementById('adminPageTitle').textContent = heading[0];
@@ -110,6 +139,7 @@ function showTab(name) {
     document.querySelectorAll('.admin-tab-panel').forEach(function (p) {
         p.hidden = p.id !== 'panel-' + name;
     });
+    if (!load) return;
     if (name === 'overview') loadStats();
     if (name === 'scrape') loadInterval();
     if (name === 'logs' && window.loadScrapeLogHistory) window.loadScrapeLogHistory();
@@ -131,6 +161,7 @@ function applyHash() {
     }
     showTab(document.getElementById('panel-' + h) ? h : 'overview');
 }
+document.addEventListener('locale-changed', () => showTab(document.querySelector('.admin-tab.is-active')?.dataset.tab || 'overview', false));
 window.addEventListener('hashchange', applyHash);
 document.addEventListener('DOMContentLoaded', applyHash);
 
@@ -141,50 +172,57 @@ async function loadStats() {
         if (!r.ok) throw new Error('stats unavailable');
         var s = await r.json();
         var failed = (s.recent_logs || []).filter(function (log) { return log.status !== 'success'; }).length;
-        document.getElementById('attentionLogStatus').textContent = failed ? '最近 ' + (s.recent_logs || []).length + ' 条已结束记录中，有 ' + failed + ' 条未完整完成。查看原因。' : '最近已结束记录中未发现异常；完整历史仍可查看。';
+        document.getElementById('attentionLogStatus').textContent = failed ? '最近 ' + (s.recent_logs || []).length + ' 条已结束记录中，有 ' + failed + ' 条未完整完成。查看原因。' : uiT('最近已结束记录中未发现异常；完整历史仍可查看。');
         var outcomes = s.scrape_outcomes_7d || {};
         var explanation = document.getElementById('scrapeRateExplanation');
-        explanation.textContent = '近 7 天：成功 ' + (outcomes.success || 0) + '、部分完成 ' + (outcomes.partial || 0) + '、失败 ' + (outcomes.failed || 0) + '、中断 ' + (outcomes.interrupted || 0) + '。成功率只统计已结束记录，运行与排队不计入，重试分别计数。';
+        explanation.textContent = uiT('近 7 天：成功 ') + (outcomes.success || 0) + uiT('、部分完成 ') + (outcomes.partial || 0) + uiT('、失败 ') + (outcomes.failed || 0) + uiT('、中断 ') + (outcomes.interrupted || 0) + uiT('。成功率只统计已结束记录，运行与排队不计入，重试分别计数。');
         explanation.hidden = false;
         var cards = [
 
-            ['学校', s.schools, '上架 ' + s.schools_enabled + ' · 活跃 ' + s.schools_active],
-            ['订阅', s.subscriptions, '订阅驱动抓取'],
-            ['通知', s.announcements, '近24h +' + s.announcements_24h],
-            ['已结束抓取（7天）', s.scrapes_7d, '完整成功率 ' + (s.scrape_success_rate == null ? '—' : (s.scrape_success_rate * 100).toFixed(1) + '%'), ' +' + s.scrape_new_7d + ' 条'],
+            [uiT('学校'), s.schools, uiT('上架 ') + s.schools_enabled + uiT(' · 活跃 ') + s.schools_active],
+            [uiT('订阅'), s.subscriptions, uiT('订阅驱动抓取')],
+            [uiT('通知'), s.announcements, uiT('近24h +') + s.announcements_24h],
+            [uiT('已结束抓取（7天）'), s.scrapes_7d, uiT('完整成功率 ') + (s.scrape_success_rate == null ? '—' : (s.scrape_success_rate * 100).toFixed(1) + '%'), ' +' + s.scrape_new_7d + uiT(' 条')],
         ];
         document.getElementById('statGrid').innerHTML = cards.map(function (c) {
             return '<div class="stat-card"><div class="n">' + c[1] + '</div><div class="l">' + c[0] + (c[2] ? ' · ' + c[2] : '') + (c[3] || '') + '</div></div>';
         }).join('');
         document.getElementById('recentLogs').innerHTML = (s.recent_logs || []).map(function (l) {
-            var statusName = { success: '成功', failed: '失败', partial: '部分完成', interrupted: '已中断' }[l.status] || l.status;
+            var statusName = { success: uiT('成功'), failed: uiT('失败'), partial: uiT('部分完成'), interrupted: uiT('已中断') }[l.status] || l.status;
             return '<div class="log-item"><span class="log-status log-' + l.status + '">' + statusName + '</span>' +
-                '<span class="log-info">学校#' + (l.school_id || '-') + ' 新增 ' + l.new_count + ' / 检查 ' + l.total_count +
+                (""+"<span class=\"log-info\">"+""+uiT("学校#")+"") + (l.school_id || '-') + uiT(' 新增 ') + l.new_count + uiT(' / 检查 ') + l.total_count +
                 (l.error_message ? ' <span class="log-error">' + escHtml(l.error_message).slice(0, 60) + '</span>' : '') + '</span>' +
                 '<span class="log-time">' + window.formatScrapeLogTime(l.started_at, true) + '</span></div>';
-        }).join('') || '<p class="text-muted">暂无记录</p>';
+        }).join('') || (""+"<p class=\"text-muted\">"+""+uiT("暂无记录")+""+"</p>"+"");
     } catch (e) {
         document.getElementById('scrapeRateExplanation').hidden = true;
-        document.getElementById('statGrid').innerHTML = '<p class="text-muted">运行概况加载失败，请刷新页面重试。</p>';
-        document.getElementById('recentLogs').textContent = '近期记录暂时无法读取，请前往抓取记录重试。';
+        document.getElementById('statGrid').innerHTML = (""+"<p class=\"text-muted\">"+""+uiT("运行概况加载失败，请刷新页面重试。")+""+"</p>"+"");
+        document.getElementById('recentLogs').textContent = uiT('近期记录暂时无法读取，请前往抓取记录重试。');
     }
 }
 
 // ---- 抓取 ----
 async function loadInterval() {
-    var r = await fetch('/api/admin/stats');
-    var s = await r.json();
-    document.getElementById('interval').value = s.scrape_interval;
-    var month = document.getElementById('sinceMonth');
-    month.value = s.scrape_since_month;
-    month.dataset.loadedMonth = s.scrape_since_month;
-    month.dataset.exactDate = s.scrape_since_date || (s.scrape_since_month + '-01');
-    var today = new Date();
-    month.max = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+    try {
+        var r = await fetch('/api/admin/stats');
+        if (!r.ok) throw new Error('settings unavailable');
+        var s = await r.json();
+        document.getElementById('interval').value = s.scrape_interval;
+        var month = document.getElementById('sinceMonth');
+        var today = new Date();
+        month.max = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+        month.value = s.scrape_since_month;
+        month.dataset.loadedMonth = s.scrape_since_month;
+        month.dataset.exactDate = s.scrape_since_date || (s.scrape_since_month + '-01');
+        month.disabled = false;
+        month.dispatchEvent(new Event('change', {bubbles: true}));
+    } catch (e) {
+        showToast('error', uiT('抓取设置加载失败，请重新打开此页。'));
+    }
 }
 async function saveInterval() {
     var month = document.getElementById('sinceMonth');
-    if (!month.reportValidity()) return;
+    if (month.disabled || !month.reportValidity()) return;
     var cutoff = month.value === month.dataset.loadedMonth
         ? {since_date: month.dataset.exactDate} : {since_month: month.value};
     var resp = await fetch('/api/settings', {

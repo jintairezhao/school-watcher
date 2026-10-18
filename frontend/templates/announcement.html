@@ -5,7 +5,7 @@
 <nav class="standalone-reader-toolbar" aria-label="阅读操作">
     <a href="{{ back_url }}" class="back-link">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
-        返回通知列表
+        <span data-i18n="返回通知列表">{{ tr("返回通知列表") }}</span>
     </a>
     {% if announcement.url %}<a class="text-button" href="{{ announcement.url }}" target="_blank" rel="noopener noreferrer">查看原文</a>{% endif %}
     {% from '_share_button.html' import share_button %}

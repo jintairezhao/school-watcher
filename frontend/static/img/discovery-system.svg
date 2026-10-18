@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100" role="img" aria-labelledby="title description">
+  <title id="title">官网信源发掘 · 系统运行图</title>
+  <desc id="description">学生和教师的共同需求引导官网主干优先探索。持久队列调度网页探针，读取证据，经程序识别、必要的 AI 辅助和程序验证接入来源。信息觅食、路径记忆、成本与失败恢复向队列反馈。监控界面只读取状态，不发起模型调用。正文采集属于独立流程。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#75b7fa" stroke-width="1.4"/></marker>
+    <marker id="muted-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#a1a1a8" stroke-width="1.4"/></marker>
+    <style>
+      text { font-family: 'Microsoft YaHei','PingFang SC',sans-serif; fill:#f5f5f7; }
+      .body { font-size:19px; fill:#c5c5ca; }
+      .small { font-size:17px; fill:#a1a1a8; }
+      .heading { font-size:24px; font-weight:600; }
+      .box { fill:#1c1c1e; stroke:#38383c; stroke-width:1.5; rx:12; }
+      .flow { fill:none; stroke:#75b7fa; stroke-width:2; marker-end:url(#arrow); }
+      .feedback { fill:none; stroke:#a1a1a8; stroke-width:1.5; stroke-dasharray:6 5; marker-end:url(#muted-arrow); }
+      .blue { fill:#75b7fa; } .green { fill:#34d399; }
+    </style>
+  </defs>
+  <rect width="1600" height="1100" fill="#101012"/>
+  <text x="64" y="78" font-size="38" font-weight="600">官网信源发掘 · 系统运行图</text>
+  <text x="64" y="116" class="body">从用户关心的官网主干出发，用真实网页证据发现并接入持续更新的信息栏目。</text>
+  <line x1="64" y1="148" x2="1536" y2="148" stroke="#38383c"/>
+
+  <rect class="box" x="64" y="182" width="330" height="150"/>
+  <text x="88" y="222" class="heading">用户画像与关注目标</text>
+  <text x="88" y="257" class="body">本科生 · 研究生 · 教师</text>
+  <text x="88" y="290" class="small">院系专业 / 升学 / 奖助 / 教学科研</text>
+  <path class="flow" d="M394 257H444"/>
+  <rect class="box" x="456" y="182" width="330" height="150"/>
+  <text x="480" y="222" class="heading">识别官网主干入口</text>
+  <text x="480" y="257" class="body">院系设置 · 学科设置 · 组织机构</text>
+  <text x="480" y="290" class="small">保留教务、研招、学工等直接入口</text>
+  <path class="flow" d="M786 257H836"/>
+  <rect class="box" x="848" y="182" width="330" height="150"/>
+  <text x="872" y="222" class="heading">持久化优先队列</text>
+  <text x="872" y="257" class="body">主干优先 · 兼顾尚缺关注方向</text>
+  <text x="872" y="290" class="small">保留待办与进度，不让单个分支独占</text>
+  <path class="flow" d="M1178 257H1228"/>
+  <rect class="box" x="1240" y="182" width="296" height="150"/>
+  <text x="1264" y="222" class="heading">网页探针与读取</text>
+  <text x="1264" y="257" class="body">HTTP / 动态页面渲染</text>
+  <text x="1264" y="290" class="small">读取引擎按页面需要选用</text>
+
+  <path class="flow" d="M1388 332V385H229V421"/>
+  <text x="650" y="373" class="small">真实标题 · 导航上下文 · 页面结构 · 当前可用材料</text>
+  <rect class="box" x="64" y="434" width="330" height="172"/>
+  <text x="88" y="475" class="heading">识别入口与候选栏目</text>
+  <text x="88" y="513" class="body">复用已有结果与配置</text>
+  <text x="88" y="546" class="body">必要时由 AI 辅助理解页面</text>
+  <text x="88" y="577" class="small">发现入口 ≠ 已经接入信源</text>
+  <path class="flow" d="M394 520H444"/>
+  <rect class="box" x="456" y="434" width="330" height="172"/>
+  <text x="480" y="475" class="heading">程序验证与归属处理</text>
+  <text x="480" y="513" class="body">检查列表、真实条目与日期</text>
+  <text x="480" y="546" class="body">区分浏览路径和部门隶属</text>
+  <text x="480" y="577" class="small">通过实际检查后才保存生效配置</text>
+  <path class="flow" d="M786 520H836"/>
+  <rect class="box" x="848" y="434" width="330" height="172"/>
+  <text x="872" y="475" class="heading green">保存并接入来源</text>
+  <text x="872" y="513" class="body">学校 → 部门 → 信息栏目</text>
+  <text x="872" y="546" class="body">保留来源身份与用户订阅</text>
+  <text x="872" y="577" class="small">由已有通知同步流程持续更新</text>
+  <path class="feedback" d="M1178 520H1228"/>
+  <rect x="1240" y="434" width="296" height="172" fill="none" stroke="#66666d" stroke-width="1.5" stroke-dasharray="6 5" rx="12"/>
+  <text x="1264" y="475" class="heading">通知内容采集</text>
+  <text x="1264" y="513" class="body">正文 · 图片 · 附件</text>
+  <text x="1264" y="546" class="small">独立流程，本图不改动其引擎</text>
+  <text x="1264" y="577" class="small">本次监控聚焦结构探索与接入</text>
+
+  <rect class="box" x="64" y="676" width="1114" height="150"/>
+  <text x="88" y="716" class="heading">探索反馈环</text>
+  <text x="88" y="757" class="body">信息觅食：继续深入或换分支</text>
+  <text x="485" y="757" class="body">路径记忆：复用成功导航路径</text>
+  <text x="88" y="795" class="body">成本反馈：已确认用量与预留分开</text>
+  <text x="485" y="795" class="body">失败恢复：网络、访问限制、材料不足分别处理</text>
+  <path class="feedback" d="M621 606V664"/>
+  <path class="feedback" d="M1013 676V640H1208V350H1013V344"/>
+
+  <rect x="1240" y="676" width="296" height="150" fill="#182c40" stroke="#75b7fa" stroke-width="1.5" rx="12"/>
+  <text x="1264" y="716" class="heading blue">实时发掘监控</text>
+  <text x="1264" y="754" class="body">每 3 秒读取任务实际状态</text>
+  <text x="1264" y="789" class="small">路径 / 当前节点 / 阻塞 / 用量</text>
+  <path class="feedback" d="M1013 606V623H1388V664"/>
+
+  <line x1="64" y1="872" x2="1536" y2="872" stroke="#38383c"/>
+  <text x="64" y="918" class="heading">如何读这张图</text>
+  <text x="64" y="958" class="body">实线是发现与接入的主流程；虚线表示反馈或独立流程。监控读取任务数据，不因打开页面而调用 AI。</text>
+  <text x="64" y="996" class="body">“发现了入口”“页面可读”“栏目已接入”分别展示；栏目数量、主题线索不等于全校覆盖率。</text>
+  <text x="64" y="1043" class="small">机制示意图 · 不含模拟任务数据 · 实际进度以应用内“发掘监控”为准 · School Watcher</text>
+</svg>

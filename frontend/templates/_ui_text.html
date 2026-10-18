@@ -1,0 +1,3 @@
+{% macro ui_text(message, variables={}) -%}
+<span data-i18n="{{ message }}" data-i18n-vars='{{ variables|tojson }}'>{{ tr(message, **variables) }}</span>
+{%- endmacro %}

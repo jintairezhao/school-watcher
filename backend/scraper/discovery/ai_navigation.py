@@ -369,7 +369,8 @@ def assist_navigation(site, page, html, parsed):
             accepted.extend(r.result_json for r in rows)
             continue
         if not dispatched and ready_to_dispatch(rows):
-            record_progress(phase='ai', ai_state='running', current_label=page['label'] or site['name'])
+            record_progress(phase='ai', ai_state='running', current_label=page['label'] or site['name'],
+                            current_url=page['url'])
             result = run_batch(school_id, generation, group, 'classify', evidence, binding,
                 existing_attempts=handle['payload'].get('legacy_ai_attempts', 0))
             dispatched = True

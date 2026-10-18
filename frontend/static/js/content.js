@@ -30,7 +30,7 @@ window.normalizeArticleTypography = function (body) {
         scroll.className = 'reading-table-scroll';
         scroll.tabIndex = 0;
         scroll.setAttribute('role', 'region');
-        scroll.setAttribute('aria-label', '通知中的表格，可横向滚动');
+        scroll.setAttribute('aria-label', uiT('通知中的表格，可横向滚动'));
         table.before(scroll);
         scroll.append(table);
     });
@@ -46,6 +46,7 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
     const button = panel.querySelector('.body-loader-retry');
     const placeholder = panel.querySelector('.body-loader-placeholder');
     const body = panel.querySelector('.body-loader-content');
+    const setMessage = text => { if (message) window.I18n.setText(message,text); };
     function updatePublicationDate(data) {
         if (!Object.prototype.hasOwnProperty.call(data, 'published_at') || !panel.isConnected) return;
         const time = panel.closest('.reader-document, .article-document')?.querySelector('.reading-meta time')
@@ -54,7 +55,8 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
         const stamp = data.published_at || '';
         if (time.getAttribute('datetime') === stamp) return;
         time.setAttribute('datetime', stamp);
-        time.textContent = data.publication_date_label || '发布时间未知';
+        time.dataset.uiDate = stamp;
+        time.textContent = stamp ? window.I18n.dateTime(stamp) : uiT('发布时间未知');
         window.dispatchEvent(new CustomEvent('notice:publication-date', {detail: {id: panel.dataset.contentId}}));
     }
     function phase(value) {
@@ -68,7 +70,7 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
         if (busy) return;
         busy = true;
         phase('loading');
-        if (message) message.textContent = '正在读取官网正文，你也可以先打开原文阅读。';
+        setMessage('正在读取官网正文，你也可以先打开原文阅读。');
         if (button) button.disabled = true;
         const read = method => fetch(endpoint, {method, signal: AbortSignal.timeout(15000)});
         let method = 'POST';
@@ -88,14 +90,14 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
                     if (!['TimeoutError', 'AbortError', 'TypeError'].includes(error.name)) throw error;
                     method = 'GET';
                     phase('waiting');
-                    if (message) message.textContent = '正在重新连接应用，后台读取任务会保留，完成后自动显示。';
+                    setMessage('正在重新连接应用，后台读取任务会保留，完成后自动显示。');
                     await new Promise(resolve => setTimeout(resolve, 5000));
                     continue;
                 }
                 method = 'GET';
                 if (!panel.isConnected) return;
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || '正文暂时无法加载，请打开原文查看。');
+                if (!response.ok) throw new Error(data.error || uiT('正文暂时无法加载，请打开原文查看。'));
                 updatePublicationDate(data);
                 if (data.content_status === 'saved') {
                     // HTML is sanitized by the server using the same policy as stored articles.
@@ -114,25 +116,25 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
                 // retry forever (see LOGIN_REQUIRED_MESSAGE). A failed read
                 // answers 200, so data.error never arrives through line 43.
                 if (data.content_status === 'failed') {
-                    throw new Error(data.error || '正文暂时无法加载，可以重试或打开官网原文。');
+                    throw new Error(data.error || uiT('正文暂时无法加载，可以重试或打开官网原文。'));
                 }
                 if (data.content_status === 'unloaded') {
                     phase('unloaded');
-                    if (message) message.textContent = '正文任务尚未安排，可点击读取或打开官网原文。';
+                    setMessage('正文任务尚未安排，可点击读取或打开官网原文。');
                     return;
                 }
                 phase('loading');
-                if (message) message.textContent = data.progress_message || '正文正在后台处理，完成后会自动显示，也可以先打开官网原文。';
+                setMessage(data.progress_message || '正文正在后台处理，完成后会自动显示，也可以先打开官网原文。');
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         } catch (error) {
             if (!panel.isConnected) return;
             phase('failed');
             if (message) message.textContent = error instanceof SyntaxError
-                ? '应用返回的正文状态暂时无法读取，可重试查看结果或打开官网原文。' : error.message;
+                ? uiT('应用返回的正文状态暂时无法读取，可重试查看结果或打开官网原文。') : error.message;
         } finally {
             busy = false;
-            if (button?.isConnected) {button.disabled = false; button.textContent = '重新加载正文';}
+            if (button?.isConnected) {button.disabled = false; button.textContent = uiT('重新加载正文');}
         }
     }
     if (button) button.addEventListener('click', load);
@@ -151,7 +153,7 @@ async function waitForQueuedTask(data) {
         const task = await response.json();
         if (!response.ok) throw new Error(task.error || '无法读取任务状态');
         if (task.state === 'done') return task.result;
-        if (task.state === 'failed') throw new Error(task.error || '任务未完成');
+        if (task.state === 'failed') throw new Error(task.error || uiT('任务未完成'));
     }
-    throw new Error('任务仍在后台等待，请稍后重试查看。');
+    throw new Error(uiT('任务仍在后台等待，请稍后重试查看。'));
 }

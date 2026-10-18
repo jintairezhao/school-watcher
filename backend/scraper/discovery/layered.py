@@ -423,7 +423,7 @@ def ordered_navigation(candidates, page, parsed, checkpoint, policy, school_id):
     checkpoint.pop('route_legacy_unsettled', None)
     from backend.services.discovery_policy import get_attention_policy
     from .navigation_order import explain_candidates
-    attention = get_attention_policy()
+    attention = get_attention_policy(school_id)
     explanations = explain_candidates(candidates,
         dict(page, observed_structure=parsed.get('nodes', [])), attention)
     ordered = [candidates[row['original_index']] for row in explanations]

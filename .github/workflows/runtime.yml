@@ -75,6 +75,14 @@ jobs:
         run: python tests/browser/check_collection_setup_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify locale switching and international education context
+        run: python tests/browser/check_localization_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify English inbox, discovery and administration workflows
+        run: python tests/browser/check_english_workflows_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify school setup and editing dialog
         run: python tests/browser/check_admin_school_dialog_browser.py
         env:
@@ -105,6 +113,22 @@ jobs:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify pause and resume for school discovery
         run: python tests/browser/check_discovery_pause_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify live source discovery monitor and read-only refresh
+        run: python tests/browser/check_discovery_monitor_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify recorded discovery paths and local visualization
+        run: |
+          node tests/js/test_discovery_atlas_model.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/browser/check_discovery_atlas_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify localized collection month controls
+        run: python tests/browser/check_month_picker_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify AI recovery status and cumulative usage explanations

@@ -7,20 +7,20 @@
     <h1 class="reading-title">{{ ann.title }}</h1>
     <div class="reading-meta">
         <span class="reader-source">{{ source|channel_breadcrumb }}</span>
-        <time datetime="{{ publication_date_stamp(ann.published_at) }}">{{ publication_date_label(ann.published_at) }}</time>
+        <time datetime="{{ publication_date_stamp(ann.published_at) }}" data-ui-date="{{ publication_date_stamp(ann.published_at) }}">{{ ui_date(ann.published_at) }}</time>
     </div>
     {{ source_links(ann, sources, user) }}
     {{ article_signature(provenance) }}
 </header>
-<div class="reader-content" aria-label="通知正文">
+<div class="reader-content" data-i18n-aria-label="通知正文" aria-label="{{ tr('通知正文') }}">
     {{ content_loader(ann) }}
 </div>
 {% if user %}
 {% set favorite = user_favorite_state(ann.id, user.id) %}
-<section class="saved-materials" data-saved-materials="{{ ann.id }}" data-active="{{ 'true' if favorite else 'false' }}" {% if not favorite %}hidden{% endif %} aria-label="收藏保存状态">
-    <p data-saved-message role="status">{% if favorite %}正在检查正文与附件的本地保存状态…{% endif %}</p>
+<section class="saved-materials" data-saved-materials="{{ ann.id }}" data-active="{{ 'true' if favorite else 'false' }}" {% if not favorite %}hidden{% endif %} data-i18n-aria-label="收藏保存状态" aria-label="{{ tr('收藏保存状态') }}">
+    <p data-saved-message role="status">{% if favorite %}<span data-i18n="正在检查正文与附件的本地保存状态…">{{ tr("正在检查正文与附件的本地保存状态…") }}</span>{% endif %}</p>
     <ul data-saved-files></ul>
-    <button class="text-button" type="button" data-retry-saved hidden>重试保存</button>
+    <button class="text-button" type="button" data-retry-saved hidden data-i18n="重试保存">{{ tr("重试保存") }}</button>
 </section>
 {% endif %}
 {% endmacro %}

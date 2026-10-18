@@ -142,13 +142,13 @@
         const activeController = controller;
         const number = ++requestNumber;
         const timeout = setTimeout(() => activeController.abort(), 15000);
-        if (!keepList) setFeedback('正在更新通知…', 'loading');
+        if (!keepList) setFeedback(uiT('正在更新通知…'), 'loading');
         find('.notice-panel').setAttribute('aria-busy', 'true');
         try {
             const response = await fetch(url.pathname + url.search, {
                 headers: {'X-Inbox-Fragment': '1'}, signal: activeController.signal
             });
-            if (!response.ok) throw new Error('筛选未更新，请重试。');
+            if (!response.ok) throw new Error(uiT('筛选未更新，请重试。'));
             const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
             if (number !== requestNumber) return;
             const next = doc.querySelector('.inbox-workspace');
@@ -231,7 +231,7 @@
             if (!sameSources) sources.restore();
             readingView.render(url, {restore: options.preserveList && sameArticle});
             if (revealSource) sources.revealSelection();
-            if (!keepList) setFeedback('已更新', 'success');
+            if (!keepList) setFeedback(uiT('已更新'), 'success');
             const restoreFocus = focusId ? document.getElementById(focusId) : focusChoice ?
                 document.querySelector(`[${focusChoice[0]}="${focusChoice[1]}"]`) : null;
             if (restoreFocus?.id !== 'inboxQuery' && restoreFocus?.getClientRects().length && !restoreFocus.closest('[inert]')) restoreFocus.focus({preventScroll: true});
@@ -245,7 +245,7 @@
             failedURL = url;
             desiredURL = new URL(appliedURL);
             syncControls(appliedURL);
-            setFeedback('筛选未更新，仍显示上次结果。', 'error');
+            setFeedback(uiT('筛选未更新，仍显示上次结果。'), 'error');
             // A failed Back/Forward request must not leave the URL claiming different results.
             if (options.history === 'none') history.replaceState(null, '', appliedURL.pathname + appliedURL.search);
         } finally {
@@ -352,20 +352,20 @@
                         body: JSON.stringify({[button.dataset.stateField]: button.dataset.stateValue === 'true'})};
                 }
                 const response = await fetch(endpoint, init), data = await response.json();
-                if (!response.ok) throw new Error(data.error || '操作失败');
+                if (!response.ok) throw new Error(data.error || uiT('操作失败'));
                 if (button.id === 'undoRead') {
                     find('[data-notice-link][data-announcement-id="' + button.dataset.announcementId + '"]')?.classList.add('is-unread');
-                    button.textContent = '已设为未读'; showToast('success', '这条通知已恢复为未读');
+                    button.textContent = uiT('已设为未读'); showToast('success', uiT('这条通知已恢复为未读'));
                 } else if (button.dataset.stateField === 'starred') {
                     const saved = button.dataset.stateValue === 'true';
                     document.querySelectorAll('[data-state-field="starred"][data-id="' + button.dataset.id + '"]').forEach(control => {
                         control.dataset.stateValue = String(!saved);
-                        const label = saved ? '取消收藏' : '收藏';
+                        const label = saved ? uiT('取消收藏') : uiT('收藏');
                         if (control.hasAttribute('data-row-state')) { control.setAttribute('aria-label', label); control.title = label; }
                         else control.textContent = label;
                         control.setAttribute('aria-pressed', String(saved)); control.disabled = false;
                     });
-                    showToast('success', saved ? (data.archive?.state === 'ready' ? '已收藏，正文与附件已保存' : '已收藏，正在后台保存正文与附件') : '已移入回收站，30 天内可恢复收藏');
+                    showToast('success', saved ? (data.archive?.state === 'ready' ? uiT('已收藏，正文与附件已保存') : uiT('已收藏，正在后台保存正文与附件')) : uiT('已移入回收站，30 天内可恢复收藏'));
                     window.dispatchEvent(new CustomEvent('notice:favorite-changed', {detail: {id: button.dataset.id, starred: saved}}));
                     if ((!saved && readingView.mailbox(appliedURL) === 'saved') || (saved && readingView.mailbox(appliedURL) === 'trash')) {
                         const keepSelected = button.dataset.id !== appliedURL.searchParams.get('selected');
@@ -423,6 +423,7 @@
     window.notifyInboxUpdates = () => pendingUpdates(true);
     window.refreshInboxView = () => appliedURL.href === desiredURL.href && !inboxSearch.isComposing()
         ? navigate(appliedURL, {history: 'none', preserveList: true, refreshList: true}) : Promise.resolve();
+    document.addEventListener('locale-changed', () => window.refreshInboxView());
     syncUnits();
     const revealInitialSource = appliedURL.hash === '#sources';
     if (revealInitialSource) {

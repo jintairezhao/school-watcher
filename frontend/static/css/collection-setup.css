@@ -1,5 +1,15 @@
 .collection-setup { max-width:820px; margin-inline:auto; padding-block:24px 64px; }
 .collection-setup .surface-heading { margin-bottom:16px; }
+.setup-profiles { border:0; margin:20px 0; padding:0; display:flex; flex-wrap:wrap; gap:12px; }
+.setup-profiles legend { color:var(--color-text-secondary); font-size:var(--text-control,.875rem); margin-bottom:12px; }
+.collection-setup .setup-profiles .setup-profile-choice { display:flex; align-items:center; gap:10px; min-height:48px; margin:0; padding:10px 18px; border:1px solid var(--color-border-strong); border-radius:var(--radius-input); cursor:pointer; }
+.setup-profile-choice:has(input:checked) { background:var(--color-primary-subtle); border-color:var(--color-primary); }
+.setup-profile-choice input { accent-color:var(--color-primary); }
+.setup-profile-preview { background:var(--color-surface-2); border-radius:var(--radius-input); padding:16px 20px; }
+.setup-profile-preview strong { font-size:var(--text-control,.875rem); font-weight:600; }
+.setup-profile-preview p { margin-top:8px; }
+.setup-profile-preview p:empty { display:none; }
+.setup-section .setup-profile-scope { margin-top:14px; }
 .setup-scope,.setup-section p { color:var(--color-text-secondary); line-height:1.75; font-size:var(--text-control,.875rem); max-width:72ch; }
 .setup-section { padding-block:28px; border-bottom:1px solid var(--color-border); }
 .setup-section h2 { font-size:var(--text-section-title,1.25rem); margin:0 0 20px; line-height:1.5; font-weight:600; }

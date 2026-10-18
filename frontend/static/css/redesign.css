@@ -1,4 +1,11 @@
 /* School Watcher — notification-first product interface */
+.language-switch select { min-height:44px; max-width:100px; background:var(--color-surface); color:var(--color-text); border:1px solid var(--color-border); border-radius:var(--radius-input); padding:6px 8px; font:inherit; font-size:13px; cursor:pointer; }
+.nav-links .mobile-admin-link { display:none; }
+@media(max-width:600px) {
+    .language-switch select { max-width:82px; }
+    .nav-actions .nav-admin-link { display:none; }
+    .nav-links .mobile-admin-link { display:flex; }
+}
 
 :root {
     --color-primary: #0066cc;

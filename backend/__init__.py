@@ -91,6 +91,8 @@ def create_app(test_config=None):
     from backend.auth import register_security_headers
     register_hooks(app)
     register_security_headers(app)
+    from backend.services.localization import register_localization
+    register_localization(app)
 
     from backend.services.source_labels import source_breadcrumb
     app.jinja_env.filters['source_breadcrumb'] = source_breadcrumb

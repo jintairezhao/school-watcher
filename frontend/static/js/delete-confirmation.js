@@ -19,12 +19,12 @@
         if (current) return Promise.resolve(false);
         current = options;
         opener = document.activeElement;
-        field('Title').textContent = '删除' + options.kind + '？';
+        field('Title').textContent = uiT('删除') + options.kind + '？';
         field('Target').textContent = options.name;
-        field('Description').textContent = options.kind === '学校'
+        field('Description').textContent = options.kind === uiT('学校')
             ? '将删除这所学校的部门、栏目、订阅和独有通知，以及这些通知的收藏与阅读记录。其他学校共用的通知会保留。'
             : '将删除这个部门或栏目的独有通知，以及这些通知的收藏与阅读记录。其他栏目共用的通知会保留。';
-        confirm.textContent = '删除' + options.kind;
+        confirm.textContent = uiT('删除') + options.kind;
         cancel.disabled = confirm.disabled = false;
         error.hidden = true;
         error.textContent = '';
@@ -59,8 +59,8 @@
         busy = true;
         cancel.disabled = confirm.disabled = true;
         dialog.setAttribute('aria-busy', 'true');
-        confirm.textContent = '正在删除…';
-        field('Status').textContent = '正在删除，请稍候。';
+        confirm.textContent = uiT('正在删除…');
+        field('Status').textContent = uiT('正在删除，请稍候。');
         error.hidden = true;
         let deleted = false;
         try {
@@ -68,19 +68,19 @@
             const body = await response.json().catch(() => ({}));
             // A lost response followed by a retry may find the item already gone.
             if (!response.ok && response.status !== 404) {
-                throw new Error(body.error || '删除未完成，请稍后重试。');
+                throw new Error(body.error || uiT('删除未完成，请稍后重试。'));
             }
             deleted = true;
         } catch (failure) {
             error.textContent = failure.name === 'TimeoutError' || failure instanceof TypeError
-                ? '暂未收到删除结果，请检查连接后重试。' : failure.message;
+                ? uiT('暂未收到删除结果，请检查连接后重试。') : failure.message;
             error.hidden = false;
         } finally {
             busy = false;
             dialog.removeAttribute('aria-busy');
             cancel.disabled = confirm.disabled = false;
             field('Status').textContent = '';
-            confirm.textContent = deleted ? '删除' + current.kind : '重试删除';
+            confirm.textContent = deleted ? uiT('删除') + current.kind : uiT('重试删除');
         }
         if (deleted) close(true);
         else error.focus();

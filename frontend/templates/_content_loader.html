@@ -5,7 +5,7 @@
         {% for paragraph in range(3) %}<div class="skeleton-paragraph">{% for line in range(4) %}<span class="skeleton-line"></span>{% endfor %}</div>{% endfor %}
     </div>
     {% endif %}
-    <div class="body-loader-content">
+    <div class="body-loader-content" data-official-content>
     {% if announcement.content_html %}
         {{ announcement.content_html|article_html(announcement.id, announcement.url)|safe }}
     {% elif announcement.content_cached_at and announcement.content_text %}
@@ -13,8 +13,8 @@
     {% endif %}
     </div>
     {% if not announcement.content_html and not announcement.content_cached_at %}
-    <p class="body-loader-status" role="status">正文尚未加载，可在此阅读或打开官网原文。</p>
-    <button class="text-button body-loader-retry" type="button">加载正文</button>
+    <p class="body-loader-status" role="status" data-i18n="正文尚未加载，可在此阅读或打开官网原文。">{{ tr("正文尚未加载，可在此阅读或打开官网原文。") }}</p>
+    <button class="text-button body-loader-retry" type="button" data-i18n="加载正文">{{ tr("加载正文") }}</button>
     {% endif %}
 </div>
 {% endmacro %}

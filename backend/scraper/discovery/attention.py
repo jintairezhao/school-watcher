@@ -39,9 +39,22 @@ PROFILE_CATEGORIES = {
     'teacher': ('academic_units', 'teaching', 'research', 'personnel', 'competition_exchange'),
 }
 ALL_PROFILES = tuple(PROFILE_CATEGORIES)
+PROFILE_LABELS = {'undergraduate': '本科生', 'graduate': '研究生', 'teacher': '教师'}
 CATEGORIES = CATEGORY_DEFINITIONS
 PROFILE_NEEDS = PROFILE_CATEGORIES
-_PATTERNS = {key: re.compile(value['pattern']) for key, value in CATEGORY_DEFINITIONS.items()}
+ENGLISH_NEEDS = {
+    'academic_units': r'\b(?:schools?|faculties|colleges?|departments?|academic units|degree programs?)\b',
+    'teaching': r'\b(?:registrar|teaching|curriculum|courses?|academic calendar|academic affairs|graduation|degree requirements)\b',
+    'admissions': r'\b(?:admissions?|apply|applications?|graduate school|postgraduate study|doctoral study)\b',
+    'funding': r'\b(?:scholarships?|financial aid|bursaries|bursary|fellowships?|studentships?|student funding)\b',
+    'career': r'\b(?:careers?|internships?|placements?|employability|employment|job fairs?)\b',
+    'competition_exchange': r'\b(?:competitions?|exchange|study abroad|mobility|international opportunities)\b',
+    'research': r'\b(?:research|seminars?|conferences?|academic events|research grants?|postgraduate research)\b',
+    'personnel': r'\b(?:human resources|faculty development|staff development|promotion|tenure|faculty careers)\b',
+    'student_services': r'\b(?:student affairs|student services|accommodation|housing|counselling|counseling|wellbeing)\b',
+}
+_PATTERNS = {key: re.compile(value['pattern'] + '|' + ENGLISH_NEEDS[key], re.I)
+             for key, value in CATEGORY_DEFINITIONS.items()}
 
 
 def normalize_profiles(value=None):
@@ -54,6 +67,23 @@ def normalize_profiles(value=None):
     if any(not isinstance(profile, str) or profile not in PROFILE_CATEGORIES for profile in values):
         raise ValueError('Unknown discovery attention profile')
     return tuple(profile for profile in ALL_PROFILES if profile in values)
+
+
+def compose_profiles(value):
+    """One composite need set, with a bounded overlap preference, not repeated work.
+
+    The 25% maximum overlap preference is an explainable initial heuristic,
+    not a learned probability. A unique need retains its full base weight.
+    """
+    profiles = normalize_profiles(value)
+    counts = {key: sum(key in PROFILE_CATEGORIES[profile] for profile in profiles)
+              for key in CATEGORY_KEYS}
+    active = [key for key in CATEGORY_KEYS if counts[key]]
+    return {'profiles': list(profiles), 'key': '+'.join(profiles),
+            'label': '＋'.join(PROFILE_LABELS[profile] for profile in profiles),
+            'categories': active, 'shared_categories': [key for key in active if counts[key] > 1],
+            'weights': {key: 1.0 + .25 * max(0, counts[key] - 1) / max(1, len(profiles) - 1)
+                        for key in active}}
 
 
 def _mapping(value):

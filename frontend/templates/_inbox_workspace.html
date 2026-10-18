@@ -1,148 +1,149 @@
+{% from '_ui_text.html' import ui_text %}
 {% if not schools and view == 'inbox' %}
 <section class="inbox-empty" aria-labelledby="empty-title">
     <svg class="empty-state-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M4 14h4l2 2h4l2-2h4"/></svg>
-    <h1 id="empty-title">收件箱还没有通知来源</h1>
-    <p>先订阅一所学校。</p>
-    <a class="btn btn-primary" href="{{ url_for('pages.explore') }}">选择学校</a>
-    <a href="{{ url_for('pages.index', view='saved', period='all') }}">查看我的收藏</a>
+    <h1 id="empty-title" data-i18n="收件箱还没有通知来源">{{ tr("收件箱还没有通知来源") }}</h1>
+    <p data-i18n="先订阅一所学校。">{{ tr("先订阅一所学校。") }}</p>
+    <a class="btn btn-primary" href="{{ url_for('pages.explore') }}" data-i18n="选择学校">{{ tr("选择学校") }}</a>
+    <a href="{{ url_for('pages.index', view='saved', period='all') }}" data-i18n="查看我的收藏">{{ tr("查看我的收藏") }}</a>
 </section>
 {% else %}
-{% set source_school = current_school.name if current_school else '全部学校' %}
-{% set source_scope = ('已选 ' ~ selected_dept_ids|length ~ ' 个栏目') if selected_dept_ids else (current_group or '全部栏目') %}
+{% set source_school = current_school.name if current_school else tr('全部学校') %}
+{% set source_scope = tr('已选 {count} 个栏目', count=selected_dept_ids|length) if selected_dept_ids else (current_group or tr('全部栏目')) %}
 {% set focused_reading = reading_view == 'focus' %}
 <div class="inbox-workspace {% if detail_requested %}detail-requested{% endif %}" data-user-id="{{ current_user.id }}" data-source-mode="closed" data-reading-view="{{ 'focus' if focused_reading else 'split' }}" data-back-url="{{ back_to_list_url }}" data-view="{{ view }}" data-can-collect="{{ 'true' if current_user.is_admin and view != 'trash' else 'false' }}">
     {% include '_inbox_source_panel.html' %}
-    <section class="notice-panel" aria-label="通知列表">
+    <section class="notice-panel" data-i18n-aria-label="通知列表" aria-label="{{ tr('通知列表') }}">
         <header class="notice-toolbar">
-            <h1 class="sr-only">{{ '回收站' if view == 'trash' else ('我的收藏' if view == 'saved' else '通知收件箱') }}</h1>
-            <nav class="mailbox-views" aria-label="信息管理">
-                <a href="{{ url_for('pages.index', view='focus') if focused_reading else url_for('pages.index') }}" data-inbox-entry="inbox" {% if view == 'inbox' %}aria-current="page"{% endif %}>收件箱{% if view == 'inbox' and scope_unread %}<span class="mailbox-unread" aria-label="当前范围 {{ scope_unread }} 条未读">{{ scope_unread }}</span>{% endif %}</a>
-                <a href="{{ url_for('pages.index', view='focus', mailbox='saved', period='all') if focused_reading else url_for('pages.index', view='saved', period='all') }}" data-inbox-entry="saved" {% if view == 'saved' %}aria-current="page"{% endif %}>我的收藏</a>
-                <a href="{{ url_for('pages.index', view='focus', mailbox='trash', period='all') if focused_reading else url_for('pages.index', view='trash', period='all') }}" data-inbox-entry="trash" {% if view == 'trash' %}aria-current="page"{% endif %}>回收站</a>
+            <h1 class="sr-only">{{ tr('回收站') if view == 'trash' else (tr('我的收藏') if view == 'saved' else tr('通知收件箱')) }}</h1>
+            <nav class="mailbox-views" data-i18n-aria-label="信息管理" aria-label="{{ tr('信息管理') }}">
+                <a href="{{ url_for('pages.index', view='focus') if focused_reading else url_for('pages.index') }}" data-inbox-entry="inbox" {% if view == 'inbox' %}aria-current="page"{% endif %}><span data-i18n="收件箱">{{ tr("收件箱") }}</span>{% if view == 'inbox' and scope_unread %}<span class="mailbox-unread" data-i18n-aria-label="当前范围 {p0} 条未读" data-i18n-aria-label-vars='{{ {'p0':(scope_unread)}|tojson }}' aria-label="{{ tr('当前范围 {p0} 条未读',p0=(scope_unread)) }}">{{ scope_unread }}</span>{% endif %}</a>
+                <a href="{{ url_for('pages.index', view='focus', mailbox='saved', period='all') if focused_reading else url_for('pages.index', view='saved', period='all') }}" data-inbox-entry="saved" {% if view == 'saved' %}aria-current="page"{% endif %} data-i18n="我的收藏">{{ tr("我的收藏") }}</a>
+                <a href="{{ url_for('pages.index', view='focus', mailbox='trash', period='all') if focused_reading else url_for('pages.index', view='trash', period='all') }}" data-inbox-entry="trash" {% if view == 'trash' %}aria-current="page"{% endif %} data-i18n="回收站">{{ tr("回收站") }}</a>
             </nav>
-            {% if view == 'trash' %}<p class="trash-help">取消收藏后保留 30 天；恢复收藏可继续长期保存，到期仅清理正文和附件缓存。</p>{% endif %}
+            {% if view == 'trash' %}<p class="trash-help" data-i18n="取消收藏后保留 30 天；恢复收藏可继续长期保存，到期仅清理正文和附件缓存。">{{ tr("取消收藏后保留 30 天；恢复收藏可继续长期保存，到期仅清理正文和附件缓存。") }}</p>{% endif %}
             <div class="toolbar-topline">
-                <button class="source-scope-trigger" type="button" id="openFilters" data-open-sources aria-expanded="false" aria-controls="sourcePanel" title="{{ source_school }} · {{ source_scope }}" aria-label="打开来源筛选：{{ source_school }} · {{ source_scope }}">
-                    <span class="source-scope-prefix">来源</span>
+                <button class="source-scope-trigger" type="button" id="openFilters" data-open-sources aria-expanded="false" aria-controls="sourcePanel" title="{{ source_school }} · {{ source_scope }}" data-i18n-aria-label="打开来源筛选：{p0} · {p1}" data-i18n-aria-label-vars='{{ {'p0':(source_school),'p1':(source_scope)}|tojson }}' aria-label="{{ tr('打开来源筛选：{p0} · {p1}',p0=(source_school),p1=(source_scope)) }}">
+                    <span class="source-scope-prefix" data-i18n="来源">{{ tr("来源") }}</span>
                     <span class="source-scope-school">{{ source_school }}</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
                 <div class="source-context-row">
-                    <p class="source-scope-context"><span class="source-scope-selection" title="{{ source_scope }}">{{ source_scope }}</span><span> · {{ pagination.total }} 条<span id="activeFilterSummary"> · {% if period == 'archive' and current_year %}{{ current_year }} 年{% if current_month %} {{ current_month }} 月{% endif %}{% elif period == 'all' %}全部时间{% else %}近一周{% endif %}{% if read_filter == 'unread' %} · 未读{% elif read_filter == 'read' %} · 已读{% endif %}</span></span></p>
-                    {% if current_school_id in subscribed_school_ids %}<a class="source-settings-link" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}" aria-label="查看{{ current_school.name }}的自动查找进度与来源设置">来源设置</a>{% endif %}
+                    <p class="source-scope-context"><span class="source-scope-selection" title="{{ source_scope }}">{{ source_scope }}</span><span> · {{ ui_text('{count} 条通知', {'count':pagination.total}) }}<span id="activeFilterSummary"> · {% if period == 'archive' and current_year %}{{ current_year }} <span data-i18n="年">{{ tr("年") }}</span>{% if current_month %} {{ current_month }} <span data-i18n="月">{{ tr("月") }}</span>{% endif %}{% elif period == 'all' %}<span data-i18n="全部时间">{{ tr("全部时间") }}</span>{% else %}<span data-i18n="近一周">{{ tr("近一周") }}</span>{% endif %}{% if read_filter == 'unread' %} · {{ ui_text('未读') }}{% elif read_filter == 'read' %} · {{ ui_text('已读') }}{% endif %}</span></span></p>
+                    {% if current_school_id in subscribed_school_ids %}<a class="source-settings-link" href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}" data-i18n-aria-label="查看{p0}的自动查找进度与来源设置" data-i18n-aria-label-vars='{{ {'p0':(current_school.name)}|tojson }}' aria-label="{{ tr('查看{p0}的自动查找进度与来源设置',p0=(current_school.name)) }}" data-i18n="来源设置">{{ tr("来源设置") }}</a>{% endif %}
                 </div>
             </div>
             <div class="notice-tools">
             <form class="inbox-search" method="get" role="search">
                 {% for key, value in request.args.items(multi=True) %}{% if key not in ['q', 'selected', 'page'] %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
-                <button type="submit" class="icon-button" aria-label="搜索通知"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
-                <label class="sr-only" for="inboxQuery">搜索当前范围的标题、摘要与已保存正文</label>
-                <input type="search" name="q" id="inboxQuery" value="{{ q }}" placeholder="搜索通知" maxlength="200" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inboxSearchOptions" aria-describedby="inboxSearchStatus">
+                <button type="submit" class="icon-button" data-i18n-aria-label="搜索通知" aria-label="{{ tr('搜索通知') }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
+                <label class="sr-only" for="inboxQuery" data-i18n="搜索当前范围的标题、摘要与已保存正文">{{ tr("搜索当前范围的标题、摘要与已保存正文") }}</label>
+                <input type="search" name="q" id="inboxQuery" value="{{ q }}" data-i18n-placeholder="搜索通知" placeholder="{{ tr('搜索通知') }}" maxlength="200" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inboxSearchOptions" aria-describedby="inboxSearchStatus">
             </form>
-            <section class="inbox-search-panel notice-popover" id="inboxSearchPanel" aria-label="通知搜索建议" hidden>
-                <div class="search-panel-heading"><strong id="inboxSearchHeading">近期搜索</strong><button type="button" class="text-button" id="clearInboxSearchHistory">清空记录</button></div>
+            <section class="inbox-search-panel notice-popover" id="inboxSearchPanel" data-i18n-aria-label="通知搜索建议" aria-label="{{ tr('通知搜索建议') }}" hidden>
+                <div class="search-panel-heading"><strong id="inboxSearchHeading" data-i18n="近期搜索">{{ tr("近期搜索") }}</strong><button type="button" class="text-button" id="clearInboxSearchHistory" data-i18n="清空记录">{{ tr("清空记录") }}</button></div>
                 <p class="search-panel-status" id="inboxSearchStatus" role="status" aria-live="polite"></p>
-                <div id="inboxSearchOptions" role="listbox" aria-label="搜索建议"></div>
-                <button class="search-all-button" type="button" id="submitInboxSearch" hidden>查看全部匹配通知</button>
+                <div id="inboxSearchOptions" role="listbox" data-i18n-aria-label="搜索建议" aria-label="{{ tr('搜索建议') }}"></div>
+                <button class="search-all-button" type="button" id="submitInboxSearch" hidden data-i18n="查看全部匹配通知">{{ tr("查看全部匹配通知") }}</button>
             </section>
             {% set default_period = 'week' if view == 'inbox' else 'all' %}
             {% set condition_count = (1 if period != default_period else 0) + (1 if read_filter != 'all' else 0) %}
-            <button type="button" class="notice-tool-button notice-filter-trigger" id="toggleNoticeFilters" aria-expanded="false" aria-controls="noticeFilterPanel" title="筛选时间与阅读状态">
+            <button type="button" class="notice-tool-button notice-filter-trigger" id="toggleNoticeFilters" aria-expanded="false" aria-controls="noticeFilterPanel" data-i18n-title="筛选时间与阅读状态" title="{{ tr('筛选时间与阅读状态') }}">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
-                <span>筛选</span>{% if condition_count %}<span class="notice-filter-count" aria-label="{{ condition_count }} 个已选条件">{{ condition_count }}</span>{% endif %}
+                <span data-i18n="筛选">{{ tr("筛选") }}</span>{% if condition_count %}<span class="notice-filter-count" data-i18n-aria-label="{p0} 个已选条件" data-i18n-aria-label-vars='{{ {'p0':(condition_count)}|tojson }}' aria-label="{{ tr('{p0} 个已选条件',p0=(condition_count)) }}">{{ condition_count }}</span>{% endif %}
             </button>
             {% if view == 'inbox' %}
-            <button class="notice-tool-button" type="button" id="refreshCurrentSources" aria-label="刷新通知列表" title="同步已保存的通知">
+            <button class="notice-tool-button" type="button" id="refreshCurrentSources" data-i18n-aria-label="刷新通知列表" aria-label="{{ tr('刷新通知列表') }}" data-i18n-title="同步已保存的通知" title="{{ tr('同步已保存的通知') }}">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66L20 9M20 4v5h-5"/></svg>
             </button>
             {% endif %}
-            <button class="notice-tool-button" type="button" id="toggleNoticeActions" aria-label="更多通知操作" title="更多操作" aria-expanded="false" aria-controls="noticeActionsMenu">
+            <button class="notice-tool-button" type="button" id="toggleNoticeActions" data-i18n-aria-label="更多通知操作" aria-label="{{ tr('更多通知操作') }}" data-i18n-title="更多操作" title="{{ tr('更多操作') }}" aria-expanded="false" aria-controls="noticeActionsMenu">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
             </button>
-            <div class="notice-filter-panel notice-popover" id="noticeFilterPanel" role="group" aria-label="通知筛选条件" hidden>
-                <div class="notice-popover-heading"><strong>筛选通知</strong><button type="button" class="icon-button" data-close-notice-popover aria-label="关闭筛选条件"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
-                <fieldset class="notice-filter-section"><legend>时间范围</legend>
+            <div class="notice-filter-panel notice-popover" id="noticeFilterPanel" role="group" data-i18n-aria-label="通知筛选条件" aria-label="{{ tr('通知筛选条件') }}" hidden>
+                <div class="notice-popover-heading"><strong data-i18n="筛选通知">{{ tr("筛选通知") }}</strong><button type="button" class="icon-button" data-close-notice-popover data-i18n-aria-label="关闭筛选条件" aria-label="{{ tr('关闭筛选条件') }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+                <fieldset class="notice-filter-section"><legend data-i18n="时间范围">{{ tr("时间范围") }}</legend>
                 <div class="time-presets">
-                    <button type="button" data-period="week" class="{% if period == 'week' %}is-active{% endif %}" aria-pressed="{{ 'true' if period == 'week' else 'false' }}">近一周</button>
-                    <button type="button" data-period="all" class="{% if period == 'all' %}is-active{% endif %}" aria-pressed="{{ 'true' if period == 'all' else 'false' }}">全部时间</button>
+                    <button type="button" data-period="week" class="{% if period == 'week' %}is-active{% endif %}" aria-pressed="{{ 'true' if period == 'week' else 'false' }}" data-i18n="近一周">{{ tr("近一周") }}</button>
+                    <button type="button" data-period="all" class="{% if period == 'all' %}is-active{% endif %}" aria-pressed="{{ 'true' if period == 'all' else 'false' }}" data-i18n="全部时间">{{ tr("全部时间") }}</button>
                 </div>
                 <div class="archive-controls">
-                    <label class="sr-only" for="yearFilter">年份</label>
-                    <select id="yearFilter" aria-label="按年份筛选">
-                        <option value="">年份</option>
+                    <label class="sr-only" for="yearFilter" data-i18n="年份">{{ tr("年份") }}</label>
+                    <select id="yearFilter" data-i18n-aria-label="按年份筛选" aria-label="{{ tr('按年份筛选') }}">
+                        <option value="" data-i18n="年份">{{ tr("年份") }}</option>
                         {% if period == 'archive' and current_year and current_year not in available_years %}
                         <option value="{{ current_year }}" selected>{{ current_year }} 年（暂无该年份通知）</option>
                         {% endif %}
                         {% for year in available_years %}
-                        <option value="{{ year }}" {% if period == 'archive' and current_year == year %}selected{% endif %}>{{ year }} 年</option>
+                        <option value="{{ year }}" {% if period == 'archive' and current_year == year %}selected{% endif %}>{{ year }} <span data-i18n="年">{{ tr("年") }}</span></option>
                         {% endfor %}
                     </select>
-                    <label class="sr-only" for="monthFilter">月份</label>
-                    <select id="monthFilter" aria-label="按月份筛选" {% if period != 'archive' or not current_year %}disabled{% endif %}>
-                        <option value="">全年</option>
+                    <label class="sr-only" for="monthFilter" data-i18n="月份">{{ tr("月份") }}</label>
+                    <select id="monthFilter" data-i18n-aria-label="按月份筛选" aria-label="{{ tr('按月份筛选') }}" {% if period != 'archive' or not current_year %}disabled{% endif %}>
+                        <option value="" data-i18n="全年">{{ tr("全年") }}</option>
                         {% for month in range(1, 13) %}
-                        <option value="{{ month }}" {% if current_month == month %}selected{% endif %}>{{ month }} 月</option>
+                        <option value="{{ month }}" {% if current_month == month %}selected{% endif %}>{{ month }} <span data-i18n="月">{{ tr("月") }}</span></option>
                         {% endfor %}
                     </select>
                 </div>
                 </fieldset>
-                <fieldset class="notice-filter-section"><legend>阅读状态</legend>
+                <fieldset class="notice-filter-section"><legend data-i18n="阅读状态">{{ tr("阅读状态") }}</legend>
                 <div class="read-filter">
-                    <button type="button" data-read="all" class="{% if read_filter == 'all' %}is-active{% endif %}" aria-pressed="{{ 'true' if read_filter == 'all' else 'false' }}">全部</button>
-                    <button type="button" data-read="unread" class="{% if read_filter == 'unread' %}is-active{% endif %}" aria-pressed="{{ 'true' if read_filter == 'unread' else 'false' }}">未读 {{ scope_unread }}</button>
-                    <button type="button" data-read="read" class="{% if read_filter == 'read' %}is-active{% endif %}" aria-pressed="{{ 'true' if read_filter == 'read' else 'false' }}">已读</button>
+                    <button type="button" data-read="all" class="{% if read_filter == 'all' %}is-active{% endif %}" aria-pressed="{{ 'true' if read_filter == 'all' else 'false' }}" data-i18n="全部">{{ tr("全部") }}</button>
+                    <button type="button" data-read="unread" class="{% if read_filter == 'unread' %}is-active{% endif %}" aria-pressed="{{ 'true' if read_filter == 'unread' else 'false' }}"><span data-i18n="未读">{{ tr("未读") }}</span> {{ scope_unread }}</button>
+                    <button type="button" data-read="read" class="{% if read_filter == 'read' %}is-active{% endif %}" aria-pressed="{{ 'true' if read_filter == 'read' else 'false' }}" data-i18n="已读">{{ tr("已读") }}</button>
                 </div></fieldset>
-                <div class="notice-filter-footer"><button type="button" class="text-button" id="resetNoticeConditions">重置条件</button><button type="button" class="btn btn-primary" data-close-notice-popover>完成</button></div>
+                <div class="notice-filter-footer"><button type="button" class="text-button" id="resetNoticeConditions" data-i18n="重置条件">{{ tr("重置条件") }}</button><button type="button" class="btn btn-primary" data-close-notice-popover data-i18n="完成">{{ tr("完成") }}</button></div>
             </div>
-            <div class="notice-actions-menu notice-popover" id="noticeActionsMenu" role="group" aria-label="更多通知操作" hidden>
+            <div class="notice-actions-menu notice-popover" id="noticeActionsMenu" role="group" data-i18n-aria-label="更多通知操作" aria-label="{{ tr('更多通知操作') }}" hidden>
                 {% if view == 'inbox' and current_user.is_admin %}
-                <button type="button" id="collectCurrentSources">{{ '抓取当前范围' if current_school_id else '抓取全部订阅' }}</button>
-                {% if current_school_id %}<button type="button" id="collectAllSources">抓取全部订阅</button>{% endif %}
+                <button type="button" id="collectCurrentSources">{{ tr('抓取当前范围') if current_school_id else tr('抓取全部订阅') }}</button>
+                {% if current_school_id %}<button type="button" id="collectAllSources" data-i18n="抓取全部订阅">{{ tr("抓取全部订阅") }}</button>{% endif %}
                 {% endif %}
-                <button type="button" id="markScopeRead" {% if not scope_unread %}disabled{% endif %}>当前结果全部设为已读</button>
-                <a class="clear-filters" href="{{ url_for('pages.index', view=view) }}">重置全部筛选</a>
+                <button type="button" id="markScopeRead" {% if not scope_unread %}disabled{% endif %} data-i18n="当前结果全部设为已读">{{ tr("当前结果全部设为已读") }}</button>
+                <a class="clear-filters" href="{{ url_for('pages.index', view=view) }}" data-i18n="重置全部筛选">{{ tr("重置全部筛选") }}</a>
             </div>
             </div>
             <div class="inbox-filter-feedback" id="inboxFilterFeedback" hidden>
                 <p class="source-filter-feedback" role="status" aria-live="polite" id="sourceFilterStatus"></p>
-                <button class="text-button" id="retryInboxFilter" type="button" hidden>重试筛选</button>
+                <button class="text-button" id="retryInboxFilter" type="button" hidden data-i18n="重试筛选">{{ tr("重试筛选") }}</button>
             </div>
-            <div class="inbox-refresh-activity" id="inboxRefreshActivity" aria-label="官网通知更新情况" hidden>
+            <div class="inbox-refresh-activity" id="inboxRefreshActivity" data-i18n-aria-label="官网通知更新情况" aria-label="{{ tr('官网通知更新情况') }}" hidden>
                 <details id="inboxRefreshDetails">
-                    <summary id="inboxRefreshSummary"><span id="inboxRefreshProgress" class="refresh-ring" role="progressbar" aria-label="官网通知更新进度" hidden><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle class="refresh-ring-track" cx="16" cy="16" r="13"/><circle class="refresh-ring-value" cx="16" cy="16" r="13" pathLength="100"/></svg></span><span id="inboxRefreshStatus" role="status" aria-live="polite"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
-                    <div class="refresh-status-panel notice-popover"><strong>更新情况</strong><ul id="inboxRefreshSources"></ul></div>
+                    <summary id="inboxRefreshSummary"><span id="inboxRefreshProgress" class="refresh-ring" role="progressbar" data-i18n-aria-label="官网通知更新进度" aria-label="{{ tr('官网通知更新进度') }}" hidden><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle class="refresh-ring-track" cx="16" cy="16" r="13"/><circle class="refresh-ring-value" cx="16" cy="16" r="13" pathLength="100"/></svg></span><span id="inboxRefreshStatus" role="status" aria-live="polite"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+                    <div class="refresh-status-panel notice-popover"><strong data-i18n="更新情况">{{ tr("更新情况") }}</strong><ul id="inboxRefreshSources"></ul></div>
                 </details>
             </div>
         </header>
-        {% if view == 'inbox' %}<button type="button" id="inboxNewNotices" class="notice-updates-button" hidden>有新通知，点击更新列表</button>{% endif %}
+        {% if view == 'inbox' %}<button type="button" id="inboxNewNotices" class="notice-updates-button" hidden data-i18n="有新通知，点击更新列表">{{ tr("有新通知，点击更新列表") }}</button>{% endif %}
         <div class="notice-scroll" id="noticeList" tabindex="-1">
             {% if announcements %}
                 {% for date_label, date_announcements in grouped.items() %}
                 <section class="timeline-group" aria-labelledby="date-{{ loop.index }}">
                     <header class="timeline-date" id="date-{{ loop.index }}">
                         <span class="timeline-date-node" aria-hidden="true"></span>
-                        <span>{{ date_label }}</span>
+                        <span data-ui-group-date="{{ date_label }}">{{ ui_date(date_label) }}</span>
                     </header>
                     <div class="timeline-items">
                         {% for ann in date_announcements %}
                         {% set is_unread = ann.id not in read_ids %}
                         <article class="notice-item">
                         <a class="notice-row {% if selected_announcement and selected_announcement.id == ann.id %}is-selected{% endif %} {% if is_unread %}is-unread{% endif %}"
-                           href="{{ notice_urls[ann.id] }}" data-notice-link data-announcement-id="{{ ann.id }}" {% if is_unread %}aria-label="未读：{{ ann.title }}"{% endif %}>
+                           href="{{ notice_urls[ann.id] }}" data-notice-link data-announcement-id="{{ ann.id }}" {% if is_unread %}data-i18n-aria-label="未读：{p0}" data-i18n-aria-label-vars='{{ {'p0':(ann.title)}|tojson }}' aria-label="{{ tr('未读：{p0}',p0=(ann.title)) }}"{% endif %}>
                             <span class="notice-node" aria-hidden="true"></span>
                             <span class="notice-copy">
                                 <strong>{{ ann.title }}</strong>
                                 {% set row_source = display_sources.get(ann.id, ann.department) %}
-                                <span class="notice-meta"><span class="notice-source-label" title="{{ row_source|channel_breadcrumb }}">{{ row_source|channel_breadcrumb }}{% if announcement_sources.get(ann.id, [])|length > 1 %} · {{ announcement_sources[ann.id]|length }} 个官网栏目{% endif %}</span><time datetime="{{ ann.published_at.isoformat() if ann.published_at else '' }}">{{ ann.published_at.strftime('%Y-%m-%d') if ann.published_at else '时间未知' }}</time></span>
+                                <span class="notice-meta"><span class="notice-source-label" title="{{ row_source|channel_breadcrumb }}">{{ row_source|channel_breadcrumb }}{% if announcement_sources.get(ann.id, [])|length > 1 %} · {{ announcement_sources[ann.id]|length }} 个官网栏目{% endif %}</span><time datetime="{{ ann.published_at.isoformat() if ann.published_at else '' }}">{{ ann.published_at.strftime('%Y-%m-%d') if ann.published_at else tr('时间未知') }}</time></span>
                                 {% set row_value = (announcement_values|default({})).get(ann.id) %}
-                                {% if row_value %}<span class="notice-value"{% if row_value.reason %} title="{{ row_value.reason }}"{% endif %}>{% if row_value.basis == 'title' %}<span>按标题判断 · </span>{% endif %}{{ row_value.label }}{% if row_value.reason %}<span> · {{ row_value.reason }}</span>{% endif %}</span>{% endif %}
-                                <span class="notice-summary">{{ (summary_texts.get(ann.id) or excerpts.get(ann.id) or '打开官网原文查看详情')|striptags|truncate(110) }}</span>
+                                {% if row_value %}<span class="notice-value"{% if row_value.reason %} title="{{ row_value.reason }}"{% endif %}>{% if row_value.basis == 'title' %}<span data-i18n="按标题判断 ·">{{ tr("按标题判断 ·") }} </span>{% endif %}{{ row_value.label }}{% if row_value.reason %}<span> · {{ row_value.reason }}</span>{% endif %}</span>{% endif %}
+                                <span class="notice-summary">{{ (summary_texts.get(ann.id) or excerpts.get(ann.id) or tr('打开官网原文查看详情'))|striptags|truncate(110) }}</span>
                             </span>
                         </a>
-                        <a class="notice-channel-link" data-channel-link href="{{ url_for('pages.index', school=row_source.school_id, dept=row_source.id, period='all', view=view, _anchor='sources') }}" aria-label="在来源栏查看{{ row_source|channel_breadcrumb }}的全部通知">查看来源</a>
+                        <a class="notice-channel-link" data-channel-link href="{{ url_for('pages.index', school=row_source.school_id, dept=row_source.id, period='all', view=view, _anchor='sources') }}" data-i18n-aria-label="在来源栏查看{p0}的全部通知" data-i18n-aria-label-vars='{{ {'p0':(row_source|channel_breadcrumb)}|tojson }}' aria-label="{{ tr('在来源栏查看{p0}的全部通知',p0=(row_source|channel_breadcrumb)) }}" data-i18n="查看来源">{{ tr("查看来源") }}</a>
                         {% set row_state = states.get(ann.id) %}
-                        <div class="notice-row-actions" aria-label="{{ ann.title }}的操作">
-                            <button type="button" class="icon-button" id="rowStar{{ ann.id }}" data-row-state data-state-field="starred" data-state-value="{{ 'false' if row_state and row_state.starred else 'true' }}" data-id="{{ ann.id }}" aria-pressed="{{ 'true' if row_state and row_state.starred else 'false' }}" aria-label="{{ '取消收藏' if row_state and row_state.starred else '收藏' }}" title="{{ '取消收藏' if row_state and row_state.starred else '收藏' }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
+                        <div class="notice-row-actions" data-i18n-aria-label="{p0}的操作" data-i18n-aria-label-vars='{{ {'p0':(ann.title)}|tojson }}' aria-label="{{ tr('{p0}的操作',p0=(ann.title)) }}">
+                            <button type="button" class="icon-button" id="rowStar{{ ann.id }}" data-row-state data-state-field="starred" data-state-value="{{ 'false' if row_state and row_state.starred else 'true' }}" data-id="{{ ann.id }}" aria-pressed="{{ 'true' if row_state and row_state.starred else 'false' }}" aria-label="{{ tr('取消收藏') if row_state and row_state.starred else tr('收藏') }}" title="{{ tr('取消收藏') if row_state and row_state.starred else tr('收藏') }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
                         </div>
                         </article>
                         {% endfor %}
@@ -151,40 +152,40 @@
                 {% endfor %}
 
                 {% if pagination.pages > 1 %}
-                <nav class="pagination-bar" aria-label="通知翻页">
-                    {% if previous_url %}<a href="{{ previous_url }}">上一页</a>{% else %}<span aria-disabled="true">上一页</span>{% endif %}
-                    <span>第 {{ pagination.page }} / {{ pagination.pages }} 页</span>
-                    {% if next_url %}<a href="{{ next_url }}">下一页</a>{% else %}<span aria-disabled="true">下一页</span>{% endif %}
+                <nav class="pagination-bar" data-i18n-aria-label="通知翻页" aria-label="{{ tr('通知翻页') }}">
+                    {% if previous_url %}<a href="{{ previous_url }}" data-i18n="上一页">{{ tr("上一页") }}</a>{% else %}<span aria-disabled="true" data-i18n="上一页">{{ tr("上一页") }}</span>{% endif %}
+                    {{ ui_text('第 {page} / {pages} 页', {'page':pagination.page,'pages':pagination.pages}) }}
+                    {% if next_url %}<a href="{{ next_url }}" data-i18n="下一页">{{ tr("下一页") }}</a>{% else %}<span aria-disabled="true" data-i18n="下一页">{{ tr("下一页") }}</span>{% endif %}
                 </nav>
                 {% endif %}
             {% else %}
             <div class="notice-empty">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg>
                 {% set school_empty = view == 'inbox' and current_school and (dept_counts.values()|sum) == 0 %}
-                <h3>{{ '本校尚未收录通知' if school_empty else '没有符合条件的通知' }}</h3>
-                <p>{% if view == 'trash' %}暂无回收站记录。取消收藏的通知会在这里保留 30 天，可随时恢复收藏。{% elif view == 'saved' %}阅读通知时点击“收藏”，即可长期保存正文与附件。{% elif school_empty %}找到的公开信息会自动出现在这里。你可以查看处理进度，或先阅读其他学校的通知。{% else %}可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。{% endif %}</p>
-                {% if view == 'inbox' and period != 'all' %}<button class="text-button" type="button" data-period="all">查看全部时间的通知</button>{% endif %}
-                {% if current_school_id in subscribed_school_ids %}<a href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}">查看自动查找进度</a>{% endif %}
-                <a href="{{ url_for('pages.index', view=view if view != 'inbox' else none, period='all') }}">{{ '查看所有已订阅学校' if school_empty else '清除筛选' }}</a>
+                <h3>{{ tr('本校尚未收录通知') if school_empty else tr('没有符合条件的通知') }}</h3>
+                <p>{% if view == 'trash' %}<span data-i18n="暂无回收站记录。取消收藏的通知会在这里保留 30 天，可随时恢复收藏。">{{ tr("暂无回收站记录。取消收藏的通知会在这里保留 30 天，可随时恢复收藏。") }}</span>{% elif view == 'saved' %}<span data-i18n="阅读通知时点击“收藏”，即可长期保存正文与附件。">{{ tr("阅读通知时点击“收藏”，即可长期保存正文与附件。") }}</span>{% elif school_empty %}<span data-i18n="找到的公开信息会自动出现在这里。你可以查看处理进度，或先阅读其他学校的通知。">{{ tr("找到的公开信息会自动出现在这里。你可以查看处理进度，或先阅读其他学校的通知。") }}</span>{% else %}<span data-i18n="可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。">{{ tr("可点击上方刷新，检查官网新通知；较早的消息可切换“全部时间”查看。") }}</span>{% endif %}</p>
+                {% if view == 'inbox' and period != 'all' %}<button class="text-button" type="button" data-period="all" data-i18n="查看全部时间的通知">{{ tr("查看全部时间的通知") }}</button>{% endif %}
+                {% if current_school_id in subscribed_school_ids %}<a href="{{ url_for('subscriptions.manage_sources', school_id=current_school_id) }}" data-i18n="查看自动查找进度">{{ tr("查看自动查找进度") }}</a>{% endif %}
+                <a href="{{ url_for('pages.index', view=view if view != 'inbox' else none, period='all') }}">{{ tr('查看所有已订阅学校') if school_empty else tr('清除筛选') }}</a>
             </div>
             {% endif %}
         </div>
     </section>
 
-    <aside class="reader-panel" aria-label="通知详情">
+    <aside class="reader-panel" data-i18n-aria-label="通知详情" aria-label="{{ tr('通知详情') }}">
         {% if selected_announcement %}
         {% set selected_source = display_sources.get(selected_announcement.id, selected_announcement.department) %}
         <div class="reader-toolbar">
-            <button class="text-button reader-view-toggle" type="button" id="toggleReadingView" data-toggle-reading-view aria-pressed="{{ 'true' if focused_reading else 'false' }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/></svg><span>{{ '返回列表' if focused_reading else '专注阅读' }}</span></button>
-            <a class="reader-back" href="{{ back_to_list_url }}" aria-label="返回通知列表">
+            <button class="text-button reader-view-toggle" type="button" id="toggleReadingView" data-toggle-reading-view aria-pressed="{{ 'true' if focused_reading else 'false' }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/></svg><span>{{ tr('返回列表') if focused_reading else tr('专注阅读') }}</span></button>
+            <a class="reader-back" href="{{ back_to_list_url }}" data-i18n-aria-label="返回通知列表" aria-label="{{ tr('返回通知列表') }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
-                <span>返回列表</span>
+                <span data-i18n="返回列表">{{ tr("返回列表") }}</span>
             </a>
-            <button class="text-button reader-source-trigger" type="button" id="readerSource" data-open-sources aria-controls="sourcePanel" aria-expanded="false" aria-label="打开来源筛选：{{ source_school }} · {{ source_scope }}">来源</button>
-            <button class="text-button" type="button" id="undoRead" data-announcement-id="{{ selected_announcement.id }}">设为未读</button>
+            <button class="text-button reader-source-trigger" type="button" id="readerSource" data-open-sources aria-controls="sourcePanel" aria-expanded="false" data-i18n-aria-label="打开来源筛选：{p0} · {p1}" data-i18n-aria-label-vars='{{ {'p0':(source_school),'p1':(source_scope)}|tojson }}' aria-label="{{ tr('打开来源筛选：{p0} · {p1}',p0=(source_school),p1=(source_scope)) }}" data-i18n="来源">{{ tr("来源") }}</button>
+            <button class="text-button" type="button" id="undoRead" data-announcement-id="{{ selected_announcement.id }}" data-i18n="设为未读">{{ tr("设为未读") }}</button>
             {% set selected_state = states.get(selected_announcement.id) %}
-            <button class="text-button" type="button" id="readerStar" data-state-field="starred" data-state-value="{{ 'false' if selected_state and selected_state.starred else 'true' }}" data-id="{{ selected_announcement.id }}" aria-pressed="{{ 'true' if selected_state and selected_state.starred else 'false' }}">{{ '恢复收藏' if view == 'trash' else ('取消收藏' if selected_state and selected_state.starred else '收藏') }}</button>
-            {% if selected_announcement.url %}<a class="text-button reader-original" href="{{ selected_announcement.url }}" target="_blank" rel="noopener noreferrer">原文<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 5h5v5M10 14L19 5M19 13v6H5V5h6"/></svg></a>{% endif %}
+            <button class="text-button" type="button" id="readerStar" data-state-field="starred" data-state-value="{{ 'false' if selected_state and selected_state.starred else 'true' }}" data-id="{{ selected_announcement.id }}" aria-pressed="{{ 'true' if selected_state and selected_state.starred else 'false' }}">{{ tr('恢复收藏') if view == 'trash' else (tr('取消收藏') if selected_state and selected_state.starred else tr('收藏')) }}</button>
+            {% if selected_announcement.url %}<a class="text-button reader-original" href="{{ selected_announcement.url }}" target="_blank" rel="noopener noreferrer"><span data-i18n="原文">{{ tr("原文") }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 5h5v5M10 14L19 5M19 13v6H5V5h6"/></svg></a>{% endif %}
             {% from '_share_button.html' import share_button %}
             {{ share_button(selected_announcement, selected_source) }}
         </div>

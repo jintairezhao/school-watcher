@@ -30,7 +30,7 @@
         const title = (button.dataset.shareTitle || '').replace(/\s+/g, ' ').trim();
         const url = button.dataset.shareUrl || '';
         if (!title || !/^https?:\/\//i.test(url)) {
-            showToast('error', '暂无可分享的官网原文链接');
+            showToast('error', uiT('暂无可分享的官网原文链接'));
             return;
         }
         const text = title + '\n' + url;
@@ -49,9 +49,9 @@
             } catch (_) { /* Older or restricted webviews may allow a copy command. */ }
             if (!copied) copied = legacyCopy(text);
             if (!copied) throw new Error('Clipboard unavailable');
-            showToast('success', '标题和官网链接已复制');
+            showToast('success', uiT('标题和官网链接已复制'));
         } catch (_) {
-            showToast('error', '复制未成功，请重试或手动复制标题和原文链接');
+            showToast('error', uiT('复制未成功，请重试或手动复制标题和原文链接'));
         } finally {
             button.removeAttribute('aria-disabled');
             button.removeAttribute('aria-busy');

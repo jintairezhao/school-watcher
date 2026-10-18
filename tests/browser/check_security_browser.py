@@ -116,7 +116,7 @@ try:
         results.append({'mode':'school_edit_name','blocked':True})
         load_depts = re.search(r'^async function loadDepts\([^\n]*\) \{.*?^\}', template, re.M | re.S).group()
         escape_html = re.search(r'^function escHtml\([^\n]*\) \{.*?^\}', template, re.M | re.S).group()
-        page.set_content('<div id="deptList"></div><script>'+escape_html+load_depts+
+        page.set_content('<div id="deptList"></div><script>function uiT(message){return message;}</script><script>'+escape_html+load_depts+
             ';function editDept(id,name){window.__received_name=name;}function deleteDept(){}function showToast(){throw Error("load failed")}</script>')
         awaitable = '(s)=>{window.fetch=async()=>({json:async()=>[{id:1,name:s}]});return loadDepts(1)}'
         page.evaluate(awaitable, attack_name)

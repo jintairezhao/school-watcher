@@ -21,8 +21,8 @@
     async function request(url, options = {}) {
         const response = await fetch(url, {...options, signal: AbortSignal.timeout(15000)});
         let data;
-        try { data = await response.json(); } catch (_) { throw new Error('记录未能加载，请稍后重试。'); }
-        if (!response.ok) throw new Error(data.error || '操作未完成，请稍后重试。');
+        try { data = await response.json(); } catch (_) { throw new Error(uiT('记录未能加载，请稍后重试。')); }
+        if (!response.ok) throw new Error(data.error || uiT('操作未完成，请稍后重试。'));
         return data;
     }
     function newState(period) {
@@ -41,7 +41,7 @@
             const table = element('table', null, 'scrape-log-table');
             table.append(element('caption', record.school_name + '的抓取记录', 'sr-only'));
             const head = element('thead'), tr = element('tr');
-            ['开始 / 结束时间', '学院或栏目', '结果', '新增 / 检查', '耗时'].forEach(text => {
+            [uiT('开始 / 结束时间'), uiT('学院或栏目'), uiT('结果'), uiT('新增 / 检查'), uiT('耗时')].forEach(text => {
                 const th = element('th', text); th.scope = 'col'; tr.append(th);
             });
             head.append(tr); table.append(head);
@@ -49,7 +49,7 @@
             find(state.period === 'recent' ? '#recentLogSchools' : '#archiveLogSchools').append(section);
             group = {body, count, size: 0}; state.groups.set(key, group);
         }
-        group.count.textContent = ' · ' + (++group.size) + ' 条';
+        group.count.textContent = ' · ' + (++group.size) + uiT(' 条');
         const row = element('tr'); row.dataset.logId = record.id;
         const times = element('td', null, 'scrape-log-times');
         const started = element('time', time(record.started_at)); started.dateTime = record.started_at || '';
@@ -79,7 +79,7 @@
         more.hidden = true;
         try {
             do {
-                status.textContent = state.count ? `已显示 ${state.count} 条，正在继续加载…` : '正在加载记录…';
+                status.textContent = state.count ? `已显示 ${state.count} 条，正在继续加载…` : uiT('正在加载记录…');
                 const params = new URLSearchParams({period});
                 if (anchor) params.set('as_of', anchor);
                 if (find('#logSchoolFilter').value) params.set('school_id', find('#logSchoolFilter').value);
@@ -94,15 +94,15 @@
                     find('#archiveLogCount').textContent = `· ${data.older_total} 条`;
                     if (find('#archiveLogSection').open && !states.archive.loaded) loadPages('archive');
                 }
-                status.textContent = data.total ? (state.cursor ? `已显示 ${state.count} / ${data.total} 条记录。` : `已完整显示 ${state.count} 条记录。`) : '这个时间范围暂无记录。';
+                status.textContent = data.total ? (state.cursor ? `已显示 ${state.count} / ${data.total} 条记录。` : `已完整显示 ${state.count} 条记录。`) : uiT('这个时间范围暂无记录。');
                 if (!all || !state.cursor) break;
             } while (number === generation);
             more.hidden = !state.cursor;
-            more.textContent = period === 'recent' ? '继续加载记录' : '加载更早记录';
+            more.textContent = period === 'recent' ? uiT('继续加载记录') : uiT('加载更早记录');
         } catch (error) {
             if (number !== generation) return;
             status.textContent = (state.count ? `已保留 ${state.count} 条已加载记录。` : '') + error.message;
-            more.textContent = '重试加载'; more.hidden = false;
+            more.textContent = uiT('重试加载'); more.hidden = false;
         } finally {
             state.busy = false;
         }
@@ -120,7 +120,7 @@
         find('#recentLogCount').textContent = ''; find('#archiveLogCount').textContent = '';
         find('#retryRecentLogs').hidden = true; find('#loadMoreArchiveLogs').hidden = true;
         find('#archiveLogSection').open = false;
-        find('#archiveLogStatus').textContent = '展开后加载较早记录。';
+        find('#archiveLogStatus').textContent = uiT('展开后加载较早记录。');
         loadPages('recent', true);
     }
     window.loadScrapeLogHistory = () => {
@@ -137,13 +137,13 @@
     find('#logRetentionForm').addEventListener('submit', async event => {
         event.preventDefault(); const button = find('#saveLogRetention'); button.disabled = true;
         const days = Number(find('#logRetentionDays').value);
-        find('#logRetentionStatus').textContent = '正在保存…';
+        find('#logRetentionStatus').textContent = uiT('正在保存…');
         try {
             const data = await request('/api/admin/scrape-logs/retention', {method: 'PUT',
                 headers: {'Content-Type': 'application/json'}, body: JSON.stringify({days})});
             retentionLoaded = true;
             find('#logRetentionDays').value = String(data.days);
-            find('#logRetentionStatus').textContent = data.days === 0 ? '已设置为永久保留记录。' : data.message;
+            find('#logRetentionStatus').textContent = data.days === 0 ? uiT('已设置为永久保留记录。') : data.message;
         } catch (error) { find('#logRetentionStatus').textContent = '未保存。' + error.message; }
         finally { button.disabled = false; }
     });

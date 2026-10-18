@@ -13,7 +13,8 @@ ACADEMIC_COLLECTION_PATTERN = (
     r'(?:全部|所有|各)(?:学院|院系|学部)|学部|'
     r'(?:院系|学院|学部|系所)(?:一览|列表|目录|导航|设置))'
     r'(?:一览|列表|目录|导航|设置)?|'
-    r'(?:schools|faculties|colleges)\s*(?:&|and|/)\s*(?:schools|faculties|colleges|departments))$'
+    r'(?:schools|faculties|colleges)\s*(?:&|and|/)\s*(?:schools|faculties|colleges|departments)|'
+    r'(?:schools|faculties|colleges|departments|academic (?:units|departments|divisions)))$'
 )
 _COLLECTION = re.compile(ACADEMIC_COLLECTION_PATTERN, re.I)
 

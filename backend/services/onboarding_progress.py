@@ -290,7 +290,7 @@ def status(school):
     review_count = SourceProposal.query.filter_by(school_id=school.id, state='needs_review').count()
     from backend.services.discovery_policy import attention_summary
     return {'state': state, 'message': message, 'stage_message': stage_message, 'phase': data.get('phase', 'fetch'),
-        'value_summary': attention_summary(),
+        'value_summary': attention_summary(school.id),
         'busy': busy, 'active': active, 'retry_at': retry_at,
         'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
         'failed_pages': data.get('failed_pages', 0), 'current_label': data.get('current_label', '') if busy else '',

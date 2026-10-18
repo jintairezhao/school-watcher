@@ -159,7 +159,7 @@
                 }
             }
             find('#pinSources').hidden = !pinViewport.matches || pinSuspended || currentMode === 'pinned';
-            find('#closeFilters').setAttribute('aria-label', currentMode === 'pinned' ? '收起来源栏' : '关闭来源筛选');
+            find('#closeFilters').setAttribute('aria-label', currentMode === 'pinned' ? uiT('收起来源栏') : uiT('关闭来源筛选'));
             find('[data-close-sources]').hidden = currentMode === 'pinned';
             document.querySelectorAll('[data-open-sources]').forEach(trigger => trigger.setAttribute('aria-expanded', String(currentMode !== 'closed')));
         }

@@ -15,12 +15,12 @@
         if (button) {
             button.hidden = !!result.summary && !busy;
             button.disabled = busy || result.status === 'uncertain';
-            button.textContent = busy ? '正在生成…' : result.status === 'failed' ? '重试生成' : '生成摘要';
+            button.textContent = busy ? '正在生成…' : result.status === 'failed' ? uiT('重试生成') : '生成摘要';
         }
         const force = panel.querySelector('[data-summary-force]');
         if (force) force.hidden = busy || (!result.summary && result.status !== 'uncertain');
         const message = panel.querySelector('[data-summary-message]');
-        message.textContent = result.status === 'waiting_content' ? '正在读取官网正文…' : busy ?
+        message.textContent = result.status === 'waiting_content' ? uiT('正在读取官网正文…') : busy ?
             '正在生成，完成后会显示在这里。' : result.error || (result.summary ?
             '根据正文生成，附件未纳入摘要。' : '点击后生成，所有读者共享这份摘要。');
         panel.setAttribute('aria-busy', String(busy));

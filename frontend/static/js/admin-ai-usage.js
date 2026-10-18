@@ -1,12 +1,12 @@
 (function () {
     'use strict';
     const field = id => document.getElementById(id);
+    const t = message => window.I18n?.t(message) || message;
     const panel = field('aiUsagePanel');
     if (!panel) return;
     let days = 30, trendDays = 30, activityMode = 'daily', metric = 'tokens', data = null, serial = 0, controller;
-    const number = value => Number(value).toLocaleString('zh-CN');
-    const compact = value => value >= 100000000 ? (value / 100000000).toLocaleString('zh-CN', {maximumFractionDigits:1}) + ' 亿'
-        : value >= 10000 ? (value / 10000).toLocaleString('zh-CN', {maximumFractionDigits:1}) + ' 万' : number(value);
+    const number = value => window.I18n.number(Number(value));
+    const compact = value => window.I18n.compact(Number(value));
     const node = (tag, text, className) => {
         const element = document.createElement(tag);
         if (text !== undefined) element.textContent = text;
@@ -36,12 +36,12 @@
         tooltip.style.top = Math.max(8, box.top > tip.height + 14 ? box.top - tip.height - 10 : Math.min(innerHeight - tip.height - 8, box.bottom + 10)) + 'px';
     }
     function describe(day) {
-        return day.date + '\n' + number(day.tokens) + ' Token · ' + number(day.calls) + ' 次调用'
-            + '\n完整结果 ' + day.succeeded + ' · 失败 ' + day.failed
-            + (day.partial ? ' · 部分结果 ' + day.partial : '')
-            + (day.pending ? ' · 进行中 ' + day.pending : '')
-            + (day.uncertain ? ' · 结果待确认 ' + day.uncertain : '')
-            + (day.unknown_usage ? '\n' + day.unknown_usage + ' 次调用未返回用量' : '');
+        return day.date + '\n' + number(day.tokens) + ' Token · ' + number(day.calls) + uiT(' 次调用')
+            + '\n完整结果 ' + day.succeeded + uiT(' · 失败 ') + day.failed
+            + (day.partial ? uiT(' · 部分结果 ') + day.partial : '')
+            + (day.pending ? uiT(' · 进行中 ') + day.pending : '')
+            + (day.uncertain ? uiT(' · 结果待确认 ') + day.uncertain : '')
+            + (day.unknown_usage ? '\n' + day.unknown_usage + uiT(' 次调用未返回用量') : '');
     }
     function inspectable(button, day) {
         const description = describe(day);
@@ -92,16 +92,16 @@
             const total = data.lifetime;
             text('aiLifetimeTokens', number(total.tokens));
             text('aiLifetimeCalls', number(total.calls));
-            text('aiLifetimeBreakdown', '输入 ' + number(total.input_tokens) + ' · 输出 ' + number(total.output_tokens)
-                + (total.unclassified_tokens ? ' · 未细分 ' + number(total.unclassified_tokens) : ''));
-            text('aiLifetimeOutcomes', total.succeeded + ' 次完整结果 · ' + total.failed + ' 次失败'
-                + (total.partial ? ' · ' + total.partial + ' 次部分结果' : '')
-                + (total.uncertain ? ' · ' + total.uncertain + ' 次结果待确认' : '')
-                + (total.pending ? ' · ' + total.pending + ' 次进行中' : ''));
+            text('aiLifetimeBreakdown', uiT('输入 ') + number(total.input_tokens) + uiT(' · 输出 ') + number(total.output_tokens)
+                + (total.unclassified_tokens ? uiT(' · 未细分 ') + number(total.unclassified_tokens) : ''));
+            text('aiLifetimeOutcomes', total.succeeded + uiT(' 次完整结果 · ') + total.failed + uiT(' 次失败')
+                + (total.partial ? ' · ' + total.partial + uiT(' 次部分结果') : '')
+                + (total.uncertain ? ' · ' + total.uncertain + uiT(' 次结果待确认') : '')
+                + (total.pending ? ' · ' + total.pending + uiT(' 次进行中') : ''));
             field('aiLifetimeUnknown').hidden = !total.unknown_usage;
-            text('aiLifetimeUnknown', total.unknown_usage + ' 次调用未返回用量，未计入 Token 总量。');
+            text('aiLifetimeUnknown', total.unknown_usage + uiT(' 次调用未返回用量，未计入 Token 总量。'));
             field('aiActivityLifetime').setAttribute('aria-label', total.start
-                ? total.start + ' — ' + total.end + ' · 本站记录的全部历史用量' : '尚无调用记录');
+                ? total.start + ' — ' + total.end + uiT(' · 本站记录的全部历史用量') : uiT('尚无调用记录'));
             return;
         }
         const entries = data.calendar;
@@ -113,8 +113,8 @@
         grid.style.setProperty('--weeks', weeks); months.style.setProperty('--weeks', weeks);
         for (let i = 0; i < padding; i++) grid.append(node('span'));
         grid.setAttribute('aria-label', activityMode === 'weekly'
-            ? '最近365天，每列一周，从上到下为周一至周日，方向键查看日期'
-            : '最近365天，每格一天，从上到下、从左到右按日期排列，方向键查看日期');
+            ? uiT('最近365天，每列一周，从上到下为周一至周日，方向键查看日期')
+            : uiT('最近365天，每格一天，从上到下、从左到右按日期排列，方向键查看日期'));
         const max = Math.max(...entries.map(d => d.tokens), 1);
         let lastMonth = '', lastColumn = -4;
         entries.forEach((day, index) => {
@@ -127,7 +127,7 @@
             const month = day.date.slice(0, 7), column = Math.floor((padding + index) / 7) + 1;
             if (month !== lastMonth && (index > 0 || Number(day.date.slice(8)) <= 7)
                 && column - lastColumn >= 3 && column < weeks - 1) {
-                const label = node('span', Number(day.date.slice(5, 7)) + '月');
+                const label = node('span', window.I18n.month(Number(day.date.slice(5, 7))));
                 label.style.gridColumn = column + ' / span 2'; months.append(label); lastColumn = column;
             }
             lastMonth = month;
@@ -157,8 +157,8 @@
         field('aiUsageEmpty').hidden = calls > 0;
         if (calls && !max) {
             field('aiUsageEmpty').hidden = false;
-            text('aiUsageEmpty', '这段时间有调用记录，已记录的 Token 用量为 0。');
-        } else text('aiUsageEmpty', '这段时间还没有调用记录。使用 AI 识别学校来源后，会在这里显示。');
+            text('aiUsageEmpty', uiT('这段时间有调用记录，已记录的 Token 用量为 0。'));
+        } else text('aiUsageEmpty', uiT('这段时间还没有调用记录。使用 AI 识别学校来源后，会在这里显示。'));
         const rows = field('aiUsageRows'); rows.replaceChildren();
         [...entries].reverse().forEach(day => {
             const row = node('tr');
@@ -170,7 +170,7 @@
     }
     function ranks(id, entries, model) {
         const box = field(id); box.replaceChildren();
-        if (!entries.length) { box.append(node('p', '所选时段暂无调用', 'usage-empty')); return; }
+        if (!entries.length) { box.append(node('p', uiT('所选时段暂无调用'), 'usage-empty')); return; }
         entries.forEach(entry => {
             const row = node('div', undefined, 'usage-rank');
             const line = node('div', undefined, 'usage-rank-label');
@@ -181,8 +181,8 @@
             track.setAttribute('aria-hidden', 'true'); track.append(fill);
             const percent = data.summary.tokens ? entry.tokens / data.summary.tokens * 100 : 0;
             const share = data.summary.tokens ? (percent > 0 && percent < .1 ? '<0.1' : percent.toFixed(1)) + '% · ' : '';
-            row.append(line, track, node('small', (model ? entry.provider_name + ' · ' : '') + share + number(entry.calls) + ' 次调用'
-                + (entry.unknown_usage ? ' · ' + entry.unknown_usage + ' 次用量待确认' : '')));
+            row.append(line, track, node('small', (model ? t(entry.provider_name) + ' · ' : '') + share + number(entry.calls) + uiT(' 次调用')
+                + (entry.unknown_usage ? ' · ' + entry.unknown_usage + uiT(' 次用量待确认') : '')));
             box.append(row);
         });
     }
@@ -201,55 +201,55 @@
         summary.peak_tokens = peak.tokens; summary.peak_date = peak.tokens ? peak.date : null;
         text('aiUsageRange', entries[0].date.replaceAll('-', '/') + ' — ' + data.end.replaceAll('-', '/'));
         text('aiUsageTokens', compact(summary.tokens)); field('aiUsageTokens').title = number(summary.tokens) + ' Token';
-        text('aiUsageTokenDetail', '输入 ' + compact(summary.input_tokens) + ' · 输出 ' + compact(summary.output_tokens)
-            + (summary.unclassified_tokens ? ' · 未细分 ' + compact(summary.unclassified_tokens) : ''));
+        text('aiUsageTokenDetail', uiT('输入 ') + compact(summary.input_tokens) + uiT(' · 输出 ') + compact(summary.output_tokens)
+            + (summary.unclassified_tokens ? uiT(' · 未细分 ') + compact(summary.unclassified_tokens) : ''));
         text('aiUsageCalls', number(summary.calls));
-        text('aiUsageCallDetail', [summary.partial && summary.partial + ' 次部分结果',
-            summary.pending && summary.pending + ' 次进行中', summary.uncertain && summary.uncertain + ' 次结果待确认']
-            .filter(Boolean).join(' · ') || '含连接测试');
+        text('aiUsageCallDetail', [summary.partial && summary.partial + uiT(' 次部分结果'),
+            summary.pending && summary.pending + uiT(' 次进行中'), summary.uncertain && summary.uncertain + uiT(' 次结果待确认')]
+            .filter(Boolean).join(' · ') || uiT('含连接测试'));
         text('aiUsageSuccess', summary.success_rate === null ? '—' : summary.success_rate + '%');
-        text('aiUsageSuccessDetail', summary.succeeded + ' 次完整结果 · ' + summary.failed + ' 次失败'
-            + (summary.partial ? ' · ' + summary.partial + ' 次部分结果' : ''));
-        field('aiUsageSuccess').title = '完整结果次数 ÷（完整结果＋失败＋部分结果）；不含进行中和结果待确认的调用';
+        text('aiUsageSuccessDetail', summary.succeeded + uiT(' 次完整结果 · ') + summary.failed + uiT(' 次失败')
+            + (summary.partial ? ' · ' + summary.partial + uiT(' 次部分结果') : ''));
+        field('aiUsageSuccess').title = uiT('完整结果次数 ÷（完整结果＋失败＋部分结果）；不含进行中和结果待确认的调用');
         field('aiUsageFailureDetail').hidden = !summary.failed;
-        text('aiUsageFailureDetail', '失败分类：' + summary.validation_failed + ' 次结果格式或字段不合要求 · '
-            + summary.other_failed + ' 次其他失败。');
+        text('aiUsageFailureDetail', uiT('失败分类：') + summary.validation_failed + uiT(' 次结果格式或字段不合要求 · ')
+            + summary.other_failed + uiT(' 次其他失败。'));
         const cacheInput = summary.cache_hit_tokens + summary.cache_miss_tokens;
         text('aiUsageCache', cacheInput
-            ? '服务商输入缓存命中 ' + (Math.round(summary.cache_hit_tokens / cacheInput * 1000) / 10) + '% · 命中 '
-                + number(summary.cache_hit_tokens) + ' Token · 未命中 ' + number(summary.cache_miss_tokens) + ' Token。'
-                + '仅统计 ' + summary.cache_reported_calls + ' 次有明细的调用'
-                + (summary.cache_unreported_calls ? '，另有 ' + summary.cache_unreported_calls + ' 次未返回明细' : '') + '。'
-            : summary.cache_reported_calls ? '已返回的输入缓存明细中输入 Token 为 0，无法计算命中率。'
-                : summary.calls ? '服务商未返回输入缓存明细，命中率未知。' : '暂无输入缓存记录。');
+            ? uiT('服务商输入缓存命中 ') + (Math.round(summary.cache_hit_tokens / cacheInput * 1000) / 10) + uiT('% · 命中 ')
+                + number(summary.cache_hit_tokens) + uiT(' Token · 未命中 ') + number(summary.cache_miss_tokens) + ' Token。'
+                + uiT('仅统计 ') + summary.cache_reported_calls + uiT(' 次有明细的调用')
+                + (summary.cache_unreported_calls ? uiT('，另有 ') + summary.cache_unreported_calls + uiT(' 次未返回明细') : '') + '。'
+            : summary.cache_reported_calls ? uiT('已返回的输入缓存明细中输入 Token 为 0，无法计算命中率。')
+                : summary.calls ? uiT('服务商未返回输入缓存明细，命中率未知。') : uiT('暂无输入缓存记录。'));
         text('aiUsagePeak', compact(summary.peak_tokens)); field('aiUsagePeak').title = number(summary.peak_tokens) + ' Token';
-        text('aiUsagePeakDate', summary.peak_date || '暂无 Token 用量');
+        text('aiUsagePeakDate', summary.peak_date || uiT('暂无 Token 用量'));
         field('aiUsageUnknown').hidden = !summary.unknown_usage;
-        text('aiUsageUnknown', summary.unknown_usage + ' 次调用未返回用量，未计入 Token 统计。');
+        text('aiUsageUnknown', summary.unknown_usage + uiT(' 次调用未返回用量，未计入 Token 统计。'));
     }
     function render() {
         renderOverview();
         renderCalendar(); renderTrend();
         ranks('aiUsagePurposes', data.purposes, false); ranks('aiUsageModels', data.models, true);
-        text('aiBudgetMonth', data.budget_month + ' · UTC 月度');
+        text('aiBudgetMonth', data.budget_month + uiT(' · UTC 月度'));
         const budgets = field('aiUsageBudgets'); budgets.replaceChildren();
         data.budgets.forEach(budget => {
             const row = node('div', undefined, 'usage-budget'), label = node('p');
-            label.append(node('strong', budget.label), node('span', number(budget.used_tokens) + ' / '
-                + (budget.limit ? number(budget.limit) + ' Token' : '不限')));
+            label.append(node('strong', uiT(budget.label)), node('span', number(budget.used_tokens) + ' / '
+                + (budget.limit ? number(budget.limit) + ' Token' : uiT('不限'))));
             row.append(label);
             if (budget.limit) {
                 const track = node('div', undefined, 'usage-track'), used = node('span'), reserved = node('span', undefined, 'usage-reserved');
                 const usedPercent = Math.min(100, budget.used_tokens / budget.limit * 100);
                 used.style.width = usedPercent + '%';
                 reserved.style.width = Math.min(100 - usedPercent, budget.reserved_tokens / budget.limit * 100) + '%';
-                track.setAttribute('aria-label', '已使用 ' + number(budget.used_tokens) + '，预留 ' + number(budget.reserved_tokens) + '，上限 ' + number(budget.limit) + ' Token');
+                track.setAttribute('aria-label', uiT('已使用 ') + number(budget.used_tokens) + uiT('，预留 ') + number(budget.reserved_tokens) + uiT('，上限 ') + number(budget.limit) + ' Token');
                 track.append(used, reserved); row.append(track);
             }
-            if (budget.reserved_tokens) row.append(node('small', '另预留 ' + number(budget.reserved_tokens) + ' Token，等待结算'));
+            if (budget.reserved_tokens) row.append(node('small', uiT('另预留 ') + number(budget.reserved_tokens) + uiT(' Token，等待结算')));
             budgets.append(row);
         });
-        text('aiUsageUpdated', '更新于 ' + new Date(data.generated_at).toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'}) + ' · 每日统计按当前时区');
+        text('aiUsageUpdated', uiT('更新于 ') + new Date(data.generated_at).toLocaleTimeString(window.I18n.locale(), {hour:'2-digit', minute:'2-digit'}) + uiT(' · 每日统计按当前时区'));
     }
     window.loadAIUsage = async function () {
         const current = ++serial;
@@ -259,10 +259,10 @@
         let timedOut = false;
         const timeout = setTimeout(() => { timedOut = true; requestController.abort(); }, 20000);
         hideTooltip(); panel.setAttribute('aria-busy', 'true');
-        field('aiUsageStatus').hidden = false; text('aiUsageStatus', data ? '正在刷新…' : '正在读取用量…');
+        field('aiUsageStatus').hidden = false; text('aiUsageStatus', data ? uiT('正在刷新…') : uiT('正在读取用量…'));
         try {
             const response = await fetch('/api/admin/ai/usage?days=30&offset=' + (-new Date().getTimezoneOffset()), {signal:requestController.signal});
-            if (!response.ok) throw new Error('无法读取');
+            if (!response.ok) throw new Error(uiT('无法读取'));
             const result = await response.json();
             if (current !== serial) return;
             data = result; render();
@@ -270,7 +270,7 @@
         } catch (error) {
             if (current !== serial || (error.name === 'AbortError' && !timedOut)) return;
             field('aiUsageContent').hidden = true;
-            text('aiUsageStatus', '用量暂时无法加载，请点击“刷新”重试。');
+            text('aiUsageStatus', uiT('用量暂时无法加载，请点击“刷新”重试。'));
         } finally {
             clearTimeout(timeout);
             if (current === serial) panel.setAttribute('aria-busy', 'false');
@@ -289,6 +289,9 @@
         metric = button.dataset.usageMetric; pressed('data-usage-metric', metric); if (data) renderTrend();
     }));
     field('aiUsageRefresh').addEventListener('click', () => window.loadAIUsage());
+    document.addEventListener('locale-changed', () => {
+        if (data) render();
+    });
     keyboardChart(field('aiActivityGrid'), true); keyboardChart(field('aiUsageBars'), false);
     window.addEventListener('scroll', () => {
         if (tooltipTarget && (document.activeElement === tooltipTarget || tooltipTarget.matches(':hover'))) {

@@ -1,5 +1,5 @@
 {% macro share_button(ann, source) %}
 {% set source = source or ann.department %}
 {% set original_url = announcement_share_url(ann, source) %}
-<button class="text-button" type="button" data-share-notice data-share-title="{{ ann.title }}" data-share-url="{{ original_url }}" {% if original_url %}title="复制标题和官网原文链接"{% else %}disabled title="暂无可分享的官网原文链接"{% endif %}>分享</button>
+<button class="text-button" type="button" data-share-notice data-share-title="{{ ann.title }}" data-share-url="{{ original_url }}" {% if original_url %}title="复制标题和官网原文链接"{% else %}disabled data-i18n-title="暂无可分享的官网原文链接" title="{{ tr('暂无可分享的官网原文链接') }}"{% endif %} data-i18n="分享">{{ tr("分享") }}</button>
 {% endmacro %}

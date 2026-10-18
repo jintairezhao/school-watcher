@@ -3,27 +3,27 @@
 {% block content %}
 <div class="directory-page">
     <header class="surface-heading directory-heading">
-        <div><h1>学校目录</h1><p>选择目标学校，自动寻找对你有用的官网信息。</p></div>
-        {% if current_user %}<a class="btn btn-outline" href="{{ url_for('pages.index') }}">返回收件箱</a>{% endif %}
+        <div><h1 data-i18n="学校目录">{{ tr("学校目录") }}</h1><p data-i18n="选择目标学校，自动寻找对你有用的官网信息。">{{ tr("选择目标学校，自动寻找对你有用的官网信息。") }}</p></div>
+        {% if current_user %}<a class="btn btn-outline" href="{{ url_for('pages.index') }}" data-i18n="返回收件箱">{{ tr("返回收件箱") }}</a>{% endif %}
     </header>
     <form class="directory-filters" id="directoryFilters" method="get" action="{{ url_for('pages.explore') }}" role="search">
-        <div><label for="catalogQuery">学校名称或简称</label><input id="catalogQuery" name="q" type="search" maxlength="100" aria-controls="directoryResults" value="{{ q }}" placeholder="例如：清华、武汉大学" class="form-input"></div>
-        <div><label for="catalogProvince">所在地区</label><select id="catalogProvince" name="province" class="form-input"><option value="">全部地区</option>{% for p in provinces %}<option {% if p == province %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></div>
-        <div><label for="catalogLevel">学校范围</label><select id="catalogLevel" name="level" class="form-input"><option value="all">全部学校</option><option value="double" {% if level == 'double' %}selected{% endif %}>双一流（2022 名单）</option><option value="subscribed" {% if level == 'subscribed' %}selected{% endif %}>我已订阅</option></select></div>
-        <button class="btn btn-primary" type="submit">查找学校</button>
+        <div><label for="catalogQuery" data-i18n="学校名称或简称">{{ tr("学校名称或简称") }}</label><input id="catalogQuery" name="q" type="search" maxlength="100" aria-controls="directoryResults" value="{{ q }}" data-i18n-placeholder="例如：清华、武汉大学" placeholder="{{ tr('例如：清华、武汉大学') }}" class="form-input"></div>
+        <div><label for="catalogProvince" data-i18n="所在地区">{{ tr("所在地区") }}</label><select id="catalogProvince" name="province" class="form-input"><option value="" data-i18n="全部地区">{{ tr("全部地区") }}</option>{% for p in provinces %}<option {% if p == province %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></div>
+        <div><label for="catalogLevel" data-i18n="学校范围">{{ tr("学校范围") }}</label><select id="catalogLevel" name="level" class="form-input"><option value="all" data-i18n="全部学校">{{ tr("全部学校") }}</option><option value="double" {% if level == 'double' %}selected{% endif %} data-i18n="双一流（2022 名单）">{{ tr("双一流（2022 名单）") }}</option><option value="subscribed" {% if level == 'subscribed' %}selected{% endif %} data-i18n="我已订阅">{{ tr("我已订阅") }}</option></select></div>
+        <button class="btn btn-primary" type="submit" data-i18n="查找学校">{{ tr("查找学校") }}</button>
     </form>
     <p id="directoryFeedback" class="directory-feedback" role="status" aria-live="polite" hidden></p>
     {% include "_directory_results.html" %}
-    <details class="directory-note"><summary>目录范围与接入说明</summary>
-        <p>双一流标记依据<a href="https://www.moe.gov.cn/srcsite/A22/s7065/202202/t20220211_598710.html" target="_blank" rel="noopener noreferrer">教育部 2022 年第二轮名单</a>（147 所）。其他本科高校为补充目录，不代表完整的一本院校名单。“一本”属于各省招生批次，请以相应省份、年份的招生信息为准。</p>
-        <p>订阅后自动查找并同步公开信息，可在“来源设置”查看处理进度和调整接收范围。校内登录页面和无法公开访问的内容不会展示。</p>
+    <details class="directory-note"><summary data-i18n="目录范围与接入说明">{{ tr("目录范围与接入说明") }}</summary>
+        <p><span data-i18n="双一流标记依据">{{ tr("双一流标记依据") }}</span><a href="https://www.moe.gov.cn/srcsite/A22/s7065/202202/t20220211_598710.html" target="_blank" rel="noopener noreferrer" data-i18n="教育部 2022 年第二轮名单">{{ tr("教育部 2022 年第二轮名单") }}</a><span data-i18n="（147 所）。其他本科高校为补充目录，不代表完整的一本院校名单。“一本”属于各省招生批次，请以相应省份、年份的招生信息为准。">{{ tr("（147 所）。其他本科高校为补充目录，不代表完整的一本院校名单。“一本”属于各省招生批次，请以相应省份、年份的招生信息为准。") }}</span></p>
+        <p data-i18n="订阅后自动查找并同步公开信息，可在“来源设置”查看处理进度和调整接收范围。校内登录页面和无法公开访问的内容不会展示。">{{ tr("订阅后自动查找并同步公开信息，可在“来源设置”查看处理进度和调整接收范围。校内登录页面和无法公开访问的内容不会展示。") }}</p>
     </details>
     {% if current_user %}
-    <details class="directory-note" id="addSchool"><summary>没找到学校？补充官网入口</summary>
+    <details class="directory-note" id="addSchool"><summary data-i18n="没找到学校？补充官网入口">{{ tr("没找到学校？补充官网入口") }}</summary>
         <form id="submitSchoolForm" class="source-add-form">
-            <div><label for="subName">学校全称</label><input class="form-input" id="subName" required maxlength="200" placeholder="填写学校全称"></div>
-            <div><label for="subUrl">学校官网</label><input class="form-input" id="subUrl" required type="url" placeholder="https://www.example.edu.cn"></div>
-            <button class="btn btn-primary" type="submit">添加并订阅</button>
+            <div><label for="subName" data-i18n="学校全称">{{ tr("学校全称") }}</label><input class="form-input" id="subName" required maxlength="200" data-i18n-placeholder="填写学校全称" placeholder="{{ tr('填写学校全称') }}"></div>
+            <div><label for="subUrl" data-i18n="学校官网">{{ tr("学校官网") }}</label><input class="form-input" id="subUrl" required type="url" placeholder="https://www.example.edu.cn"></div>
+            <button class="btn btn-primary" type="submit" data-i18n="添加并订阅">{{ tr("添加并订阅") }}</button>
             <p class="form-feedback" role="status" id="submitFeedback"></p>
         </form>
     </details>

@@ -9,13 +9,13 @@
                 <h4>{{ school.name }}</h4>
                 <span class="text-muted">{{ school.url|truncate(50) }}</span>
                 <span class="text-muted">
-                    {{ school.departments.count() }} 个部门 ·
-                    {{ school.announcements.count() }} 条通知 ·
-                    {{ school.subscriber_count or 0 }} 人订阅 ·
+                    {{ school.departments.count() }} <span data-i18n="个部门 ·">{{ tr("个部门 ·") }}</span>
+                    {{ school.announcements.count() }} <span data-i18n="条通知 ·">{{ tr("条通知 ·") }}</span>
+                    {{ school.subscriber_count or 0 }} <span data-i18n="人订阅 ·">{{ tr("人订阅 ·") }}</span>
                     {% if school.enabled %}
-                    <span class="text-success">已上架</span>
+                    <span class="text-success" data-i18n="已上架">{{ tr("已上架") }}</span>
                     {% else %}
-                    <span class="text-muted">已下架</span>
+                    <span class="text-muted" data-i18n="已下架">{{ tr("已下架") }}</span>
                     {% endif %}
                     {% if school.enabled and (school.subscriber_count or 0) == 0 %}
                     <span class="text-muted">（暂无订阅 · 暂停抓取）</span>
@@ -24,25 +24,25 @@
             </div>
         </div>
         <div class="manage-actions">
-            <button class="btn btn-sm btn-outline" onclick="manageDept({{ school.id }})" title="管理部门">
-                部门
+            <button class="btn btn-sm btn-outline" onclick="manageDept({{ school.id }})" title="管理部门" data-i18n="部门">
+                {{ tr("部门") }}
             </button>
-            <button class="btn btn-sm btn-outline" data-school-id="{{ school.id }}" data-school-name="{{ school.name }}" data-school-url="{{ school.url }}" data-school-enabled="{{ school.enabled|lower }}" onclick="editSchool(Number(this.dataset.schoolId), this.dataset.schoolName, this.dataset.schoolUrl, this.dataset.schoolEnabled === 'true')">
-                编辑
+            <button class="btn btn-sm btn-outline" data-school-id="{{ school.id }}" data-school-name="{{ school.name }}" data-school-url="{{ school.url }}" data-school-enabled="{{ school.enabled|lower }}" onclick="editSchool(Number(this.dataset.schoolId), this.dataset.schoolName, this.dataset.schoolUrl, this.dataset.schoolEnabled === 'true')" data-i18n="编辑">
+                {{ tr("编辑") }}
             </button>
             <a href="{{ url_for('pages.school_detail', school_id=school.id) }}" class="btn btn-sm btn-outline">
                 查看
             </a>
-            <button class="btn btn-sm btn-danger-outline" data-school-name="{{ school.name }}" onclick="deleteSchool({{ school.id }}, this.dataset.schoolName)">
-                删除
+            <button class="btn btn-sm btn-danger-outline" data-school-name="{{ school.name }}" onclick="deleteSchool({{ school.id }}, this.dataset.schoolName)" data-i18n="删除">
+                {{ tr("删除") }}
             </button>
         </div>
     </div>
     {% endfor %}
     {% else %}
     <div class="empty-state">
-        <h3>还没有添加学校</h3>
-        <p>点击上方按钮添加学校。</p>
+        <h3 data-i18n="还没有添加学校">{{ tr("还没有添加学校") }}</h3>
+        <p data-i18n="点击上方按钮添加学校。">{{ tr("点击上方按钮添加学校。") }}</p>
     </div>
     {% endif %}
 </div>
@@ -51,25 +51,25 @@
 <dialog class="modal" id="schoolModal" aria-labelledby="modalTitle" style="position:fixed;inset:0;margin:auto;padding:0;width:calc(100% - 32px);max-width:480px;max-height:calc(100dvh - 32px);">
     <form id="schoolForm" onsubmit="event.preventDefault(); saveSchool();">
         <div class="modal-header">
-            <h3 id="modalTitle">添加学校</h3>
-            <button type="button" class="modal-close" onclick="closeModal()" aria-label="关闭学校编辑">&times;</button>
+            <h3 id="modalTitle" data-i18n="添加学校">{{ tr("添加学校") }}</h3>
+            <button type="button" class="modal-close" onclick="closeModal()" data-i18n-aria-label="关闭学校编辑" aria-label="{{ tr('关闭学校编辑') }}">&times;</button>
         </div>
         <div class="modal-body">
             <input type="hidden" id="editSchoolId">
             <div class="form-group">
-                <label for="schoolName">学校名称 *</label>
-                <input type="text" id="schoolName" class="form-input" required maxlength="200" placeholder="填写学校全称" autofocus>
+                <label for="schoolName" data-i18n="学校名称 *">{{ tr("学校名称 *") }}</label>
+                <input type="text" id="schoolName" class="form-input" required maxlength="200" data-i18n-placeholder="填写学校全称" placeholder="{{ tr('填写学校全称') }}" autofocus>
             </div>
             <div class="form-group">
-                <label for="schoolUrl">学校官网 URL *</label>
+                <label for="schoolUrl" data-i18n="学校官网 URL *">{{ tr("学校官网 URL *") }}</label>
                 <input type="url" id="schoolUrl" class="form-input" required maxlength="1000" placeholder="https://www.example.edu.cn/">
                 <span id="schoolUrlHint" class="form-hint" role="status" aria-live="polite"></span>
             </div>
-            <label><input type="checkbox" id="schoolEnabled" checked> 上架这所学校</label>
+            <label><input type="checkbox" id="schoolEnabled" checked> <span data-i18n="上架这所学校">{{ tr("上架这所学校") }}</span></label>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-outline" onclick="closeModal()">取消</button>
-            <button type="submit" class="btn btn-primary">保存</button>
+            <button type="button" class="btn btn-outline" onclick="closeModal()" data-i18n="取消">{{ tr("取消") }}</button>
+            <button type="submit" class="btn btn-primary" data-i18n="保存">{{ tr("保存") }}</button>
         </div>
     </form>
 </dialog>
@@ -81,7 +81,7 @@
         <h2 id="deptSchoolName"></h2>
         <button class="btn btn-primary" onclick="showAddDept()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            添加部门
+            <span data-i18n="添加部门">{{ tr("添加部门") }}</span>
         </button>
     </div>
     <div id="deptList"></div>
@@ -91,59 +91,59 @@
 <div class="modal-overlay" id="deptModal" style="display:none;">
     <div class="modal" style="max-width: 600px;">
         <div class="modal-header">
-            <h3 id="deptModalTitle">添加部门</h3>
+            <h3 id="deptModalTitle" data-i18n="添加部门">{{ tr("添加部门") }}</h3>
             <button class="modal-close" onclick="closeDeptModal()">&times;</button>
         </div>
         <div class="modal-body">
             <input type="hidden" id="editDeptId">
             <input type="hidden" id="deptSchoolId">
             <div class="form-group">
-                <label for="deptName">部门名称 *</label>
-                <input type="text" id="deptName" class="form-input" placeholder="例如：通知公告">
+                <label for="deptName" data-i18n="部门名称 *">{{ tr("部门名称 *") }}</label>
+                <input type="text" id="deptName" class="form-input" data-i18n-placeholder="例如：通知公告" placeholder="{{ tr('例如：通知公告') }}">
             </div>
             <div class="form-group">
-                <label for="deptGroupName">导航分组</label>
-                <input type="text" id="deptGroupName" class="form-input" placeholder="例如：院系设置（可选）">
-                <span class="form-hint">用于侧边栏分组展示</span>
+                <label for="deptGroupName" data-i18n="导航分组">{{ tr("导航分组") }}</label>
+                <input type="text" id="deptGroupName" class="form-input" data-i18n-placeholder="例如：院系设置（可选）" placeholder="{{ tr('例如：院系设置（可选）') }}">
+                <span class="form-hint" data-i18n="用于侧边栏分组展示">{{ tr("用于侧边栏分组展示") }}</span>
             </div>
             <div class="form-group">
-                <label for="deptListUrl">通知列表页 URL *</label>
+                <label for="deptListUrl" data-i18n="通知列表页 URL *">{{ tr("通知列表页 URL *") }}</label>
                 <input type="url" id="deptListUrl" class="form-input" placeholder="https://www.example.edu.cn/notice.htm">
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="deptListSel">列表项选择器 *</label>
+                    <label for="deptListSel" data-i18n="列表项选择器 *">{{ tr("列表项选择器 *") }}</label>
                     <input type="text" id="deptListSel" class="form-input" placeholder="li.news-item">
                 </div>
                 <div class="form-group">
-                    <label for="deptTitleSel">标题选择器</label>
+                    <label for="deptTitleSel" data-i18n="标题选择器">{{ tr("标题选择器") }}</label>
                     <input type="text" id="deptTitleSel" class="form-input" placeholder="a">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="deptLinkSel">链接选择器</label>
+                    <label for="deptLinkSel" data-i18n="链接选择器">{{ tr("链接选择器") }}</label>
                     <input type="text" id="deptLinkSel" class="form-input" placeholder="a">
                 </div>
                 <div class="form-group">
-                    <label for="deptDateSel">日期选择器</label>
+                    <label for="deptDateSel" data-i18n="日期选择器">{{ tr("日期选择器") }}</label>
                     <input type="text" id="deptDateSel" class="form-input" placeholder="span.date">
                 </div>
             </div>
             <div class="form-group">
-                <label for="deptContentSel">正文内容选择器</label>
+                <label for="deptContentSel" data-i18n="正文内容选择器">{{ tr("正文内容选择器") }}</label>
                 <input type="text" id="deptContentSel" class="form-input" placeholder="div.article-content, article">
             </div>
             <div style="margin-top:8px;">
-                <button type="button" class="btn btn-sm btn-outline" onclick="testCurrentSelectors()" id="testSelectorsBtn">
-                    测试选择器
+                <button type="button" class="btn btn-sm btn-outline" onclick="testCurrentSelectors()" id="testSelectorsBtn" data-i18n="测试选择器">
+                    {{ tr("测试选择器") }}
                 </button>
                 <span id="testSelectorsResult" style="margin-left:8px;font-size:13px;"></span>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeDeptModal()">取消</button>
-            <button class="btn btn-primary" onclick="saveDept()">保存</button>
+            <button class="btn btn-outline" onclick="closeDeptModal()" data-i18n="取消">{{ tr("取消") }}</button>
+            <button class="btn btn-primary" onclick="saveDept()" data-i18n="保存">{{ tr("保存") }}</button>
         </div>
     </div>
 </div>
@@ -165,7 +165,7 @@ function showAddSchool() {
 
 function editSchool(id, name, url, enabled) {
     resetSchoolSuggestion();
-    document.getElementById('modalTitle').textContent = '编辑学校';
+    document.getElementById('modalTitle').textContent = uiT('编辑学校');
     document.getElementById('editSchoolId').value = id;
     document.getElementById('schoolName').value = name;
     document.getElementById('schoolUrl').value = url;
@@ -186,8 +186,8 @@ async function saveSchool() {
     const url = document.getElementById('schoolUrl').value.trim();
     const enabled = document.getElementById('schoolEnabled').checked;
 
-    if (!name) { showToast('error', '请输入学校名称'); return; }
-    if (!url) { showToast('error', '请输入学校官网URL'); return; }
+    if (!name) { showToast('error', uiT('请输入学校名称')); return; }
+    if (!url) { showToast('error', uiT('请输入学校官网URL')); return; }
 
     const method = id ? 'PUT' : 'POST';
     const endpoint = id ? '/api/schools/' + id : '/api/schools';
@@ -200,11 +200,11 @@ async function saveSchool() {
         });
         const data = await resp.json();
         if (resp.ok) {
-            showToast('success', id ? '学校已更新' : '学校已添加');
+            showToast('success', id ? uiT('学校已更新') : uiT('学校已添加'));
             closeModal();
             setTimeout(() => location.reload(), 800);
         } else {
-            showToast('error', data.error || '操作失败');
+            showToast('error', data.error || uiT('操作失败'));
         }
     } catch(e) {
         showToast('error', '请求失败: ' + e.message);
@@ -226,8 +226,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 async function deleteSchool(id, name) {
-    if (await confirmDeletion({kind: '学校', name, url: '/api/schools/' + id})) {
-        showToast('success', '学校已删除');
+    if (await confirmDeletion({kind: uiT('学校'), name, url: '/api/schools/' + id})) {
+        showToast('success', uiT('学校已删除'));
         setTimeout(() => location.reload(), 500);
     }
 }
@@ -257,7 +257,7 @@ async function manageDept(schoolId) {
         section.scrollIntoView({behavior: 'smooth'});
         await loadDepts(schoolId);
     } catch(e) {
-        showToast('error', '加载失败');
+        showToast('error', uiT('加载失败'));
     }
 }
 
@@ -304,7 +304,7 @@ async function loadDepts(schoolId) {
             card.querySelector('[data-dept-action="delete"]').addEventListener('click', () => deleteDept(d.id, d.name));
         });
     } catch(e) {
-        showToast('error', '加载部门列表失败');
+        showToast('error', uiT('加载部门列表失败'));
     }
 }
 
@@ -313,7 +313,7 @@ function escHtml(s) {
 }
 
 function editDept(id, name, group_name, list_url, list_sel, title_sel, link_sel, date_sel, content_sel) {
-    document.getElementById('deptModalTitle').textContent = '编辑部门';
+    document.getElementById('deptModalTitle').textContent = uiT('编辑部门');
     document.getElementById('editDeptId').value = id;
     document.getElementById('deptName').value = name;
     document.getElementById('deptGroupName').value = group_name || '';
@@ -328,14 +328,14 @@ function editDept(id, name, group_name, list_url, list_sel, title_sel, link_sel,
 }
 
 async function deleteDept(id, name) {
-    if (await confirmDeletion({kind: '部门', name, url: '/api/departments/' + id})) {
-        showToast('success', '部门已删除');
+    if (await confirmDeletion({kind: uiT('部门'), name, url: '/api/departments/' + id})) {
+        showToast('success', uiT('部门已删除'));
         loadDepts(currentDeptSchoolId);
     }
 }
 
 function showAddDept() {
-    document.getElementById('deptModalTitle').textContent = '添加部门';
+    document.getElementById('deptModalTitle').textContent = uiT('添加部门');
     document.getElementById('editDeptId').value = '';
     document.getElementById('deptName').value = '';
     document.getElementById('deptGroupName').value = '';
@@ -362,14 +362,14 @@ async function testCurrentSelectors() {
     const date_sel = document.getElementById('deptDateSel').value.trim() || 'span';
 
     if (!url || !list_sel) {
-        showToast('error', '请先填写 URL 和列表项选择器');
+        showToast('error', uiT('请先填写 URL 和列表项选择器'));
         return;
     }
 
     const btn = document.getElementById('testSelectorsBtn');
     const resultEl = document.getElementById('testSelectorsResult');
     btn.disabled = true;
-    btn.textContent = '测试中...';
+    btn.textContent = uiT('测试中...');
     resultEl.textContent = '';
 
     try {
@@ -398,7 +398,7 @@ async function testCurrentSelectors() {
         resultEl.innerHTML = '<span style="color:#e53e3e;">❌ ' + escHtml(e.message) + '</span>';
     } finally {
         btn.disabled = false;
-        btn.textContent = '测试选择器';
+        btn.textContent = uiT('测试选择器');
     }
 }
 
@@ -417,7 +417,7 @@ async function saveDept() {
         content_selector: document.getElementById('deptContentSel').value.trim(),
     };
 
-    if (!data.name) { showToast('error', '请输入部门名称'); return; }
+    if (!data.name) { showToast('error', uiT('请输入部门名称')); return; }
 
     const method = id ? 'PUT' : 'POST';
     const endpoint = id ? '/api/departments/' + id : '/api/departments';
@@ -430,14 +430,14 @@ async function saveDept() {
         });
         const result = await resp.json();
         if (resp.ok) {
-            showToast('success', id ? '部门已更新' : '部门已添加');
+            showToast('success', id ? uiT('部门已更新') : uiT('部门已添加'));
             closeDeptModal();
             loadDepts(currentDeptSchoolId);
         } else {
-            showToast('error', result.error || '操作失败');
+            showToast('error', result.error || uiT('操作失败'));
         }
     } catch(e) {
-        showToast('error', '请求失败');
+        showToast('error', uiT('请求失败'));
     }
 }
 

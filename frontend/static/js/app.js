@@ -34,7 +34,7 @@
         meta.setAttribute('content', bg || '#f5f5f7');
         var toggle = document.getElementById('themeToggle');
         if (toggle) {
-            toggle.setAttribute('aria-label', effectiveDark() ? '切换为浅色外观' : '切换为深色外观');
+            toggle.setAttribute('aria-label', effectiveDark() ? uiT('切换为浅色外观') : uiT('切换为深色外观'));
             toggle.title = toggle.getAttribute('aria-label');
         }
     }
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const setOpen = open => {
             links.classList.toggle('open', open);
             toggle.setAttribute('aria-expanded', String(open));
-            toggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+            toggle.setAttribute('aria-label', open ? uiT('关闭菜单') : uiT('打开菜单'));
         };
         toggle.addEventListener('click', function() {
             setOpen(!links.classList.contains('open'));
@@ -166,10 +166,10 @@ function timeAgo(dateStr) {
     const days = Math.floor(diff / 86400000);
 
     if (minutes < 1) return '刚刚';
-    if (minutes < 60) return minutes + '分钟前';
-    if (hours < 24) return hours + '小时前';
-    if (days < 7) return days + '天前';
-    return date.toLocaleDateString('zh-CN');
+    if (minutes < 60) return window.I18n?.relative(-minutes,'minute') || minutes + '分钟前';
+    if (hours < 24) return window.I18n?.relative(-hours,'hour') || hours + '小时前';
+    if (days < 7) return window.I18n?.relative(-days,'day') || days + '天前';
+    return window.I18n?.dateTime(dateStr,{dateStyle:'medium',timeStyle:undefined}) || date.toLocaleDateString();
 }
 
 // ---- 键盘快捷键 ----

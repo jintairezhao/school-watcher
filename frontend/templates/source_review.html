@@ -1,27 +1,27 @@
 {% extends 'admin_base.html' %}
 {% set admin_section = 'source-review' %}
-{% block title %}自动接入进度 — 学校通知{% endblock %}
+{% block title %}{{ tr("自动接入进度 — 学校通知") }}{% endblock %}
 {% block content %}
-<header class="surface-heading"><div><h1>自动接入进度</h1><p>查看栏目接入进度、卡点和下一步。程序与 AI 自动读取官网并验证，技术问题由程序处理；只有订阅范围需要你的偏好时才提供具体选项。</p></div></header>
+<header class="surface-heading"><div><h1 data-i18n="自动接入进度">{{ tr("自动接入进度") }}</h1><p>查看栏目接入进度、卡点和下一步。程序与 AI 自动读取官网并验证，技术问题由程序处理；只有订阅范围需要你的偏好时才提供具体选项。</p></div></header>
 <div class="source-review-layout">
 <div class="setting-card">
     <div class="setting-card-body">
-        <label for="proposalState">显示状态</label>
+        <label for="proposalState" data-i18n="显示状态">{{ tr("显示状态") }}</label>
         <select id="proposalState" class="form-input">
-            <option value="all">全部进度</option><option value="checking">自动检查中</option>
-            <option value="recognition_incomplete">自动识别未完成</option><option value="site_unavailable">官网暂不可用</option>
-            <option value="login_required">官网要求登录</option><option value="access_limited">官网限制访问</option>
-            <option value="program_error">程序执行失败</option><option value="user_choice">需要我选择</option>
+            <option value="all" data-i18n="全部进度">{{ tr("全部进度") }}</option><option value="checking" data-i18n="自动检查中">{{ tr("自动检查中") }}</option>
+            <option value="recognition_incomplete" data-i18n="自动识别未完成">{{ tr("自动识别未完成") }}</option><option value="site_unavailable" data-i18n="官网暂不可用">{{ tr("官网暂不可用") }}</option>
+            <option value="login_required" data-i18n="官网要求登录">{{ tr("官网要求登录") }}</option><option value="access_limited" data-i18n="官网限制访问">{{ tr("官网限制访问") }}</option>
+            <option value="program_error" data-i18n="程序执行失败">{{ tr("程序执行失败") }}</option><option value="user_choice" data-i18n="需要我选择">{{ tr("需要我选择") }}</option>
             <option value="activated">已正式接入</option><option value="superseded">已自动整理</option><option value="rejected">已拒绝</option>
-            <option value="not_a_column">资料页，无需接入</option>
+            <option value="not_a_column" data-i18n="资料页，无需接入">{{ tr("资料页，无需接入") }}</option>
         </select>
-        <p id="reviewStatus" role="status" aria-live="polite">加载中…</p>
+        <p id="reviewStatus" role="status" aria-live="polite" data-i18n="加载中…">{{ tr("加载中…") }}</p>
         <div id="proposalList"></div>
-        <div class="header-actions"><button class="btn btn-outline" id="reviewPrev">上一页</button><button class="btn btn-outline" id="reviewNext">下一页</button></div>
+        <div class="header-actions"><button class="btn btn-outline" id="reviewPrev" data-i18n="上一页">{{ tr("上一页") }}</button><button class="btn btn-outline" id="reviewNext" data-i18n="下一页">{{ tr("下一页") }}</button></div>
     </div>
 </div>
 <section id="proposalDetail" class="setting-card" hidden aria-labelledby="proposalTitle">
-    <div class="setting-card-header"><h2 id="proposalTitle">官网证据</h2></div>
+    <div class="setting-card-header"><h2 id="proposalTitle" data-i18n="官网证据">{{ tr("官网证据") }}</h2></div>
     <div class="setting-card-body">
         <p id="proposalWorkflow" role="status" aria-live="polite"></p>
         <p id="proposalNext"></p>
@@ -31,16 +31,16 @@
         <div id="proposalQuestion"></div>
         <div id="proposalRelated" class="header-actions"></div>
         <div id="proposalEvidence"></div>
-        <details><summary>处理历史</summary><ol id="proposalHistory"></ol></details>
+        <details><summary data-i18n="处理历史">{{ tr("处理历史") }}</summary><ol id="proposalHistory"></ol></details>
         <div id="reviewActions">
-        <p class="text-muted">重新检查会复用已保存的材料和调用结果，通过验证后自动接入。</p>
+        <p class="text-muted" data-i18n="重新检查会复用已保存的材料和调用结果，通过验证后自动接入。">{{ tr("重新检查会复用已保存的材料和调用结果，通过验证后自动接入。") }}</p>
         <div class="header-actions">
-            <button class="btn btn-primary" data-review="recheck">自动检查</button>
+            <button class="btn btn-primary" data-review="recheck" data-i18n="自动检查">{{ tr("自动检查") }}</button>
             <button class="btn btn-ghost" data-review="reject">拒绝此建议</button>
         </div>
 
         </div>
-        <details id="sourceVersions" hidden><summary>查看配置版本</summary><div id="sourceVersionList"></div><p id="sourceVersionStatus" role="status" aria-live="polite"></p></details>
+        <details id="sourceVersions" hidden><summary data-i18n="查看配置版本">{{ tr("查看配置版本") }}</summary><div id="sourceVersionList"></div><p id="sourceVersionStatus" role="status" aria-live="polite"></p></details>
     </div>
 </section>
 </div>

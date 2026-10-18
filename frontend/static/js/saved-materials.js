@@ -18,13 +18,13 @@
                     {method, cache: 'no-store', signal: AbortSignal.timeout(15000)});
                 const data = await response.json();
                 if (!current()) return;
-                if (!response.ok) throw new Error(data.error || '保存状态暂时无法读取，请稍后重试');
+                if (!response.ok) throw new Error(data.error || uiT('保存状态暂时无法读取，请稍后重试'));
                 panel.hidden = data.state === 'none';
                 if (panel.hidden) return;
                 const message = panel.querySelector('[data-saved-message]');
                 const expiry = data.trash_until ? '回收站保留至 ' + new Date(data.trash_until).toLocaleDateString('zh-CN') + '。' : '';
-                message.textContent = expiry + (data.state === 'ready' ? '正文与附件已保存在本地。' :
-                    data.state === 'failed' ? '正文或部分附件保存未完成，可重试；已保存的内容仍保留。' :
+                message.textContent = expiry + (data.state === 'ready' ? uiT('正文与附件已保存在本地。') :
+                    data.state === 'failed' ? uiT('正文或部分附件保存未完成，可重试；已保存的内容仍保留。') :
                     '正在后台保存正文与附件（' + data.saved + '/' + data.total + ' 个资源已保存）。');
                 const files = panel.querySelector('[data-saved-files]');
                 files.replaceChildren();
@@ -32,7 +32,7 @@
                     const item = document.createElement('li');
                     if (file.state === 'ready') {
                         const link = document.createElement('a');
-                        link.href = file.url; link.textContent = file.filename || '已保存附件'; item.append(link);
+                        link.href = file.url; link.textContent = file.filename || uiT('已保存附件'); item.append(link);
                     } else item.textContent = (file.filename || '官网资源') + '：' + (file.error || '等待保存');
                     files.append(item);
                 });

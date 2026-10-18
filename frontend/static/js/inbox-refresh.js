@@ -32,19 +32,19 @@
         const status = find('#inboxRefreshStatus');
         if (!status) return;
         const total = state?.total || 0, completed = (state?.done || 0) + (state?.failed || 0);
-        const scopeLabel = state?.tracking?.scope_label || (scope === 'all' ? '全部订阅' : '本次更新');
+        const scopeLabel = uiT(state?.tracking?.scope_label || (scope === 'all' ? uiT('全部订阅') : uiT('本次更新')));
         let text = message;
-        if (reconnecting) text = '连接中断，正在重连';
-        else if (recovering) text = '正在恢复更新进度…';
-        else if (sending) text = '正在提交更新…';
-        else if (submissionUncertain) text = '本次抓取请求未确认，可重新尝试抓取';
+        if (reconnecting) text = uiT('连接中断，正在重连');
+        else if (recovering) text = uiT('正在恢复更新进度…');
+        else if (sending) text = uiT('正在提交更新…');
+        else if (submissionUncertain) text = uiT('本次抓取请求未确认，可重新尝试抓取');
         else if (tracked && total) {
             if (busy) text = `${scopeLabel} · 更新中 ${completed}/${total}`;
             else if (state.failed) text = `${scopeLabel} · ${state.failed} 个来源暂未成功`;
             else if (state.done === total) text = `更新完成 · ${total} 个来源`;
             else text = `${scopeLabel} · 部分来源尚未更新`;
         }
-        status.textContent = text || '暂无更新任务';
+        status.textContent = uiT(text) || uiT('暂无更新任务');
         status.dataset.state = reconnecting ? 'reconnecting' : busy || sending || recovering ? 'running' : state?.failed ? 'error' : 'idle';
         const activity = find('#inboxRefreshActivity');
         if (activity) activity.hidden = !(tracked || sending || recovering || reconnecting || submissionUncertain || message);
@@ -57,7 +57,7 @@
             progress.setAttribute('aria-valuemax', String(Math.max(1, total)));
             if (total) progress.setAttribute('aria-valuenow', String(Math.min(total, completed)));
             else progress.removeAttribute('aria-valuenow');
-            progress.setAttribute('aria-valuetext', !total ? '正在查询更新进度' : reconnecting ? `连接中断，最近确认 ${completed}/${total} 个来源完成` : `${completed}/${total} 个来源完成`);
+            progress.setAttribute('aria-valuetext', !total ? uiT('正在查询更新进度') : reconnecting ? `连接中断，最近确认 ${completed}/${total} 个来源完成` : `${completed}/${total} 个来源完成`);
         }
         const refreshButton = find('#refreshCurrentSources');
         if (refreshButton) {
@@ -74,7 +74,7 @@
             const row = input.closest('.department-option'), label = row?.querySelector('[data-source-status]');
             if (!row) return;
             if (label) {
-                label.textContent = source.status_label || '';
+                label.textContent = uiT(source.status_label || '');
                 label.hidden = !source.status_label;
                 row.title = source.name + (source.status_label ? ' · ' + source.status_label : '') + (source.message ? '：' + source.message : '');
             }
@@ -83,7 +83,7 @@
                 const saved = Number(count.dataset.savedCount || 0);
                 const known = saved > 0 || source.state === 'done' || source.state === 'saved';
                 count.textContent = known ? String(saved) : '—';
-                count.setAttribute('aria-label', known ? `${saved} 条已保存通知` : '尚未取得通知，数量未知');
+                count.setAttribute('aria-label', known ? uiT('{saved} 条已保存通知',{saved}) : uiT('尚未取得通知，数量未知'));
             }
         });
         const details = find('#inboxRefreshDetails'), list = find('#inboxRefreshSources');
@@ -91,18 +91,18 @@
         details.hidden = false;
         const items = (state?.sources || []).map(source => {
             const item = document.createElement('li');
-            const label = {pending: '等待更新', running: '正在更新', done: '已更新', saved: '已保存', failed: '更新失败', unloaded: '尚未采集'}[source.state] || '尚未更新';
+            const label = {pending: uiT('等待更新'), running: uiT('正在更新'), done: uiT('已更新'), saved: uiT('已保存'), failed: uiT('更新失败'), unloaded: uiT('尚未采集')}[source.state] || uiT('尚未更新');
             item.textContent = source.name + '：' + label + (source.state === 'done' ? ` · 最近一次新增 ${source.new_count || 0} 条` : '') + (source.message ? ' · ' + source.message : '');
             return item;
         });
         if (reconnecting || (!items.length && message)) {
             const item = document.createElement('li');
-            item.textContent = reconnecting ? '暂时无法连接网站，正在自动重新查询。已提交的更新不会因离开页面而取消。' : message;
+            item.textContent = reconnecting ? uiT('暂时无法连接网站，正在自动重新查询。已提交的更新不会因离开页面而取消。') : message;
             items.unshift(item);
         }
         if (submissionUncertain) {
             const item = document.createElement('li');
-            item.textContent = '本次抓取请求未确认，可重新尝试抓取。' + submissionReason + ' 下方只显示后台已确认的来源状态。';
+            item.textContent = uiT('本次抓取请求未确认，可重新尝试抓取。') + submissionReason + uiT(' 下方只显示后台已确认的来源状态。');
             items.unshift(item);
         }
         list.replaceChildren(...items);
@@ -110,14 +110,14 @@
     async function request(url, options = {}) {
         let response;
         try { response = await fetch(url, {...options, cache: 'no-store', signal: AbortSignal.timeout(15000)}); }
-        catch (_) { throw Object.assign(new Error('暂时无法连接网站。'), {retryable: true}); }
+        catch (_) { throw Object.assign(new Error(uiT('暂时无法连接网站。')), {retryable: true}); }
         if (response.status === 401 || response.status === 403) {
-            throw Object.assign(new Error('本机会话已失效，请重新打开应用后查看更新。'), {retryable: false});
+            throw Object.assign(new Error(uiT('本机会话已失效，请重新打开应用后查看更新。')), {retryable: false});
         }
         let data;
         try { data = await response.json(); }
-        catch (_) { throw Object.assign(new Error('暂时无法读取更新进度。'), {retryable: true}); }
-        if (!response.ok) throw Object.assign(new Error(data.error || '更新请求未完成，请稍后重试。'),
+        catch (_) { throw Object.assign(new Error(uiT('暂时无法读取更新进度。')), {retryable: true}); }
+        if (!response.ok) throw Object.assign(new Error(data.error || uiT('更新请求未完成，请稍后重试。')),
             {retryable: response.status === 408 || response.status === 429 || response.status >= 500});
         return data;
     }
@@ -197,7 +197,7 @@
             const data = await request('/api/inbox/refresh', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload(mode))});
             if (number === generation) { submissionUncertain = false; submissionReason = ''; }
             await accept(data, number, true);
-            if (!data.total && number === generation) { message = '当前范围没有可更新的订阅来源。'; render(); }
+            if (!data.total && number === generation) { message = uiT('当前范围没有可更新的订阅来源。'); render(); }
         } catch (error) {
             if (number === generation && error.retryable !== false) {
                 submissionUncertain = true; submissionReason = error.message;

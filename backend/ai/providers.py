@@ -21,8 +21,9 @@ ENDPOINTS = {
     'ark': {'cn-beijing': 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'},
     'bigmodel': {'default': 'https://open.bigmodel.cn/api/paas/v4/chat/completions'},
 }
-PROVIDER_NAMES = {'deepseek': 'DeepSeek', 'dashscope': '阿里云百炼 / 通义千问',
-                  'ark': '火山方舟 / 豆包', 'bigmodel': '智谱'}
+# Familiar model-family labels for UI; provider IDs still select the official API.
+PROVIDER_NAMES = {'deepseek': 'DeepSeek', 'dashscope': '通义千问',
+                  'ark': '豆包', 'bigmodel': 'GLM'}
 DEFAULT_REGIONS = {'deepseek': 'default', 'dashscope': 'cn-beijing', 'ark': 'cn-beijing', 'bigmodel': 'default'}
 
 

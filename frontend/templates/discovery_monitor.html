@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}{{ school.name }} · 信源发掘监控{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/discovery-monitor.css') }}">{% endblock %}
+{% block body_class %}discovery-experience{% endblock %}
+{% block main_class %}discovery-main{% endblock %}
+{% block content %}
+<div class="monitor-page" id="discoveryMonitor" data-endpoint="{{ url_for('discovery.monitor_data', school_id=school.id) }}" data-control="{{ url_for('discovery.monitor_control', school_id=school.id) }}">
+    <header class="atlas-page-header school-heading">
+        <div class="atlas-brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m16 7-9 17m9-17 9 17"/><circle cx="16" cy="6" r="4"/><circle cx="6" cy="26" r="4"/><circle cx="26" cy="26" r="4"/></svg><div><h1 data-i18n="官网深潜">{{ tr('官网深潜') }}</h1><p>{{ school.name }}</p></div></div>
+        <nav aria-label="{{ tr('学校信息') }}" data-i18n-aria-label="学校信息"><a href="{{ url_for('pages.school_detail', school_id=school.id) }}" data-i18n="本校通知">{{ tr('本校通知') }}</a><a href="{{ url_for('source_structure.school_structure', school_id=school.id) }}" data-i18n="官网结构">{{ tr('官网结构') }}</a><a href="{{ url_for('subscriptions.manage_sources', school_id=school.id) }}" data-i18n="来源设置">{{ tr('来源设置') }}</a></nav>
+    </header>
+    <div class="monitor-toolbar">
+        <div class="monitor-school"><label for="monitorSchool" data-i18n="查看学校">{{ tr("查看学校") }}</label><select id="monitorSchool" class="form-input">{% for item in monitor_schools %}<option value="{{ url_for('discovery.monitor', school_id=item.id) }}"{% if item.id == school.id %} selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></div>
+        <div class="monitor-tools"><label class="monitor-auto"><input id="monitorAuto" type="checkbox" checked> <span data-i18n="自动刷新">{{ tr("自动刷新") }}</span></label><button id="monitorRefresh" type="button" class="btn btn-outline" data-i18n="立即刷新">{{ tr("立即刷新") }}</button>{% if current_user.is_admin %}<button id="monitorControl" type="button" class="btn btn-outline" hidden data-i18n="暂停探索">{{ tr("暂停探索") }}</button>{% endif %}</div>
+    </div>
+    <div class="monitor-connection" role="status" aria-live="polite"><span class="monitor-dot" id="monitorDot"></span><span id="monitorConnection" data-i18n="正在读取实际进度…">{{ tr("正在读取实际进度…") }}</span><span id="monitorReadAt"></span></div>
+    <p class="monitor-error" id="monitorError" role="alert" hidden></p>
+    <div class="monitor-workspace">
+        <section class="monitor-map" aria-labelledby="monitorMapHeading">
+            <header class="monitor-section-head"><div><h2 id="monitorMapHeading" data-i18n="官网探索路径">{{ tr("官网探索路径") }}</h2><p data-i18n="连线表示已记录的浏览路径，不代表行政隶属关系。">{{ tr("连线表示已记录的浏览路径，不代表行政隶属关系。") }}</p></div><a class="monitor-map-link" href="{{ url_for('source_structure.school_structure', school_id=school.id) }}" data-i18n="官网结构">{{ tr("官网结构") }}</a></header>
+            <div class="monitor-map-controls"><label class="monitor-search" for="monitorSearch"><span data-i18n="查找入口">{{ tr("查找入口") }}</span><input id="monitorSearch" class="form-input" type="search" data-i18n-placeholder="按院系、部门或栏目名称查找" placeholder="{{ tr('按院系、部门或栏目名称查找') }}"></label><label for="monitorFilter"><span data-i18n="显示状态">{{ tr("显示状态") }}</span><select id="monitorFilter" class="form-input"><option value="all" data-i18n="全部状态">{{ tr("全部状态") }}</option><option value="running" data-i18n="正在处理">{{ tr("正在处理") }}</option><option value="connected" data-i18n="已接入">{{ tr("已接入") }}</option><option value="failed" data-i18n="等待恢复">{{ tr("等待恢复") }}</option><option value="pending" data-i18n="等待探索">{{ tr("等待探索") }}</option><option value="waiting" data-i18n="等待继续">{{ tr("等待继续") }}</option></select></label></div>
+            <div class="atlas-stage" id="atlasStage" data-renderer="loading">
+                <div class="atlas-heading"><h2><span data-i18n="沿着线索，">{{ tr('沿着线索，') }}</span><br><span data-i18n="深入官网。">{{ tr('深入官网。') }}</span></h2><p data-i18n="从官网入口出发，让每一次分叉都有迹可循。">{{ tr('从官网入口出发，让每一次分叉都有迹可循。') }}</p></div>
+                <div id="atlasViewport" class="atlas-viewport" tabindex="0" role="region" data-i18n-aria-label="三维官网探索网络" aria-label="{{ tr('三维官网探索网络') }}" aria-describedby="atlasHelp"></div>
+                <canvas id="atlasFinish" class="atlas-finish" aria-hidden="true"></canvas>
+                <div id="atlasLabels" class="atlas-labels"></div>
+                <div class="atlas-status" id="atlasStatus" role="status" data-i18n="正在准备三维视图…">{{ tr('正在准备三维视图…') }}</div>
+                <div class="atlas-camera-controls" role="group" data-i18n-aria-label="视角控制" aria-label="{{ tr('视角控制') }}">
+                    <button type="button" id="atlasOverview" data-i18n="返回全景">{{ tr('返回全景') }}</button>
+                    <button type="button" id="atlasZoomIn" data-i18n-aria-label="放大网络" aria-label="{{ tr('放大网络') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M10 4v12"/></svg></button>
+                    <button type="button" id="atlasZoomOut" data-i18n-aria-label="缩小网络" aria-label="{{ tr('缩小网络') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12"/></svg></button>
+                    <button type="button" id="atlasFullscreen" data-i18n="全屏探索" aria-pressed="false">{{ tr('全屏探索') }}</button>
+                </div>
+                <p class="atlas-help" id="atlasHelp" data-i18n="拖动旋转 · 滚轮缩放 · 点击球体查看路径">{{ tr('拖动旋转 · 滚轮缩放 · 点击球体查看路径') }}</p>
+            </div>
+            <div class="atlas-narrative" aria-label="{{ tr('路径导览') }}" data-i18n-aria-label="路径导览">
+                <button type="button" id="atlasPlay" class="atlas-play" aria-pressed="false" data-i18n-aria-label="播放路径导览" aria-label="{{ tr('播放路径导览') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="atlas-play-symbol" d="m9 5 10 7-10 7Z"/><path class="atlas-pause-symbol" d="M8 5v14M16 5v14"/></svg></button>
+                <div class="atlas-chapters">
+                    <div class="atlas-chapter-buttons"><button type="button" data-atlas-chapter="0"><span>01</span><span data-i18n="官网入口">{{ tr('官网入口') }}</span></button><button type="button" data-atlas-chapter="1"><span>02</span><span data-i18n="分叉发现">{{ tr('分叉发现') }}</span></button><button type="button" data-atlas-chapter="2"><span>03</span><span data-i18n="栏目识别">{{ tr('栏目识别') }}</span></button><button type="button" data-atlas-chapter="3"><span>04</span><span data-i18n="证据复核">{{ tr('证据复核') }}</span></button></div>
+                    <input id="atlasScrubber" type="range" min="0" max="3" value="0" step="1" data-i18n-aria-label="切换导览阶段" aria-label="{{ tr('切换导览阶段') }}">
+                    <p id="atlasNarration" aria-live="polite" data-i18n="选择一个节点，沿已记录的路径深入。">{{ tr('选择一个节点，沿已记录的路径深入。') }}</p>
+                </div>
+                <label class="atlas-follow"><input type="checkbox" id="atlasFollow" checked><span data-i18n="跟随探索">{{ tr('跟随探索') }}</span></label>
+            </div>
+            <div class="atlas-key"><span data-i18n="大小：节点层级">{{ tr('大小：节点层级') }}</span><span data-i18n="颜色：所属分支">{{ tr('颜色：所属分支') }}</span><span data-i18n="光圈：节点状态">{{ tr('光圈：节点状态') }}</span></div>
+            <details id="atlasListPanel" class="atlas-list-panel"><summary data-i18n="探索路径列表">{{ tr('探索路径列表') }}</summary><div id="monitorTree" class="monitor-tree" data-i18n-aria-label="探索路径列表" aria-label="{{ tr('探索路径列表') }}" aria-busy="true"><p class="monitor-empty" data-i18n="正在载入保存的路径…">{{ tr('正在载入保存的路径…') }}</p></div></details>
+            <p id="monitorCatalogNote" class="monitor-caption"></p>
+            <div class="monitor-legend" data-i18n-aria-label="节点状态图例" aria-label="{{ tr('节点状态图例') }}"><span data-state="running" data-i18n="正在处理">{{ tr("正在处理") }}</span><span data-state="connected" data-i18n="已接入">{{ tr("已接入") }}</span><span data-state="fetched" data-i18n="已读取">{{ tr("已读取") }}</span><span data-state="pending" data-i18n="等待探索">{{ tr("等待探索") }}</span><span data-state="waiting" data-i18n="等待继续">{{ tr('等待继续') }}</span><span data-state="failed" data-i18n="等待恢复">{{ tr("等待恢复") }}</span></div>
+        </section>
+        <aside class="monitor-detail" aria-labelledby="monitorDetailHeading"><h2 id="monitorDetailHeading" data-i18n="节点详情">{{ tr("节点详情") }}</h2><div id="atlasBreadcrumb" class="atlas-breadcrumb"></div><div id="monitorDetail"><p class="monitor-empty" data-i18n="选择左侧入口，查看路径、状态和接入结果。">{{ tr("选择左侧入口，查看路径、状态和接入结果。") }}</p></div><button type="button" id="atlasBranch" class="btn btn-outline" hidden data-i18n="收起分支">{{ tr('收起分支') }}</button></aside>
+    </div>
+    <section class="monitor-summary" data-i18n-aria-label="探索状态" aria-label="{{ tr('探索状态') }}">
+        <div class="monitor-summary-title"><h2 id="monitorMessage" data-i18n="正在读取探索状态">{{ tr('正在读取探索状态') }}</h2><p id="monitorCurrent" data-i18n="打开监控不会启动探索或调用 AI。">{{ tr('打开监控不会启动探索或调用 AI。') }}</p><p id="monitorWorkAt" class="text-muted"></p></div>
+        <dl class="monitor-counters"><div><dt data-i18n="已读页面">{{ tr('已读页面') }}</dt><dd id="monitorChecked">—</dd></div><div><dt data-i18n="等待探索">{{ tr('等待探索') }}</dt><dd id="monitorPending">—</dd></div><div><dt data-i18n="栏目处理中">{{ tr('栏目处理中') }}</dt><dd id="monitorCandidates">—</dd></div><div><dt data-i18n="已接入栏目">{{ tr('已接入栏目') }}</dt><dd id="monitorConnected">—</dd></div></dl>
+        <p class="monitor-caption" data-i18n="页面计数来自最近一次任务检查点；已接入栏目为当前保存的配置。探索范围会继续扩大，不以这些计数计算全校完成率。">{{ tr('页面计数来自最近一次任务检查点；已接入栏目为当前保存的配置。探索范围会继续扩大，不以这些计数计算全校完成率。') }}</p>
+    </section>
+    <div class="monitor-bottom">
+        <section class="monitor-directions" aria-labelledby="monitorDirectionsHeading"><header class="monitor-section-head"><div><h2 id="monitorDirectionsHeading" data-i18n="关注方向">{{ tr("关注方向") }}</h2><p id="monitorProfiles" data-i18n="按当前画像查看探索线索">{{ tr("按当前画像查看探索线索") }}</p></div></header><div id="monitorDirections"></div><p class="monitor-caption" data-i18n="按页面名称和已记录路径归类，可重复计数。出现相关线索或接入一个栏目，都不代表该方向已完整覆盖。">{{ tr("按页面名称和已记录路径归类，可重复计数。出现相关线索或接入一个栏目，都不代表该方向已完整覆盖。") }}</p></section>
+        <section class="monitor-cost" aria-labelledby="monitorCostHeading"><header class="monitor-section-head"><div><h2 id="monitorCostHeading" data-i18n="AI 用量与等待">{{ tr("AI 用量与等待") }}</h2><p data-i18n="本校当前探索额度周期，可能跨多轮任务">{{ tr("本校当前探索额度周期，可能跨多轮任务") }}</p></div></header><dl id="monitorCost"></dl><p id="monitorAI" class="monitor-caption"></p><p id="monitorBillingNote" class="monitor-caption"></p></section>
+    </div>
+    <section class="monitor-recent" aria-labelledby="monitorRecentHeading"><header class="monitor-section-head"><div><h2 id="monitorRecentHeading" data-i18n="任务最近更新">{{ tr("任务最近更新") }}</h2><p data-i18n="按真实更新时间排列，每项显示最近状态；这是任务快照，不是完整逐步日志。">{{ tr("按真实更新时间排列，每项显示最近状态；这是任务快照，不是完整逐步日志。") }}</p></div></header><ol id="monitorRecent"><li class="monitor-empty" data-i18n="暂无任务记录">{{ tr("暂无任务记录") }}</li></ol></section>
+    <details class="monitor-system"><summary data-i18n="查看系统可视化流程图">{{ tr("查看系统可视化流程图") }}</summary><p data-i18n="本图说明官网框架探索和信源接入的机制，独立于通知正文抓取。">{{ tr("本图说明官网框架探索和信源接入的机制，独立于通知正文抓取。") }}</p><a href="{{ url_for('static', filename='img/discovery-system.svg') }}" target="_blank" rel="noopener noreferrer" data-i18n="打开或保存完整流程图">{{ tr("打开或保存完整流程图") }}</a><img src="{{ url_for('static', filename='img/discovery-system.svg') }}" alt="由用户画像和官网主干出发，经优先队列、网页读取、AI 识别、程序验证，接入学校部门栏目；路径记忆、成本反馈与失败恢复构成反馈环。" loading="lazy"></details>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="importmap">{"imports":{"three":{{ url_for('static', filename='vendor/three/three.module.min.js')|tojson }}}}</script>
+<script type="module" src="{{ url_for('static', filename='js/discovery-atlas.js') }}"></script>
+<script src="{{ url_for('static', filename='js/discovery-monitor.js') }}"></script>
+{% endblock %}

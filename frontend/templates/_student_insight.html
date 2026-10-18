@@ -3,7 +3,7 @@
     {% if insight %}
     <p><strong>{{ insight.value_label }}</strong> · {{ insight.time_label }}</p>
     {% if insight.historical in ('high', 'possible') %}<p>可作历史参考：用于了解往年的条件、材料或流程。往年安排不代表今年安排。</p>{% endif %}
-    <details><summary>查看判断依据</summary>
+    <details><summary data-i18n="查看判断依据">{{ tr("查看判断依据") }}</summary>
         <p>个人是否符合条件、政策目前是否有效，仍需结合原文和后续通知核实。</p>
         {% for fact in insight.facts %}<blockquote><p>{{ fact.text }}</p><small>原文：{{ fact.quote }}</small></blockquote>{% endfor %}
     </details>

@@ -1,6 +1,7 @@
 # Only explicit application resources are shipped. Never collect the repository root.
 from pathlib import Path
 from importlib import metadata
+from PyInstaller.utils.hooks import collect_data_files
 import os
 import runpy
 import sys
@@ -10,6 +11,7 @@ version = runpy.run_path(str(root / 'desktop' / '__init__.py'))['VERSION']
 
 application_data = runpy.run_path(str(root / 'desktop/resources.py'))['application_data']
 datas = application_data(root, root / '.local/desktop-build')
+datas += collect_data_files('tzdata')
 hidden = ['desktop.window', 'desktop.updater', 'desktop.browser', 'scripts.maintenance.migrate_safely', 'logging.config', 'ijson.backends.yajl2_c', 'ijson.backends.python']
 for source in (root / 'backend').rglob('*.py'):
     name = '.'.join(source.relative_to(root).with_suffix('').parts)

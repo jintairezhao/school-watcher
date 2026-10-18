@@ -288,7 +288,9 @@ def crawl_site(inventory, key, max_pages=250, workers=4, fetcher=fetch_page, pro
                         tasks.checkpoint(dict(tasks.current_execution().get('checkpoint') or {},
                             discovery_active_page={'site_key': key, 'url': batch[0]['url']}))
                         from backend.services.onboarding_progress import record_progress
-                        record_progress(phase='crawl', current_label=batch[0]['label'])
+                        record_progress(phase='crawl', current_label=batch[0]['label'],
+                            current_url=batch[0]['url'], current_pages=[{field: page.get(field)
+                                for field in ('url', 'label', 'path_json', 'kind')} for page in batch])
                     futures = [pool.submit(inspect_page, inventory, site, p, fetcher, focus) for p in batch] if pool else batch
                     for future in as_completed(futures) if pool else futures:
                         if pool:

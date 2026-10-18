@@ -1,21 +1,21 @@
 async function directoryRequest(url, method, body) {
     const response = await fetch(url, {method, headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined});
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || '操作未完成，请稍后重试');
+    if (!response.ok) throw new Error(data.error || uiT('操作未完成，请稍后重试'));
     return data;
 }
 function bindDirectoryActions(root = document) {
 root.querySelectorAll('[data-subscribe-name]').forEach(button => {
     button.addEventListener('click', async () => {
         button.disabled = true;
-        button.textContent = '正在订阅…';
+        button.textContent = uiT('正在订阅…');
         try {
             const schoolId = button.dataset.schoolId;
             const query = new URLSearchParams(schoolId ? {school_id:schoolId} : {name:button.dataset.subscribeName});
             location.href = '/collection/setup?' + query;
         } catch (error) {
             showToast('error', error.message);
-            button.textContent = '重试订阅';
+            button.textContent = uiT('重试订阅');
             button.disabled = false;
         }
     });
@@ -68,7 +68,7 @@ bindDirectoryActions();
         results.setAttribute('aria-busy', 'true');
         feedback.hidden = false;
         feedback.classList.remove('sr-only');
-        feedback.textContent = '正在匹配…';
+        feedback.textContent = uiT('正在匹配…');
         try {
             const response = await fetch(url, {headers: {'X-Directory-Fragment': '1'}, signal: current.signal});
             if (!response.ok) throw new Error('search failed');
@@ -85,7 +85,7 @@ bindDirectoryActions();
         } catch (_) {
             if (requestId !== serial) return;
             feedback.classList.remove('sr-only');
-            feedback.textContent = '匹配未完成，当前仍是上次结果。点击“查找学校”重试。';
+            feedback.textContent = uiT('匹配未完成，当前仍是上次结果。点击“查找学校”重试。');
         } finally {
             clearTimeout(timeout);
             if (requestId === serial) results.setAttribute('aria-busy', 'false');
@@ -117,7 +117,7 @@ document.getElementById('submitSchoolForm')?.addEventListener('submit', async ev
     const button = event.target.querySelector('button');
     const feedback = document.getElementById('submitFeedback');
     button.disabled = true;
-    feedback.textContent = '正在添加学校…';
+    feedback.textContent = uiT('正在添加学校…');
     try {
         location.href = '/collection/setup?' + new URLSearchParams({add:'1',
             name:document.getElementById('subName').value.trim(), url:document.getElementById('subUrl').value.trim()});

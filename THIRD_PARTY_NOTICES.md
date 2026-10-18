@@ -9,6 +9,7 @@
 | 资产 | 上游及版本 | 许可与本地声明 |
 | --- | --- | --- |
 | `frontend/static/fonts/inter/` | [Inter](https://github.com/rsms/inter)，4.001；字体文件中的版本为 `git-66647c0bb` | SIL OFL 1.1；[原始许可](frontend/static/fonts/inter/OFL.txt) |
+| `frontend/static/vendor/three/` | [Three.js](https://github.com/mrdoob/three.js/tree/r170)，0.170.0；本地保存的渲染核心、OrbitControls 和后处理模块，内容未修改 | MIT；[原始许可](frontend/static/vendor/three/LICENSE) |
 | `frontend/static/fonts/noto-sans-sc/` | [Google Fonts / Noto Sans SC](https://github.com/google/fonts/tree/main/ofl/notosanssc)，2.004-H2 | SIL OFL 1.1；[原始许可](frontend/static/fonts/noto-sans-sc/OFL.txt) |
 | 模板中的部分 SVG 图标，如主页、指南针、搜索、日月主题切换 | [Feather Icons](https://github.com/feathericons/feather/tree/v4.29.2)，与 4.29.2 对应图形一致；嵌入时调整尺寸、类名或描边 | MIT；Copyright (c) 2013–2023 Cole Bemis；[完整声明](licenses/Feather-MIT.txt) |
 | `deploy/seccomp_profile.json` | [Playwright v1.61.0 Docker 配置](https://github.com/microsoft/playwright/blob/v1.61.0/utils/docker/seccomp_profile.json)，JSON 内容未经修改 | Apache-2.0；[完整许可](licenses/Apache-2.0.txt)、[上游 NOTICE](licenses/Playwright-NOTICE.txt) |

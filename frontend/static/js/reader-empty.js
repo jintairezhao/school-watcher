@@ -1,5 +1,6 @@
 /* Delegated events also cover reader panels replaced by inbox navigation. */
 (function () {
+    const uiT = message => window.I18n?.t(message) || message;
     const workspace = document.querySelector('.inbox-workspace');
     if (!workspace) return;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -45,7 +46,7 @@
             resetLetter();
             const opened = letter.getAttribute('aria-pressed') !== 'true';
             letter.setAttribute('aria-pressed', String(opened));
-            letter.setAttribute('aria-label', opened ? '收起信纸' : '拆开信封');
+            letter.setAttribute('aria-label', opened ? uiT('收起信纸') : uiT('拆开信封'));
             return;
         }
         const start = event.target.closest('[data-reader-start]');

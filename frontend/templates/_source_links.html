@@ -5,20 +5,20 @@
 {% set publication = publications[0] %}
 <div class="article-sources">
     <span class="publication-actions">
-        <a data-channel-link href="{{ publication.filter_url }}">在来源栏查看通知</a>
-        {% if publication.article_url %}<a href="{{ publication.article_url }}" target="_blank" rel="noopener noreferrer">此处刊载原文</a>{% endif %}
-        {% if publication.list_url %}<a href="{{ publication.list_url }}" target="_blank" rel="noopener noreferrer">官网栏目</a>{% endif %}
+        <a data-channel-link href="{{ publication.filter_url }}" data-i18n="在来源栏查看通知">{{ tr("在来源栏查看通知") }}</a>
+        {% if publication.article_url %}<a href="{{ publication.article_url }}" target="_blank" rel="noopener noreferrer" data-i18n="此处刊载原文">{{ tr("此处刊载原文") }}</a>{% endif %}
+        {% if publication.list_url %}<a href="{{ publication.list_url }}" target="_blank" rel="noopener noreferrer" data-i18n="官网栏目">{{ tr("官网栏目") }}</a>{% endif %}
     </span>
 </div>
 {% else %}
 <details class="article-sources">
-    <summary>{{ '这篇文章出现在 ' ~ publications|length ~ ' 个官网栏目' }}</summary>
+    <summary data-i18n="这篇文章出现在 {count} 个官网栏目" data-i18n-vars='{{ {"count":publications|length}|tojson }}'>{{ tr('这篇文章出现在 {count} 个官网栏目', count=publications|length) }}</summary>
     <ul>{% for publication in publications %}<li>
         <span class="publication-name">{{ publication.breadcrumb }}</span>
         <span class="publication-actions">
-            <a data-channel-link href="{{ publication.filter_url }}">在来源栏查看通知</a>
-            {% if publication.article_url %}<a href="{{ publication.article_url }}" target="_blank" rel="noopener noreferrer">此处刊载原文</a>{% endif %}
-            {% if publication.list_url %}<a href="{{ publication.list_url }}" target="_blank" rel="noopener noreferrer">官网栏目</a>{% endif %}
+            <a data-channel-link href="{{ publication.filter_url }}" data-i18n="在来源栏查看通知">{{ tr("在来源栏查看通知") }}</a>
+            {% if publication.article_url %}<a href="{{ publication.article_url }}" target="_blank" rel="noopener noreferrer" data-i18n="此处刊载原文">{{ tr("此处刊载原文") }}</a>{% endif %}
+            {% if publication.list_url %}<a href="{{ publication.list_url }}" target="_blank" rel="noopener noreferrer" data-i18n="官网栏目">{{ tr("官网栏目") }}</a>{% endif %}
         </span>
     </li>{% endfor %}</ul>
 </details>

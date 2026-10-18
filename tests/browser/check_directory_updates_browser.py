@@ -104,6 +104,7 @@ def check():
                 page.locator('[data-subscribe-name]').first.click()
                 expect(page.locator('#collectionSetup')).to_be_visible()
                 assert not subscriptions, 'opening setup must not subscribe'
+                page.locator('[name="profiles"][value="undergraduate"]').check()
                 page.locator('#setupStart').click()
                 expect(page.get_by_text('隔离测试：未实际订阅', exact=True)).to_be_visible()
                 assert subscriptions and '中国' in subscriptions[-1]['name']

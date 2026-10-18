@@ -4,7 +4,7 @@
     if (!root) return;
     const field = id => document.getElementById(id);
     const endpoint = '/api/subscriptions/' + root.dataset.schoolId + '/discovery';
-    let timer, busy = false, dirty = false, choices = null, state = null;
+    let timer, busy = false, dirty = false, choices = null, state = null, lastData = null;
     function updateChoices() {
         const all = document.querySelector('[name="mode"]:checked').value === 'all';
         document.querySelectorAll('[name="department"]').forEach(input => { input.disabled = all; });
@@ -34,32 +34,34 @@
         updateChoices();
     });
     function render(data) {
+        lastData = data;
         state = data.state;
-        field('discoveryMessage').textContent = data.message;
+        field('discoveryMessage').textContent = uiT(data.message);
         field('discoveryProgress').hidden = !data.busy;
-        field('discoveryActivity').textContent = data.state === 'pausing' ? '正在暂停' : data.state === 'paused' ? '已暂停'
-            : ['budget_paused', 'ai_connection', 'ai_result'].includes(data.state) ? '进度已保存' : data.state === 'queued' ? '排队中' : data.state === 'retry_wait' ? '等待重试' : data.busy ? '进行中' : '';
+        field('discoveryActivity').textContent = data.state === 'pausing' ? uiT('正在暂停') : data.state === 'paused' ? uiT('已暂停')
+            : ['budget_paused', 'ai_connection', 'ai_result'].includes(data.state) ? uiT('进度已保存') : data.state === 'queued' ? uiT('排队中') : data.state === 'retry_wait' ? uiT('等待重试') : data.busy ? uiT('进行中') : '';
         const pause = field('discoveryPause');
         if (pause) {
             pause.hidden = !data.can_pause && !data.can_resume && data.state !== 'pausing';
             pause.dataset.action = data.can_resume ? 'resume' : 'pause';
-            pause.textContent = data.can_resume ? '继续' : data.state === 'pausing' ? '正在暂停…' : '暂停';
+            pause.textContent = data.can_resume ? uiT('继续') : data.state === 'pausing' ? uiT('正在暂停…') : uiT('暂停');
         }
-        field('discoveryCounts').textContent = '已收录 ' + (data.article_count ?? 0) + ' 条通知 · 已接入 ' + (data.verified_source_count ?? 0) + ' 个信息来源';
-        if (field('discoveryValue')) field('discoveryValue').textContent = data.value_summary || '优先寻找升学、奖助、实习就业、竞赛和校园办事信息。';
-        if (field('discoveryStages')) field('discoveryStages').textContent = data.stage_message || '';
+        field('discoveryCounts').textContent = uiT(`已收录 ${data.article_count ?? 0} 条通知 · 已接入 ${data.verified_source_count ?? 0} 个信息来源`);
+        if (field('discoveryValue')) field('discoveryValue').textContent = data.value_summary || uiT('优先寻找升学、奖助、实习就业、竞赛和校园办事信息。');
+        if (field('discoveryStages')) field('discoveryStages').textContent = uiT(data.stage_message || '');
         if (field('discoveryChanges')) field('discoveryChanges').textContent = data.changes && Object.keys(data.changes).length
-            ? '本轮检查：结构未变 ' + (data.changes.unchanged ?? 0) + ' 个 · 有变化 ' + (data.changes.changed ?? 0) + ' 个 · 新入口 ' + (data.changes.new ?? 0) + ' 个' : '';
-        if (field('discoveryAI')) field('discoveryAI').textContent = data.ai_message || '';
+            ? uiT('本轮检查：结构未变 {unchanged} 个 · 有变化 {changed} 个 · 新入口 {added} 个',
+                {unchanged:data.changes.unchanged ?? 0,changed:data.changes.changed ?? 0,added:data.changes.new ?? 0}) : '';
+        if (field('discoveryAI')) field('discoveryAI').textContent = uiT(data.ai_message || '');
         if (field('discoveryAIUsage')) {
             field('discoveryAIUsage').hidden = !data.ai_usage_message;
-            field('discoveryAIUsage').textContent = data.ai_usage_message || '';
+            field('discoveryAIUsage').textContent = uiT(data.ai_usage_message || '');
         }
         if (field('discoveryGaps')) {
             const gaps = data.coverage?.gaps || [];
             field('discoveryGaps').hidden = gaps.length === 0;
             field('discoveryGapList').replaceChildren(...gaps.map(gap => {
-                const item = document.createElement('li'); item.textContent = gap.reason || '该项尚未完成';
+                const item = document.createElement('li'); item.textContent = uiT(gap.reason || '该项尚未完成');
                 if (/^https?:\/\//i.test(gap.url || '')) {
                     const link = document.createElement('a'); link.href = gap.url;
                     link.textContent = gap.name || gap.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
@@ -87,6 +89,7 @@
         }
         return data.active || ['waiting', 'idle', 'ai_connection', 'ai_result'].includes(data.state);
     }
+    document.addEventListener('locale-changed', () => { if (lastData) render(lastData); });
     async function refresh(method, action) {
         if (busy) return;
         busy = true;
@@ -103,7 +106,7 @@
             again = render(data);
         } catch (error) {
             field('discoveryError').textContent = error.name === 'TimeoutError' ? '连接超时，正在重新确认状态…'
-                : (action === 'pause' ? '暂停未成功：' : action === 'resume' ? '继续未成功：' : '进度连接中断：') + error.message;
+                : (action === 'pause' ? '暂停未成功：' : action === 'resume' ? '继续未成功：' : uiT('进度连接中断：')) + error.message;
             field('discoveryError').hidden = false;
             field('discoveryActivity').textContent = '连接中断';
             field('discoveryProgress').hidden = true;

@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "default_locale": "zh-CN",
+  "supported_locales": ["zh-CN", "en"],
+  "source_message_language": "zh-CN",
+  "english_catalog": "en.json",
+  "untranslated_message_policy": "Preserve the original UI message. Never rewrite user or official website content.",
+  "integration": "Flask tr() and explicit data-i18n attributes; window.I18n for dynamic messages, dates and numbers",
+  "initial_coverage": ["global_navigation", "school_navigation", "identity_setup", "regional_preferences", "collection_setup", "monitor_headings_and_dates"],
+  "expanded_coverage": ["inbox_and_reader", "university_catalogue", "subscriptions", "discovery_monitor", "admin_navigation", "collection_settings", "ai_configuration", "api_usage", "storage_and_backup", "website_verification", "source_structure_ui", "common_error_messages"],
+  "remaining_migration": ["rare_diagnostic_details", "legacy_unused_summary_and_analysis_views", "provider_error_details_not_registered_in_catalog"],
+  "coverage_check": "python scripts/checks/check_localization_catalog.py",
+  "school_context_fields": ["country_code", "content_locale", "time_zone", "date_order"],
+  "education_systems": ["cn", "global"],
+  "foreign_university_live_acceptance": "not_performed"
+}

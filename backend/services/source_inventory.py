@@ -317,7 +317,7 @@ class Inventory:
                                        interval=policy['frontier_exploration_interval'],
                                        slice_size=policy['discovery_slice_pages'],
                                        branches=branch_assignments, history=history,
-                                       attention=get_attention_policy(),
+                                       attention=get_attention_policy(root_url=school['root_url'] if school else None),
                                        structure=structure,
                                        receipts=load_source_receipts(dict(school)) if school else (),
                                        costs=load_discovery_costs(dict(school)) if school else None,
@@ -379,7 +379,7 @@ class Inventory:
             site = dict(row)
             edges = [dict(edge) for edge in c.execute('SELECT * FROM edges WHERE site_key=?', (key,))]
         pages, assignments = branches(self, key)
-        return {'site': site, 'attention_policy': get_attention_policy(),
+        return {'site': site, 'attention_policy': get_attention_policy(root_url=site['root_url']),
                 'coverage': coverage_state(pages, branches=assignments,
                     validated_sources=load_source_receipts(site), edges=edges),
                 'coverage_state': 'observed_scopes_only',

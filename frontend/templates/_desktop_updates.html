@@ -1,8 +1,8 @@
 {% if config.DESKTOP_MODE %}
-<aside id="desktopUpdateNotice" class="desktop-update-notice" aria-label="软件更新" hidden>
+<aside id="desktopUpdateNotice" class="desktop-update-notice" data-i18n-aria-label="软件更新" aria-label="{{ tr('软件更新') }}" hidden>
     <p id="desktopUpdateMessage" role="status" aria-live="polite"></p>
     <div class="desktop-update-actions">
-        <button id="desktopUpdateOpen" type="button" class="btn btn-primary btn-sm">查看更新</button>
+        <button id="desktopUpdateOpen" type="button" class="btn btn-primary btn-sm" data-i18n="查看更新">{{ tr("查看更新") }}</button>
         <button id="desktopUpdateDismiss" type="button" class="btn btn-outline btn-sm">稍后</button>
     </div>
 </aside>

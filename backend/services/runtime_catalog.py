@@ -77,6 +77,25 @@ class RuntimeCatalog:
                 'SELECT page_gzip FROM catalog_pages WHERE site_id=? ORDER BY id', (site['id'],))]
             return report
 
+    def monitor_snapshot(self, key):
+        """Published page metadata only; no HTML and no scratch database locks."""
+        published = self._published(key)
+        if published:
+            return published.monitor_snapshot(key)
+        if not self.path.exists():
+            return None
+        with self.connect() as c:
+            site = c.execute('SELECT id,report_gzip FROM catalog_sites WHERE site_key=?', (key,)).fetchone()
+            if not site:
+                return None
+            summary = unpack(site['report_gzip'])
+            fields = ('url', 'label', 'title', 'kind', 'path_json', 'state', 'health',
+                      'status_code', 'checked_at', 'content_hash')
+            return {'catalogue_published_at': summary.get('catalogue_published_at'),
+                    'pages': [{key: page.get(key) for key in fields} for row in c.execute(
+                        'SELECT page_gzip FROM catalog_pages WHERE site_id=? ORDER BY id', (site['id'],))
+                        for page in [unpack(row[0])]]}
+
     def structure(self, key):
         published = self._published(key)
         if published:

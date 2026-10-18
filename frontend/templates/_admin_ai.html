@@ -1,47 +1,47 @@
 <div class="setting-card">
-    <div class="setting-card-header"><h3>AI 服务</h3><p>用于发现学校官网栏目和生成通知摘要，两个功能可以共用一个服务。</p></div>
+    <div class="setting-card-header"><h3 data-i18n="AI 服务">{{ tr("AI 服务") }}</h3><p data-i18n="用于发现学校官网栏目和生成通知摘要，两个功能可以共用一个服务。">{{ tr("用于发现学校官网栏目和生成通知摘要，两个功能可以共用一个服务。") }}</p></div>
     <div class="setting-card-body">
-        <p id="aiStatus" role="status" aria-live="polite">加载中…</p>
-        <h4 class="ai-section-title">已保存的服务</h4>
+        <p id="aiStatus" role="status" aria-live="polite" data-i18n="加载中…">{{ tr("加载中…") }}</p>
+        <h4 class="ai-section-title" data-i18n="已保存的服务">{{ tr("已保存的服务") }}</h4>
         <div id="aiProfiles"></div>
         <form id="aiProfileForm" aria-labelledby="aiFormTitle">
-            <h4 id="aiFormTitle" class="ai-section-title">添加 AI 服务</h4>
+            <h4 id="aiFormTitle" class="ai-section-title" data-i18n="添加 AI 服务">{{ tr("添加 AI 服务") }}</h4>
             <input id="aiProfileId" type="hidden">
-            <div class="form-group"><label for="aiProvider">服务商</label><select id="aiProvider" class="form-input" required></select></div>
+            <div class="form-group"><label for="aiProvider" data-i18n="服务商">{{ tr("服务商") }}</label><select id="aiProvider" class="form-input" required></select></div>
             <a id="aiKeyLink" class="setup-provider-link" href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">获取 API 密钥（服务商官网）</a>
-            <div class="form-group" id="aiRegionGroup" hidden><label for="aiRegion">API 密钥所属区域</label><select id="aiRegion" class="form-input" required aria-describedby="aiRegionHelp"></select><p id="aiRegionHelp" class="text-muted">选择创建这把密钥时在百炼控制台使用的区域。不同区域的密钥不能混用。</p></div>
-            <div class="form-group"><label for="aiModel">模型名称</label><input id="aiModel" class="form-input" maxlength="160" required aria-describedby="aiModelHelp" placeholder="复制服务商提供的模型名称"><p id="aiModelHelp" class="text-muted"></p></div>
+            <div class="form-group" id="aiRegionGroup" hidden><label for="aiRegion" data-i18n="API 密钥所属区域">{{ tr("API 密钥所属区域") }}</label><select id="aiRegion" class="form-input" required aria-describedby="aiRegionHelp"></select><p id="aiRegionHelp" class="text-muted" data-i18n="选择创建这把密钥时在百炼控制台使用的区域。不同区域的密钥不能混用。">{{ tr("选择创建这把密钥时在百炼控制台使用的区域。不同区域的密钥不能混用。") }}</p></div>
+            <div class="form-group"><label for="aiModel" data-i18n="模型名称">{{ tr("模型名称") }}</label><input id="aiModel" class="form-input" maxlength="160" required aria-describedby="aiModelHelp" data-i18n-placeholder="复制服务商提供的模型名称" placeholder="{{ tr('复制服务商提供的模型名称') }}"><p id="aiModelHelp" class="text-muted"></p></div>
             <div class="form-group">
-                <label for="aiKey">API 密钥</label>
+                <label for="aiKey" data-i18n="API 密钥">{{ tr("API 密钥") }}</label>
                 <div class="ai-key-control">
                     <input id="aiKey" type="password" class="form-input" autocomplete="new-password" spellcheck="false" required aria-describedby="aiKeyHelp">
-                    <button id="aiKeyToggle" type="button" class="btn btn-ghost ai-key-toggle" aria-label="显示 API 密钥" title="显示 API 密钥" aria-controls="aiKey" aria-pressed="false">
+                    <button id="aiKeyToggle" type="button" class="btn btn-ghost ai-key-toggle" data-i18n-aria-label="显示 API 密钥" aria-label="{{ tr('显示 API 密钥') }}" data-i18n-title="显示 API 密钥" title="{{ tr('显示 API 密钥') }}" aria-controls="aiKey" aria-pressed="false">
                         <svg id="aiKeyShowIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
                         <svg id="aiKeyHideIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="m3 3 18 18M10.6 5.1A12 12 0 0 1 12 5c6.5 0 10 7 10 7a19 19 0 0 1-3 3.9M6.2 6.2C3.4 8.3 2 12 2 12s3.5 7 10 7a12 12 0 0 0 5.8-1.8M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
                     </button>
                 </div>
-                <p id="aiKeyHelp" class="text-muted">从所选服务商获取密钥。密钥加密保存，点击小眼睛可显示或隐藏。</p>
+                <p id="aiKeyHelp" class="text-muted" data-i18n="从所选服务商获取密钥。密钥加密保存，点击小眼睛可显示或隐藏。">{{ tr("从所选服务商获取密钥。密钥加密保存，点击小眼睛可显示或隐藏。") }}</p>
             </div>
-            <p class="text-muted">保存后点击“测试连接”，通过后即可在下方选择。测试会调用一次 API。</p>
-            <button class="btn btn-primary" type="submit">保存服务</button>
-            <button class="btn btn-ghost" type="button" id="aiReset" hidden>取消修改</button>
+            <p class="text-muted" data-i18n="保存后点击“测试连接”，通过后即可在下方选择。测试会调用一次 API。">{{ tr("保存后点击“测试连接”，通过后即可在下方选择。测试会调用一次 API。") }}</p>
+            <button class="btn btn-primary" type="submit" data-i18n="保存服务">{{ tr("保存服务") }}</button>
+            <button class="btn btn-ghost" type="button" id="aiReset" hidden data-i18n="取消修改">{{ tr("取消修改") }}</button>
         </form>
         <hr>
         <form id="aiBindingForm" aria-labelledby="aiFunctionsTitle">
-            <h4 id="aiFunctionsTitle" class="ai-section-title">学校来源识别</h4>
-            <div class="form-group"><label for="aiDirectory">使用的 AI 服务</label><select id="aiDirectory" class="form-input" aria-describedby="aiDirectoryHelp"></select><p id="aiDirectoryHelp" class="text-muted">根据真实官网材料识别部门、栏目和采集入口，验证后保存复用。阅读通知不调用 AI。</p></div>
-            <button class="btn btn-primary" type="submit">保存功能设置</button>
+            <h4 id="aiFunctionsTitle" class="ai-section-title" data-i18n="学校来源识别">{{ tr("学校来源识别") }}</h4>
+            <div class="form-group"><label for="aiDirectory" data-i18n="使用的 AI 服务">{{ tr("使用的 AI 服务") }}</label><select id="aiDirectory" class="form-input" aria-describedby="aiDirectoryHelp"></select><p id="aiDirectoryHelp" class="text-muted" data-i18n="根据真实官网材料识别部门、栏目和采集入口，验证后保存复用。阅读通知不调用 AI。">{{ tr("根据真实官网材料识别部门、栏目和采集入口，验证后保存复用。阅读通知不调用 AI。") }}</p></div>
+            <button class="btn btn-primary" type="submit" data-i18n="保存功能设置">{{ tr("保存功能设置") }}</button>
         </form>
         <details>
-            <summary>用量与并发设置（可选）</summary>
+            <summary data-i18n="用量与并发设置（可选）">{{ tr("用量与并发设置（可选）") }}</summary>
             <form id="aiLimitsForm">
-                <p class="text-muted">每月 Token 上限，0 表示不限。</p>
-                <div class="form-group"><label for="aiTotalLimit">每月总上限</label><input type="number" id="aiTotalLimit" class="form-input" min="0" step="1" value="0" required></div>
-                <div class="form-group"><label for="aiDirectoryLimit">目录识别每月上限</label><input type="number" id="aiDirectoryLimit" class="form-input" min="0" step="1" value="0" required></div>
-                <div class="form-group"><label for="aiSchoolLimit">每所学校每轮 Token 上限</label><input type="number" id="aiSchoolLimit" class="form-input" min="0" step="1" required><p class="text-muted">发现、接入和修复共享额度。重启、续跑与重新查找不重置额度；达到任一上限即保存进度，已接通来源继续更新。</p></div>
-                <div class="form-group"><label for="aiSchoolRequests">每所学校每轮实际请求上限</label><input type="number" id="aiSchoolRequests" class="form-input" min="0" step="1" required><p class="text-muted">缓存命中不计请求。Token 实际消耗使用服务商用量；保守预留单独记录，不代表实际扣费。0 表示不限。</p></div>
-                <div class="form-group"><label for="aiConcurrent">同时执行数量</label><input type="number" id="aiConcurrent" class="form-input" min="1" max="16" step="1" value="2" required></div>
-                <button class="btn btn-outline" type="submit">保存用量设置</button>
+                <p class="text-muted" data-i18n="每月 Token 上限，0 表示不限。">{{ tr("每月 Token 上限，0 表示不限。") }}</p>
+                <div class="form-group"><label for="aiTotalLimit" data-i18n="每月总上限">{{ tr("每月总上限") }}</label><input type="number" id="aiTotalLimit" class="form-input" min="0" step="1" value="0" required></div>
+                <div class="form-group"><label for="aiDirectoryLimit" data-i18n="目录识别每月上限">{{ tr("目录识别每月上限") }}</label><input type="number" id="aiDirectoryLimit" class="form-input" min="0" step="1" value="0" required></div>
+                <div class="form-group"><label for="aiSchoolLimit" data-i18n="每所学校每轮 Token 上限">{{ tr("每所学校每轮 Token 上限") }}</label><input type="number" id="aiSchoolLimit" class="form-input" min="0" step="1" required><p class="text-muted" data-i18n="发现、接入和修复共享额度。重启、续跑与重新查找不重置额度；达到任一上限即保存进度，已接通来源继续更新。">{{ tr("发现、接入和修复共享额度。重启、续跑与重新查找不重置额度；达到任一上限即保存进度，已接通来源继续更新。") }}</p></div>
+                <div class="form-group"><label for="aiSchoolRequests" data-i18n="每所学校每轮实际请求上限">{{ tr("每所学校每轮实际请求上限") }}</label><input type="number" id="aiSchoolRequests" class="form-input" min="0" step="1" required><p class="text-muted" data-i18n="缓存命中不计请求。Token 实际消耗使用服务商用量；保守预留单独记录，不代表实际扣费。0 表示不限。">{{ tr("缓存命中不计请求。Token 实际消耗使用服务商用量；保守预留单独记录，不代表实际扣费。0 表示不限。") }}</p></div>
+                <div class="form-group"><label for="aiConcurrent" data-i18n="同时执行数量">{{ tr("同时执行数量") }}</label><input type="number" id="aiConcurrent" class="form-input" min="1" max="16" step="1" value="2" required></div>
+                <button class="btn btn-outline" type="submit" data-i18n="保存用量设置">{{ tr("保存用量设置") }}</button>
             </form>
         </details>
     </div>

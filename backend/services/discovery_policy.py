@@ -75,10 +75,11 @@ def get_policy():
     return dict(DEFAULTS, **dict(shared, **{key: value for key, value in overrides.items() if key in DEFAULTS}))
 
 
-def get_attention_policy():
-    """Shared audience preferences; never a source filter or a budget override.
+def get_attention_policy(school_id=None, *, root_url=None):
+    """School subscribers' composed preferences, never a filter or fee override.
 
-    Equal category weights are an unvalidated starting preference. Keep these
+    Without a saved subscriber identity, retain the legacy starting policy.
+    Composite overlap weights are an unvalidated bounded preference. Keep these
     separate from the numeric acquisition limits so model, browser and worker
     concurrency continue to use exactly their existing settings.
     """
@@ -99,13 +100,28 @@ def get_attention_policy():
                     or not math.isfinite(weight) or weight <= 0):
                 raise ValueError('Discovery attention weights must be positive finite numbers')
             weights[category] = weight
-    return {'profiles': list(profiles), 'weights': weights}
+    from backend.services.discovery_profiles import subscriber_policy
+    personal = subscriber_policy(school_id, root_url=root_url)
+    if personal:
+        profiles = personal['profiles']
+        weights = {key: value * personal['weights'][key] for key, value in weights.items()}
+    return {'profiles': list(profiles), 'weights': weights,
+            'profile_context': personal or {'source': 'legacy_default', 'groups': []}}
 
 
-def attention_summary():
+def attention_summary(school_id=None):
     """One reader-facing description of the same configured exploration goal."""
     labels = {'undergraduate': '本科生', 'graduate': '研究生', 'teacher': '教师'}
-    audience = '、'.join(labels[profile] for profile in get_attention_policy()['profiles'])
+    policy = get_attention_policy(school_id)
+    audience = '、'.join(labels[profile] for profile in policy['profiles'])
+    groups = policy['profile_context'].get('groups', [])
+    if groups:
+        audience = '、'.join(group['label'] for group in groups)
+    from flask import has_request_context, g
+    if has_request_context() and getattr(g, 'ui_locale', None) == 'en':
+        from backend.services.localization import translate
+        audience = ', '.join(translate(labels[profile]) for profile in policy['profiles'])
+        return f'Prioritize website navigation, academic departments and sources for {audience} interests.'
     return f'按{audience}关注的需求，优先探索官网主干、院系部门和信息栏目。'
 
 

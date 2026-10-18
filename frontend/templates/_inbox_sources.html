@@ -8,7 +8,7 @@
     <input type="checkbox" value="{{ department.id }}" data-department aria-label="{{ department.name }}" {% if column.unavailable %}disabled{% elif department.id in selected %}checked{% endif %}>
     <span class="checkbox-mark" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6"/></svg></span>
     <span class="department-name">{{ column.label }}<small class="source-sync-label" data-source-status {% if not status_label %}hidden{% endif %}>{{ status_label }}</small></span>
-    <span class="department-count" data-saved-count="{{ count }}" aria-label="{{ (count ~ ' 条已保存通知') if count_known else '尚未取得通知，数量未知' }}">{{ count if count_known else '—' }}</span>
+    <span class="department-count" data-saved-count="{{ count }}" aria-label="{{ (count ~ ' 条已保存通知') if count_known else tr('尚未取得通知，数量未知') }}">{{ count if count_known else '—' }}</span>
 </label>
 {% endmacro %}
 
@@ -19,18 +19,18 @@
 <div class="source-unit" data-source-unit="{{ unit.key }}" data-source-unit-name="{{ unit.name }}">
     <div class="source-unit-row">
         <label class="unit-select" {% if not selectable %}title="暂未找到可用信息；后续来源会自动加入"{% endif %}>
-            <input type="checkbox" data-unit-select aria-label="选择{{ unit.name }}的全部{{ '单位' if unit.directory else '栏目' }}" {% if not selectable %}disabled{% elif selected_columns|length == selectable|length %}checked{% endif %}>
+            <input type="checkbox" data-unit-select aria-label="选择{{ unit.name }}的全部{{ tr('单位') if unit.directory else tr('栏目') }}" {% if not selectable %}disabled{% elif selected_columns|length == selectable|length %}checked{% endif %}>
             <span class="checkbox-mark" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4L19 6"/></svg></span>
         </label>
         <button type="button" class="source-unit-toggle" aria-expanded="{{ 'true' if selected_columns else 'false' }}" aria-controls="unit-columns-{{ unit.key }}">
-            <span class="source-unit-name">{{ unit.name }}<small>{% if unit.children %}{{ unit.children|length }} 个单位 · {% endif %}{{ (unit.columns|length ~ ' 个栏目') if unit.columns else '栏目待接入' }}</small></span>
+            <span class="source-unit-name">{{ unit.name }}<small>{% if unit.children %}{{ unit.children|length }} <span data-i18n="个单位 ·">{{ tr("个单位 ·") }}</span> {% endif %}{{ (unit.columns|length ~ tr(' 个栏目')) if unit.columns else tr('栏目待接入') }}</small></span>
             <svg class="unit-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
         </button>
     </div>
     <div class="source-unit-columns" id="unit-columns-{{ unit.key }}" {% if not selected_columns %}hidden{% endif %}>
         {% for column in unit.own_columns %}{{ column_choice(column, selected, counts, sync_states) }}{% endfor %}
         {% for child in unit.children %}{{ unit_view(child, selected, counts, sync_states) }}{% endfor %}
-        {% if not unit.columns and not unit.children %}<p class="source-unit-empty">该单位的栏目尚未接通，已发现的进度会保留。</p>{% endif %}
+        {% if not unit.columns and not unit.children %}<p class="source-unit-empty" data-i18n="该单位的栏目尚未接通，已发现的进度会保留。">{{ tr("该单位的栏目尚未接通，已发现的进度会保留。") }}</p>{% endif %}
     </div>
 </div>
 {% else %}

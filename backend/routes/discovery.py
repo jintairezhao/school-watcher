@@ -2,15 +2,59 @@
 import json
 import logging
 
-from flask import Blueprint, request, jsonify, Response, current_app
+from flask import Blueprint, request, jsonify, Response, current_app, g, abort, render_template
 
 from backend.database.db import db
-from backend.database.models import School, Department
-from backend.auth import admin_required
+from backend.database.models import School, Department, Subscription
+from backend.auth import admin_required, login_required
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('discovery', __name__)
+
+
+def _monitor_school(school_id):
+    school = db.get_or_404(School, school_id)
+    if not school.enabled:
+        abort(404)
+    if not g.user.is_admin and not Subscription.query.filter_by(user_id=g.user.id, school_id=school.id).first():
+        abort(403)
+    return school
+
+
+@bp.route('/subscriptions/<int:school_id>/discovery-monitor')
+@login_required
+def monitor(school_id):
+    school = _monitor_school(school_id)
+    query = School.query.filter_by(enabled=True)
+    if not g.user.is_admin:
+        query = query.join(Subscription).filter(Subscription.user_id == g.user.id)
+    return render_template('discovery_monitor.html', school=school, monitor_schools=query.order_by(School.name).all())
+
+
+@bp.route('/api/schools/<int:school_id>/discovery-monitor')
+@login_required
+def monitor_data(school_id):
+    from backend.services.discovery_monitor import snapshot
+    response = jsonify(snapshot(_monitor_school(school_id)))
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@bp.route('/api/schools/<int:school_id>/discovery-monitor/control', methods=['POST'])
+@admin_required
+def monitor_control(school_id):
+    from backend.services.discovery_control import control
+    _monitor_school(school_id)
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or payload.get('action') not in ('pause', 'resume'):
+        return jsonify(error='请选择暂停或继续探索'), 400
+    try:
+        control(school_id, payload['action'])
+    except ValueError as exc:
+        db.session.rollback()
+        return jsonify(error=str(exc)), 409
+    return jsonify(success=True)
 
 
 @bp.route('/api/schools/<int:school_id>/discover', methods=['POST'])

@@ -58,6 +58,12 @@ def check():
                 page.get_by_role('link', name='取消', exact=True).click()
                 assert not Subscription.query.count() and not BackgroundTask.query.count()
                 page.goto('http://localhost/collection/setup?school_id=' + str(fixture.school.id))
+                page.locator('#setupStart').click()
+                expect(page.locator('#setupFeedback')).to_contain_text('请至少选择一种身份')
+                page.locator('[name="profiles"][value="graduate"]').check()
+                page.locator('[name="profiles"][value="teacher"]').check()
+                expect(page.locator('#setupProfileLabel')).to_contain_text('研究生＋教师')
+                expect(page.locator('#setupProfileOverlap')).to_contain_text('科研与学术')
                 page.locator('#setupAIDetails > summary').click()
                 expect(page.locator('#aiProvider')).not_to_have_value('')
                 for provider, domain in [('deepseek','platform.deepseek.com'), ('dashscope','help.aliyun.com'),
@@ -81,6 +87,9 @@ def check():
                 assert BackgroundTask.query.filter_by(kind='discover').one().payload['ai_assist'] is False
                 assert calls.index(('POST','/api/collection/setup')) < calls.index(('POST','/api/subscriptions'))
                 page.goto('http://localhost/collection/setup')
+                expect(page.locator('[name="profiles"][value="graduate"]')).to_be_checked()
+                expect(page.locator('[name="profiles"][value="teacher"]')).to_be_checked()
+                expect(page.locator('[name="profiles"][value="undergraduate"]')).not_to_be_checked()
                 expect(page.locator('#setupSinceDate')).to_have_value('2024-06-15')
                 expect(page.locator('#setupInterval')).to_have_value('45')
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
@@ -95,7 +104,8 @@ def check():
                 assert not errors, errors
                 results.append({'width':width, 'theme':theme, 'save_precedes_start':True,
                     'cancel_no_work':True, 'key_links':4, 'exact_date_retained':True,
-                    'legacy_interval_edit_preserves_exact_day':True, 'page_errors':errors})
+                    'legacy_interval_edit_preserves_exact_day':True, 'multi_profile_saved_and_reloaded':True,
+                    'empty_profile_blocks_start':True, 'combined_profile_preview':True, 'page_errors':errors})
                 page.close()
             finally:
                 fixture.tearDown()

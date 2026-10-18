@@ -1,37 +1,38 @@
 <div class="scrape-log-page">
     <header class="scrape-log-heading">
-        <h2>抓取记录</h2>
-        <p>近一周按学校完整展示，更早的记录按需展开。时间按北京时间显示。</p>
+        <h2 data-i18n="抓取记录">{{ tr("抓取记录") }}</h2>
+        <p class="text-muted" data-log-timezone></p>
+        <p data-i18n="近一周按学校完整展示，更早的记录按需展开。时间按北京时间显示。">{{ tr("近一周按学校完整展示，更早的记录按需展开。时间按北京时间显示。") }}</p>
     </header>
     <form id="logRetentionForm" class="log-retention-form">
         <div>
-            <label for="logRetentionDays">记录保留时长</label>
-            <input class="form-input" id="logRetentionDays" name="days" type="number" min="0" step="1" value="30" required aria-label="记录保留天数，0 表示永久保留">
+            <label for="logRetentionDays" data-i18n="记录保留时长">{{ tr("记录保留时长") }}</label>
+            <input class="form-input" id="logRetentionDays" name="days" type="number" min="0" step="1" value="30" required data-i18n-aria-label="记录保留天数，0 表示永久保留" aria-label="{{ tr('记录保留天数，0 表示永久保留') }}">
         </div>
-        <button class="btn btn-primary" type="submit" id="saveLogRetention">保存保留时长</button>
-        <p>每日清理超期的已结束记录；通知、收藏和正在进行的抓取不受影响。</p>
+        <button class="btn btn-primary" type="submit" id="saveLogRetention" data-i18n="保存保留时长">{{ tr("保存保留时长") }}</button>
+        <p data-i18n="每日清理超期的已结束记录；通知、收藏和正在进行的抓取不受影响。">{{ tr("每日清理超期的已结束记录；通知、收藏和正在进行的抓取不受影响。") }}</p>
         <span id="logRetentionStatus" role="status" aria-live="polite"></span>
     </form>
     <div class="scrape-log-filters">
         <div>
-            <label for="logSchoolFilter">查看学校</label>
+            <label for="logSchoolFilter" data-i18n="查看学校">{{ tr("查看学校") }}</label>
             <select id="logSchoolFilter" class="form-input">
-                <option value="">全部学校</option>
+                <option value="" data-i18n="全部学校">{{ tr("全部学校") }}</option>
                 {% for school in schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}
             </select>
         </div>
-        <button class="btn btn-outline" type="button" id="reloadScrapeLogs">刷新记录</button>
+        <button class="btn btn-outline" type="button" id="reloadScrapeLogs" data-i18n="刷新记录">{{ tr("刷新记录") }}</button>
     </div>
     <section class="scrape-log-period" aria-labelledby="recentLogTitle">
-        <h3 id="recentLogTitle">近一周 <span id="recentLogCount"></span></h3>
-        <p id="recentLogStatus" role="status" aria-live="polite">打开后加载记录。</p>
+        <h3 id="recentLogTitle"><span data-i18n="近一周">{{ tr("近一周") }}</span> <span id="recentLogCount"></span></h3>
+        <p id="recentLogStatus" role="status" aria-live="polite" data-i18n="打开后加载记录。">{{ tr("打开后加载记录。") }}</p>
         <div id="recentLogSchools"></div>
-        <button class="btn btn-outline" type="button" id="retryRecentLogs" hidden>继续加载记录</button>
+        <button class="btn btn-outline" type="button" id="retryRecentLogs" hidden data-i18n="继续加载记录">{{ tr("继续加载记录") }}</button>
     </section>
     <details class="scrape-log-archive" id="archiveLogSection">
-        <summary>一周以前的记录 <span id="archiveLogCount"></span></summary>
-        <p id="archiveLogStatus" role="status" aria-live="polite">展开后加载较早记录。</p>
+        <summary><span data-i18n="一周以前的记录">{{ tr("一周以前的记录") }}</span> <span id="archiveLogCount"></span></summary>
+        <p id="archiveLogStatus" role="status" aria-live="polite" data-i18n="展开后加载较早记录。">{{ tr("展开后加载较早记录。") }}</p>
         <div id="archiveLogSchools"></div>
-        <button class="btn btn-outline" type="button" id="loadMoreArchiveLogs" hidden>加载更早记录</button>
+        <button class="btn btn-outline" type="button" id="loadMoreArchiveLogs" hidden data-i18n="加载更早记录">{{ tr("加载更早记录") }}</button>
     </details>
 </div>

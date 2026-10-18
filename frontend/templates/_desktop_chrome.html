@@ -1,18 +1,18 @@
 {% if config.DESKTOP_FRAMELESS %}
 {% if not desktop_controls_only|default(false) %}
-<header class="desktop-admin-bar"><a class="desktop-app-name" href="{{ url_for('pages.index') }}">学校通知</a><span class="desktop-app-section">系统管理</span><div class="desktop-drag pywebview-drag-region" aria-label="拖动窗口"></div>
+<header class="desktop-admin-bar"><a class="desktop-app-name" href="{{ url_for('pages.index') }}" data-i18n="学校通知">{{ tr("学校通知") }}</a><span class="desktop-app-section" data-i18n="系统管理">{{ tr("系统管理") }}</span><div class="desktop-drag pywebview-drag-region" data-i18n-aria-label="拖动窗口" aria-label="{{ tr('拖动窗口') }}"></div>
 {% endif %}
 <div class="desktop-chrome" id="desktopChrome">
-    <details class="desktop-menu"><summary aria-label="应用菜单" title="应用菜单"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></summary><div>
-        <button type="button" data-window-action="updates">检查更新</button>
-        <button type="button" data-window-action="components">采集组件</button>
-        <button type="button" data-window-action="locations">文件位置</button>
-        <button type="button" data-window-action="data">打开数据文件夹</button>
-        <button type="button" data-window-action="uninstall">卸载学校通知…</button>
+    <details class="desktop-menu"><summary data-i18n-aria-label="应用菜单" aria-label="{{ tr('应用菜单') }}" data-i18n-title="应用菜单" title="{{ tr('应用菜单') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></summary><div>
+        <button type="button" data-window-action="updates" data-i18n="检查更新">{{ tr("检查更新") }}</button>
+        <button type="button" data-window-action="components" data-i18n="采集组件">{{ tr("采集组件") }}</button>
+        <button type="button" data-window-action="locations" data-i18n="文件位置">{{ tr("文件位置") }}</button>
+        <button type="button" data-window-action="data" data-i18n="打开数据文件夹">{{ tr("打开数据文件夹") }}</button>
+        <button type="button" data-window-action="uninstall" data-i18n="卸载学校通知…">{{ tr("卸载学校通知…") }}</button>
     </div></details>
-    <button type="button" data-window-action="minimize" aria-label="最小化" title="最小化"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
-    <button type="button" data-window-action="maximize" aria-label="最大化或还原" title="最大化或还原"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></button>
-    <button type="button" class="desktop-close" data-window-action="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    <button type="button" data-window-action="minimize" data-i18n-aria-label="最小化" aria-label="{{ tr('最小化') }}" data-i18n-title="最小化" title="{{ tr('最小化') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+    <button type="button" data-window-action="maximize" data-i18n-aria-label="最大化或还原" aria-label="{{ tr('最大化或还原') }}" data-i18n-title="最大化或还原" title="{{ tr('最大化或还原') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></button>
+    <button type="button" class="desktop-close" data-window-action="close" data-i18n-aria-label="关闭" aria-label="{{ tr('关闭') }}" data-i18n-title="关闭" title="{{ tr('关闭') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
 </div>
 {% if not desktop_controls_only|default(false) %}</header>{% endif %}
 <div class="desktop-resize" id="desktopResize" aria-hidden="true"></div>
