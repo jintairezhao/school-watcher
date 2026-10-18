@@ -7,7 +7,7 @@
     <h1 class="reading-title">{{ ann.title }}</h1>
     <div class="reading-meta">
         <span class="reader-source">{{ source|channel_breadcrumb }}</span>
-        <time datetime="{{ publication_date_stamp(ann.published_at) }}" data-ui-date="{{ publication_date_stamp(ann.published_at) }}">{{ ui_date(ann.published_at) }}</time>
+        <time datetime="{{ publication_date_stamp(ann.published_at) }}" data-ui-date="{{ publication_date_stamp(ann.published_at) }}" data-ui-date-empty="发布时间未知">{{ ui_date(ann.published_at) if ann.published_at else tr('发布时间未知') }}</time>
     </div>
     {{ source_links(ann, sources, user) }}
     {{ article_signature(provenance) }}

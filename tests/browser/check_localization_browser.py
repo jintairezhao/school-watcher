@@ -63,6 +63,8 @@ def check():
                 page.evaluate("() => {const p=document.createElement('p');p.dataset.officialContent='';p.innerHTML='<span id=protectedText data-i18n=收藏>收藏</span>';document.body.append(p);const b=document.createElement('button');b.id='lateUI';b.dataset.i18n='收藏';document.body.append(b);}")
                 expect(page.locator('#protectedText')).to_have_text('收藏')
                 expect(page.locator('#lateUI')).to_have_text('Save')
+                page.evaluate("() => {const time=document.createElement('time');time.id='unknownPublication';time.dataset.uiDate='';time.dataset.uiDateEmpty='发布时间未知';document.body.append(time);}")
+                expect(page.locator('#unknownPublication')).to_have_text('Publication date unknown')
                 assert page.evaluate("I18n.t('{count} 个栏目',{count:1})")=='1 source'
                 assert page.evaluate("I18n.t('{count} 个栏目',{count:2})")=='2 sources'
                 expect(page.locator('#setupEducation')).to_have_value('cn')
@@ -83,6 +85,8 @@ def check():
                 page.locator('#languageSelect').select_option('zh-CN')
                 expect(page.locator('#aiProvider option[value="dashscope"]')).to_have_text(PROVIDER_NAMES['dashscope'])
                 expect(page.locator('.setup-provider-guides')).to_contain_text(PROVIDER_NAMES['bigmodel'])
+                assert page.evaluate("I18n.dateTime('2026-09-03')") == '2026年09月03日'
+                expect(page.locator('#unknownPublication')).to_have_text('发布时间未知')
                 expect(page.locator('#aiModel')).to_have_value('unsaved-model')
                 expect(page.locator('#aiKey')).to_have_value('unsaved-fixture-key-never-sent')
                 page.locator('#languageSelect').select_option('en')

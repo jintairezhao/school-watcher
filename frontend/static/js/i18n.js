@@ -42,7 +42,8 @@
         }
         for (const node of select('time[data-ui-date]')) {
             if (official(node)) continue;
-            const value = dateTime(node.dataset.uiDate); if (node.textContent !== value) node.textContent = value;
+            const value = node.dataset.uiDate ? dateTime(node.dataset.uiDate) : t(node.dataset.uiDateEmpty || '时间未知');
+            if (node.textContent !== value) node.textContent = value;
         }
         for (const node of select('[data-ui-number]')) {
             if (official(node)) continue;
@@ -61,6 +62,10 @@
         const wallTime = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(value);
         const date = new Date(wallTime ? value+'Z' : value); if (!Number.isFinite(date.getTime())) return '—';
         const onlyDate = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+        // Keep publication dates consistent with the server's existing Chinese format.
+        if (onlyDate && prefs.locale === 'zh-CN' && Object.keys(options).length === 0) {
+            return `${date.getUTCFullYear()}年${String(date.getUTCMonth()+1).padStart(2,'0')}月${String(date.getUTCDate()).padStart(2,'0')}日`;
+        }
         const settings = onlyDate ? {dateStyle:'medium',timeZone:'UTC'}
             : {dateStyle:'medium',timeStyle:'medium',hourCycle:'h23',...(wallTime ? {timeZone:'UTC'} : prefs.time_zone ? {timeZone:prefs.time_zone} : {})};
         return new Intl.DateTimeFormat(prefs.locale, {...settings,...options}).format(date);

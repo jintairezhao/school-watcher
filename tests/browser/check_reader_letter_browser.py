@@ -29,7 +29,9 @@ def paper_occlusion(page):
 
 def check():
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    markup = Environment().from_string(
+    environment = Environment()
+    environment.globals['tr'] = lambda message: message
+    markup = environment.from_string(
         (ROOT / 'frontend/templates/_reader_empty.html').read_text(encoding='utf-8')
     ).render(announcements=[])
     css = '\n'.join((ROOT / path).read_text(encoding='utf-8') for path in (
