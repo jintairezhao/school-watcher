@@ -44,6 +44,8 @@ def install_work_area(window):
 
     def update(*_):
         form = window.native
+        if getattr(window, '_browser_fullscreen', False):
+            return  # Browser fullscreen deliberately covers the taskbar work area.
         screen = Screen.FromHandle(form.Handle)
         work, bounds = screen.WorkingArea, screen.Bounds
         form.MaximizedBounds = Rectangle(work.X - bounds.X, work.Y - bounds.Y, work.Width, work.Height)
@@ -62,4 +64,51 @@ def install_work_area(window):
         # Updating the bounds when dragged across monitors also handles different DPI/taskbar edges.
         window.native.LocationChanged += update
         window.native.DpiChanged += update
+    window.native.Invoke(Action(attach))
+
+
+def install_browser_fullscreen(window, trusted_url):
+    """Let WebView2's real HTML fullscreen also occupy the physical display."""
+    from System import Action
+    from System.Drawing import Rectangle
+    from System.Windows.Forms import Screen, FormWindowState
+
+    def attach():
+        form = window.native
+        view = form.webview
+        saved = {}
+
+        def ready(*_):
+            core = view.CoreWebView2
+            if core is None or saved.get('attached'):
+                return
+            saved['attached'] = True
+
+            def changed(*_):
+                expanded = bool(core.ContainsFullScreenElement)
+                if expanded == getattr(window, '_browser_fullscreen', False):
+                    return
+                if expanded:
+                    if not trusted_url(str(core.Source)):
+                        return
+                    saved['state'] = form.WindowState
+                    saved['maximized_bounds'] = form.MaximizedBounds
+                    saved['restore_bounds'] = form.RestoreBounds if form.WindowState == FormWindowState.Maximized else form.Bounds
+                    # Suspend work-area clamping before pywebview changes bounds.
+                    window._browser_fullscreen = True
+                    bounds = Screen.FromHandle(form.Handle).Bounds
+                    form.MaximizedBounds = Rectangle(0, 0, bounds.Width, bounds.Height)
+                    form.toggle_fullscreen()
+                else:
+                    form.toggle_fullscreen()
+                    form.MaximizedBounds = saved['maximized_bounds']
+                    form.Bounds = saved['restore_bounds']
+                    form.WindowState = saved['state']
+                    window._browser_fullscreen = False
+
+            core.ContainsFullScreenElementChanged += changed
+
+        view.CoreWebView2InitializationCompleted += ready
+        ready()
+
     window.native.Invoke(Action(attach))

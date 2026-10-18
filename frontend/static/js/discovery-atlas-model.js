@@ -1,5 +1,5 @@
 /* Geometry follows recorded navigation names, never guessed administrative links. */
-export function buildAtlas(snapshot) {
+export function buildAtlas(snapshot, {spacing = 1} = {}) {
     const entries = new Map(), actual = new Map();
     const cleanUrl = value => (value || '').replace(/\/$/, '');
     const roots = snapshot.nodes.filter(node => node.kind === 'root' || cleanUrl(node.url) === cleanUrl(snapshot.school.url));
@@ -52,11 +52,12 @@ export function buildAtlas(snapshot) {
         const kind=item.record?.kind;
         item.radius=kind==='root'||item.id==='["@school"]'?14:kind==='unit'?9:kind==='directory'?10:kind==='channel'?4.3:item.children.length?6:2.9;
         const lineage=ancestors(item);
-        const branch=[...lineage].reverse().find(part=>part.record?.kind==='unit')||lineage[Math.min(2,lineage.length-1)];
+        const branch=lineage.find(part=>part.record?.kind==='unit')||lineage[Math.min(2,lineage.length-1)];
+        item.cluster=branch.id;
         item.branch=hash(branch.id)%5;
         const axis=unit(heading), tangent=unit(cross(axis,Math.abs(axis.y)>.85?{x:1,y:0,z:0}:{x:0,y:1,z:0})), normal=cross(axis,tangent);
         const count=item.children.length;
-        const reach=(item.depth===0?120:62)+16*Math.sqrt(count)+12*Math.cbrt(item.weight);
+        const reach=(item.depth===0?140:item.depth===1?96:40)+12*Math.sqrt(count)+8*Math.cbrt(item.weight);
         item.children.forEach((child,index)=>{
             let vector;
             if (!item.parent) vector=direction(index,count,hash(item.id)%31);
@@ -73,10 +74,82 @@ export function buildAtlas(snapshot) {
     }
     forest.forEach((item,index)=>{
         const vector=direction(index,forest.length,.6);
-        const distance=forest.length===1?0:130+18*Math.sqrt(forest.length);
+        const distance=forest.length===1||item.id==='["@school"]'?0:160+24*Math.sqrt(forest.length);
         place(item,{x:vector.x*distance,y:vector.y*distance,z:vector.z*distance},vector);
     });
+    // Keep each recorded branch together, then give whole branches breathing room.
+    // This changes geometry only: it never creates or removes a recorded connection.
+    const clusters = new Map();
+    for (const item of entries.values()) {
+        if (!clusters.has(item.cluster)) clusters.set(item.cluster, {id:item.cluster, items:[]});
+        clusters.get(item.cluster).items.push(item);
+    }
+    for (const cluster of clusters.values()) {
+        const members=cluster.items;
+        cluster.anchor=entries.get(cluster.id);
+        cluster.fixed=cluster.anchor.depth<2 && !cluster.anchor.orphan;
+        // Local collision avoidance keeps dense sibling nodes from merging into a ball.
+        for (let pass=0;pass<12;pass++) for (let i=0;i<members.length;i++) for (let j=i+1;j<members.length;j++) {
+            const a=members[i],b=members[j],delta={x:b.position.x-a.position.x,y:b.position.y-a.position.y,z:b.position.z-a.position.z};
+            const length=Math.hypot(delta.x,delta.y,delta.z)||.01, minimum=a.radius+b.radius+12;
+            if (length>=minimum) continue;
+            if (length===.01) {const seed=direction(i+j,members.length,hash(a.id)%31);for(const axis of ['x','y','z'])delta[axis]=seed[axis]*.01;}
+            const step=(minimum-length)/length*.45;
+            for (const axis of ['x','y','z']) {a.position[axis]-=delta[axis]*step;b.position[axis]+=delta[axis]*step;}
+        }
+        const low={x:Infinity,y:Infinity,z:Infinity},high={x:-Infinity,y:-Infinity,z:-Infinity};
+        for (const item of members) for (const axis of ['x','y','z']) {
+            low[axis]=Math.min(low[axis],item.position[axis]);high[axis]=Math.max(high[axis],item.position[axis]);
+        }
+        cluster.center={x:(low.x+high.x)/2,y:(low.y+high.y)/2,z:(low.z+high.z)/2};
+        cluster.origin={...cluster.center};
+        cluster.radius=Math.max(...members.map(item=>Math.hypot(item.position.x-cluster.center.x,item.position.y-cluster.center.y,item.position.z-cluster.center.z)+item.radius))+12;
+    }
+    const groups=[...clusters.values()].sort((a,b)=>a.id.localeCompare(b.id));
+    const gap=64*Math.max(.7,Math.min(1.8,Number(spacing)||1));
+    for (let pass=0;pass<48;pass++) {
+        let crowded=false;
+        for (let i=0;i<groups.length;i++) for (let j=i+1;j<groups.length;j++) {
+            const a=groups[i],b=groups[j];if(a.fixed&&b.fixed)continue;
+            const dx=b.center.x-a.center.x,dy=b.center.y-a.center.y,dz=(b.center.z-a.center.z)*.35;
+            const length=Math.hypot(dx,dy,dz),minimum=a.radius+b.radius+gap;
+            if(length>=minimum)continue;
+            crowded=true;
+            const angle=hash(a.id+'|'+b.id)%628/100;
+            const axis=length>.01?{x:dx/length,y:dy/length,z:dz/length*.35}:{x:Math.cos(angle),y:Math.sin(angle),z:0};
+            const push=(minimum-length)*.65;
+            const share=a.fixed?0:b.fixed?1:.5;
+            for(const key of ['x','y','z']){a.center[key]-=axis[key]*push*share;b.center[key]+=axis[key]*push*(1-share);}
+        }
+        if(!crowded)break;
+    }
+    for(const cluster of groups)for(const item of cluster.items)for(const axis of ['x','y','z'])
+        item.position[axis]+=cluster.center[axis]-cluster.origin[axis];
+    // Preserve useful spatial depth even when many clusters spread across the overview.
+    const points=[...entries.values()],means={x:0,y:0,z:0},variance={x:0,y:0,z:0};
+    for(const point of points)for(const axis of ['x','y','z'])means[axis]+=point.position[axis]/Math.max(1,points.length);
+    for(const point of points)for(const axis of ['x','y','z'])variance[axis]+=(point.position[axis]-means[axis])**2;
+    const depthScale=variance.z>0?Math.max(1,Math.sqrt((variance.x+variance.y)*.24/variance.z)):1;
+    for(const point of points)point.position.z*=depthScale;
     return {entries, actual, forest};
+}
+
+/* The latest real work is a better target than the first alphabetically sorted node. */
+export function trackingTarget(snapshot) {
+    const nodes=snapshot?.nodes||[],byUrl=new Map(nodes.filter(n=>n.url).map(n=>[n.url,n]));
+    const stamp=value=>Number.isFinite(Date.parse(value))?Date.parse(value):0;
+    const work=[];
+    for(const node of nodes)for(const task of node.tasks||[])work.push({node,state:task.state,at:stamp(task.updated_at)});
+    for(const task of snapshot?.tasks||[])if(byUrl.has(task.url))work.push({node:byUrl.get(task.url),state:task.state,at:stamp(task.updated_at)});
+    for(const node of nodes)if(node.state==='running'&&!work.some(w=>w.node===node&&w.state==='running'))work.push({node,state:'running',at:0});
+    const running=work.filter(w=>w.state==='running');
+    const candidates=running.length?running:work;
+    candidates.sort((a,b)=>b.at-a.at||a.node.id.localeCompare(b.node.id));
+    const latest=candidates[0];
+    if(!latest)return null;
+    const named=candidates.filter(w=>w.at===latest.at&&w.node.label===snapshot?.progress?.current_label);
+    const target=named.length===1?named[0]:latest;
+    return {...target,key:[target.node.id,target.state,target.at].join(':')};
 }
 
 export function ancestors(item) {

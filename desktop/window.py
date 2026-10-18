@@ -481,8 +481,12 @@ def run_window(runtime, smoke_test=False):
                     time.sleep(.05)
                 if window.native is None or not window.native.IsHandleCreated:
                     raise RuntimeError('窗口初始化超时')
-                from desktop.window_bounds import install_work_area
+                from desktop.window_bounds import install_work_area, install_browser_fullscreen
                 install_work_area(window)
+                from urllib.parse import urlsplit
+                install_browser_fullscreen(window, lambda url: urlsplit(url).scheme == 'http' and
+                    urlsplit(url).hostname == '127.0.0.1' and
+                    urlsplit(url).netloc == urlsplit(runtime.address or '').netloc)
             address = runtime.start()
             window.load_url(runtime.open_url())
             if not smoke_test:

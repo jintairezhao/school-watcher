@@ -25,7 +25,8 @@
         const box = el('monitorDetail');
         const dl = create('dl');
         for (const [name, value] of [[uiT('状态'), uiT(node.state_label) + ' · ' + uiT(node.reason)],
-            [uiT('入口类型'), uiT(node.kind_label)], [uiT('导航路径'), node.path.length ? node.path.join(' / ') : uiT('路径尚未记录，单独展示此入口')],
+            [uiT('入口类型'), uiT(node.kind_label)], [uiT('关联路径'), node.path.length ? node.path.join(' / ') : uiT('路径尚未记录，单独展示此入口')],
+            [uiT('关系依据'), uiT(node.path_basis || '导航路径未记录')],
             [uiT('最近读取'), date(node.checked_at)], [uiT('网页响应'), node.status_code ? 'HTTP ' + node.status_code : uiT('尚无响应记录')]]) {
             dl.append(create('dt', name), create('dd', value));
         }
@@ -33,6 +34,9 @@
         box.replaceChildren(badge, create('h3', node.label));
         if (node.url) { const action = link(uiT('打开官网入口'), node.url); action.className = 'atlas-source-action'; box.append(action); }
         box.append(dl);
+        if(node.navigation_path?.length && node.navigation_path.join('/')!==node.path.join('/')){
+            box.append(create('p',uiT('原始发现路径：{path}',{path:node.navigation_path.join(' / ') || uiT('导航路径未记录')}),'monitor-caption'));
+        }
         box.append(create('p', node.url, 'monitor-caption'));
         box.append(create('p', node.cost ? uiT('此入口已确认{used} Token；另预留{reserved} Token。',
             {used:number(node.cost.confirmed_tokens),reserved:number(node.cost.reserved_tokens)}) : uiT('此入口尚无可准确归属的 AI 用量记录。'), 'monitor-caption'));

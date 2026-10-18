@@ -46,6 +46,9 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_security*.py' -v
       - name: Verify native startup update notification
         run: python tests/smoke/check_startup_updates.py
+      - name: Verify Windows graph fullscreen and restored window bounds
+        if: runner.os == 'Windows'
+        run: python tests/smoke/check_graph_fullscreen.py
       - name: Prepare Windows WebView2 bootstrapper
         if: runner.os == 'Windows'
         shell: pwsh

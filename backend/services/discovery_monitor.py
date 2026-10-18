@@ -6,7 +6,7 @@ import logging
 import sqlite3
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from backend.database.models import BackgroundTask, Department
+from backend.database.models import BackgroundTask, Department, DepartmentDirectoryEntry
 from backend.database.source_governance_models import SourceProposal
 from backend.scraper.discovery.attention import CATEGORY_DEFINITIONS, need_evidence
 from backend.services.discovery_policy import get_attention_policy
@@ -103,6 +103,98 @@ def _task(row, now):
             'error_code': row.error_code if row.error_code in ERRORS else ''}
 
 
+def _project_directory_relations(school, pages, departments, *, catalogue_available):
+    """Read saved memberships and evidenced source placements, never infer by name.
+
+    A crawl's discovery path is not the source's ownership path. Preserve that
+    original path separately; only project an unambiguous existing relationship.
+    """
+    from backend.services.source_placements import official_source_placements
+    by_id = {row.id: row for row in departments}
+    installed = [row for row in departments if row.list_selector and _url(row.list_url)]
+    if not installed:
+        return
+    placements = {}
+    if catalogue_available:
+        try:
+            placements = official_source_placements(installed)
+        except (OSError, sqlite3.Error, RuntimeError):
+            logger.exception('Discovery monitor could not read published source placements')
+    parents = {}
+    for entry in DepartmentDirectoryEntry.query.filter(
+            DepartmentDirectoryEntry.parent_id.in_(by_id),
+            DepartmentDirectoryEntry.department_id.in_(by_id)).all():
+        parent = by_id[entry.parent_id]
+        if parent.kind in ('group', 'unit'):
+            parents.setdefault(entry.department_id, []).append(parent.id)
+
+    def chains(ident, seen=()):
+        if ident in seen or len(seen) >= 16:
+            return []
+        candidates = parents.get(ident, [])
+        if not candidates:
+            return [[]]
+        return [prefix + [by_id[parent]] for parent in sorted(candidates)
+                for prefix in chains(parent, seen + (ident,))]
+
+    projected = {}
+
+    def propose(url, trail, label, kind, basis):
+        url = _url(url)
+        if not url or url.rstrip('/') == _url(school.url).rstrip('/'):
+            return
+        projected.setdefault(url, []).append(dict(path=[school.name] + [n['name'] for n in trail],
+            label=label, kind=kind, basis=basis))
+
+    for source in installed:
+        choices = []
+        for chain in chains(source.id):
+            if chain:
+                choices.append([{'name': _name(row.name), 'url': _url(row.list_url),
+                                 'kind': 'directory' if row.kind == 'group' else 'unit'} for row in chain])
+        if not choices:
+            for placement in placements.get(source.id, []):
+                group = placement.get('group')
+                if not group or not placement.get('nodes'):
+                    continue
+                # A matching stored group supplies its real page URL; absent URLs
+                # stay named path groups rather than invented fetched pages.
+                groups = [row for row in departments if row.kind == 'group' and row.name == group]
+                address = _url(groups[0].list_url) if len(groups) == 1 else ''
+                choices.append([{'name': _name(group), 'url': address, 'kind': 'directory'}] +
+                    [{'name': _name(n['name']), 'url': _url(n.get('url')), 'kind': 'unit'}
+                     for n in placement['nodes']])
+        unique = {tuple((n['name'], n['url'], n['kind']) for n in chain): chain for chain in choices}
+        if len(unique) != 1:
+            continue  # Conflicting owners must not be resolved by iteration order.
+        trail = next(iter(unique.values()))
+        basis = '已保存的目录归属' if parents.get(source.id) else '官网目录与栏目入口记录'
+        for index, node in enumerate(trail):
+            propose(node['url'], trail[:index], node['name'], node['kind'], basis)
+        url = _url(source.list_url)
+        if trail[-1]['url'] == url:
+            propose(url, trail[:-1], trail[-1]['name'], trail[-1]['kind'], basis)
+            continue
+        page = pages.get(url, {})
+        label = _name(page.get('label') or source.name)
+        owners = {n['name'] for n in trail}
+        labels = {_name(p['label']) for p in placements.get(source.id, []) if p.get('label')}
+        if len(labels) == 1 and (label in owners or label == _name(source.name)):
+            label = next(iter(labels))
+        propose(url, trail, label, 'channel', basis)
+
+    for url, proposals in projected.items():
+        paths = {tuple(p['path']) for p in proposals}
+        labels = {p['label'] for p in proposals}
+        if len(paths) != 1 or len(labels) != 1:
+            continue
+        projection = proposals[0]
+        page = pages.setdefault(url, dict(url=url, state='observed'))
+        page.setdefault('navigation_path', _path(page.get('path_json')))
+        page.update(path_json=projection['path'], label=projection['label'],
+                    kind=projection['kind'], path_basis=projection['basis'])
+
+
 def snapshot(school):
     from backend.services.onboarding_progress import status
     from backend.services.runtime_catalog import runtime_catalog
@@ -143,12 +235,14 @@ def snapshot(school):
             task_pages.setdefault(url, []).append(dict(id=parent.id, state='running',
                 reason='正在探索网站结构', updated_at=_stamp(parent.updated_at)))
     sources = {}
-    for row in Department.query.filter_by(school_id=school.id).order_by(Department.id):
+    departments = Department.query.filter_by(school_id=school.id).order_by(Department.id).all()
+    for row in departments:
         url = _url(row.list_url)
         if url and row.list_selector:
             sources.setdefault(url, []).append({'id': row.id, 'name': _name(row.name, '已接入栏目'),
                                                'group': _name(row.group_name, '')})
             pages.setdefault(url, dict(url=url, label=row.name, kind='channel', state='observed'))
+    _project_directory_relations(school, pages, departments, catalogue_available=not catalog_error)
     nodes = []
     for url, page in pages.items():
         current = task_pages.get(url, [])
@@ -171,7 +265,8 @@ def snapshot(school):
             'reason': live[0]['reason'] if live else '栏目配置已接入，可持续更新' if url in sources else
                       '读取未完成，等待后台恢复' if failed else
                       '页面已读取，仍需识别和验证具体栏目' if state == 'fetched' else '已记录官网入口',
-            'path_basis': '观察到的导航路径' if _path(page.get('path_json')) else '导航路径未记录'})
+            'navigation_path': page.get('navigation_path'),
+            'path_basis': page.get('path_basis') or ('观察到的导航路径' if _path(page.get('path_json')) else '导航路径未记录')})
     rank = {'running': 0, 'failed': 1, 'waiting': 2, 'connected': 3}
     nodes.sort(key=lambda item: (rank.get(item['state'], 4), item['label'], item['url']))
     total = len(nodes)

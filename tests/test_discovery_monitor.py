@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import test_shared_summaries as fixture_module
 from backend.database.db import db
-from backend.database.models import BackgroundTask, Department, School, Subscription
+from backend.database.models import BackgroundTask, Department, DepartmentDirectoryEntry, School, Subscription
 from backend.services.runtime_catalog import RuntimeCatalog, pack
 from backend.services.source_inventory import site_key
 
@@ -109,6 +109,76 @@ class DiscoveryMonitorTests(unittest.TestCase):
         self.assertNotIn(old.id, [row['id'] for row in value['tasks']])
         self.assertEqual(next(row for row in value['tasks'] if row['id'] == new.id)['state'], 'waiting')
         self.assertIn('租约已失效', next(row for row in value['tasks'] if row['id'] == new.id)['reason'])
+
+    def college(self):
+        group = Department(school_id=self.school.id, name='院系设置', kind='group',
+                           list_url=self.school.url + '/colleges/')
+        unit = Department(school_id=self.school.id, name='化工与环境学院', kind='unit',
+                          list_url=self.school.url + '/gxy/')
+        source = Department(school_id=self.school.id, name=unit.name, kind='column',
+                            group_name=group.name, list_url=unit.list_url + 'tzgg/', list_selector='li')
+        db.session.add_all([group, unit, source]); db.session.flush()
+        db.session.add_all([DepartmentDirectoryEntry(parent_id=group.id, department_id=unit.id),
+                            DepartmentDirectoryEntry(parent_id=unit.id, department_id=source.id)])
+        db.session.commit()
+        return group, unit, source
+
+    def publish_college(self, group, unit, source):
+        from test_source_placements import route
+        self.publish([{'url':unit.list_url, 'label':'工学院', 'kind':'unit', 'path_json':[]},
+                      {'url':source.list_url, 'label':source.name, 'kind':'channel', 'path_json':[]}])
+        evidence = route(group=group.name, names=(unit.name,), urls=(unit.list_url,), reference=group.list_url)
+        evidence['entry_names'] = ['通知公告']
+        with self.catalog.connect(write=True) as c:
+            c.execute('UPDATE catalog_sites SET paths_gzip=?', (pack({source.list_url:[evidence]}),))
+
+    def test_saved_directory_membership_repairs_orphan_without_changing_raw_records(self):
+        group, unit, source = self.college()
+        self.publish_college(group, unit, source)
+        before = (source.name, source.group_name, source.list_url, source.list_selector,
+                  DepartmentDirectoryEntry.query.count(), BackgroundTask.query.count())
+        with patch('backend.ai.providers.complete', side_effect=AssertionError('No paid request')):
+            nodes = {n['url']:n for n in self.client.get(self.endpoint).json['nodes']}
+        self.assertEqual(nodes[source.list_url]['label'], '通知公告')
+        self.assertEqual(nodes[source.list_url]['path'], [self.school.name, group.name, unit.name])
+        self.assertEqual(nodes[source.list_url]['navigation_path'], [])
+        self.assertEqual(nodes[source.list_url]['path_basis'], '已保存的目录归属')
+        self.assertEqual(nodes[unit.list_url]['label'], unit.name)
+        self.assertEqual(nodes[unit.list_url]['path'], [self.school.name, group.name])
+        self.assertEqual(nodes[group.list_url]['kind'], 'directory')
+        self.assertEqual(nodes[source.list_url]['sources'][0]['name'], source.name)
+        self.assertEqual((source.name, source.group_name, source.list_url, source.list_selector,
+                          DepartmentDirectoryEntry.query.count(), BackgroundTask.query.count()), before)
+        raw = self.catalog.monitor_snapshot(site_key(self.school.url))['pages']
+        self.assertEqual(next(p for p in raw if p['url']==source.list_url)['path_json'], [])
+
+    def test_published_entry_proof_recovers_source_missing_membership_but_name_alone_cannot(self):
+        group, unit, source = self.college()
+        self.publish_college(group, unit, source)
+        DepartmentDirectoryEntry.query.filter_by(department_id=source.id).delete()
+        stranger = Department(school_id=self.school.id, name=source.name, group_name=group.name,
+                             list_url='https://unrelated.edu.cn/tzgg/', list_selector='li')
+        db.session.add(stranger); db.session.commit()
+        nodes = {n['url']:n for n in self.client.get(self.endpoint).json['nodes']}
+        self.assertEqual(nodes[source.list_url]['path'], [self.school.name, group.name, unit.name])
+        self.assertEqual(nodes[source.list_url]['path_basis'], '官网目录与栏目入口记录')
+        self.assertEqual(nodes[stranger.list_url]['path'], [])
+
+    def test_conflicting_saved_owners_and_directory_cycles_do_not_invent_edges(self):
+        group, unit, source = self.college()
+        other = Department(school_id=self.school.id, name='另一学院', kind='unit',
+                           list_url=self.school.url + '/other/')
+        db.session.add(other); db.session.flush()
+        db.session.add(DepartmentDirectoryEntry(parent_id=other.id, department_id=source.id))
+        db.session.commit()
+        self.publish([{'url':source.list_url, 'label':source.name, 'kind':'channel', 'path_json':[]}])
+        nodes = {n['url']:n for n in self.client.get(self.endpoint).json['nodes']}
+        self.assertEqual(nodes[source.list_url]['path'], [])
+        DepartmentDirectoryEntry.query.filter_by(parent_id=other.id).delete()
+        db.session.add(DepartmentDirectoryEntry(parent_id=unit.id, department_id=group.id))
+        db.session.commit()
+        nodes = {n['url']:n for n in self.client.get(self.endpoint).json['nodes']}
+        self.assertEqual(nodes[source.list_url]['path'], [])
 
     def test_failed_catalog_keeps_last_work_metadata_and_never_reads_scratch(self):
         self.task(state='waiting', phase='ai_result', error_code='ai_result_unknown')
