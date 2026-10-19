@@ -127,7 +127,13 @@ jobs:
         run: |
           node tests/js/test_discovery_atlas_model.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tests/js/test_discovery_atlas_evidence.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node tests/js/test_discovery_atlas_motion.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tests/js/test_discovery_atlas_view.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tests/js/test_discovery_atlas_picking.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/browser/check_discovery_atlas_browser.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

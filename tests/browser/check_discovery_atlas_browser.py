@@ -13,6 +13,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / 'tests')]
 from test_discovery_monitor import DiscoveryMonitorTests
 from backend.database.db import db
 from backend.database.models import BackgroundTask, Department
+from backend.services.runtime_catalog import pack
 from playwright.sync_api import expect, sync_playwright
 
 
@@ -32,20 +33,33 @@ def check():
         fixture = DiscoveryMonitorTests(); fixture.setUp()
         try:
             base = fixture.school.url
+            original_publish=fixture.publish
+            def publish_linked(pages):
+                original_publish(pages)
+                with fixture.catalog.connect(write=True) as c:
+                    for parent in pages:
+                        records=[dict(node_key='identity',parent_key='',url=parent['url'],name=parent['label'],relation='page_identity')]
+                        for child in pages:
+                            if child.get('_parent_url')!=parent['url']:continue
+                            records.append(dict(node_key=child['url'],parent_key='identity',url=child['url'],name=child['label'],
+                                kind=child['kind'],relation='directory_entry' if parent['kind']=='directory' else 'navigation_entry',locator='nav a'))
+                        c.execute('UPDATE catalog_pages SET nodes_gzip=? WHERE url=?',(pack(records),parent['url']))
+            fixture.publish=publish_linked
             pages = [{'url':base, 'label':'学校官网', 'kind':'root', 'path_json':[], 'state':'fetched'}]
+            pages += [dict(url=base+'/directory/'+key,label=label,kind='directory',path_json=['学校官网'],state='fetched',_parent_url=base) for key,label in [('org','组织机构'),('faculties','院系设置')]]
             for index, label in enumerate(['教务处','研究生院','学生工作处','招生就业','计算机学院','外国语学院','国际交流']):
                 prefix = ['学校官网','组织机构' if index < 4 else '院系设置']
                 pages.append({'url':base+'/unit/'+str(index), 'label':label, 'kind':'unit',
-                    'path_json':prefix, 'state':'fetched', 'checked_at':'2026-10-18T03:00:00Z','status_code':200})
+                    'path_json':prefix, '_parent_url':base+'/directory/'+('org' if index<4 else 'faculties'), 'state':'fetched', 'checked_at':'2026-10-18T03:00:00Z','status_code':200})
                 for leaf, name in enumerate(['通知公告','教学安排','学生事务','办事指南','文件下载','培养工作']):
                     url = base+f'/unit/{index}/column/{leaf}'
-                    pages.append({'url':url,'label':name,'kind':'channel','path_json':prefix+[label],
+                    pages.append({'url':url,'label':name,'kind':'channel','path_json':prefix+[label], '_parent_url':base+'/unit/'+str(index),
                         'state':'failed' if leaf == 4 and index == 0 else 'fetched',
                         'checked_at':'2026-10-18T03:10:00Z','status_code':503 if leaf == 4 and index == 0 else 200})
                     if leaf == 0:
                         db.session.add(Department(school_id=fixture.school.id, name=name,group_name=label,
                             list_url=url,list_selector='li'))
-            pages.append({'url':base+'/unplaced','label':'路径未记录入口','kind':'navigation','path_json':[], 'state':'observed'})
+            pages.append({'url':base+'/unplaced','label':'路径未记录入口','kind':'channel','path_json':[], 'state':'observed'})
             fixture.publish(pages)
             task = fixture.task(state='running',lease_until=datetime.utcnow()+timedelta(hours=1),
                 checkpoint={'discovery_progress':{'phase':'crawl','checked_pages':128,'pending_pages':12,
@@ -80,16 +94,48 @@ def check():
                 count = page.locator('#discoveryMonitor').get_attribute('data-atlas-node-count')
                 assert int(count) > 50
                 assert page.evaluate('new Set([...discoveryMonitor.discoveryAtlas.model.entries.values()].map(n=>n.position.z)).size>5')
-                # Following is an independent remembered preference, not an animation stage.
+                page.wait_for_function('() => discoveryMonitor.dataset.atlasLabelCount!==undefined')
+                assert 0<int(page.locator('#discoveryMonitor').get_attribute('data-atlas-label-count'))<=42
+                assert page.evaluate('''() => {
+                    const a=discoveryMonitor.discoveryAtlas,positions=a.scene.getObjectByName('atlasLinks').geometry.attributes.position;
+                    // A link is one continuous segment; cross-links stay in the model.
+                    return positions.count===a.model.links.length*2 && a.nodes.every(n=>n.record.url);
+                }''')
+                # Names are presentation preferences, not a filter on real nodes.
+                expect(page.locator('#atlasNodeLabels')).to_be_checked()
+                before_names=page.evaluate('''() => {const a=discoveryMonitor.discoveryAtlas;return {nodes:a.nodes.map(n=>n.id),positions:a.nodes.map(n=>n.position),camera:a.camera.position.toArray(),links:a.model.links.map(e=>e.id)}}''')
+                page.locator('#atlasOptions > summary').click()
+                page.locator('#atlasNodeLabels').uncheck()
+                page.locator('#atlasOptions > summary').click()
+                page.wait_for_function('''() => [...document.querySelectorAll('.atlas-node-label')].every(n=>n.hidden)''')
+                assert page.evaluate('''() => {const a=discoveryMonitor.discoveryAtlas;return {nodes:a.nodes.map(n=>n.id),positions:a.nodes.map(n=>n.position),camera:a.camera.position.toArray(),links:a.model.links.map(e=>e.id)}}''')==before_names
+                page.reload()
+                page.wait_for_function('() => document.getElementById("discoveryMonitor")?.discoveryAtlas?.model?.actual.size>40')
+                expect(page.locator('#atlasNodeLabels')).not_to_be_checked()
+                # Saving another preference retains the hidden-name choice.
+                page.locator('#atlasFollow').uncheck()
+                assert page.evaluate('JSON.parse(localStorage.getItem("school-watcher:atlas:preferences")).nodeLabels===false')
+                page.locator('#atlasFollow').check()
+                page.evaluate("discoveryMonitor.discoveryAtlas.select([...discoveryMonitor.discoveryAtlas.model.actual.values()].find(n=>n.label==='研究生院').id)")
+                selected_name=page.evaluate('discoveryMonitor.discoveryAtlas.current.id')
+                expect(page.locator(f'[data-atlas-node="{selected_name}"]')).to_be_hidden()
+                expect(page.locator('#monitorDetail')).to_contain_text('研究生院')
+                assert page.evaluate('''() => [...document.querySelectorAll('.atlas-node-label')].every(n=>n.hidden)''')
+                page.locator('#atlasOverview').click()
+                page.locator('#atlasOptions > summary').click()
+                page.locator('#atlasNodeLabels').check()
+                page.locator('#atlasOptions > summary').click()
+                # Selected-path visibility is remembered; background tasks never choose a page.
                 expect(page.locator('#atlasFollow')).to_be_visible()
                 page.locator('#atlasFollow').check()
-                expect(page.locator('#monitorDetail')).to_contain_text('研究生院')
+                assert page.evaluate('discoveryMonitor.discoveryAtlas.current===null')
                 assert page.evaluate('discoveryMonitor.discoveryAtlas.progress===1')
                 page.reload()
                 page.wait_for_function('() => document.getElementById("discoveryMonitor")?.discoveryAtlas?.model?.actual.size > 40')
                 expect(page.locator('#atlasFollow')).to_be_checked()
                 page.locator('#monitorAuto').uncheck()
-                expect(page.locator('#monitorDetail')).to_contain_text('研究生院')
+                assert page.evaluate('discoveryMonitor.discoveryAtlas.current===null')
+                page.evaluate("discoveryMonitor.discoveryAtlas.select([...discoveryMonitor.discoveryAtlas.model.actual.values()].find(n=>n.label==='研究生院').id)")
                 page.locator('.school-heading p').evaluate("node => node.textContent = '隔离演示数据 · 实际界面'")
                 # Wheel gestures over either canvas or HTML labels never scroll the document.
                 page.locator('#atlasStage').scroll_into_view_if_needed()
@@ -141,26 +187,19 @@ def check():
                 assert target_before!=page.evaluate('discoveryMonitor.discoveryAtlas.controls.target.toArray()')
                 expect(page.locator('#atlasFollow')).to_be_checked()
                 page.locator('#atlasOverview').click()
-                # Manual paths use violet while the independently followed path stays blue.
+                # Manual selection shows the full evidenced upstream route; it has no sibling branches.
                 page.evaluate("discoveryMonitor.discoveryAtlas.select([...discoveryMonitor.discoveryAtlas.model.actual.values()].find(n=>n.record.label==='计算机学院').record.id)")
                 expect(page.locator('#discoveryMonitor')).to_have_attribute('data-atlas-highlight','manual')
                 expect(page.locator('#atlasFollow')).to_be_checked()
-                route_info=page.evaluate('''() => {
-                    const routes=discoveryMonitor.discoveryAtlas.scene.getObjectByName('atlasRoutes').children;
-                    const manual=routes.filter(r=>r.userData.route==='manual'),live=routes.filter(r=>r.userData.route==='follow');
-                    const current=discoveryMonitor.discoveryAtlas.current;
-                    const expected=[current,...current.children].map(n=>n.id).sort();
-                    const camera=discoveryMonitor.discoveryAtlas.camera;
-                    const inFrame=[current.parent,current,...current.children].filter(Boolean).every(n=>{
-                        const p=camera.position.clone().copy(n.position).project(camera);return Math.abs(p.x)<.95&&Math.abs(p.y)<.95&&p.z<1;
-                    });
-                    return {manual:manual.length,live:live.length,manualColor:manual[0]?.material.color.toArray(),liveColor:live[0]?.material.color.toArray(),
-                        actual:manual.map(r=>r.userData.entry).sort(),expected,inFrame};
-                }''')
-                assert route_info['manual']==7 and route_info['live']>0,route_info
-                assert route_info['actual']==route_info['expected'],route_info
-                assert route_info['inFrame'], 'Both the immediate parent and children must fit in the selected view'
-                assert route_info['manualColor']!=route_info['liveColor'],route_info
+                route_info=page.evaluate("""() => {
+                    const a=discoveryMonitor.discoveryAtlas,routes=a.scene.getObjectByName('atlasRoutes').children;
+                    const manual=routes.filter(r=>r.userData.route==='manual');
+                    return {ids:[...new Set(manual.map(r=>r.userData.entry))],current:a.current.id,
+                        upstream:a.current.parent.id,live:routes.filter(r=>r.userData.route==='follow').length};
+                }""")
+                assert set(route_info['ids'])=={route_info['current'],route_info['upstream']},route_info
+                assert route_info['live']==0,route_info
+                expect(page.locator('#atlasPathEvidence')).to_contain_text('学校官网')
                 page.locator('#atlasStage').screenshot(path=str(output/f'{theme}-{width}-manual-routes.png'))
                 # Inspecting a node exits partial playback instead of hiding its fluorescent path.
                 page.locator('#atlasOptions > summary').click()
@@ -170,6 +209,21 @@ def check():
                 expect(page.locator('#atlasFollow')).to_be_checked()
                 page.locator('#atlasOptions > summary').click()
                 # Select a saved channel and inspect its real recorded ancestors.
+                if width==1586 and theme=='dark':
+                    # Interrupt a growing path and inspect another real page.
+                    # Static highlights must meet the settled spheres afterward.
+                    page.emulate_media(reduced_motion='no-preference')
+                    page.locator('#atlasPlay').click()
+                    page.wait_for_function('() => discoveryMonitor.discoveryAtlas.progress>.1&&discoveryMonitor.discoveryAtlas.progress<.8')
+                    page.evaluate("discoveryMonitor.discoveryAtlas.select([...discoveryMonitor.discoveryAtlas.model.actual.values()].find(n=>n.record.label==='计算机学院').id)")
+                    assert page.evaluate('''() => {
+                        const a=discoveryMonitor.discoveryAtlas;
+                        return a.scene.getObjectByName('atlasRoutes').children.filter(r=>r.userData.route==='manual').every(r=>{
+                            const end=r.localToWorld(a.camera.position.clone().set(0,.5,0)),n=a.model.actual.get(r.userData.entry);
+                            return end.distanceTo(n.position)<.00001;
+                        });
+                    }''')
+                    page.emulate_media(reduced_motion='reduce')
                 page.evaluate('''() => {
                     const atlas=discoveryMonitor.discoveryAtlas;
                     const entry=[...atlas.model.actual.values()].find(n=>n.record.label==='通知公告'&&n.record.path.includes('研究生院'));
@@ -180,13 +234,14 @@ def check():
                 assert page.evaluate('''() => {
                     const a=discoveryMonitor.discoveryAtlas;
                     const routes=a.scene.getObjectByName('atlasRoutes').children.filter(r=>r.userData.route==='manual');
-                    return routes.length===1&&routes[0].userData.entry===a.current.id&&a.current.parent.label==='研究生院';
-                }'''), 'A leaf highlights its direct parent only, without upstream ancestors'
+                    return new Set(routes.map(r=>r.userData.entry)).size===3&&a.current.parent.label==='研究生院';
+                }'''), 'A leaf highlights the entire recorded route from the university website'
                 assert page.evaluate('discoveryMonitor.discoveryAtlas.progress===1')
                 page.locator('#atlasOptions > summary').click()
                 page.locator('button[data-atlas-chapter="3"]').click()
                 expect(page.locator('#atlasNarration')).to_have_attribute('data-stage','3')
                 assert page.evaluate('discoveryMonitor.discoveryAtlas.camera.position.distanceTo(discoveryMonitor.discoveryAtlas.controls.target)<170')
+                page.locator('#atlasOptions > summary').click()
                 page.locator('#atlasOverview').click()
                 # Branch folding affects the graph while leaving the full accessible list intact.
                 page.evaluate("discoveryMonitor.discoveryAtlas.select([...discoveryMonitor.discoveryAtlas.model.actual.values()].find(n=>n.record.label==='研究生院').record.id)")
@@ -205,7 +260,6 @@ def check():
                 page.locator('#atlasListPanel').evaluate('node => node.open=false')
                 # Locate reveals a real target hidden by filters or a collapsed ancestor.
                 page.locator('#monitorFilter').select_option('failed')
-                expect(page.locator('#atlasFollowStatus')).to_contain_text('筛选隐藏')
                 page.locator('#atlasLocate').click()
                 expect(page.locator('#monitorFilter')).to_have_value('all')
                 expect(page.locator('#monitorDetail')).to_contain_text('研究生院')
@@ -224,17 +278,23 @@ def check():
                     discoveryMonitor.monitorSnapshot=snapshot;
                     discoveryMonitor.dispatchEvent(new CustomEvent('monitor-data',{detail:snapshot}));
                 }''')
+                assert page.evaluate("discoveryMonitor.discoveryAtlas.current.record.label==='研究生院'"), 'New background work must not replace a selected page'
+                page.locator('#atlasLocate').click()
                 assert page.evaluate("discoveryMonitor.discoveryAtlas.current.record.label==='计算机学院'")
                 assert page.evaluate('discoveryMonitor.discoveryAtlas.progress===1')
-                expect(page.locator('#atlasFollowStatus')).to_contain_text('最近进展')
+                expect(page.locator('#atlasFollowStatus')).to_contain_text('所选路径')
                 page.locator('#monitorRefresh').click()
-                expect(page.locator('#monitorDetail')).to_contain_text('研究生院')
+                expect(page.locator('#monitorDetail')).to_contain_text('计算机学院')
                 # Tour is a local presentation, not a task control.
                 page.locator('#atlasPlay').click()
                 expect(page.locator('#atlasPlay')).to_have_attribute('aria-pressed','true')
                 expect(page.locator('#atlasFollow')).to_be_checked()
-                page.locator('#atlasOptions > summary').click()
-                page.locator('#atlasScrubber').fill('1')
+                selected_before=page.evaluate('discoveryMonitor.discoveryAtlas.current.id')
+                camera_before=page.evaluate('discoveryMonitor.discoveryAtlas.camera.position.toArray()')
+                page.wait_for_function('() => !discoveryMonitor.discoveryAtlas.playing && discoveryMonitor.discoveryAtlas.progress===1',timeout=10000)
+                assert page.evaluate('discoveryMonitor.discoveryAtlas.current.id')==selected_before, 'Playback end must retain the selected page instead of jumping to the latest task'
+                camera_after=page.evaluate('discoveryMonitor.discoveryAtlas.camera.position.toArray()')
+                assert max(abs(a-b) for a,b in zip(camera_before,camera_after))<1e-6,(camera_before,camera_after)
                 expect(page.locator('#atlasPlay')).to_have_attribute('aria-pressed','false')
                 page.locator('#atlasOverview').click()
                 # Repeated zoom out keeps actual sphere geometry visible and away from clipping.
@@ -279,7 +339,8 @@ def check():
                     for item in changed:
                         if item['url']==base+'/unit/0' or item['url'].startswith(base+'/unit/0/'):
                             path=item['path_json'];item['path_json']=path[:2]+['新增导航桥梁']+path[2:]
-                    changed.append({'url':base+'/bridge','label':'新增导航桥梁','kind':'navigation','path_json':['学校官网','组织机构'],'state':'fetched'})
+                    next(item for item in changed if item['url']==base+'/unit/0')['_parent_url']=base+'/bridge'
+                    changed.append({'url':base+'/bridge','label':'新增导航桥梁','kind':'navigation','path_json':['学校官网','组织机构'],'state':'fetched','_parent_url':base+'/directory/org'})
                     page.emulate_media(reduced_motion='no-preference')
                     fixture.publish(changed);page.locator('#monitorRefresh').click()
                     page.wait_for_function("() => discoveryMonitor.discoveryAtlas.nodes.some(n=>n.label==='新增导航桥梁'&&n.baseScale>0&&n.baseScale<1)")
@@ -287,6 +348,16 @@ def check():
                     assert page.evaluate("discoveryMonitor.discoveryAtlas.nodes.find(n=>n.label==='新增导航桥梁').baseScale===1")
                     fixture.publish(pages);page.locator('#monitorRefresh').click()
                     page.emulate_media(reduced_motion='reduce')
+                # A close, unselected leaf still has its identity label; it is not restricted to a global shortlist.
+                page.locator('#atlasOverview').click()
+                leaf_id=page.evaluate("""() => {
+                    const a=discoveryMonitor.discoveryAtlas,n=a.nodes.find(n=>n.record.url.endsWith('/unit/6/column/5'));
+                    a.controls.target.copy(n.position);a.camera.position.copy(n.position);a.camera.position.z+=180;
+                    a.controls.update();a.controls.dispatchEvent({type:'change'});return n.id;
+                }""")
+                expect(page.locator(f'[data-atlas-node="{leaf_id}"]')).to_be_visible()
+                page.locator('#atlasStage').screenshot(path=str(output/f'{theme}-{width}-leaf-information.png'))
+                page.locator('#atlasOverview').click()
                 # Existing theme switch recolors the same WebGL scene.
                 page.locator('#themeToggle').click()
                 flipped = 'light' if theme=='dark' else 'dark'
@@ -305,6 +376,36 @@ def check():
                 expect(page.locator('#atlasDetailPanel')).to_be_hidden()
                 expect(page.locator('#monitorMapHeading')).to_be_hidden()
                 expect(page.locator('#atlasFollow')).to_be_checked()
+                # Exercise real sphere picking with text hidden, rather than only
+                # selecting through the diagnostics used by the other checks.
+                page.locator('#atlasOptions > summary').click()
+                page.locator('#atlasNodeLabels').uncheck()
+                page.locator('#atlasOptions > summary').click()
+                point=page.evaluate('''async () => {
+                    const a=discoveryMonitor.discoveryAtlas,T=await import('/static/vendor/three/three.module.min.js');
+                    a.camera.updateMatrixWorld(true);
+                    const canvas=a.renderer.domElement,rect=canvas.getBoundingClientRect();
+                    const mesh=a.scene.children.flatMap(g=>g.children).find(o=>o.isInstancedMesh);
+                    for(const n of a.nodes.filter(n=>n.record.kind==='unit')) {
+                        const p=new T.Vector3().copy(n.renderPosition).project(a.camera);
+                        const x=rect.x+(p.x+1)*rect.width/2,y=rect.y+(1-p.y)*rect.height/2;
+                        if(p.z<0||p.z>1||document.elementFromPoint(x,y)!==canvas)continue;
+                        const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(p.x,p.y),a.camera);
+                        const saved=mesh.boundingSphere;mesh.boundingSphere=null;
+                        const hit=ray.intersectObject(mesh,false)[0];mesh.boundingSphere=saved;
+                        if(hit&&a.nodes[hit.instanceId]===n)return {id:n.id,x,y};
+                    }
+                    return null;
+                }''')
+                assert point,'A genuine unobstructed sphere is available'
+                camera_before=page.evaluate('discoveryMonitor.discoveryAtlas.camera.position.toArray()')
+                page.mouse.click(point['x'],point['y'])
+                page.wait_for_function('id=>discoveryMonitor.discoveryAtlas.current?.id===id',arg=point['id'])
+                expect(page.locator('#atlasDetailPanel')).to_be_hidden()
+                assert page.evaluate('''() => {const g=discoveryMonitor.discoveryAtlas.scene.getObjectByName('atlasRoutes');return g.visible&&g.children.some(n=>n.userData.selection);}''')
+                assert max(abs(a-b) for a,b in zip(camera_before,page.evaluate('discoveryMonitor.discoveryAtlas.camera.position.toArray()')))<.000001
+                page.locator('#atlasOptions > summary').click();page.locator('#atlasNodeLabels').check();page.locator('#atlasOptions > summary').click()
+                page.locator('#atlasOverview').click()
                 page.screenshot(path=str(output/f'{theme}-{width}-fullscreen.png'))
                 page.locator('#atlasSearchToggle').click()
                 expect(page.locator('#monitorSearch')).to_be_focused()
@@ -352,18 +453,19 @@ def check():
                 fixture.publish(pages)
                 report.append({'width':width,'theme':theme,'sphere_nodes':int(count),'real_webgl':True,
                     'rotation_and_zoom':True,'theme_switch':True,'branch_fold':True,'real_evidence':True,
-                    'local_tour_no_writes':True,'gpu_loss_fallback':True,'remembered_follow':True,
+                    'local_tour_no_writes':True,'gpu_loss_fallback':True,'remembered_path_visibility':True,
                     'wheel_contained':True,'filtered_target_locate':True,'top_right_controls':True,
-                    'branch_spacing':True,'manual_live_route_colors':True,'middle_drag_pan':True,
+                    'branch_spacing':True,'full_evidenced_selected_route':True,'playback_retains_selection_and_camera':True,'close_leaf_label':True,'middle_drag_pan':True,
                     'native_fullscreen':True,'fullscreen_optional_panels':True,'window_fullscreen_fallback':True,'page_errors':errors})
                 page.close()
             # Many branches must remain legible without dropping or flattening nodes.
             dense=[{'url':base,'label':'学校官网','kind':'root','path_json':[],'state':'fetched'}]
+            dense.append(dict(url=base+'/dense-directory',label='院系设置',kind='directory',path_json=['学校官网'],state='fetched',_parent_url=base))
             for unit in range(40):
                 label=f'院系 {unit+1:02d}'
-                dense.append({'url':base+f'/dense/{unit}','label':label,'kind':'unit','path_json':['学校官网','院系设置'],'state':'fetched'})
+                dense.append({'url':base+f'/dense/{unit}','label':label,'kind':'unit','path_json':['学校官网','院系设置'],'state':'fetched','_parent_url':base+'/dense-directory'})
                 for leaf in range(28):
-                    dense.append({'url':base+f'/dense/{unit}/{leaf}','label':f'信息栏目 {leaf+1:02d}','kind':'channel','path_json':['学校官网','院系设置',label],'state':'fetched'})
+                    dense.append({'url':base+f'/dense/{unit}/{leaf}','label':f'信息栏目 {leaf+1:02d}','kind':'channel','path_json':['学校官网','院系设置',label],'state':'fetched','_parent_url':base+f'/dense/{unit}'})
             fixture.publish(dense)
             for width in [1586,390]:
                 page=browser.new_page(viewport={'width':width,'height':992},reduced_motion='reduce')
@@ -377,6 +479,7 @@ def check():
                 page.locator('#atlasStage').screenshot(path=str(output/f'dense-{width}-scene.png'))
                 assert page.evaluate('discoveryMonitor.discoveryAtlas.model.actual.size>=1161')
                 assert page.evaluate('new Set(discoveryMonitor.discoveryAtlas.nodes.map(n=>n.cluster)).size>=40')
+                assert int(page.locator('#discoveryMonitor').get_attribute('data-atlas-label-count'))<=42
                 assert not writes and BackgroundTask.query.count()==before
                 page.close()
             # The initial empty scene must not display demonstration nodes.

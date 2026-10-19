@@ -78,7 +78,7 @@ class RuntimeCatalog:
             return report
 
     def monitor_snapshot(self, key):
-        """Published page metadata only; no HTML and no scratch database locks."""
+        """Published page and link metadata; no HTML or scratch database locks."""
         published = self._published(key)
         if published:
             return published.monitor_snapshot(key)
@@ -91,10 +91,18 @@ class RuntimeCatalog:
             summary = unpack(site['report_gzip'])
             fields = ('url', 'label', 'title', 'kind', 'path_json', 'state', 'health',
                       'status_code', 'checked_at', 'content_hash')
+            pages, structure = [], []
+            node_fields = ('name', 'url', 'node_key', 'parent_key', 'relation', 'reference_url', 'locator', 'kind')
+            for row in c.execute('SELECT url,page_gzip,nodes_gzip FROM catalog_pages WHERE site_id=? ORDER BY id', (site['id'],)):
+                page = unpack(row['page_gzip'])
+                pages.append({field: page.get(field) for field in fields})
+                for node in unpack(row['nodes_gzip']):
+                    # Stale evidence from another revision must not establish a link.
+                    if node.get('content_hash') and node.get('content_hash') != page.get('content_hash'):
+                        continue
+                    structure.append({**{field: node.get(field) for field in node_fields}, 'reference_url': row['url']})
             return {'catalogue_published_at': summary.get('catalogue_published_at'),
-                    'pages': [{key: page.get(key) for key in fields} for row in c.execute(
-                        'SELECT page_gzip FROM catalog_pages WHERE site_id=? ORDER BY id', (site['id'],))
-                        for page in [unpack(row[0])]]}
+                    'pages': pages, 'structure_nodes': structure}
 
     def structure(self, key):
         published = self._published(key)

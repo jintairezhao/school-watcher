@@ -16,10 +16,20 @@ const retained={id:'c',record:{id:'c'},position:{x:20,y:30,z:40},children:[],par
 const previous=new Map([[identity(root),{position:root.position}],[identity(retained),{position:retained.position}]]);
 assert.deepEqual(birthAnchor(child,previous),{x:10,y:15,z:20},'An inserted node emerges between the two retained endpoints');
 assert.equal(identity({...child,id:'new-path-id'}),identity(child),'Animation identity survives a recorded path change');
+const alternative={id:'alternative',parent:null,children:[],position:{x:0,y:50,z:0}},page={...child,id:'page',parent:alternative};
+const selectedPlan=growthPlan([root,child,page],{parents:new Map([['a',null],['b',root],['page',child]])});
+assert.ok(selectedPlan.entries.get('page').start>selectedPlan.entries.get('b').start,'Selected-path growth follows evidenced route order rather than a different layout parent');
 
-const records=[{id:'root',label:'Home',path:[],kind:'root',state:'fetched'}];
-for(let unit=0;unit<18;unit++) for(let leaf=0;leaf<5;leaf++) records.push({id:`${unit}-${leaf}`,label:`Channel ${leaf}`,kind:'channel',state:'fetched',path:['Home','Departments',`Unit ${unit}`]});
-const atlas=buildAtlas({school:{name:'Example University'},nodes:records});
+const records=[{id:'root',url:'https://example.edu',label:'Home',path:[],kind:'root',state:'fetched'}],relations=[];
+for(let unit=0;unit<18;unit++) {
+    records.push({id:`unit-${unit}`,url:`https://example.edu/unit/${unit}`,label:`Unit ${unit}`,path:[],kind:'unit'});
+    relations.push({source:'root',target:`unit-${unit}`,type:'navigation',evidence_url:'https://example.edu'});
+    for(let leaf=0;leaf<5;leaf++){
+        records.push({id:`${unit}-${leaf}`,url:`https://example.edu/unit/${unit}/${leaf}`,label:`Channel ${leaf}`,kind:'channel',state:'fetched',path:['Home','Departments',`Unit ${unit}`]});
+        relations.push({source:`unit-${unit}`,target:`${unit}-${leaf}`,type:'navigation',evidence_url:`https://example.edu/unit/${unit}`});
+    }
+}
+const atlas=buildAtlas({school:{name:'Example University'},nodes:records,relations});
 const points=[...atlas.entries.values()].map(n=>n.position), mean=key=>points.reduce((sum,p)=>sum+p[key],0)/points.length;
 const axes=['x','y','z'], means=axes.map(mean);
 const covariance=axes.map((a,i)=>axes.map((b,j)=>points.reduce((sum,p)=>sum+(p[a]-means[i])*(p[b]-means[j]),0)/points.length));

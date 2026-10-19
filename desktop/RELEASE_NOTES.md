@@ -1,10 +1,10 @@
-School Watcher 2.26：合并图谱交互、实时跟随、桌面全屏与语言修复。
+School Watcher 2.27：让官网探索图谱更清楚、可点击，路径与真实记录一致。
 
-- 合并另一会话的完整图谱改动，并保留 2.25 的更新窗口英文和 API 历史用量修复。
-- “跟随探索”记住用户选择，根据真实任务的最新进展定位入口；被筛选或收起的目标可一键显示。手动浏览与后台探索分别运行。
-- 手动选择与实时跟随的路径分别高亮；根据已保存的目录归属和来源证据显示可确认的关系，保留原始发现路径，不猜测归属。
-- 增加分支间距设置、成簇布局、中键平移和独立的动画控制。沉浸视图中的搜索、详情及设置可按需展开。
-- 支持图谱全屏；Windows 桌面窗口可覆盖整个屏幕，退出后恢复之前的普通或最大化状态。
-- 补充密集图谱、持续生长、目标定位、全屏恢复和中英文检查。验证使用隔离数据，不调用付费 AI。
+- 图谱仅呈现当前学校有实际记录的官网入口，区分网页导航、目录收录与组织归属，避免把外校链接和通知正文混入结构图。
+- 调整为空间更均衡的三维球状分布，改善分支间距、节点文字层次和连线可读性；可统一开启或关闭节点文字，悬停仍可查看名称。
+- 修复生长、缩放及布局变化后球体无法点击的问题；选中节点、直接关联和所选路径有持续清晰的光效。
+- “所选发掘路径”优先显示官网到当前节点的真实发掘链路；仅有双向连通关系时标为关联路径，并明确说明反向导航。没有记录的连接不会补造。
+- 生长动画保留选择和视角，不再跳到流程占位节点。节点详情仅由用户手动打开，关闭后不会因后续点击再次弹出。
+- 补充中英文文案与真实鼠标操作、动画、全屏和路径证据检查。订阅、收藏、阅读记录与 API 配置保留。
 
-English: Combines the discovery graph improvements with the 2.25 localization fixes. Live tracking remembers your choice and locates real task progress, while manual selections use a separate highlighted path. Recorded directory relationships are shown with their evidence and original navigation paths. Adds clustered layouts, branch spacing, middle-button panning, optional immersive-view panels, and Windows fullscreen that restores the previous window state. Existing summary usage remains historical accounting; the reader's summary-generation entry is not restored.
+English: The discovery graph now uses a balanced three-dimensional layout and shows recorded entries for the current university. Clearer connections and progressive labels improve readability, with one switch for all node text. Sphere selection remains accurate after animation, layout changes and zooming, and selected nodes and their real connections stay highlighted. Recorded discovery paths are distinguished from association routes with explicitly marked reverse navigation; missing links are never invented. Growth playback keeps the selected node and camera. Details open only when requested, update while open, and stay closed after dismissal. Includes localization and real pointer-interaction regression checks while preserving subscriptions, saved items, reading history and API configuration.

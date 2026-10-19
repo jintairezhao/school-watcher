@@ -1,6 +1,8 @@
 /* Local WebGL scene. Viewing or touring never dispatches discovery work. */
-import {buildAtlas, ancestors, visibleEntries, trackingTarget} from './discovery-atlas-model.js';
+import {buildAtlas, ancestors, visibleEntries, trackingTarget, discoveryRoute} from './discovery-atlas-model.js';
+import {focusContext, displayLink, labelPolicy, labelImportance} from './discovery-atlas-view.js';
 import {identity, birthAnchor, growthPlan, growthAt, mix, smooth, clamp} from './discovery-atlas-motion.js';
+import {pickSphere} from './discovery-atlas-picking.js';
 
 const root = document.getElementById('discoveryMonitor');
 const el = id => document.getElementById(id);
@@ -10,11 +12,12 @@ let atlas;
 const preferenceKey = 'school-watcher:atlas:preferences';
 try {
     const saved = JSON.parse(localStorage.getItem(preferenceKey) || '{}');
-    el('atlasFollow').checked = saved.follow === true;
+    el('atlasFollow').checked = saved.trace !== false;
+    el('atlasNodeLabels').checked = typeof saved.nodeLabels === 'boolean' ? saved.nodeLabels : saved.departmentNames !== false;
     if (Number.isFinite(saved.spacing)) el('atlasSpacing').value = Math.max(.7, Math.min(1.8, saved.spacing));
 } catch (_) { /* Presentation remains usable when local storage is unavailable. */ }
 function savePreferences() {
-    try { localStorage.setItem(preferenceKey, JSON.stringify({follow:el('atlasFollow').checked, spacing:Number(el('atlasSpacing').value)})); }
+    try { localStorage.setItem(preferenceKey, JSON.stringify({trace:el('atlasFollow').checked, spacing:Number(el('atlasSpacing').value), nodeLabels:el('atlasNodeLabels').checked})); }
     catch (_) { /* A blocked preference store must not block the graph. */ }
 }
 
@@ -24,7 +27,7 @@ function fallback(message) {
     el('atlasStatus').textContent = message;
     el('atlasListPanel').open = true;
     el('atlasPlay').disabled = true;
-    for (const id of ['atlasZoomIn', 'atlasZoomOut', 'atlasOverview', 'atlasLocate', 'atlasSpacing']) el(id).disabled = true;
+    for (const id of ['atlasZoomIn', 'atlasZoomOut', 'atlasOverview', 'atlasLocate', 'atlasSpacing', 'atlasNodeLabels']) el(id).disabled = true;
     el('atlasFollowStatus').textContent = uiT('三维视图暂不可用，已展开路径列表。');
 }
 
@@ -64,26 +67,29 @@ async function initialize() {
     composer.addPass(new RenderPass(scene, camera)); composer.addPass(bloom); composer.addPass(new OutputPass());
     const sphereGeometry = new THREE.SphereGeometry(1, 24, 18);
     const ringGeometry = new THREE.TorusGeometry(1, .035, 5, 36);
+    const routeGeometry = new THREE.CylinderGeometry(1,1,1,8,1,true);
+    const selectionRingGeometry = new THREE.TorusGeometry(1,.065,6,48);
     const sphereMaterial = new THREE.MeshStandardMaterial({roughness:.47, metalness:.16});
     const matrix = new THREE.Object3D(), raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(), projected = new THREE.Vector3();
     const palette = {light:['#4386c3','#388e98','#8072b7','#698997','#aa778c'],
         dark:['#75b7fa','#72b0b9','#a49bce','#98aeba','#be9aaa']};
     let model = null, nodes = [], spheres, rings, ringNodes = [], labelNodes = [], current = null;
-    let signature = '', theme, primary, manualColor, stateColors = {}, selectedPath = [], stageIndex = 0, tourTimer = null;
+    let signature = '', theme, primary, manualColor, stateColors = {}, selectedPath = [], selectedRoute = {nodes:[],links:[],complete:false}, stageIndex = 0, tourTimer = null;
     let contextAvailable = true, explicitSelection = false, replayPosition = 1, replayPlan = null, replayScope = null;
     let frames = new Map(), edges = [], lineGeometry = null, linePositions = null, lineColors = null, layoutMoving = false;
     let layoutSpacing = Number(el('atlasSpacing').value), lastTrackedKey = '', manualView = false;
     let fadingLinks = null, fadingAt = 0;
     let frame = null, lastFrame = 0, tween = null, dirty = true, active = false, inView = true, disposed = false;
     let bounds = new THREE.Sphere(new THREE.Vector3(), 260), extent = new THREE.Vector3(450, 300, 140), hover = null, press = null, lastPick = 0;
+    let overviewDistance = 600, contextIds = new Set();
     const collapsed = new Set();
     const tooltip = document.createElement('div'); tooltip.className = 'atlas-tooltip'; tooltip.hidden = true;
     stage.append(tooltip);
 
     function disposeGroup(group) {
         group.traverse(object => {
-            if (object.geometry && object.geometry !== sphereGeometry && object.geometry !== ringGeometry) object.geometry.dispose();
+            if (object.geometry && ![sphereGeometry,ringGeometry,routeGeometry,selectionRingGeometry].includes(object.geometry)) object.geometry.dispose();
             if (object.material && object.material !== sphereMaterial) object.material.dispose();
             if (object.isInstancedMesh) object.dispose();
         });
@@ -121,21 +127,21 @@ async function initialize() {
         }
         ctx.putImageData(pixels, 0, 0);
     }
-    function curveFor(from,to) {
-        const a=new THREE.Vector3().copy(from.renderPosition || from.position), b=new THREE.Vector3().copy(to.renderPosition || to.position);
-        return new THREE.CubicBezierCurve3(a,a.clone().lerp(b,.35),a.clone().lerp(b,.7),b);
+    function replayGrowthPlan() {
+        const route=replayScope&&current?discoveryRoute(model,current):null;
+        const parents=route?new Map(route.nodes.map((item,index)=>[item.id,index?route.nodes[index-1]:null])):null;
+        return growthPlan(replayScope?nodes.filter(item=>replayScope.has(item.id)):nodes,{parents});
     }
 
     function renderLabels() {
-        const chosen = new Set(selectedPath.map(item => item.id));
-        labelNodes = nodes.filter(item => chosen.has(item.id) || item.record?.kind === 'root' ||
-            item.id === item.cluster || (current && item.parent === current)).sort((a,b) =>
-            Number(b === current) - Number(a === current) || Number(chosen.has(b.id)) - Number(chosen.has(a.id)) ||
-            Number(Boolean(a.orphan)) - Number(Boolean(b.orphan)) || a.depth - b.depth).slice(0, 48);
+        // Build identities for every real page. The current viewport, rather than
+        // a fixed global shortlist, decides which labels have room to be shown.
+        labelNodes = [...nodes];
         const fragment = document.createDocumentFragment();
         for (const item of labelNodes) {
             const button = document.createElement('button'); button.type = 'button';
             button.className = 'atlas-node-label'; button.textContent = item.label;
+            button.dataset.kind=item.record.kind;
             button.dataset.atlasNode = item.id; button.dataset.selected = String(item === current);
             button.setAttribute('aria-label', item.label + ' · ' + uiT(item.record?.state_label || uiT('已记录的导航名称')));
             button.addEventListener('click', () => pick(item)); item.labelElement = button; fragment.append(button);
@@ -149,10 +155,11 @@ async function initialize() {
     }
     function paint() {
         const previous=new Map(nodes.map(item=>[identity(item),{position:{...(item.renderPosition||item.position)},scale:item.baseScale ?? 1}]));
-        const previousEdges=edges.map(item=>({from:identity(item.parent),to:identity(item)}));
+        const previousEdges=edges.filter(edge=>displayLink(edge,current,hover)).map(edge=>({from:identity(edge.from),to:identity(edge.to)}));
         disposeGroup(graph); disposeGroup(highlight);
         fadingLinks=null;
-        nodes=visibleEntries(model,{query:el('monitorSearch').value.trim(),state:el('monitorFilter').value,collapsed}).sort((a,b)=>a.depth-b.depth);
+        const revealed=new Set(current&&el('atlasFollow').checked?discoveryRoute(model,current).nodes.map(item=>item.id):[]);
+        nodes=visibleEntries(model,{query:el('monitorSearch').value.trim(),state:el('monitorFilter').value,collapsed,revealed}).sort((a,b)=>a.depth-b.depth);
         const shown=new Set(nodes.map(item=>item.id)), now=performance.now();
         frames=new Map(nodes.map(item=>{
             const old=previous.get(identity(item));
@@ -161,13 +168,13 @@ async function initialize() {
                 scale:old?.scale ?? (entering?0:1),at:now,entering,
                 moving:entering || Boolean(old && (old.scale!==1 || Math.hypot(old.position.x-item.position.x,old.position.y-item.position.y,old.position.z-item.position.z)>.01))}];
         }));
-        replayPlan=growthPlan(replayScope ? nodes.filter(item=>replayScope.has(item.id)) : nodes);
+        replayPlan=replayGrowthPlan();
         spheres=new THREE.InstancedMesh(sphereGeometry,sphereMaterial,nodes.length);
         spheres.instanceMatrix.setUsage(THREE.DynamicDrawUsage); spheres.frustumCulled=false;
         nodes.forEach((item,index)=>spheres.setColorAt(index,new THREE.Color(palette[theme][item.branch])));
         graph.add(spheres);
-        edges=nodes.filter(item=>item.parent && shown.has(item.parent.id));
-        const retained=new Set(nodes.map(identity)), nextEdges=new Set(edges.map(item=>identity(item.parent)+'|'+identity(item)));
+        edges=model.links.filter(edge=>shown.has(edge.from.id)&&shown.has(edge.to.id));
+        const retained=new Set(nodes.map(identity)), nextEdges=new Set(edges.map(edge=>identity(edge.from)+'|'+identity(edge.to)));
         const rewired=previousEdges.filter(edge=>retained.has(edge.from)&&retained.has(edge.to)&&!nextEdges.has(edge.from+'|'+edge.to));
         if (rewired.length && !reduced.matches) {
             const positions=rewired.flatMap(edge=>[previous.get(edge.from).position,previous.get(edge.to).position].flatMap(point=>[point.x,point.y,point.z]));
@@ -175,12 +182,13 @@ async function initialize() {
             fadingLinks=new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color:theme==='dark'?0x8995a8:0x647384,transparent:true,opacity:.5,depthWrite:false}));
             fadingLinks.frustumCulled=false; fadingAt=now; graph.add(fadingLinks);
         }
-        linePositions=new Float32Array(edges.length*12*2*3);
+        linePositions=new Float32Array(edges.length*2*3);
         lineGeometry=new THREE.BufferGeometry();
         lineGeometry.setAttribute('position',new THREE.BufferAttribute(linePositions,3).setUsage(THREE.DynamicDrawUsage));
         lineColors=new Float32Array(linePositions.length);
         lineGeometry.setAttribute('color',new THREE.BufferAttribute(lineColors,3).setUsage(THREE.DynamicDrawUsage));
-        const lines=new THREE.LineSegments(lineGeometry,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.48,depthWrite:false}));
+        const lines=new THREE.LineSegments(lineGeometry,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.38,depthWrite:false}));
+        lines.name='atlasLinks';
         lines.frustumCulled=false; graph.add(lines);
         ringNodes=nodes.filter(item=>['running','connected','waiting','failed'].includes(item.record?.state));
         rings=new THREE.InstancedMesh(ringGeometry,new THREE.MeshBasicMaterial({transparent:true,opacity:.8}),ringNodes.length);
@@ -206,7 +214,8 @@ async function initialize() {
             const reveal=replayScope && !replayScope.has(item.id) ? 1 : growthAt(replayPlan,item,replayPosition);
             item.baseScale=entry.scale+(1-entry.scale)*ease;
             item.growth=item.baseScale*reveal;
-            const origin=item.parent?.renderPosition || base;
+            const tracedParent=replayScope&&selectedRoute.steps?.find(step=>step.to.id===item.id)?.from;
+            const origin=(tracedParent||item.parent)?.renderPosition || base;
             item.renderPosition=reduced.matches?base:mix(origin,base,reveal);
             const distance=camera.position.distanceTo(new THREE.Vector3().copy(item.renderPosition));
             item.drawRadius=Math.max(item.radius,1.35*distance*pixelFactor)*item.growth;
@@ -215,11 +224,12 @@ async function initialize() {
         });
         spheres.instanceMatrix.needsUpdate=true;
         let offset=0;
-        for (const item of edges) {
-            const a=item.parent.renderPosition,b=item.renderPosition;
-            const reveal=Math.min(item.growth,item.parent.growth);
-            for(let segment=0;segment<12;segment++) for(const step of [segment/12,(segment+1)/12]) {
-                const point=mix(a,b,step*reveal);
+        for (const edge of edges) {
+            const a=edge.from.renderPosition,b=edge.to.renderPosition;
+            const reveal=Math.min(edge.from.growth,edge.to.growth);
+            const shown=displayLink(edge,current,hover);
+            for(const fraction of [0,shown?reveal:0]) {
+                const point=mix(a,b,fraction);
                 linePositions[offset++]=point.x;linePositions[offset++]=point.y;linePositions[offset++]=point.z;
             }
         }
@@ -234,21 +244,32 @@ async function initialize() {
 
     function updateHighlight() {
         disposeGroup(highlight);
-        selectedPath = current ? explicitSelection ? [current.parent,current,...current.children].filter(Boolean) : ancestors(current) : [];
+        selectedRoute = discoveryRoute(model,current);
+        selectedPath = el('atlasFollow').checked ? selectedRoute.nodes : current ? [current] : [];
         const visible = new Set(nodes.map(item => item.id));
-        const tracked=el('atlasFollow').checked&&trackingTarget(root.monitorSnapshot),live=tracked&&model.actual.get(tracked.node.id);
-        const manualEdges=explicitSelection&&current ? [current,...current.children].filter(item=>item.parent&&visible.has(item.id)&&visible.has(item.parent.id)) : [];
-        const manualIds=new Set(manualEdges.map(item=>item.id));
-        const liveEdges=live?ancestors(live).filter(item=>item.parent&&visible.has(item.id)&&visible.has(item.parent.id)&&!manualIds.has(item.id)):[];
+        const manualEdges=el('atlasFollow').checked ? selectedRoute.links.filter(edge=>visible.has(edge.from.id)&&visible.has(edge.to.id)) : [];
+        const pair=edge=>[edge.from.id,edge.to.id].sort().join('|'),painted=new Set();
         const drawRoute=(items,color,kind)=>{
-            for(const item of items){
-                const geometry=new THREE.TubeGeometry(curveFor(item.parent,item),36,.58,6,false);
-                const line=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:color.clone().multiplyScalar(theme==='dark'?3.4:2.2)}));
-                line.userData.route=kind;line.userData.entry=item.id;highlight.add(line);
+            for(const edge of items){
+                if(painted.has(pair(edge)))continue;painted.add(pair(edge));
+                const line=new THREE.Mesh(routeGeometry,new THREE.MeshBasicMaterial({color:color.clone().multiplyScalar(theme==='dark'?3.2:1.45)}));
+                line.userData.route=kind;line.userData.entry=edge.to.id;line.userData.source=edge.from.id;line.userData.edge=edge;
+                line.position.copy(edge.from.position).lerp(edge.to.position,.5);
+                const direction=new THREE.Vector3().copy(edge.to.position).sub(edge.from.position);
+                line.userData.length=direction.length();line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
+                line.scale.set(.2,line.userData.length,.2);
+                highlight.add(line);
             }
         };
-        drawRoute(liveEdges,primary,'follow');drawRoute(manualEdges,manualColor,'manual');
-        root.dataset.atlasHighlight=explicitSelection&&current?'manual':liveEdges.length?'follow':'none';
+        drawRoute(manualEdges,manualColor,'manual');
+        const related=current?model.links.filter(edge=>(edge.from===current||edge.to===current)&&visible.has(edge.from.id)&&visible.has(edge.to.id)):[];
+        drawRoute(related,primary,'connection');
+        root.dataset.atlasHighlight=current?'manual':'none';
+        root.dataset.atlasPathMode=selectedRoute.mode;
+        if(current&&visible.has(current.id)) {
+            const ring=new THREE.Mesh(selectionRingGeometry,new THREE.MeshBasicMaterial({color:manualColor.clone().multiplyScalar(theme==='dark'?3.2:1.45)}));
+            ring.userData.selection=current;ring.userData.faceCamera=true;highlight.add(ring);
+        }
         for (const item of selectedPath) {
             if (!visible.has(item.id)) continue;
             // The fluorescent route and label convey selection; retain status hues.
@@ -260,30 +281,54 @@ async function initialize() {
             }
         }
         const crumbs = document.createDocumentFragment();
-        for (const item of current ? ancestors(current) : []) {
+        for (const item of selectedRoute.nodes) {
             const button = document.createElement('button'); button.type = 'button'; button.textContent = item.label;
             button.addEventListener('click', () => pick(item)); crumbs.append(button);
         }
         el('atlasBreadcrumb').replaceChildren(crumbs);
         el('atlasBranch').hidden = !current?.children.length;
         el('atlasBranch').textContent = uiT(collapsed.has(current?.id) ? '展开分支' : uiT('收起分支'));
-        updateEmphasis(); renderLabels(); updateNarration(); requestFrame();
+        renderRouteEvidence();
+        updateEmphasis(); renderLabels(); updateNarration(); updateFollowInfo(); requestFrame();
+    }
+    function renderRouteEvidence() {
+        el('atlasPathEvidence')?.remove();
+        if(!current)return;
+        const section=document.createElement('section');section.id='atlasPathEvidence';section.className='atlas-path-evidence';
+        const association=selectedRoute.mode==='association';
+        const heading=document.createElement('h3');heading.textContent=uiT(association?'所选节点的关联路径':'所选节点的发掘路径');section.append(heading);
+        const note=document.createElement('p');note.className='monitor-caption';
+        note.textContent=uiT('连线表示有记录的网页导航或目录收录，不表示组织上下级。');section.append(note);
+        if(association){const note=document.createElement('p');note.className='monitor-caption';note.textContent=uiT('发掘记录未连通官网，以下按真实链接展示关联路径；反向步骤不表示实际发掘顺序。');section.append(note);}
+        else if(!selectedRoute.rootConnected){const gap=document.createElement('p');gap.className='monitor-caption';gap.textContent=uiT('当前分支尚未记录到官网的连接，已突出此节点的直接关联。');section.append(gap);}
+        const list=document.createElement('ol');
+        selectedRoute.nodes.forEach((node,index)=>{
+            const row=document.createElement('li'),button=document.createElement('button');button.type='button';button.textContent=node.label;
+            button.title=node.record.url;button.addEventListener('click',()=>pick(node));row.append(button);
+            if(index){
+                const step=selectedRoute.steps[index-1],edge=step.edge,proof=document.createElement('a');
+                proof.textContent=uiT(edge.type==='navigation'?'网页导航':'目录收录')+' · '+uiT(edge.basis);
+                if(step.reversed)proof.textContent+=' · '+uiT('反向关联；原链接：{from} → {to}',{from:edge.from.label,to:edge.to.label});
+                proof.href=edge.evidence_url;proof.target='_blank';proof.rel='noopener noreferrer';proof.title=edge.locator||edge.evidence_url;row.append(proof);
+            }
+            list.append(row);
+        });
+        section.append(list);el('monitorDetail').querySelector('h3').after(section);
     }
     function updateEmphasis() {
-        if (!spheres) return;
-        const context = current && current.depth >= 2 ? current.cluster : null;
+        if (!spheres || !model) return;
+        contextIds=focusContext(model.links,current,hover,selectedPath);
         const onPath = new Set(selectedPath.map(item=>item.id));
-        const tracked=el('atlasFollow').checked&&trackingTarget(root.monitorSnapshot),live=tracked&&model.actual.get(tracked.node.id);
-        if(live)ancestors(live).forEach(item=>onPath.add(item.id));
         nodes.forEach((item,index)=>{
-            const dim = explicitSelection && current ? !onPath.has(item.id) : context && item.cluster !== context && !onPath.has(item.id);
-            spheres.setColorAt(index,new THREE.Color(palette[theme][item.branch]).lerp(scene.background,dim ? .7 : 0));
+            const focused=Boolean(current||hover),near=contextIds.has(item.id);
+            const fade=focused && !near ? .8 : focused && !onPath.has(item.id) ? .25 : 0;
+            spheres.setColorAt(index,new THREE.Color(palette[theme][item.branch]).lerp(scene.background,fade));
         });
         if(spheres.instanceColor)spheres.instanceColor.needsUpdate=true;
-        edges.forEach((item,index)=>{
-            const dim=explicitSelection && current ? !(onPath.has(item.id)&&onPath.has(item.parent.id)) : context && item.cluster!==context && !onPath.has(item.id);
-            const color=new THREE.Color(theme==='dark'?'#8995a8':'#647384').lerp(scene.background,dim ? .8 : item.depth>2 ? .24 : 0);
-            for(let offset=index*72;offset<(index+1)*72;offset+=3){lineColors[offset]=color.r;lineColors[offset+1]=color.g;lineColors[offset+2]=color.b;}
+        edges.forEach((edge,index)=>{
+            const dim=(current||hover) && !(contextIds.has(edge.from.id)&&contextIds.has(edge.to.id));
+            const color=new THREE.Color(theme==='dark'?'#8e9aae':'#586d82').lerp(scene.background,dim ? .87 : 0);
+            for(let offset=index*6;offset<(index+1)*6;offset+=3){lineColors[offset]=color.r;lineColors[offset+1]=color.g;lineColors[offset+2]=color.b;}
         });
         if(lineGeometry)lineGeometry.attributes.color.needsUpdate=true;
     }
@@ -299,15 +344,13 @@ async function initialize() {
         el('atlasPlay').disabled = !nodes.length;
     }
     function sendSelection(item, focus = true) {
-        const node = item.record || {id:item.id, label:item.label, kind_label:uiT('已记录的导航名称'),
-            state:'observed', state_label:uiT('路径分组'), reason:uiT('此名称来自已记录导航，尚无单独的页面读取记录。'),
-            path:ancestors(item).map(part => part.label), url:'', checked_at:null, status_code:null, sources:[], tasks:[]};
+        const node = item.record;
         root.dispatchEvent(new CustomEvent('monitor-select-node', {detail:{id:node.id, node, focus}}));
     }
     function pick(item) {
         manualView = true;
         if(tourTimer||replayPosition<1)completeReplay();else stopTour();
-        explicitSelection = true; current = item; sendSelection(item); updateHighlight();
+        explicitSelection = true; current = item; sendSelection(item,false); updateHighlight();
     }
     function receiveSelection(event) {
         if (!model) return;
@@ -320,6 +363,7 @@ async function initialize() {
         }
         let revealed = false;
         for (const part of ancestors(item).slice(0, -1)) if (collapsed.delete(part.id)) revealed = true;
+        if(el('atlasFollow').checked&&discoveryRoute(model,item).nodes.some(node=>!nodes.includes(node)))revealed=true;
         if (revealed) paint(); else updateHighlight();
         if (event.detail.focus) {
             manualView = true; updateFollowInfo();
@@ -328,10 +372,11 @@ async function initialize() {
     }
     function update(snapshot) {
         active = snapshot.nodes.some(node => node.state === 'running');
-        const next = JSON.stringify([layoutSpacing,snapshot.nodes.map(node => [node.id, node.label, node.path, node.kind, node.state])]);
+        const next = JSON.stringify([layoutSpacing,snapshot.nodes.map(node => [node.id, node.label, node.path, node.kind, node.state]),snapshot.relations]);
         const initial = !model;
         if (next !== signature) {
             signature = next; const oldId = current?.record?.id || current?.id;
+            hover=null;tooltip.hidden=true;
             model = buildAtlas(snapshot,{spacing:layoutSpacing});
             current = model.actual.get(oldId) || model.entries.get(oldId) || model.actual.get(root.dataset.selectedId) || null;
             paint();
@@ -347,43 +392,35 @@ async function initialize() {
         const target=trackingTarget(root.monitorSnapshot);
         el('atlasLocate').disabled=!target;
         let message='';
-        if(el('atlasFollow').checked){
-            if(tourTimer)message=uiT('回放结束后继续跟随');
-            else if(replayPosition<1)message=uiT('回放已暂停，可点击定位');
-            else if(!target)message=uiT('等待新的探索进展');
-            else if(!nodes.some(item=>item.record?.id===target.node.id))message=el('monitorSearch').value||el('monitorFilter').value!=='all' ? uiT('当前入口被筛选隐藏，可点击定位') : uiT('当前入口位于收起的分支，可点击定位');
-            else if(manualView)message=uiT('自由浏览中，新进展时继续跟随');
-            else message=uiT(target.state==='running'?'跟随中：{name}':'最近进展：{name}',{name:target.node.label});
-        }
+        if(el('atlasFollow').checked)message=!current?uiT('选择节点，查看从官网入口到此处的完整路径'):
+            selectedRoute.mode==='association'?uiT('官网关联路径：{count} 个入口（含反向导航）',{count:selectedRoute.nodes.length}):
+            selectedRoute.complete?uiT('所选路径：{count} 个入口',{count:selectedRoute.nodes.length}):uiT('当前分支尚未记录到官网的连接，已突出此节点的直接关联。');
         el('atlasFollowStatus').textContent=message;
         el('atlasFollowStatus').title=message;
     }
     function syncFollowing(force=false) {
         updateFollowInfo();
-        if(!contextAvailable||!model||(!force&&!el('atlasFollow').checked)||tourTimer||replayPosition<1)return;
+        if(!force||!contextAvailable||!model||tourTimer||replayPosition<1)return;
         const target=trackingTarget(root.monitorSnapshot),item=target&&model.actual.get(target.node.id);
         if(!item)return;
-        if(!nodes.includes(item)){
-            if(!force&&(el('monitorSearch').value||el('monitorFilter').value!=='all'))return;
-            if(force&&(el('monitorSearch').value||el('monitorFilter').value!=='all')){
-                el('monitorSearch').value='';el('monitorFilter').value='all';
-                el('monitorSearch').dispatchEvent(new Event('input',{bubbles:true}));
-            }
+        if(el('monitorSearch').value||el('monitorFilter').value!=='all'){
+            el('monitorSearch').value='';el('monitorFilter').value='all';
+            el('monitorSearch').dispatchEvent(new Event('input',{bubbles:true}));
         }
         if(!force&&target.key===lastTrackedKey)return;
         lastTrackedKey=target.key;manualView=false;
         let revealed=false;
         for(const part of ancestors(item).slice(0,-1))if(collapsed.delete(part.id))revealed=true;
-        current=item;explicitSelection=false;
+        current=item;explicitSelection=true;
         if(revealed)paint();
-        sendSelection(item,false);updateHighlight();
-        fly(new THREE.Vector3().copy(item.position),Math.max(235,item.radius*20),true);
+        sendSelection(item,true);updateHighlight();
         updateFollowInfo();
     }
     function completeReplay() {
         stopTour();replayScope=null;replayPlan=growthPlan(nodes);positionReplay(1);
     }
     function fly(target, distance, animate = true, front = false) {
+        hover=null;tooltip.hidden=true;updateEmphasis();
         const direction = front ? new THREE.Vector3(.03,.035,1).normalize() : camera.position.clone().sub(controls.target).normalize();
         if (!Number.isFinite(direction.x) || direction.lengthSq() < .1) direction.set(.06, .07, 1).normalize();
         const destination = target.clone().addScaledVector(direction, distance);
@@ -402,10 +439,11 @@ async function initialize() {
         for(const item of nodes){const offset=new THREE.Vector3().copy(item.position).sub(bounds.center),depth=offset.dot(direction);
             distance=Math.max(distance,(Math.abs(offset.dot(right))+item.radius)/tanX+depth,(Math.abs(offset.dot(up))+item.radius)/tanY+depth);}
         distance*=1.08;
+        overviewDistance=distance;
         fly(bounds.center,distance,animate,true);
     }
     function frameSelection(item) {
-        const visible=new Set(nodes), neighbors=[item.parent,item,...item.children].filter(n=>n&&visible.has(n));
+        const visible=new Set(nodes), neighbors=(el('atlasFollow').checked?discoveryRoute(model,item).nodes:[item]).filter(n=>visible.has(n));
         const box=new THREE.Box3();for(const node of neighbors)box.expandByPoint(new THREE.Vector3().copy(node.position));
         const center=box.getCenter(new THREE.Vector3()),direction=camera.position.clone().sub(controls.target).normalize();
         const right=new THREE.Vector3().crossVectors(camera.up,direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right);
@@ -418,7 +456,7 @@ async function initialize() {
     }
 
     function updateNarration() {
-        const path = current ? ancestors(current).map(item => item.label).join(' / ') : '';
+        const path = selectedRoute.nodes.map(item => item.label).join(' / ');
         const lines = [uiT('从已记录的官网入口出发。'), uiT('分叉表示观察到的导航路径或已保存的目录归属。'),
             current ? uiT('当前线索：{name}', {name:current.label}) : uiT('选择一个节点，沿已记录的路径深入。'),
             current?.record?.sources.length ? uiT('此入口已有接入栏目，可查看保存的来源与状态。') : uiT('查看右侧读取记录与官网入口，未验证的内容保留待确认状态。')];
@@ -436,7 +474,7 @@ async function initialize() {
     function setChapter(index,animate=true) {
         positionReplay(Number(index)/3);
         if (!current || !explicitSelection) return;
-        const path=ancestors(current), target=Number(index)===1?path[Math.min(1,path.length-1)]:current;
+        const path=discoveryRoute(model,current).nodes, target=Number(index)===1?path[Math.min(1,path.length-1)]:current;
         if (Number(index)===0) overview(animate);
         else fly(new THREE.Vector3().copy(target.position),Number(index)===1?370:Number(index)===2?235:155,animate);
         el('monitorDetail').classList.toggle('atlas-evidence-focus',Number(index)===3);
@@ -448,13 +486,13 @@ async function initialize() {
     function tour() {
         if (tourTimer) {stopTour();return;}
         if (!nodes.length) return;
-        replayScope=explicitSelection && current ? new Set(ancestors(current).map(item=>item.id)) : null;
-        replayPlan=growthPlan(replayScope?nodes.filter(item=>replayScope.has(item.id)):nodes);
+        replayScope=current ? new Set(discoveryRoute(model,current).nodes.map(item=>item.id)) : null;
+        replayPlan=replayGrowthPlan();
         if (replayPosition>=1) positionReplay(0);
         tourTimer={at:performance.now(),from:replayPosition,duration:reduced.matches?1200:7200};
         el('atlasPlay').setAttribute('aria-pressed','true'); el('atlasPlay').setAttribute('aria-label',uiT('暂停生长动画'));
         updateFollowInfo();
-        if (!explicitSelection) overview(false);
+        if (!current) overview(false);
         requestFrame();
     }
     function clearSelection() {
@@ -463,33 +501,67 @@ async function initialize() {
     }
 
     function labelsAndRings() {
-        const width = viewport.clientWidth, height = viewport.clientHeight, occupied = [[0,0,width,78],[0,height-104,width,height]];
-        const reserved = [el('atlasOptions').open && el('atlasOptions').querySelector('.atlas-options-panel'),
+        const width = viewport.clientWidth, height = viewport.clientHeight, occupied = [[0,0,width,8],[0,height-8,width,height]];
+        const reserved = [el('atlasStatus'),el('atlasHelp'),stage.querySelector('.atlas-live-controls'),
+            stage.querySelector('.atlas-scene-tools'),stage.querySelector('.atlas-camera-controls'),
+            el('atlasOptions').open && el('atlasOptions').querySelector('.atlas-options-panel'),
             root.classList.contains('atlas-expanded') && stage.querySelector('.atlas-immersive-tools'),
             root.classList.contains('atlas-search-open') && el('atlasSearchPanel'),
             root.classList.contains('atlas-details-open') && el('atlasDetailPanel')].filter(Boolean);
         const rect=viewport.getBoundingClientRect();
         for(const panel of reserved){const box=panel.getBoundingClientRect();occupied.push([box.left-rect.left,box.top-rect.top,box.right-rect.left,box.bottom-rect.top]);}
+        const candidates=[],chosen=new Set(selectedPath.map(item=>item.id));
+        const zoom=overviewDistance/Math.max(1,camera.position.distanceTo(controls.target));
+        const policy=labelPolicy({width,height,zoom,selected:current});
         for (const item of labelNodes) {
-            const button = item.labelElement;
+            item.labelElement.hidden=true;
             projected.copy(item.renderPosition || item.position).project(camera);
             const x = (projected.x + 1) * width / 2, y = (1 - projected.y) * height / 2;
             const distance = camera.position.distanceTo(new THREE.Vector3().copy(item.renderPosition || item.position));
             const offset = item.drawRadius * height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * distance) + 8;
-            const left = x + offset, top = y - item.labelHeight / 2;
-            const box = [left, top, left + item.labelWidth, top + item.labelHeight];
-            const collides = occupied.some(other => box[0] < other[2] && box[2] > other[0] && box[1] < other[3] && box[3] > other[1]);
-            const hide = item.growth < .15 || projected.z < -1 || projected.z > 1 || left < 0 || top < 0 || box[2] > width || top > height - 24 ||
-                (collides && item !== current);
-            button.hidden = hide;
-            if (!hide) { button.style.transform = `translate(${left}px,${top}px)`; occupied.push(box); }
+            if(item.growth<.15||projected.z < -1||projected.z>1||x<0||x>width||y<0||y>height)continue;
+            const priority=labelImportance(item,{selected:current,hovered:hover,path:chosen,context:contextIds,detailed:policy.detailed,pixels:offset-8,nodeLabels:el('atlasNodeLabels').checked});
+            if(priority>=0)candidates.push({item,x,y,offset,priority});
         }
+        candidates.sort((a,b)=>b.priority-a.priority||a.item.id.localeCompare(b.item.id));
+        const limit=policy.limit;
+        let count=0;
+        for(const {item,x,y,offset} of candidates){
+            if(count>=limit)break;
+            const w=item.labelWidth,h=item.labelHeight;
+            const positions=[[x+offset,y-h/2],[x-offset-w,y-h/2],[x-w/2,y-offset-h],[x-w/2,y+offset]];
+            let box;
+            for(const [left,top] of positions){
+                const candidate=[left,top,left+w,top+h];
+                if(left<4||top<4||candidate[2]>width-4||candidate[3]>height-4)continue;
+                if(occupied.some(other=>left<other[2]&&candidate[2]>other[0]&&top<other[3]&&candidate[3]>other[1]))continue;
+                box=candidate;break;
+            }
+            if(!box)continue;
+            const button=item.labelElement;button.hidden=false;button.style.transform=`translate(${box[0]}px,${box[1]}px)`;
+            button.dataset.selected=String(item===current);occupied.push([box[0]-6,box[1]-5,box[2]+6,box[3]+5]);count++;
+        }
+        root.dataset.atlasLabelCount=String(count);
+        root.dataset.atlasDisplayMode=current?'local':policy.detailed?'detail':'overview';
         ringNodes.forEach((item, index) => {
             matrix.position.copy(item.renderPosition || item.position); matrix.scale.setScalar(item.drawRadius ? item.drawRadius*1.18 : 0); matrix.quaternion.copy(camera.quaternion);
             matrix.updateMatrix(); rings.setMatrixAt(index, matrix.matrix);
         });
         if (rings) rings.instanceMatrix.needsUpdate = true;
-        highlight.children.forEach(object => { if (object.userData.faceCamera) object.quaternion.copy(camera.quaternion); });
+        const pixelFactor=2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/Math.max(1,height);
+        highlight.children.forEach(object => {
+            if(object.userData.faceCamera)object.quaternion.copy(camera.quaternion);
+            if(object.userData.edge){
+                const pixel=camera.position.distanceTo(object.position)*pixelFactor;
+                const radius=Math.max(.2,pixel*(object.userData.route==='manual'?1.6:1.05));
+                object.scale.set(radius,object.userData.length,radius);
+            }
+            if(object.userData.selection){
+                const item=object.userData.selection;object.position.copy(item.renderPosition||item.position);
+                const pixel=camera.position.distanceTo(object.position)*pixelFactor;
+                object.scale.setScalar(Math.max((item.drawRadius||item.radius)+pixel*4,pixel*9));
+            }
+        });
     }
     function draw(time) {
         frame = null;
@@ -506,7 +578,7 @@ async function initialize() {
         }
         if (tourTimer) {
             positionReplay(tourTimer.from+(time-tourTimer.at)/tourTimer.duration);
-            if (replayPosition>=1) {stopTour();if(el('atlasFollow').checked)syncFollowing(true);}
+            if (replayPosition>=1) stopTour();
             moving=true;
         }
         const pulsing = active && !reduced.matches && selectedPath.some(item => item.record?.state === 'running');
@@ -533,12 +605,14 @@ async function initialize() {
         if (!spheres || !nodes.length) return null;
         const rect = renderer.domElement.getBoundingClientRect();
         pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+        camera.updateMatrixWorld(true);
         raycaster.setFromCamera(pointer, camera);
-        const found = raycaster.intersectObject(spheres, false)[0];
-        return found ? nodes[found.instanceId] : null;
+        return pickSphere(nodes,{origin:raycaster.ray.origin,direction:raycaster.ray.direction,
+            near:camera.near,far:camera.far,pixelFactor:2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/Math.max(1,rect.height),
+            minimumPixels:event.pointerType==='touch'?8:4});
     }
     renderer.domElement.addEventListener('pointerdown', event => {
-        press = event.button === 0 ? {x:event.clientX,y:event.clientY} : null;
+        press = event.button === 0 && event.isPrimary ? {x:event.clientX,y:event.clientY,id:event.pointerId,dragged:false} : null;
         if(event.button===1)event.preventDefault();
         tween = null; stopTour();
     });
@@ -552,22 +626,25 @@ async function initialize() {
             button:event.button,buttons:event.buttons,clientX:event.clientX,clientY:event.clientY,cancelable:true}));
     },{capture:true});
     renderer.domElement.addEventListener('pointerup', event => {
-        if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) < 5) { const item = hit(event); if (item) pick(item); else clearSelection(); }
+        if (press && press.id===event.pointerId && !press.dragged && Math.hypot(event.clientX - press.x, event.clientY - press.y) < 5) { const item = hit(event); if (item) pick(item); else clearSelection(); }
         press = null;
     });
     renderer.domElement.addEventListener('pointercancel', () => { press = null; });
     renderer.domElement.addEventListener('pointermove', event => {
-        if (press || performance.now() - lastPick < 65) return;
-        lastPick = performance.now(); hover = hit(event); tooltip.hidden = !hover;
+        if (press) {if(Math.hypot(event.clientX-press.x,event.clientY-press.y)>=5)press.dragged=true;return;}
+        if (performance.now() - lastPick < 65) return;
+        lastPick = performance.now(); const previousHover=hover;hover = hit(event); tooltip.hidden = !hover;
+        if(hover!==previousHover)updateEmphasis();
         renderer.domElement.style.cursor = hover ? 'pointer' : 'grab';
         if (hover) {
-            tooltip.textContent = hover.label + ' · ' + uiT(hover.record?.state_label || uiT('已记录的导航名称'));
+            tooltip.textContent = hover.label + ' · ' + uiT(hover.record.kind_label) + '\n' + hover.record.url;
             const rect = stage.getBoundingClientRect();
             tooltip.style.left = Math.min(event.clientX - rect.left + 14, stage.clientWidth - 225) + 'px';
             tooltip.style.top = Math.max(8, event.clientY - rect.top - 40) + 'px';
         }
+        requestFrame();
     });
-    renderer.domElement.addEventListener('pointerleave', () => { tooltip.hidden = true; });
+    renderer.domElement.addEventListener('pointerleave', () => { tooltip.hidden = true;hover=null;updateEmphasis();requestFrame(); });
     // Labels and other HTML overlays sit above the canvas. Catch their wheel events
     // too, so a zoom gesture never chains to the surrounding document.
     stage.addEventListener('wheel',event=>{
@@ -591,11 +668,11 @@ async function initialize() {
     renderer.domElement.addEventListener('webglcontextrestored', () => {
         contextAvailable = true; controls.enabled = true;
         stage.dataset.renderer = 'ready';
-        for (const id of ['atlasZoomIn','atlasZoomOut','atlasOverview','atlasSpacing']) el(id).disabled = false;
+        for (const id of ['atlasZoomIn','atlasZoomOut','atlasOverview','atlasSpacing','atlasNodeLabels']) el(id).disabled = false;
         updateStatus(); updateFollowInfo(); resize();
     });
     controls.addEventListener('change', requestFrame);
-    controls.addEventListener('start', () => { manualView = true; tween = null; stopTour(); });
+    controls.addEventListener('start', () => { manualView = true; tween = null; hover=null;tooltip.hidden=true;updateEmphasis();stopTour(); });
     viewport.addEventListener('keydown', event => {
         if (event.target !== viewport) return;
         if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) {
@@ -630,10 +707,11 @@ async function initialize() {
     });
     el('atlasFollow').addEventListener('change', () => {
         savePreferences();lastTrackedKey='';
-        if(el('atlasFollow').checked){completeReplay();syncFollowing(true);}else{updateFollowInfo();if(model)updateHighlight();}
+        completeReplay();if(model)paint();
     });
+    el('atlasNodeLabels').addEventListener('change',()=>{savePreferences();requestFrame();});
     el('atlasLocate').addEventListener('click',()=>{completeReplay();syncFollowing(true);});
-    el('atlasReplayReset').addEventListener('click',()=>{completeReplay();if(el('atlasFollow').checked)syncFollowing(true);else{clearSelection();overview();}});
+    el('atlasReplayReset').addEventListener('click',()=>{completeReplay();if(current)frameSelection(current);else overview();});
     el('atlasSpacingValue').textContent=Math.round(layoutSpacing*100)+'%';
     el('atlasSpacing').addEventListener('input',()=>{el('atlasSpacingValue').textContent=Math.round(Number(el('atlasSpacing').value)*100)+'%';});
     el('atlasSpacing').addEventListener('change',()=>{
@@ -661,6 +739,7 @@ async function initialize() {
         disposed = true; resizeObserver.disconnect(); intersection.disconnect(); themeObserver.disconnect();
         controls.dispose(); disposeGroup(graph); disposeGroup(highlight); sphereGeometry.dispose(); sphereMaterial.dispose();
         ringGeometry.dispose(); bloom.dispose(); composer.dispose(); renderer.dispose();
+        routeGeometry.dispose();selectionRingGeometry.dispose();
     });
     window.addEventListener('pageshow', () => { if (!disposed) requestFrame(); });
     // Small diagnostics also let browser checks verify genuine spatial interaction.

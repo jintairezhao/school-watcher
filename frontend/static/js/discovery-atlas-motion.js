@@ -11,12 +11,14 @@ export function birthAnchor(item, previous) {
     return parent?.position || child?.position || item.parent?.position || item.position;
 }
 
-export function growthPlan(nodes) {
+export function growthPlan(nodes, {parents = null} = {}) {
     const plan=new Map(), shown=new Set(nodes.map(node=>node.id));
+    const parentOf=item=>parents?.has(item.id)?parents.get(item.id):item.parent;
     function add(item) {
         if (plan.has(item.id)) return plan.get(item.id);
-        const parent=item.parent && shown.has(item.parent.id) ? add(item.parent) : null;
-        const siblings=item.parent?.children || nodes.filter(node=>!node.parent);
+        const upstream=parentOf(item);
+        const parent=upstream && shown.has(upstream.id) ? add(upstream) : null;
+        const siblings=parents?nodes.filter(node=>parentOf(node)===upstream):item.parent?.children || nodes.filter(node=>!node.parent);
         const index=Math.max(0,siblings.indexOf(item));
         const start=parent ? parent.start+.38 + .28*index/Math.max(1,siblings.length-1) : 0;
         const value={start,end:start+.85}; plan.set(item.id,value); return value;

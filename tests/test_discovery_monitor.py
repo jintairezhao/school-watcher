@@ -44,6 +44,44 @@ class DiscoveryMonitorTests(unittest.TestCase):
             payload={'school_id':self.school.id}, **values)
         db.session.add(row); db.session.commit(); return row
 
+    def test_same_name_paths_do_not_invent_page_or_ownership_links(self):
+        base=self.school.url
+        self.publish([{'url':base+'/math','label':'数理学院','kind':'unit','path_json':['学校官网','学生工作']},
+                      {'url':base+'/business/party','label':'党建工作','kind':'navigation','path_json':['学校官网','数理学院']}])
+        value=self.client.get(self.endpoint).json
+        self.assertEqual(value['relations'], [])
+        self.assertEqual([node['url'] for node in value['nodes']], [base+'/math'])
+        self.assertEqual(value['catalog']['scope']['omitted']['nonstructural'], 1)
+
+    def test_recorded_menu_links_have_url_evidence_and_navigation_type(self):
+        base=self.school.url
+        parent=base+'/math'
+        target=base+'/math/funding'
+        self.publish([{'url':parent,'label':'数理学院','kind':'unit','content_hash':'revision-1'}])
+        records=[{'node_key':'identity','parent_key':'','name':'数理学院','url':parent,'relation':'page_identity'},
+                 {'node_key':'party','parent_key':'identity','name':'学生资助','url':target,'relation':'menu_group','locator':'nav a.funding','content_hash':'revision-1'},
+                 {'node_key':'stale','parent_key':'identity','name':'旧入口','url':base+'/old','relation':'menu_group','content_hash':'revision-0'},
+                 {'node_key':'unclear','parent_key':'missing','name':'无依据入口','url':base+'/unknown','relation':'menu_group'}]
+        with self.catalog.connect(write=True) as c:
+            c.execute('UPDATE catalog_pages SET nodes_gzip=? WHERE url=?',(pack(records),parent))
+        value=self.client.get(self.endpoint).json
+        nodes={node['url']:node for node in value['nodes']}
+        self.assertIn(target,nodes)
+        self.assertNotIn(base+'/old',nodes)
+        self.assertNotIn(base+'/unknown',nodes)
+        self.assertEqual(value['relations'],[dict(source=nodes[parent]['id'],target=nodes[target]['id'],
+            type='navigation',evidence_url=parent,locator='nav a.funding',basis='官网页面中记录的导航链接')])
+        self.assertNotIn('evidence_gzip',str(value))
+
+    def test_task_phase_is_not_a_page_name(self):
+        address=self.school.url+'/new-entry'
+        row=self.task(name='onboard',state='pending')
+        row.payload={'school_id':self.school.id,'url':address};db.session.commit()
+        value=self.client.get(self.endpoint).json
+        self.assertEqual(value['nodes'], [])
+        self.assertEqual(value['catalog']['scope']['omitted']['unidentified'], 1)
+        self.assertEqual(value['tasks'][0]['url'], address)
+
     def test_empty_passive_reads_create_nothing_and_reveal_no_keys(self):
         with patch('backend.ai.providers.complete', side_effect=AssertionError('No paid request')), \
              patch('backend.services.source_inventory.Inventory.__init__', side_effect=AssertionError('No scratch reads')):
@@ -159,10 +197,12 @@ class DiscoveryMonitorTests(unittest.TestCase):
         stranger = Department(school_id=self.school.id, name=source.name, group_name=group.name,
                              list_url='https://unrelated.edu.cn/tzgg/', list_selector='li')
         db.session.add(stranger); db.session.commit()
-        nodes = {n['url']:n for n in self.client.get(self.endpoint).json['nodes']}
+        value = self.client.get(self.endpoint).json
+        nodes = {n['url']:n for n in value['nodes']}
         self.assertEqual(nodes[source.list_url]['path'], [self.school.name, group.name, unit.name])
         self.assertEqual(nodes[source.list_url]['path_basis'], '官网目录与栏目入口记录')
-        self.assertEqual(nodes[stranger.list_url]['path'], [])
+        self.assertNotIn(stranger.list_url, nodes)
+        self.assertEqual(value['catalog']['scope']['omitted']['external'], 1)
 
     def test_conflicting_saved_owners_and_directory_cycles_do_not_invent_edges(self):
         group, unit, source = self.college()
@@ -237,9 +277,8 @@ class DiscoveryMonitorTests(unittest.TestCase):
         self.publish([{'url':self.school.url + '/legacy','label':'news.example.edu.cn/x',
                        'kind':'channel','state':'fetched','path_json':['www.example.edu.cn','组织机构']}])
         value = self.client.get(self.endpoint).json
-        node = value['nodes'][0]
-        self.assertEqual(node['label'], '未命名官网入口')
-        self.assertNotIn('www.example.edu.cn', node['path'])
+        self.assertEqual(value['nodes'], [])
+        self.assertEqual(value['catalog']['scope']['omitted']['unidentified'], 1)
 
     def test_pending_and_done_tasks_do_not_claim_to_be_reading(self):
         rows = []
@@ -251,10 +290,102 @@ class DiscoveryMonitorTests(unittest.TestCase):
         value = self.client.get(self.endpoint).json
         task_by_id = {row['id']:row for row in value['tasks']}
         node_by_url = {row['url']:row for row in value['nodes']}
-        self.assertEqual(node_by_url[self.school.url + '/queued']['state'], 'pending')
+        self.assertNotIn(self.school.url + '/queued', node_by_url)
         self.assertEqual(task_by_id[rows[0].id]['reason'], '等待调度')
         self.assertEqual(task_by_id[rows[1].id]['reason'], '本项处理结束')
         self.assertEqual(value['progress']['column_tasks'], 1)
+
+
+class DiscoveryGraphScopeTests(unittest.TestCase):
+    def project(self, pages, *, records=(), sources=(), relations=(), root='https://www.campus.edu.cn/'):
+        from backend.services.discovery_monitor import _graph_scope
+        return _graph_scope(root, {page['url']: page for page in pages}, list(relations),
+                            list(records), dict.fromkeys(sources))
+
+    def test_external_university_authority_and_sibling_campus_are_not_school_structure(self):
+        root = 'https://www.cupk.edu.cn/'
+        rows = [{'url': address, 'label': '人事处', 'kind': 'unit'} for address in (
+            root, 'https://career.cupk.edu.cn/', 'https://www.cup.edu.cn/',
+            'https://rsc.nankai.edu.cn/', 'https://www.moe.gov.cn/', 'https://cupk.edu.cn.evil.test/')]
+        kept, _, scope = self.project(rows, root=root, sources=['https://www.cup.edu.cn/'])
+        self.assertEqual(set(kept), {root, 'https://career.cupk.edu.cn/'})
+        self.assertEqual(scope['omitted']['external'], 4)
+        self.assertEqual(scope['observed_nodes'], scope['included_nodes'] + scope['omitted_nodes'])
+        kept, _, _ = self.project([{'url': 'https://other.university.edu/', 'label': '学院', 'kind': 'unit'}],
+                                  root='https://campus.university.edu/')
+        self.assertEqual(kept, {})
+
+    def test_single_articles_and_tools_do_not_become_structural_nodes(self):
+        base = 'https://www.campus.edu.cn/'
+        rows = [dict(url=base+path, label=label, kind='channel') for path,label in (
+            ('c/2026-09-10/123.shtml', '关于2026年奖学金申请的通知'),
+            ('info/1001/12345.htm', '教职工聘用公示'),
+            ('Home/Detail?id=123', '学生竞赛结果'),
+            ('2026/10/19/awards.html', '学生获奖'),
+            ('mail/', '电子邮件'), ('File/DownloadFile?id=1', '附件一'), ('forms/example.pdf', '申请表'))]
+        kept, _, scope = self.project(rows)
+        self.assertEqual(kept, {})
+        self.assertEqual(scope['omitted']['article'], 4)
+        self.assertEqual(scope['omitted']['utility'], 3)
+        rows[0]['path_basis'] = '观察到的导航路径'
+        rows[0]['path_json'] = ['数学学院', '学生资助']
+        kept, _, _ = self.project(rows)
+        self.assertEqual(kept, {})
+
+    def test_evidenced_directory_and_unit_survive_article_shaped_urls(self):
+        base = 'https://www.campus.edu.cn/'
+        directory, unit = base+'c/2020-10-10/10.shtml', base+'c/2021-01-01/20.shtml'
+        rows = [dict(url=directory,label='机构设置',kind='directory',content_hash='a'*64),
+                dict(url=unit,label='数学与统计系',kind='unit')]
+        proof = dict(url=unit,reference_url=directory,relation='sub_unit',name='数学与统计系')
+        kept, _, scope = self.project(rows, records=[proof])
+        self.assertEqual(set(kept), {directory, unit})
+        self.assertTrue(all(page['scope_basis']=='directory_evidence' for page in kept.values()))
+        self.assertEqual(scope['omitted_nodes'], 0)
+        # The same words in an external page are not school structure evidence.
+        proof['reference_url'] = 'https://other.edu.cn/'
+        kept, _, scope = self.project(rows, records=[proof])
+        self.assertEqual(set(kept), {directory})
+        self.assertEqual(scope['omitted']['article'], 1)
+        rows[0]['label'] = 'Departments'
+        kept, _, _ = self.project(rows)
+        self.assertEqual(set(kept), {directory})
+
+    def test_plain_menus_need_their_own_interest_evidence_not_inherited_college_path(self):
+        base = 'https://www.campus.edu.cn/'
+        rows = [dict(url=base+path,label=label,kind='navigation',path_json=['数学学院'])
+                for path,label in (('theme/', '师德榜样'), ('funding/', '学生资助'), ('unknown/', ''))]
+        records = [dict(url=row['url'],name=row['label'],reference_url=base,relation='menu_group') for row in rows]
+        kept, _, scope = self.project(rows, records=records)
+        self.assertEqual(set(kept), {base+'funding/'})
+        self.assertEqual(scope['omitted']['nonstructural'], 1)
+        self.assertEqual(scope['omitted']['unidentified'], 1)
+
+    def test_configured_sources_keep_identity_and_links_need_visible_local_endpoints(self):
+        base = 'https://www.campus.edu.cn/'
+        source = base+'department/notices/'
+        pages = [dict(url=base,label='学校官网',kind='root'),
+                 dict(url=source,label='师德榜样',kind='navigation')]
+        relations = [dict(source_url=base,target_url=source,evidence_url=base,type='navigation'),
+                     dict(source_url=base,target_url=source,evidence_url='https://other.edu.cn/',type='navigation')]
+        original = json.loads(json.dumps(pages))
+        kept, links, scope = self.project(pages,sources=[source],relations=relations)
+        self.assertEqual(kept[source]['scope_basis'], 'configured_source')
+        self.assertEqual(links, relations[:1])
+        self.assertEqual(scope['omitted_relations'], 1)
+        self.assertEqual(pages, original)
+
+    def test_policy_folder_is_not_a_department_despite_legacy_unit_classification(self):
+        base = 'https://www.campus.edu.cn/'
+        policy = base+'jwjc/zcfg/jyb/'
+        office = base+'office/'
+        rows = [dict(url=policy,label='教育部',kind='unit',state='fetched'),
+                dict(url=office,label='综合办公室',kind='unit',state='fetched')]
+        records = [dict(url=page['url'],reference_url=page['url'],name=page['label'],relation='page_identity')
+                   for page in rows]
+        kept, _, scope = self.project(rows, records=records)
+        self.assertEqual(set(kept), {office})
+        self.assertEqual(scope['omitted']['nonstructural'], 1)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {pickSphere} from '../../frontend/static/js/discovery-atlas-picking.js';
+const ray={origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:-1},near:.5,far:1000};
+const sphere=(id,x,y,z,radius=2)=>({id,renderPosition:{x,y,z},drawRadius:radius,growth:1});
+const a=sphere('front',0,0,-10),b=sphere('back',0,0,-20);
+assert.equal(pickSphere([b,a],ray),a,'Pick the visible front surface, independent of list order');
+assert.equal(pickSphere([sphere('behind',0,0,10)],ray),null);
+assert.equal(pickSphere([{...a,growth:0}],ray),null,'A not-yet-grown bubble is not clickable');
+assert.equal(pickSphere([sphere('outside',0,0,-2000)],ray),null);
+a.renderPosition={x:20,y:0,z:-10};
+assert.equal(pickSphere([a],ray),null);
+a.renderPosition={x:3,y:0,z:-10};a.drawRadius=4;
+assert.equal(pickSphere([a],ray),a,'Picking follows current animated positions and sizes, without cached bounds');
+const tiny=sphere('tiny',.2,0,-100,.01);
+assert.equal(pickSphere([tiny],{...ray,pixelFactor:.001}),tiny,'Tiny rendered bubbles have a small pointer target');
+assert.equal(pickSphere([tiny,b],{...ray,pixelFactor:.001}),b,'Tolerance cannot steal a genuine surface hit');
+console.log('Atlas sphere picking: front surface, animation, tiny targets and clipping pass');
