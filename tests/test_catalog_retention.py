@@ -27,8 +27,11 @@ class CatalogRetentionTests(unittest.TestCase):
         from tests.test_direct_onboarding import DirectOnboardingTests
         self.fixture = DirectOnboardingTests(); self.fixture.setUp()
         self.app = self.fixture.app
-        self.root = Path(self.fixture.temp.name)
-        self.catalog = RuntimeCatalog(self.app.config['SOURCE_CATALOG_PATH'])
+        # Windows hosted runners can expose the same temporary folder through
+        # an 8.3 alias. Match the canonical paths used by the deletion guards,
+        # so the injected permission/link failures actually intercept them.
+        self.root = Path(self.fixture.temp.name).resolve()
+        self.catalog = RuntimeCatalog(Path(self.app.config['SOURCE_CATALOG_PATH']).resolve())
         self.inv = Inventory(self.root / 'investigation.db')
         self.key = self.inv.ensure_site('Example', 'https://example.edu.cn/')
         self.url = 'https://example.edu.cn/'
