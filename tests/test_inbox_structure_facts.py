@@ -35,8 +35,9 @@ class InboxStructureFactTests(unittest.TestCase):
         self.assertEqual(response.status_code,200,response.text[:500])
         return BeautifulSoup(response.text,'html.parser'),captured[-1]
 
-    def test_default_sidebar_does_not_use_legacy_inferred_hierarchy(self):
-        with patch('backend.services.inbox.source_hierarchy',side_effect=AssertionError('No inferred display tree')):
+    def test_sidebar_uses_only_captured_directory_context(self):
+        with patch('backend.services.source_placements.official_source_placements',side_effect=AssertionError('No fresh catalogue lookup')), \
+                patch('backend.services.source_channels.legacy_channels_for',side_effect=AssertionError('No uncaptured publisher lookup')):
             soup,context=self.render()
         panel=soup.select_one('#sourcePanel')
         self.assertEqual(panel['data-attention-policy-version'],context['source_attention_policy_version'])
@@ -52,8 +53,12 @@ class InboxStructureFactTests(unittest.TestCase):
         db.session.add(owner);db.session.flush()
         db.session.add(DepartmentDirectoryEntry(parent_id=owner.id,department_id=self.teacher.id));db.session.commit()
         soup,_=self.render()
-        self.assertIsNone(soup.select_one('#sourcePanel [data-source-unit]'))
-        self.assertIn('栏目（归属待核实）',soup.select_one('#sourcePanel').get_text())
+        unit=soup.select_one('#sourcePanel [data-source-unit]')
+        self.assertIsNotNone(unit)
+        self.assertEqual(unit['data-source-unit-basis'],'display_directory')
+        self.assertIn('记录分组',unit.get_text())
+        self.assertFalse(any(edge['type']=='source_ownership' and edge['target']==f'source:{self.teacher.id}'
+            for edge in read_structure(self.school)['facts']['relations']))
 
     def test_historical_unconfigured_source_stays_available_without_faking_connection(self):
         historical=Department.query.filter_by(school_id=self.school.id,list_selector=None).first()

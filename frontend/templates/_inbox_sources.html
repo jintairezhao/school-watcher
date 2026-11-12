@@ -29,6 +29,7 @@
         </button>
     </div>
     <div class="source-unit-columns" id="unit-columns-{{ unit.key }}" {% if not selected_columns %}hidden{% endif %}>
+        {% if unit.basis == 'display_directory' %}<p class="source-value-note text-muted" data-recorded-directory data-i18n="记录分组，仅用于查找栏目">{{ tr('记录分组，仅用于查找栏目') }}</p>{% endif %}
         {% for column in unit.own_columns %}{{ column_choice(column, selected, counts, sync_states) }}{% endfor %}
         {% for child in unit.children %}{{ unit_view(child, selected, counts, sync_states) }}{% endfor %}
         {% if not unit.columns and not unit.children %}<p class="source-unit-empty" data-i18n="该单位的栏目尚未接通，已发现的进度会保留。">{{ tr("该单位的栏目尚未接通，已发现的进度会保留。") }}</p>{% endif %}

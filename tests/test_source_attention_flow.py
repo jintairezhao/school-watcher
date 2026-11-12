@@ -196,8 +196,11 @@ class ReaderAttentionContractTests(unittest.TestCase):
             response=f.client.get(f'/subscriptions/{f.school.id}')
             self.assertEqual(response.status_code,200)
             html=response.get_data(as_text=True)
-            self.assertEqual([int(value) for value in re.findall(r'name="department" value="(\d+)"',html)],
+            visible=[int(value) for value in re.findall(r'name="department" value="(\d+)"',html)]
+            configured={teacher.id,platform.id,funding.id}
+            self.assertEqual([ident for ident in visible if ident in configured],
                 [teacher.id,platform.id,funding.id])
+            self.assertEqual(set(visible)-configured,{f.fixture.fixture.ann.department_id})
             choices_response=f.client.get(f'/api/subscriptions/{f.school.id}/discovery')
             self.assertEqual(choices_response.status_code,200)
             choices=choices_response.json
@@ -212,8 +215,10 @@ class ReaderAttentionContractTests(unittest.TestCase):
             self.assertEqual(choices['structure_version'],first['structure_version'])
             self.assertNotEqual(updated['attention_policy_version'],first['attention_policy_version'])
             self.assertEqual(choices['attention_policy_version'],updated['attention_policy_version'])
-            self.assertEqual([int(value) for value in re.findall(r'name="department" value="(\d+)"',choices['choices_html'])],
+            refreshed=[int(value) for value in re.findall(r'name="department" value="(\d+)"',choices['choices_html'])]
+            self.assertEqual([ident for ident in refreshed if ident in configured],
                 [funding.id,platform.id,teacher.id])
+            self.assertEqual(set(refreshed),set(visible))
             self.assertEqual(updated['update_mode'],'delta')
             merged=f.apply_delta(first,updated)
             self.assertEqual([(node['id'],node['state']) for node in merged['nodes']],[(node['id'],node['state']) for node in first['nodes']])

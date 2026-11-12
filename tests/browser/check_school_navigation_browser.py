@@ -93,7 +93,8 @@ with sync_playwright() as playwright:
             expect(page.locator(f'[data-department][value="{fixture.column.id}"]')).to_be_enabled()
             page.get_by_role('link', name='来源设置', exact=True).click()
             expect(page.get_by_role('heading', name='东南大学', exact=True)).to_be_visible()
-            expect(page.locator(f'input[name="department"][value="{fixture.unit.id}"]')).to_have_count(1)
+            expect(page.locator(f'[data-source-unit-id="{fixture.unit.id}"]')).to_be_disabled()
+            expect(page.locator(f'input[name="department"][value="{fixture.column.id}"]')).to_have_count(1)
 
             with fixture.assertLogs(fixture.app.logger, level='ERROR'):
                 response = page.goto(base + '/?test_failure=1')

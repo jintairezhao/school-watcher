@@ -29,12 +29,13 @@
 {% endmacro %}
 {% macro unit_choice(unit, depth=0) %}
 {% if unit.expandable or unit.department_id is defined %}
-<details class="source-unit" data-unit-key="{{ unit.key }}" {% if depth == 0 %}open{% endif %}>
+<details class="source-unit" data-unit-key="{{ unit.key }}" data-source-unit-basis="{{ unit.basis|default('verified_owner') }}" {% if depth == 0 %}open{% endif %}>
     <summary>
-        {% if unit.department_id is defined %}<label><input type="checkbox" name="department" value="{{ unit.department_id }}" data-source-unit {% if selected_ids is none or unit.department_id in selected_ids %}checked{% endif %}><span>{{ unit.name }}</span></label>{% else %}<span>{{ unit.name }}</span>{% endif %}
+        <label><input type="checkbox" data-source-unit data-source-unit-id="{{ unit.department_id if unit.department_id is defined else unit.key }}" {% if not unit.columns %}disabled{% elif selected_ids is none %}checked{% endif %}><span>{{ unit.name }}</span></label>
         <span class="source-unit-count">{{ ui_text('{count} 个栏目',{'count':unit.columns|length}) }}</span>
     </summary>
     <div class="source-unit-contents">
+        {% if unit.basis == 'display_directory' %}<p class="source-value-note text-muted" data-i18n="记录分组，仅用于查找栏目">{{ tr('记录分组，仅用于查找栏目') }}</p>{% endif %}
         {% for column in unit.own_columns %}{{ column_choice(column) }}{% endfor %}
         {% for child in unit.children %}{{ unit_choice(child, depth + 1) }}{% endfor %}
         {% if not unit.columns and not unit.children %}<p class="source-unit-empty">{% if not unit.url %}<span data-i18n="尚未识别到官网入口">{{ tr("尚未识别到官网入口") }}</span>{% else %}<span data-i18n="该单位的栏目尚未接通">{{ tr("该单位的栏目尚未接通") }}</span>{% endif %} <span data-i18n="已发现的进度会保留。">{{ tr('已发现的进度会保留。') }}</span></p>{% endif %}

@@ -44,7 +44,7 @@ def check():
                 for ident in (35,36,37,38,39,40):
                     expect(parent.locator(f'.source-entry[data-source-id="{ident}"]')).to_have_count(1)
                 expect(parent.locator('.source-entry[data-source-id="40"]')).to_contain_text('心理健康 / 通知公告')
-                expect(page.locator('input[name="department"][value="1132"]')).to_be_checked()
+                expect(page.locator('[data-source-unit-id="1132"]')).to_be_checked()
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),'Horizontal page overflow'
                 page.screenshot(path=str(out/f'sources-{width}.png'),full_page=True)
                 parent.screenshot(path=str(out/f'student-work-{width}.png'))

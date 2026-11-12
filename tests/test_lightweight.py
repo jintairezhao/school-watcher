@@ -80,7 +80,8 @@ class LightweightTests(unittest.TestCase):
         self.assertIn('选课子栏目的通知', response.text)
         from bs4 import BeautifulSoup
         panel=BeautifulSoup(response.text,'html.parser').select_one('#sourcePanel')
-        self.assertIsNone(panel.select_one('[data-source-unit]'),'A legacy member without proof is not a publisher')
+        self.assertIsNone(panel.select_one('[data-source-unit-basis="verified_owner"]'),'A legacy member without proof is not a publisher')
+        self.assertIsNotNone(panel.select_one('[data-recorded-directory]'))
         self.assertFalse(panel.select_one('[data-legacy-source-scope]').has_attr('hidden'))
         self.assertIsNone(child.group_name)
         self.assertEqual(child.name, '本科教育-选课安排')
@@ -217,7 +218,11 @@ class LightweightTests(unittest.TestCase):
         self.assertIn('选课通知', page)
         self.assertNotIn('校园新闻消息', page)
         self.assertEqual(Subscription.query.one().department_ids, [self.teaching.id])
-        self.assertIn('人才培养 / 本科教育', page)
+        from bs4 import BeautifulSoup
+        caption=BeautifulSoup(page,'html.parser').select_one('.notice-source-label').get_text(' ',strip=True)
+        self.assertIn('本科教育',caption)
+        self.assertIn('记录分组：人才培养',caption)
+        self.assertIn('归属待核实',caption)
 
     def test_foreign_and_empty_column_selection_rejected(self):
         for ids in ([], [str(self.foreign_dept.id)]):

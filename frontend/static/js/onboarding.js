@@ -8,16 +8,23 @@
     function updateChoices() {
         const all = document.querySelector('[name="mode"]:checked').value === 'all';
         document.querySelectorAll('[name="department"]').forEach(input => { input.disabled = all; });
+        document.querySelectorAll('[data-source-unit]').forEach(input => {
+            const leaves = [...input.closest('.source-unit').querySelectorAll('[name="department"]')];
+            input.disabled = all || !leaves.length;
+            input.checked = Boolean(leaves.length) && leaves.every(leaf => leaf.checked);
+            input.indeterminate = !input.checked && leaves.some(leaf => leaf.checked);
+        });
         if (field('sourceClearSelection')) field('sourceClearSelection').hidden = all;
     }
     field('sourceClearSelection')?.addEventListener('click', () => {
         dirty = true;
         document.querySelectorAll('[name="department"]').forEach(input => { input.checked = false; });
+        updateChoices();
     });
     document.querySelector('.sources-form').addEventListener('change', event => {
         dirty = true;
         const input = event.target;
-        if (input.matches('[name="department"]')) {
+        if (input.matches('[name="department"], [data-source-unit]')) {
             const unit = input.closest('.source-unit');
             if (unit && input.hasAttribute('data-source-unit')) {
                 unit.querySelectorAll('[name="department"]').forEach(child => { child.checked = input.checked; });

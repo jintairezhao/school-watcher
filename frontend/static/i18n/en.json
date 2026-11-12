@@ -2009,6 +2009,7 @@
   "历史筛选范围已保留；下方只按有依据的归属展示。": "Your historical filter is preserved. The list below shows ownership only where supported by evidence.",
   "历史来源，保留已有通知": "Historical source; existing notices retained",
   "记录分组：{name}": "Saved display group: {name}",
+  "记录分组，仅用于查找栏目": "Saved grouping for finding columns",
   "访问受限": "Access restricted",
   "请求受限": "Requests limited",
   "待适配": "Awaiting adaptation",

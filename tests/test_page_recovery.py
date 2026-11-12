@@ -47,7 +47,11 @@ class SchoolNavigationTests(unittest.TestCase):
             with self.subTest(path=path):
                 response = self.client.get(path, follow_redirects=True)
                 self.assertEqual(response.status_code, 200, response.text[:300])
-                self.assertNotIn('机械工程学院',response.text,'An unconnected, unbound unit is not a source choice')
+                from bs4 import BeautifulSoup
+                soup=BeautifulSoup(response.text,'html.parser')
+                self.assertIn('机械工程学院',soup.get_text())
+                self.assertIsNone(soup.select_one(f'[name="department"][value="{self.unit.id}"]'))
+                self.assertIsNone(soup.select_one(f'[data-department][value="{self.unit.id}"]'))
                 self.assertIn('研究生招生办公室', response.text)
                 self.assertIn(f'/subscriptions/{self.school.id}', response.text)
         fragment = self.client.get(f'/?school={self.school.id}', headers={'X-Inbox-Fragment': '1'})
