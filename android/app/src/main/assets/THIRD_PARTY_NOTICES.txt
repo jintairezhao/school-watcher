@@ -1,0 +1,17 @@
+School Watcher Android 0.1.0
+
+Project code: School Watcher Noncommercial License 1.0 (LICENSE.txt).
+AndroidX AppCompat 1.7.0, WorkManager 2.10.1, RecyclerView 1.3.2
+and their AndroidX dependencies: Copyright The Android Open Source Project,
+Apache License 2.0 (Apache-2.0.txt).
+Material Components for Android 1.12.0: Copyright Google LLC,
+Apache License 2.0 (Apache-2.0.txt).
+Transitive runtime components include Kotlin standard library and kotlinx.coroutines
+(Copyright JetBrains s.r.o., Apache-2.0), Google Guava listenablefuture
+(Copyright Google LLC, Apache-2.0), and JetBrains annotations (Apache-2.0).
+jsoup 1.21.2: Copyright Jonathan Hedley, MIT (jsoup-LICENSE.txt).
+
+Android uses system fonts. The application icons are original vector shapes.
+School names and official URLs identify sources and do not imply endorsement.
+University notices, images and attachments belong to their respective owners.
+The source code license does not grant rights to republish their content.

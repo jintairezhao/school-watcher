@@ -15,6 +15,17 @@ from backend.auth import login_required
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('subscriptions', __name__)
+
+
+def _legacy_scope(departments, selected_ids, expanded_ids):
+    """Expose retained directory subscriptions without turning them into facts."""
+    if selected_ids is None:
+        return False
+    selected = set(selected_ids)
+    return bool(set(expanded_ids or ()) - selected) or any(
+        row.id in selected and row.kind != 'column' for row in departments)
+
+
 def start_background_scrape(school_id):
     """Persist work; never start a crawler in a request process."""
     from backend.services.tasks import enqueue
@@ -124,21 +135,19 @@ def manage_sources(school_id):
             flash('关注范围已保存', 'success')
             return redirect(url_for('pages.index', school=school.id))
     latest = ScrapeLog.query.filter_by(school_id=school.id).order_by(ScrapeLog.id.desc()).first()
-    from backend.services.source_inventory import Inventory, DEFAULT_PATH, site_key
-    from backend.services.source_relationships import SourceRelationships
-    from backend.services.runtime_catalog import runtime_catalog, relationships_for
-    inventory = runtime_catalog()
-    key = site_key(school.url)
-    relationships = relationships_for(inventory, key)
+    from backend.services.structure_snapshot import read_structure, source_choices, source_paths
+    structure = read_structure(school)
     from backend.services.source_governance import school_governance_status
     from backend.services.onboarding_progress import status
+    selected_ids = expand_directory_ids(school.id, sub.department_ids)
     return render_template('sources.html', school=school, subscription=sub,
-                           discovery=status(school),
+                           discovery=status(school, capture=structure),
                            onboarding=school_governance_status(school.id),
-                           groups=source_hierarchy(departments, directory_entries=directory_entries_for(school.id), available_only=True,
-                               retained_ids=sub.department_ids or ()), latest=latest,
-                           selected_ids=expand_directory_ids(school.id, sub.department_ids),
-                           source_paths={d.id: relationships.paths_for(d.list_url) for d in departments})
+                           groups=source_choices(structure, retained_ids=sub.department_ids or ()), latest=latest,
+                           selected_ids=selected_ids,
+                           legacy_scope=_legacy_scope(structure['departments'], sub.department_ids, selected_ids),
+                           source_paths=source_paths(structure), structure_version=structure['version'],
+                           attention_policy_version=structure['attention_policy_version'])
 
 
 @bp.route('/api/subscriptions/<int:school_id>/discovery', methods=['GET', 'POST'])
@@ -179,17 +188,19 @@ def subscription_discovery(school_id):
         db.session.commit()
     from backend.services.inbox import source_hierarchy
     from backend.services.directory_options import directory_entries_for, expand_directory_ids
-    from backend.services.source_inventory import site_key
-    from backend.services.runtime_catalog import runtime_catalog, relationships_for
-    relationships = relationships_for(runtime_catalog(), site_key(school.url))
+    from backend.services.structure_snapshot import read_structure, source_choices, source_paths
+    structure = read_structure(school)
     departments = school.departments.order_by(Department.id).all()
     sub = Subscription.query.filter_by(user_id=g.user.id, school_id=school.id).first()
+    selected_ids = expand_directory_ids(school.id, sub.department_ids)
+    legacy_scope = _legacy_scope(structure['departments'], sub.department_ids, selected_ids)
     choices = render_template('_source_tree_choices.html', school=school,
-                              groups=source_hierarchy(departments, directory_entries=directory_entries_for(school.id), available_only=True,
-                                  retained_ids=sub.department_ids or ()), subscription=sub,
-                              selected_ids=expand_directory_ids(school.id, sub.department_ids),
-                              source_paths={d.id: relationships.paths_for(d.list_url) for d in departments})
-    return jsonify(**status(school), choices_html=choices)
+                              groups=source_choices(structure, retained_ids=sub.department_ids or ()), subscription=sub,
+                              selected_ids=selected_ids,
+                              source_paths=source_paths(structure), structure_version=structure['version'])
+    return jsonify(**status(school, capture=structure), choices_html=choices, structure_version=structure['version'],
+                   attention_policy_version=structure['attention_policy_version'],
+                   legacy_scope=legacy_scope)
 
 
 @bp.route('/subscriptions/<int:school_id>/sources', methods=['POST'])

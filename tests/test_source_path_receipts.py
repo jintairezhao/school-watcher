@@ -81,6 +81,31 @@ class SourcePathReceiptTests(unittest.TestCase):
         self.assertEqual(first[0]['content_hash'], governance._hash(native_fixture.HTML))
         self.assertEqual(first[0]['region']['container'], '#notices')
 
+    def test_native_and_activated_receipts_preserve_observed_response_page(self):
+        reference=dict(hash='a'*64,url='https://example.edu.cn/final/',
+            requested_url=self.source.list_url,status=200,outcome='usable',
+            observed_at='2026-10-21T01:00:00+00:00')
+        self.native(self.detail(list_snapshot=reference))
+        self.assertEqual(self.load()[0]['list_observation'],reference)
+        proposal=self.public()
+        bundle=json.loads(proposal.evidence_json)
+        bundle['list']=reference
+        proposal.evidence_json,proposal.evidence_hash=governance._json(bundle),governance._hash(bundle)
+        proposal.validated_hash=governance._hash([proposal.candidate_json,proposal.evidence_hash,governance.VERSION])
+        db.session.commit()
+        receipt,=self.load()
+        self.assertEqual(receipt['receipt_id'],'proposal:'+str(proposal.id))
+        self.assertEqual(receipt['list_observation'],reference)
+
+    def test_historical_missing_body_label_does_not_grant_a_current_receipt(self):
+        row = self.public()
+        bundle = json.loads(row.evidence_json)
+        bundle['samples'] = {'article:missing': 'access_limited:http_404'}
+        row.evidence_json, row.evidence_hash = governance._json(bundle), governance._hash(bundle)
+        row.validated_hash = governance._hash([row.candidate_json, row.evidence_hash, governance.VERSION])
+        db.session.commit()
+        self.assertEqual(self.load(), [])
+
     def test_no_app_or_policy_only_flask_context_has_no_receipts(self):
         self.fixture.ctx.pop()
         try:
@@ -168,6 +193,58 @@ class SourcePathReceiptTests(unittest.TestCase):
         self.assertEqual(self.load()[0]['receipt_id'], 'proposal:' + str(public.id))
         self.native()
         self.assertEqual(len(self.load()), 1)
+
+    def test_prior_activated_receipt_survives_upgrade_without_becoming_new_validation(self):
+        public = self.public()
+        for version in ('source-governance-8', 'source-governance-9', 'source-governance-10', 'source-governance-11', 'source-governance-12', 'source-governance-13', 'source-governance-14', 'source-governance-15', 'source-governance-16', 'source-governance-17', 'source-governance-18', 'source-governance-19', 'source-governance-20', 'source-governance-21', 'source-governance-22', 'source-governance-23'):
+            with self.subTest(version=version):
+                public.validator_version = version
+                public.validated_hash = governance._hash([public.candidate_json,public.evidence_hash,public.validator_version])
+                db.session.commit()
+                receipt, = self.load()
+                self.assertEqual(receipt['receipt_id'],'proposal:'+str(public.id))
+                self.assertEqual(receipt['validation_version'],version)
+                self.assertFalse(receipt['current_validation'])
+                self.assertEqual(public.validator_version,version)
+                self.assertEqual(public.state,'activated')
+
+    def test_prior_receipt_compatibility_still_rejects_drafts_tampering_and_unknown_versions(self):
+        public = self.public()
+        for version, state, changed in (('source-governance-8','validated',False),
+                ('source-governance-9','validated',False),('source-governance-10','validated',False),
+                ('source-governance-10','activated',True),('source-governance-11','validated',False),
+                ('source-governance-11','activated',True),('source-governance-12','validated',False),
+                ('source-governance-12','activated',True),('source-governance-9','activated',True),
+                ('source-governance-13','validated',False),('source-governance-13','activated',True),
+                ('source-governance-14','validated',False),('source-governance-14','activated',True),
+                ('source-governance-15','validated',False),('source-governance-15','activated',True),
+                ('source-governance-16','validated',False),('source-governance-16','activated',True),
+                ('source-governance-17','validated',False),('source-governance-17','activated',True),
+                ('source-governance-18','validated',False),('source-governance-18','activated',True),
+                ('source-governance-19','validated',False),('source-governance-19','activated',True),
+                ('source-governance-20','validated',False),('source-governance-20','activated',True),
+                ('source-governance-21','validated',False),('source-governance-21','activated',True),
+                ('source-governance-22','validated',False),('source-governance-22','activated',True),
+                ('source-governance-23','validated',False),('source-governance-23','activated',True),
+                ('source-governance-8','activated',True),('source-governance-7','activated',False),
+                ('source-governance-999','activated',False)):
+            with self.subTest(version=version,state=state,changed=changed):
+                public.validator_version,public.state = version,state
+                public.validated_hash = ('wrong' if changed else
+                    governance._hash([public.candidate_json,public.evidence_hash,version]))
+                db.session.commit()
+                self.assertEqual(self.load(),[])
+
+    def test_previous_pending_validation_cannot_activate_under_new_rules(self):
+        public = self.public(state='validated')
+        for version in ('source-governance-11','source-governance-12','source-governance-13','source-governance-14','source-governance-15','source-governance-16','source-governance-17','source-governance-18','source-governance-19','source-governance-20','source-governance-21','source-governance-22','source-governance-23'):
+            public.validator_version = version
+            public.validated_hash = governance._hash([public.candidate_json,public.evidence_hash,public.validator_version])
+            db.session.commit()
+            with self.assertRaisesRegex(ValueError, '来源尚未通过统一检查'):
+                governance.activate_proposal(public.id)
+            self.assertEqual(public.state, 'validated')
+            self.assertEqual(self.load(), [])
 
     def test_public_draft_failed_validation_empty_or_tampered_hashes_do_not_reward(self):
         public = self.public(state='proposed')

@@ -47,7 +47,7 @@ class SchoolNavigationTests(unittest.TestCase):
             with self.subTest(path=path):
                 response = self.client.get(path, follow_redirects=True)
                 self.assertEqual(response.status_code, 200, response.text[:300])
-                self.assertIn('机械工程学院', response.text)
+                self.assertNotIn('机械工程学院',response.text,'An unconnected, unbound unit is not a source choice')
                 self.assertIn('研究生招生办公室', response.text)
                 self.assertIn(f'/subscriptions/{self.school.id}', response.text)
         fragment = self.client.get(f'/?school={self.school.id}', headers={'X-Inbox-Fragment': '1'})
@@ -56,7 +56,7 @@ class SchoolNavigationTests(unittest.TestCase):
         self.assertNotIn('<html', fragment.text)
 
     def test_server_error_has_visible_explanation_and_working_exit(self):
-        with patch('backend.services.inbox.source_hierarchy', side_effect=RuntimeError('directory unavailable')):
+        with patch('backend.services.structure_snapshot.read_structure', side_effect=RuntimeError('directory unavailable')):
             response = self.client.get(f'/?school={self.school.id}')
         self.assertEqual(response.status_code, 500)
         main = BeautifulSoup(response.text, 'html.parser').select_one('main')

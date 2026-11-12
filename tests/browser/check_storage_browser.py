@@ -2,6 +2,7 @@
 import io
 import json
 import logging
+import os
 from pathlib import Path
 import sys
 import threading
@@ -13,6 +14,12 @@ from backend.database.db import db
 from backend.database.models import Announcement
 from playwright.sync_api import sync_playwright, expect
 from werkzeug.serving import make_server
+
+
+def show_control(page,selector):
+    for disclosure in page.locator('.storage-page details').all():
+        if disclosure.locator(selector).count() and not disclosure.evaluate('node=>node.open'):
+            disclosure.locator(':scope > summary').click()
 
 
 def check():
@@ -39,6 +46,7 @@ def check():
             page.goto(base + '/admin/storage')
             expect(page.get_by_role('heading', name='存储管理', exact=True)).to_be_visible()
             expect(page.locator('#policy-body_cache_days')).to_have_value('30')
+            show_control(page,'#policy-body_cache_days')
             page.locator('#policy-body_cache_days').fill('90')
             page.locator('[data-cleanup="expired"]').click()
             expect(page.locator('#cleanupStatus')).to_contain_text('请先保存')
@@ -48,15 +56,17 @@ def check():
             expect(page.locator('#policy-body_cache_days')).to_have_value('90')
 
             # A cancel must make no request; accept then retain the notification row.
+            show_control(page,'[data-cleanup="cache"]')
             page.once('dialog', lambda dialog: dialog.dismiss())
-            page.locator('[data-cleanup="all_cache"]').click()
+            page.locator('[data-cleanup="cache"]').click()
             expect(page.locator('#cleanupStatus')).to_be_empty()
             page.once('dialog', lambda dialog: dialog.accept())
-            page.locator('[data-cleanup="all_cache"]').click()
-            expect(page.locator('#cleanupStatus')).to_contain_text('1 条正文缓存')
+            page.locator('[data-cleanup="cache"]').click()
+            expect(page.locator('#cleanupStatus')).to_contain_text('已清理可移除的缓存')
             expect(page.locator('#announcementCount')).to_have_text('1')
 
             with page.expect_download() as download_info:
+                show_control(page,'#exportStorage')
                 page.locator('#exportStorage').click()
             download = download_info.value
             assert download.suggested_filename.startswith('school-watcher-data-')
@@ -78,13 +88,16 @@ def check():
 
             # Preserve useful result states while viewing the whole desktop/mobile surface.
             page.evaluate('window.scrollTo(0, 0)')
-            page.screenshot(path=str(output / 'storage-desktop.png'), full_page=True)
+            if not os.environ.get('SKIP_STORAGE_SCREENSHOTS'):
+                page.screenshot(path=str(output / 'storage-desktop.png'), full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.set_viewport_size({'width': 390, 'height': 844})
-            page.screenshot(path=str(output / 'storage-mobile.png'), full_page=True)
+            if not os.environ.get('SKIP_STORAGE_SCREENSHOTS'):
+                page.screenshot(path=str(output / 'storage-mobile.png'), full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.evaluate("document.documentElement.dataset.theme='dark'")
-            page.screenshot(path=str(output / 'storage-mobile-dark.png'), full_page=True)
+            if not os.environ.get('SKIP_STORAGE_SCREENSHOTS'):
+                page.screenshot(path=str(output / 'storage-mobile-dark.png'), full_page=True)
             assert not errors, errors
             browser.close()
         print(json.dumps({'browser_errors': errors, 'checks': ['saved policy', 'unsaved changes guard',

@@ -59,7 +59,7 @@ class DiscoveryMonitorTests(unittest.TestCase):
         target=base+'/math/funding'
         self.publish([{'url':parent,'label':'数理学院','kind':'unit','content_hash':'revision-1'}])
         records=[{'node_key':'identity','parent_key':'','name':'数理学院','url':parent,'relation':'page_identity'},
-                 {'node_key':'party','parent_key':'identity','name':'学生资助','url':target,'relation':'menu_group','locator':'nav a.funding','content_hash':'revision-1'},
+                 {'node_key':'party','parent_key':'identity','name':'学生资助','url':target,'relation':'menu_group','locator':'nav a.funding','content_hash':'revision-1','observed_at':'2026-10-21T00:00:00Z'},
                  {'node_key':'stale','parent_key':'identity','name':'旧入口','url':base+'/old','relation':'menu_group','content_hash':'revision-0'},
                  {'node_key':'unclear','parent_key':'missing','name':'无依据入口','url':base+'/unknown','relation':'menu_group'}]
         with self.catalog.connect(write=True) as c:
@@ -70,7 +70,9 @@ class DiscoveryMonitorTests(unittest.TestCase):
         self.assertNotIn(base+'/old',nodes)
         self.assertNotIn(base+'/unknown',nodes)
         self.assertEqual(value['relations'],[dict(source=nodes[parent]['id'],target=nodes[target]['id'],
-            type='navigation',evidence_url=parent,locator='nav a.funding',basis='官网页面中记录的导航链接')])
+            type='navigation',evidence_url=parent,locator='nav a.funding',basis='官网页面中记录的导航链接',
+            content_hash='revision-1',observed_at='2026-10-21T00:00:00Z',access=True,
+            evidence=[dict(evidence_url=parent,locator='nav a.funding',content_hash='revision-1',observed_at='2026-10-21T00:00:00Z')])])
         self.assertNotIn('evidence_gzip',str(value))
 
     def test_task_phase_is_not_a_page_name(self):
@@ -93,7 +95,7 @@ class DiscoveryMonitorTests(unittest.TestCase):
                 self.assertEqual(response.json['nodes'], [])
             page = self.client.get(self.page)
             self.assertEqual(page.status_code, 200)
-            self.assertIn('官网探索路径', page.text)
+        self.assertIn('官网结构与信源', page.text)
         self.assertEqual(BackgroundTask.query.count(), 0)
         self.assertFalse(Path(self.app.config['SOURCE_CATALOG_PATH']).exists())
 

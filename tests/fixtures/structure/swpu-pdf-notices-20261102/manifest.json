@@ -1,0 +1,83 @@
+{
+  "purpose": "Portable actual retained material for isolated acquisition/native validation checks; not a live run or independent sample",
+  "school_name": "西南石油大学",
+  "school_url": "https://www.swpu.edu.cn/",
+  "list_url": "http://www.swpu.edu.cn/sgy/tzgg.htm",
+  "config": {
+    "name": "通知公告",
+    "list_url": "http://www.swpu.edu.cn/sgy/tzgg.htm",
+    "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(div.container > div.sub-right > div.sub-right-con > ul.list > li)",
+    "title_selector": "a",
+    "link_selector": "a",
+    "date_selector": "span.time",
+    "content_selector": "",
+    "group_name": ""
+  },
+  "list": {
+    "file": "../swpu-sgy-notices-0048ecef-20261102.html.gz",
+    "sha256": "0048ecefca6d49046d7e9fb23a751576b632783a06d6b3a1e7416fca14a853c8"
+  },
+  "next_list": {
+    "file": "next-list.html.gz",
+    "sha256": "d1b7d07e0a7176a542d09d65b8594b82e64c5605d212d1031cab64019a723abe",
+    "source_original": ".local/structure-facts-20261021/notice-materials-online-20261102/d1b7d07e0a7176a542d09d65b8594b82e64c5605d212d1031cab64019a723abe.html.gz",
+    "url": "http://www.swpu.edu.cn/sgy/tzgg/26.htm",
+    "kind": "html"
+  },
+  "articles": [
+    {
+      "html": {
+        "file": "article-1.html.gz",
+        "sha256": "d42fd0310044c6b3e6ee1778989a31202b23b6458f3baa8ce0ccfd0572cfa513",
+        "source_original": ".local/structure-facts-20261021/branch-pilot-config-instance-20261026/fetch-evidence/52-1-8b2200a68f2ad798baea5d853247efbff8b9a11f85c85b1f02a64e9dcb2108e4.json",
+        "url": "http://www.swpu.edu.cn/sgy/info/1086/69157.htm",
+        "kind": "html"
+      },
+      "title": "石工院关于2026年硕士研究生学位论文开题论证的通知",
+      "pdf": {
+        "file": "article-1.pdf.gz",
+        "sha256": "3c63f9dacdb8b16dd9010cec61f761f8f61589c6e0b8e51f112685fc39034611",
+        "source_original": ".local/structure-facts-20261021/completed-notice-materials-20261102/evidence/3c63f9dacdb8b16dd9010cec61f761f8f61589c6e0b8e51f112685fc39034611.pdf",
+        "url": "http://www.swpu.edu.cn/virtual_attach_file.vsb?afc=yo7Wh7U4-bL4vZn3RAkLl-PL7L4UmNBsnl7YU498U4GPMN-0gihFp2hmCIa0LkyYLYyDnSyDMmNsM4f7L7-DL7LiUlCYL474M8Wknm-YnznFoRG8UlMVLRrFLlUPnRlJv2nto4OeosMj_ShXptQ0g47aoRC0MmNPMzvJqdGnx&oid=1461716072&tid=1086&nid=69157&e=.pdf",
+        "kind": "pdf"
+      },
+      "pdf_url": "http://www.swpu.edu.cn/virtual_attach_file.vsb?afc=yo7Wh7U4-bL4vZn3RAkLl-PL7L4UmNBsnl7YU498U4GPMN-0gihFp2hmCIa0LkyYLYyDnSyDMmNsM4f7L7-DL7LiUlCYL474M8Wknm-YnznFoRG8UlMVLRrFLlUPnRlJv2nto4OeosMj_ShXptQ0g47aoRC0MmNPMzvJqdGnx&oid=1461716072&tid=1086&nid=69157&e=.pdf"
+    },
+    {
+      "html": {
+        "file": "article-2.html.gz",
+        "sha256": "25a645baff81ac4655aaea020c310a28cfe29ab8d1d9c74c81737882aacdadf2",
+        "source_original": ".local/structure-facts-20261021/notice-materials-online-20261102/25a645baff81ac4655aaea020c310a28cfe29ab8d1d9c74c81737882aacdadf2.html.gz",
+        "url": "http://www.swpu.edu.cn/sgy/info/1086/69147.htm",
+        "kind": "html"
+      },
+      "title": "石工院关于2026年硕士研究生学位论文中期检查的通知",
+      "pdf": {
+        "file": "article-2.pdf.gz",
+        "sha256": "7a89fb7bc7a8159625de56909708bf9a9da97e83e1a595ce82f8135135abfeb3",
+        "source_original": ".local/structure-facts-20261021/completed-notice-pdf-pair-20261102/evidence/7a89fb7bc7a8159625de56909708bf9a9da97e83e1a595ce82f8135135abfeb3.pdf",
+        "url": "http://www.swpu.edu.cn/virtual_attach_file.vsb?afc=hMNL3iM8-YL7rVMBRn7nmNsMzn2LzNGZL8-YoRGinN7bMR-0gihFp2hmCIa0nkyZM1ysnSyiozCZol7YoRNbnmAkLR6VoRLDLmGsUzLYLzfFMz7DM77an7VFLzLPMmLJv2nto4OeosMj_ShXptQ0g47aoRC0MmNPMRvJqdfnx&oid=1461716072&tid=1086&nid=69147&e=.pdf",
+        "kind": "pdf"
+      },
+      "pdf_url": "http://www.swpu.edu.cn/virtual_attach_file.vsb?afc=hMNL3iM8-YL7rVMBRn7nmNsMzn2LzNGZL8-YoRGinN7bMR-0gihFp2hmCIa0nkyZM1ysnSyiozCZol7YoRNbnmAkLR6VoRLDLmGsUzLYLzfFMz7DM77an7VFLzLPMmLJv2nto4OeosMj_ShXptQ0g47aoRC0MmNPMRvJqdfnx&oid=1461716072&tid=1086&nid=69147&e=.pdf"
+    },
+    {
+      "html": {
+        "file": "article-3.html.gz",
+        "sha256": "dfb38d6e31b00efcaf7bfec27006b16db3d5d94486db0eeeb771235fdbe4ef18",
+        "source_original": ".local/structure-facts-20261021/notice-materials-online-20261102/dfb38d6e31b00efcaf7bfec27006b16db3d5d94486db0eeeb771235fdbe4ef18.html.gz",
+        "url": "http://www.swpu.edu.cn/sgy/info/1086/69137.htm",
+        "kind": "html"
+      },
+      "title": "石工院关于2026年专业学位研究生专业实践集中考核的通知",
+      "pdf": {
+        "file": "article-3.pdf.gz",
+        "sha256": "0bc6886aa1e02388a63e3b34ca08eb6181120d0c4361d0ab73fabf2a9e51595d",
+        "source_original": ".local/structure-facts-20261021/completed-notice-pdf-pair-20261102/evidence/0bc6886aa1e02388a63e3b34ca08eb6181120d0c4361d0ab73fabf2a9e51595d.pdf",
+        "url": "http://www.swpu.edu.cn/virtual_attach_file.vsb?afc=hL8C3ZnmT2nl7bLBz9PLNnfnzNPUNlGiolVVU4CYL4W7L7-0gihFp2hmCIa0LkhRLYybM1yPUl-DU494M46kUz9inRUDMRGZLmrRLRARLmWFL4-Znz7an7MFLzCbozlJv2nto4OeosMj_ShXptQ0g47aoRC0MmNPL4vJqdfnx&oid=1461716072&tid=1086&nid=69137&e=.pdf",
+        "kind": "pdf"
+      },
+      "pdf_url": "http://www.swpu.edu.cn/virtual_attach_file.vsb?afc=hL8C3ZnmT2nl7bLBz9PLNnfnzNPUNlGiolVVU4CYL4W7L7-0gihFp2hmCIa0LkhRLYybM1yPUl-DU494M46kUz9inRUDMRGZLmrRLRARLmWFL4-Znz7an7MFLzCbozlJv2nto4OeosMj_ShXptQ0g47aoRC0MmNPL4vJqdfnx&oid=1461716072&tid=1086&nid=69137&e=.pdf"
+    }
+  ]
+}

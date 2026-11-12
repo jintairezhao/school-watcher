@@ -32,7 +32,11 @@
 
 从 [Releases](https://github.com/jintairezhao/school-watcher/releases) 下载 Windows x64 安装程序，或适合 Apple 芯片／Intel Mac 的 DMG。桌面版在独立窗口中打开即用，无需账号和 Python，可直接管理系统。优先使用已有 Edge／Chrome，缺少时自动下载独立采集组件；应用菜单的「检查更新」可以下载新版并确认安装。全新安装不预选学校，从学校目录关注高校后自动查找信息，已读到的通知立即可用，AI 为可选辅助。安装说明、数据位置及版本发布流程见 [桌面版说明](deploy/DESKTOP.md)。
 
-### 源码运行（与桌面版一致）
+### Android 移动版（首版）
+
+项目新增独立运行的 Android 客户端，支持 Android 8.0 及以上，可在手机订阅公开静态栏目、刷新与搜索通知、收藏、离线阅读文字正文和开启本机后台提醒。安装包构建、使用方式与功能边界见 [Android 说明](deploy/ANDROID.md)。复杂动态采集、AI 和桌面数据同步暂未接入；源码位于 `android/`。
+
+### 桌面源码运行（与桌面版一致）
 
 使用 Python 3.14.3。Windows 可依次双击 `scripts/setup.bat`、`scripts/run.bat`；也可在项目根目录运行：
 
@@ -77,6 +81,7 @@ AI 也可根据已抓取的标题样本生成学生用途说明，复用缓存�
 | 位置 | 内容 |
 | --- | --- |
 | `app.py` | 桌面源码启动入口 |
+| `android/` | Android 独立客户端与构建入口 |
 | `backend/` | 路由、数据模型、采集、任务、浏览器服务和 AI 功能 |
 | `frontend/` | 页面模板、样式、脚本与字体 |
 | [`config/`](config/README.md) | 学校种子与公开抓取适配配置 |

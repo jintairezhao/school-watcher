@@ -4,6 +4,7 @@ import codecs
 import json
 import time
 import requests
+from backend.ai.material_capture import capture_provider, record_provider_request
 from urllib3.exceptions import (ConnectTimeoutError, NameResolutionError, NewConnectionError,
                                 ProtocolError, ReadTimeoutError, SSLError)
 
@@ -94,13 +95,15 @@ def _transport_evidence(exc):
     return 'connection_lost', 'RequestException', False
 
 
+@capture_provider
 def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on_content=None, on_progress=None):
     """A fresh session avoids shared credentials/proxies and SDK retry behavior."""
     url = endpoint_for(profile['provider'], profile['region'])
     budget = min(int(max_tokens or profile.get('max_output_tokens', 4096)), 16384)
     streaming = bool(streaming and profile['provider'] == 'deepseek')
     from backend.services.discovery_policy import get_policy
-    temperature = get_policy()['ai_temperature']
+    policy = get_policy()
+    temperature = policy['ai_temperature']
     common = {'model': profile['model'], 'stream': streaming}
     if profile['provider'] == 'dashscope':
         body = {**common, 'input': {'messages': messages}, 'parameters': {
@@ -115,6 +118,7 @@ def complete(profile, api_key, messages, *, max_tokens=None, streaming=False, on
             body['thinking'] = {'type': 'disabled'}
     if streaming:
         body['stream_options'] = {'include_usage': True}
+    record_provider_request(profile, body, policy)
     session = requests.Session()
     session.trust_env = False
     started = time.monotonic()

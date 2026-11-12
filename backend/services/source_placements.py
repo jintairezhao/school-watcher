@@ -182,11 +182,11 @@ def placements_from_paths(source, school_url, paths, known_groups):
         if group not in known_groups and current_group and current_group not in {n['name'].strip() for n in units}:
             continue
         if not (_named_owner(source, units) or
-                _within_unit(source.list_url, units[-1].get('url'), school_url)):
+                _within_unit(source.list_url, path.get('website_url') or units[-1].get('url'), school_url)):
             continue
         candidates.append({'group': group,
                            'nodes': [{'key': _unit_key(school_url, n), 'name': n['name'].strip(),
-                                      'url': n.get('url') or ''} for n in units],
+                                      'url': (path.get('website_url') if n is units[-1] else '') or n.get('url') or ''} for n in units],
                            'label': _scoped_column_label(source, units, path)})
     known = [candidate for candidate in candidates if candidate['group'] in known_groups]
     if known:

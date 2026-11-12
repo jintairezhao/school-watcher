@@ -25,23 +25,31 @@ def ai_available():
         return False
 
 
-def _ai_message(task, data, available):
+def _ai_message(task, data, available, *, active_source_count=None):
     if data.get('ai_state') == 'disabled':
         return '本校已关闭 AI 识别，仍会自动查找和更新公开通知'
     unconfirmed=(data.get('ai_usage') or {}).get('unconfirmed_requests',0)
     if unconfirmed:
         return f'{unconfirmed} 次模型请求结果未确认，预留额度保留；已有进度和已接入栏目保留，不会自动重发'
     if data.get('ai_error_code') == 'provider_connection_paused':
+        if active_source_count == 0:
+            return '官网识别因连续连接失败暂停；请重新测试当前模型配置，成功后自动继续。进度已保存，历史通知仍保留'
         return '官网识别因连续连接失败暂停；请重新测试当前模型配置，成功后自动继续。进度已保存，已接入栏目继续更新'
     if data.get('ai_error_code') == 'ai_result_unknown':
+        if active_source_count == 0:
+            return 'AI 返回结果尚未确认，进度已保存；历史通知仍保留'
         return 'AI 返回结果尚未确认，进度已保存；已接入的栏目继续更新'
     if not available:
         return 'AI 尚未开启，仍会自动查找和更新公开通知'
     if data.get('ai_error_code') == 'budget_exhausted':
+        if active_source_count == 0:
+            return '额度已用完，进度已保存；历史通知仍保留'
         return '额度已用完，进度已保存；已接入的栏目继续更新'
     if data.get('ai_state') == 'running':
         return '正在处理 AI 官网识别任务'
     if data.get('ai_state') == 'queued':
+        if active_source_count == 0:
+            return '已安排 AI 识别官网入口，历史通知仍保留'
         return '已安排 AI 识别官网入口，已接入的栏目继续更新'
     history = dict((task.checkpoint or {}).get('ai_navigation') or {}) if task else {}
     succeeded = sum(value == 'succeeded' for value in history.values())
@@ -126,14 +134,38 @@ def _navigation_progress(task, jobs, data):
     return data
 
 
-def status(school):
+def _source_counts(school, capture):
+    """Use immutable facts when a caller already pinned a structure capture."""
+    if capture is not None:
+        nodes = capture['facts']['nodes']
+        sources = {node['source_id']: node for node in nodes if node['entity_type'] == 'source'}
+        configured = [node for node in sources.values() if node.get('configured')]
+        active = sum(node.get('lifecycle') not in ('disabled', 'removed') for node in configured)
+        verified = sum(node.get('verification') == 'verified'
+            and node.get('lifecycle') not in ('disabled', 'removed') for node in configured)
+        groups = {node['display_group'] for node in sources.values() if node.get('display_group')}
+        units = sum(node['entity_type'] == 'organization' for node in nodes)
+        return len(sources), active, len(configured) - active, len(groups), units, verified
+    columns = Department.query.filter_by(school_id=school.id).all()
+    from backend.services.source_lifecycle import states_for
+    lifecycle = states_for(d.id for d in columns)
+    sources = [d for d in columns if d.kind == 'column']
+    configured = [d for d in sources if d.list_url and d.list_selector]
+    active = sum(lifecycle[d.id] == 'active' for d in configured)
+    from backend.services.source_path_receipts import load_source_receipts
+    verified_ids = {r['source_id'] for r in load_source_receipts({'name': school.name, 'root_url': school.url})}
+    verified = sum(d.id in verified_ids and lifecycle[d.id] == 'active' for d in configured)
+    return (len(sources), active, len(configured) - active,
+            len({d.group_name for d in columns if d.group_name}), sum(d.kind == 'unit' for d in columns), verified)
+
+
+def status(school, *, capture=None):
     """Report useful output; website organisation is never a reader's task."""
     from backend.database.source_governance_models import SourceProposal, SchoolOnboarding
     from backend.services.discovery_control import requested
     task = BackgroundTask.query.filter_by(identity=f'discover:{school.id}').first()
     data = _current_ai_progress(task)
-    columns = Department.query.filter_by(school_id=school.id).all()
-    count = sum(bool(d.list_selector) for d in columns)
+    source_count, count, inactive_count, display_groups, official_units, verified_count = _source_counts(school, capture)
     jobs = [t for t in BackgroundTask.query.filter(BackgroundTask.kind.in_(
         ('onboard', 'navigation_review', 'student_assessment'))).all() if t.payload.get('school_id') == school.id
         and (t.kind != 'student_assessment' or t.payload.get('automatic_source') or t.payload.get('automatic_listing'))]
@@ -221,17 +253,20 @@ def status(school):
         message = '可直接开始查找栏目' if task.phase == 'ai_setup' else '官网需要访问验证，完成后继续'
     elif state == 'failed':
         message = '本轮查找未完成，可以重试；已接入的栏目仍可使用' if count else '本轮查找未完成，可以重试'
-    elif state == 'done' or count:
-        message = f'已找到 {article_count} 条通知，后续自动更新' if article_count else '本轮暂未读到公开通知，学校已保留'
+    elif state == 'done' or count or article_count:
+        message = ((f'已找到 {article_count} 条通知，后续自动更新' if count else
+                    f'已保留 {article_count} 条历史通知，当前没有启用的信息来源')
+                   if article_count else '本轮暂未读到公开通知，学校已保留')
     if budget_paused and not pause and not ai_wait_state:
-        message = '额度已用完，进度已保存；已接入的栏目继续更新'
+        message = ('额度已用完，进度已保存；已接入的栏目继续更新' if count else
+                   '额度已用完，进度已保存；历史通知仍保留')
         if not busy and not any(t.state == 'pending' for t in live) and not (task and task.state == 'pending'):
             state, active = 'budget_paused', False
     if ai_wait_state and not pause and not any(t.state in ('pending', 'running')
                                                for t in ([task] if task else []) + live):
         # A saved wait needs no running worker and must not suggest a fresh run.
         state, active = ai_wait_state, False
-        message = _ai_message(task, data, True)
+        message = _ai_message(task, data, True, active_source_count=count)
     gaps = []
     recovery_jobs = []
     for job in jobs:
@@ -271,8 +306,7 @@ def status(school):
                 retry_at += 'Z'
     onboarding = db.session.get(SchoolOnboarding, school.id)
     import json
-    departments = len(json.loads(onboarding.scope_json or '[]')) if onboarding else len({d.group_name for d in columns if d.group_name})
-    official_units = sum(d.kind == 'unit' for d in columns)
+    departments = len(json.loads(onboarding.scope_json or '[]')) if onboarding else display_groups
     if official_units:
         departments = official_units
     available = ai_available()
@@ -295,7 +329,12 @@ def status(school):
         'checked_pages': data.get('checked_pages', 0), 'pending_pages': data.get('pending_pages', 0),
         'failed_pages': data.get('failed_pages', 0), 'current_label': data.get('current_label', '') if busy else '',
         'changes': data.get('changes', {}),
-        'updated_at': data.get('updated_at'), 'source_count': len(columns), 'verified_source_count': count,
+        'updated_at': data.get('updated_at'), 'source_count': source_count,
+        # Saved configuration and executed verification are distinct facts.
+        # Operational continuity still uses the active configuration count.
+        'verified_source_count': verified_count, 'active_source_count': count, 'inactive_source_count': inactive_count,
+        'structure_counts_version': dict(capture['version']) if capture is not None else None,
+        'runtime_progress_scope': 'live_not_structure_versioned',
         'article_count': article_count, 'assessed_source_count': len(source_assessments),
         'useful_source_count': useful_source_count,
         'department_count': departments, 'processing_count': len(live),
@@ -308,7 +347,7 @@ def status(school):
         'background_exploration': any(t.kind == 'navigation_review' for t in live),
         'ai_available': available, 'ai_state': data.get('ai_state', 'not_started'),
         'ai_reviewed_routes': data.get('ai_reviewed_routes', 0), 'ai_cached_routes': data.get('ai_cached_routes', 0),
-        'ai_message': _ai_message(task, data, available),
+        'ai_message': _ai_message(task, data, available, active_source_count=count),
         'ai_usage': usage, 'ai_usage_message': _usage_message(usage), 'budget_paused': budget_paused,
         'coverage': {'complete': False, 'gaps': gaps, 'placement_gap_count': 0},
         'incomplete_reasons': [g['reason'] for g in gaps],

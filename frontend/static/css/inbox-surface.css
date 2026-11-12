@@ -21,6 +21,8 @@
 .source-search:focus-within { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .source-search input:focus { outline: 0; box-shadow: none; }
 .source-selection-head { min-height: 44px; margin: 8px 0 0; gap: 8px; }
+.source-selection-head > span { flex: 1; min-width: 0; }
+.source-selection-head > button { flex-shrink: 0; white-space: nowrap; }
 #sourceSelectionCount { color: var(--color-text-secondary); font-size: var(--text-meta); }
 .source-tree-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 0 12px 12px 18px; }
 .source-panel .inbox-source-group { margin: 0; border-top: 1px solid var(--color-border); }

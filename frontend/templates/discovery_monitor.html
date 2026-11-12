@@ -4,7 +4,7 @@
 {% block body_class %}discovery-experience{% endblock %}
 {% block main_class %}discovery-main{% endblock %}
 {% block content %}
-<div class="monitor-page" id="discoveryMonitor" data-endpoint="{{ url_for('discovery.monitor_data', school_id=school.id) }}" data-control="{{ url_for('discovery.monitor_control', school_id=school.id) }}">
+<div class="monitor-page" id="discoveryMonitor" data-endpoint="{{ url_for('discovery.structure_snapshot_data', school_id=school.id) }}" data-control="{{ url_for('discovery.monitor_control', school_id=school.id) }}" data-path-mode="access">
     <header class="atlas-page-header school-heading">
         <div class="atlas-brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m16 7-9 17m9-17 9 17"/><circle cx="16" cy="6" r="4"/><circle cx="6" cy="26" r="4"/><circle cx="26" cy="26" r="4"/></svg><div><h1 data-i18n="官网深潜">{{ tr('官网深潜') }}</h1><p>{{ school.name }}</p></div></div>
         <nav aria-label="{{ tr('学校信息') }}" data-i18n-aria-label="学校信息"><a href="{{ url_for('pages.school_detail', school_id=school.id) }}" data-i18n="本校通知">{{ tr('本校通知') }}</a><a href="{{ url_for('source_structure.school_structure', school_id=school.id) }}" data-i18n="官网结构">{{ tr('官网结构') }}</a><a href="{{ url_for('subscriptions.manage_sources', school_id=school.id) }}" data-i18n="来源设置">{{ tr('来源设置') }}</a></nav>
@@ -17,8 +17,12 @@
     <p class="monitor-error" id="monitorError" role="alert" hidden></p>
     <div class="monitor-workspace">
         <section class="monitor-map" aria-labelledby="monitorMapHeading">
-            <header class="monitor-section-head"><div><h2 id="monitorMapHeading" data-i18n="官网探索路径">{{ tr("官网探索路径") }}</h2><p data-i18n="全景看主干，放大看栏目；选中节点查看完整发掘路径。">{{ tr("全景看主干，放大看栏目；选中节点查看完整发掘路径。") }}</p></div><a class="monitor-map-link" href="{{ url_for('source_structure.school_structure', school_id=school.id) }}" data-i18n="官网结构">{{ tr("官网结构") }}</a></header>
-            <div class="monitor-map-controls" id="atlasSearchPanel"><label class="monitor-search" for="monitorSearch"><span data-i18n="查找入口">{{ tr("查找入口") }}</span><input id="monitorSearch" class="form-input" type="search" data-i18n-placeholder="按院系、部门或栏目名称查找" placeholder="{{ tr('按院系、部门或栏目名称查找') }}"></label><label for="monitorFilter"><span data-i18n="显示状态">{{ tr("显示状态") }}</span><select id="monitorFilter" class="form-input"><option value="all" data-i18n="全部状态">{{ tr("全部状态") }}</option><option value="running" data-i18n="正在处理">{{ tr("正在处理") }}</option><option value="connected" data-i18n="已接入">{{ tr("已接入") }}</option><option value="failed" data-i18n="等待恢复">{{ tr("等待恢复") }}</option><option value="pending" data-i18n="等待探索">{{ tr("等待探索") }}</option><option value="waiting" data-i18n="等待继续">{{ tr("等待继续") }}</option></select></label></div>
+            <header class="monitor-section-head"><div><h2 id="monitorMapHeading" data-i18n="官网结构与信源">{{ tr("官网结构与信源") }}</h2><p data-i18n="全景看入口，放大看栏目；按关系类型查看所选节点的依据。">{{ tr("全景看入口，放大看栏目；按关系类型查看所选节点的依据。") }}</p></div><a class="monitor-map-link" href="{{ url_for('source_structure.school_structure', school_id=school.id) }}" data-i18n="官网结构">{{ tr("官网结构") }}</a></header>
+            <div class="monitor-map-controls monitor-view-controls">
+                <label for="monitorScope"><span data-i18n="显示范围">{{ tr('显示范围') }}</span><select id="monitorScope" class="form-input"><option value="connected" data-i18n="已接入信源与入口">{{ tr('已接入信源与入口') }}</option><option value="exploration" data-i18n="探索候选">{{ tr('探索候选') }}</option></select></label>
+                <label for="monitorPathMode"><span data-i18n="路径类型">{{ tr('路径类型') }}</span><select id="monitorPathMode" class="form-input"><option value="access" data-i18n="官网访问路径">{{ tr('官网访问路径') }}</option><option value="membership" data-i18n="目录或归属路径">{{ tr('目录或归属路径') }}</option><option value="exploration" data-i18n="真实探索记录">{{ tr('真实探索记录') }}</option></select></label>
+            </div>
+            <div class="monitor-map-controls" id="atlasSearchPanel"><label class="monitor-search" for="monitorSearch"><span data-i18n="查找入口">{{ tr("查找入口") }}</span><input id="monitorSearch" class="form-input" type="search" data-i18n-placeholder="按院系、部门或栏目名称查找" placeholder="{{ tr('按院系、部门或栏目名称查找') }}"></label><label for="monitorFilter"><span data-i18n="显示状态">{{ tr("显示状态") }}</span><select id="monitorFilter" class="form-input"><option value="all" data-i18n="全部状态">{{ tr("全部状态") }}</option><option value="running" data-i18n="正在处理">{{ tr("正在处理") }}</option><option value="connected" data-i18n="已接入">{{ tr("已接入") }}</option><option value="failed" data-i18n="等待恢复">{{ tr("等待恢复") }}</option><option value="pending" data-i18n="待验证">{{ tr("待验证") }}</option><option value="waiting" data-i18n="等待继续">{{ tr("等待继续") }}</option></select></label></div>
             <div class="atlas-heading"><h2><span data-i18n="沿着线索，">{{ tr('沿着线索，') }}</span> <span data-i18n="深入官网。">{{ tr('深入官网。') }}</span></h2><p data-i18n="从官网入口出发，让每一次分叉都有迹可循。">{{ tr('从官网入口出发，让每一次分叉都有迹可循。') }}</p></div>
             <div class="atlas-stage" id="atlasStage" data-renderer="loading">
 
@@ -27,7 +31,7 @@
                 <div id="atlasLabels" class="atlas-labels"></div>
                 <div class="atlas-immersive-tools" role="group" data-i18n-aria-label="沉浸模式工具" aria-label="{{ tr('沉浸模式工具') }}"><button type="button" id="atlasSearchToggle" class="atlas-tool" aria-expanded="false" aria-controls="atlasSearchPanel" data-i18n-title="查找入口" title="{{ tr('查找入口') }}" data-i18n-aria-label="查找入口" aria-label="{{ tr('查找入口') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5"/><path d="m12 12 5 5"/></svg></button><button type="button" id="atlasInspect" class="atlas-tool" aria-expanded="false" aria-controls="atlasDetailPanel" data-i18n-title="节点详情" title="{{ tr('节点详情') }}" data-i18n-aria-label="节点详情" aria-label="{{ tr('节点详情') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M11 3v14M6 7h2m-2 4h2"/></svg></button></div>
                 <div class="atlas-live-controls">
-                    <div class="atlas-live-actions"><label class="atlas-follow"><input type="checkbox" id="atlasFollow"><span data-i18n="所选发掘路径">{{ tr('所选发掘路径') }}</span></label><button type="button" id="atlasLocate" class="atlas-tool" data-i18n-title="定位当前入口" title="{{ tr('定位当前入口') }}" data-i18n-aria-label="定位当前入口" aria-label="{{ tr('定位当前入口') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5"/><path d="M10 2v4m0 8v4M2 10h4m8 0h4"/></svg></button></div>
+                    <div class="atlas-live-actions"><label class="atlas-follow"><input type="checkbox" id="atlasFollow"><span data-i18n="所选路径">{{ tr('所选路径') }}</span></label><button type="button" id="atlasLocate" class="atlas-tool" data-i18n-title="定位当前入口" title="{{ tr('定位当前入口') }}" data-i18n-aria-label="定位当前入口" aria-label="{{ tr('定位当前入口') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5"/><path d="M10 2v4m0 8v4M2 10h4m8 0h4"/></svg></button></div>
                     <p id="atlasFollowStatus" class="atlas-follow-status" role="status"></p>
                 </div>
                 <div class="atlas-scene-tools">
@@ -37,36 +41,39 @@
                             <div class="atlas-layout-options"><h3 data-i18n="布局">{{ tr('布局') }}</h3><label for="atlasSpacing"><span data-i18n="分支间距">{{ tr('分支间距') }}</span><output id="atlasSpacingValue" for="atlasSpacing">100%</output></label><input id="atlasSpacing" type="range" min="0.7" max="1.8" value="1" step="0.1">
                                 <label class="atlas-label-toggle"><input id="atlasNodeLabels" type="checkbox" checked aria-describedby="atlasNodeLabelsHint"><span data-i18n="显示节点文字">{{ tr('显示节点文字') }}</span></label>
                                 <p class="atlas-label-hint" id="atlasNodeLabelsHint" data-i18n="关闭后，图上不显示节点文字；悬停提示和详情仍可查看名称。">{{ tr('关闭后，图上不显示节点文字；悬停提示和详情仍可查看名称。') }}</p>
+                                <p class="atlas-label-hint" data-i18n="大小按明确归属中的接入信源数去重并限幅，未知部分不计入。">{{ tr('大小按明确归属中的接入信源数去重并限幅，未知部分不计入。') }}</p>
+                                <p class="atlas-label-hint" data-i18n="颜色对应组织身份或已确认关联；灰色表示未确认，多重关联使用单独颜色。">{{ tr('颜色对应组织身份或已确认关联；灰色表示未确认，多重关联使用单独颜色。') }}</p>
                             </div>
                             <div class="atlas-growth-options"><div class="atlas-option-heading"><h3 data-i18n="生长动画">{{ tr('生长动画') }}</h3><button type="button" id="atlasReplayReset" data-i18n="回到完整图谱">{{ tr('回到完整图谱') }}</button></div>
                                 <div class="atlas-chapter-buttons"><button type="button" data-atlas-chapter="0" data-i18n="官网入口">{{ tr('官网入口') }}</button><button type="button" data-atlas-chapter="1" data-i18n="分叉发现">{{ tr('分叉发现') }}</button><button type="button" data-atlas-chapter="2" data-i18n="栏目识别">{{ tr('栏目识别') }}</button><button type="button" data-atlas-chapter="3" data-i18n="证据复核">{{ tr('证据复核') }}</button></div>
                                 <input id="atlasScrubber" type="range" min="0" max="1" value="1" step="0.001" data-i18n-aria-label="切换导览阶段" aria-label="{{ tr('切换导览阶段') }}">
                                 <p id="atlasNarration" aria-live="polite" data-i18n="选择一个节点，沿已记录的路径深入。">{{ tr('选择一个节点，沿已记录的路径深入。') }}</p>
-                                <p class="atlas-replay-note" data-i18n="回放已记录路径，不代表实际采集时间顺序。">{{ tr('回放已记录路径，不代表实际采集时间顺序。') }}</p>
+                                <p class="atlas-replay-note" data-i18n="按真实记录顺序回放；不改变接入状态。">{{ tr('按真实记录顺序回放；不改变接入状态。') }}</p>
                             </div>
                         </div>
                     </details>
                 </div>
-                <div class="atlas-status" id="atlasStatus" role="status" data-i18n="正在准备三维视图…">{{ tr('正在准备三维视图…') }}</div>
+                <div class="atlas-readout"><div class="atlas-status" id="atlasStatus" role="status" data-i18n="正在准备三维视图…">{{ tr('正在准备三维视图…') }}</div>
+                    <p class="atlas-help" id="atlasHelp"><span id="atlasRelationStatus"></span><br><span data-i18n="左键旋转 · 中键拖动平移 · 滚轮缩放">{{ tr('左键旋转 · 中键拖动平移 · 滚轮缩放') }}</span><br><span data-i18n="悬停看名称，选中看路径和相邻入口">{{ tr('悬停看名称，选中看路径和相邻入口') }}</span></p>
+                </div>
                 <div class="atlas-camera-controls" role="group" data-i18n-aria-label="视角控制" aria-label="{{ tr('视角控制') }}">
                     <button type="button" id="atlasOverview" data-i18n="返回全景">{{ tr('返回全景') }}</button>
                     <button type="button" id="atlasZoomIn" data-i18n-aria-label="放大网络" aria-label="{{ tr('放大网络') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M10 4v12"/></svg></button>
                     <button type="button" id="atlasZoomOut" data-i18n-aria-label="缩小网络" aria-label="{{ tr('缩小网络') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12"/></svg></button>
                     <button type="button" id="atlasFullscreen" data-i18n="全屏探索" aria-pressed="false">{{ tr('全屏探索') }}</button>
                 </div>
-                <p class="atlas-help" id="atlasHelp"><span data-i18n="左键旋转 · 中键拖动平移 · 滚轮缩放">{{ tr('左键旋转 · 中键拖动平移 · 滚轮缩放') }}</span><br><span data-i18n="悬停看名称，选中看路径和相邻入口">{{ tr('悬停看名称，选中看路径和相邻入口') }}</span></p>
             </div>
-            <div class="atlas-key"><span data-i18n="大小：入口类型">{{ tr('大小：入口类型') }}</span><span data-i18n="颜色：导航分支">{{ tr('颜色：导航分支') }}</span><span data-i18n="光圈：节点状态">{{ tr('光圈：节点状态') }}</span><span class="atlas-route-key" data-route="connection"><i aria-hidden="true"></i><span data-i18n="直接关联">{{ tr('直接关联') }}</span></span><span class="atlas-route-key" data-route="manual"><i aria-hidden="true"></i><span data-i18n="所选路径">{{ tr('所选路径') }}</span></span></div>
+            <div class="atlas-key"><span data-i18n="大小：已确认信源数">{{ tr('大小：已确认信源数') }}</span><span data-i18n="颜色：组织与发布主体">{{ tr('颜色：组织与发布主体') }}</span><span data-i18n="光圈：节点状态">{{ tr('光圈：节点状态') }}</span><span class="atlas-route-key" data-route="connection"><i aria-hidden="true"></i><span data-i18n="直接关联">{{ tr('直接关联') }}</span></span><span class="atlas-route-key" data-route="manual"><i aria-hidden="true"></i><span data-i18n="所选路径">{{ tr('所选路径') }}</span></span></div>
             <details id="atlasListPanel" class="atlas-list-panel"><summary data-i18n="探索路径列表">{{ tr('探索路径列表') }}</summary><div id="monitorTree" class="monitor-tree" data-i18n-aria-label="探索路径列表" aria-label="{{ tr('探索路径列表') }}" aria-busy="true"><p class="monitor-empty" data-i18n="正在载入保存的路径…">{{ tr('正在载入保存的路径…') }}</p></div></details>
             <p id="monitorCatalogNote" class="monitor-caption"></p>
-            <div class="monitor-legend" data-i18n-aria-label="节点状态图例" aria-label="{{ tr('节点状态图例') }}"><span data-state="running" data-i18n="正在处理">{{ tr("正在处理") }}</span><span data-state="connected" data-i18n="已接入">{{ tr("已接入") }}</span><span data-state="fetched" data-i18n="已读取">{{ tr("已读取") }}</span><span data-state="pending" data-i18n="等待探索">{{ tr("等待探索") }}</span><span data-state="waiting" data-i18n="等待继续">{{ tr('等待继续') }}</span><span data-state="failed" data-i18n="等待恢复">{{ tr("等待恢复") }}</span></div>
+            <div class="monitor-legend" data-i18n-aria-label="节点状态图例" aria-label="{{ tr('节点状态图例') }}"><span data-state="running" data-i18n="正在处理">{{ tr("正在处理") }}</span><span data-state="connected" data-i18n="已接入">{{ tr("已接入") }}</span><span data-state="fetched" data-i18n="已读取">{{ tr("已读取") }}</span><span data-state="pending" data-i18n="待验证">{{ tr("待验证") }}</span><span data-state="waiting" data-i18n="等待继续">{{ tr('等待继续') }}</span><span data-state="failed" data-i18n="等待恢复">{{ tr("等待恢复") }}</span></div>
         </section>
         <aside class="monitor-detail" id="atlasDetailPanel" aria-labelledby="monitorDetailHeading"><h2 id="monitorDetailHeading" data-i18n="节点详情">{{ tr("节点详情") }}</h2><button type="button" id="atlasDetailClose" class="atlas-tool atlas-detail-close" data-i18n-aria-label="关闭节点详情" aria-label="{{ tr('关闭节点详情') }}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"/></svg></button><div id="atlasBreadcrumb" class="atlas-breadcrumb"></div><div id="monitorDetail"><p class="monitor-empty" data-i18n="选择左侧入口，查看路径、状态和接入结果。">{{ tr("选择左侧入口，查看路径、状态和接入结果。") }}</p></div><button type="button" id="atlasBranch" class="btn btn-outline" hidden data-i18n="收起分支">{{ tr('收起分支') }}</button></aside>
     </div>
     <section class="monitor-summary" data-i18n-aria-label="探索状态" aria-label="{{ tr('探索状态') }}">
         <div class="monitor-summary-title"><h2 id="monitorMessage" data-i18n="正在读取探索状态">{{ tr('正在读取探索状态') }}</h2><p id="monitorCurrent" data-i18n="打开监控不会启动探索或调用 AI。">{{ tr('打开监控不会启动探索或调用 AI。') }}</p><p id="monitorWorkAt" class="text-muted"></p></div>
         <dl class="monitor-counters"><div><dt data-i18n="已读页面">{{ tr('已读页面') }}</dt><dd id="monitorChecked">—</dd></div><div><dt data-i18n="等待探索">{{ tr('等待探索') }}</dt><dd id="monitorPending">—</dd></div><div><dt data-i18n="栏目处理中">{{ tr('栏目处理中') }}</dt><dd id="monitorCandidates">—</dd></div><div><dt data-i18n="已接入栏目">{{ tr('已接入栏目') }}</dt><dd id="monitorConnected">—</dd></div></dl>
-        <p class="monitor-caption" data-i18n="页面计数来自最近一次任务检查点；已接入栏目为当前保存的配置。探索范围会继续扩大，不以这些计数计算全校完成率。">{{ tr('页面计数来自最近一次任务检查点；已接入栏目为当前保存的配置。探索范围会继续扩大，不以这些计数计算全校完成率。') }}</p>
+        <p class="monitor-caption" data-i18n="页面计数来自最近一次任务检查点；已接入栏目以当前有效验证结果为准。探索范围会继续扩大，不以这些计数计算全校完成率。">{{ tr('页面计数来自最近一次任务检查点；已接入栏目以当前有效验证结果为准。探索范围会继续扩大，不以这些计数计算全校完成率。') }}</p>
     </section>
     <div class="monitor-bottom">
         <section class="monitor-directions" aria-labelledby="monitorDirectionsHeading"><header class="monitor-section-head"><div><h2 id="monitorDirectionsHeading" data-i18n="关注方向">{{ tr("关注方向") }}</h2><p id="monitorProfiles" data-i18n="按当前画像查看探索线索">{{ tr("按当前画像查看探索线索") }}</p></div></header><div id="monitorDirections"></div><p class="monitor-caption" data-i18n="按页面名称和已记录路径归类，可重复计数。出现相关线索或接入一个栏目，都不代表该方向已完整覆盖。">{{ tr("按页面名称和已记录路径归类，可重复计数。出现相关线索或接入一个栏目，都不代表该方向已完整覆盖。") }}</p></section>
@@ -79,5 +86,5 @@
 {% block scripts %}
 <script type="importmap">{"imports":{"three":{{ url_for('static', filename='vendor/three/three.module.min.js')|tojson }}}}</script>
 <script type="module" src="{{ url_for('static', filename='js/discovery-atlas.js') }}"></script>
-<script src="{{ url_for('static', filename='js/discovery-monitor.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/discovery-monitor.js') }}"></script>
 {% endblock %}

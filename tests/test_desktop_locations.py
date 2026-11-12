@@ -54,6 +54,20 @@ class LocationTests(unittest.TestCase):
         from desktop.locations import downloads_dir
         self.assertEqual(downloads_dir(self.root / 'data'), self.root / 'data' / 'updates')
 
+    def test_favorite_and_cached_attachment_bytes_move_with_personal_database(self):
+        from desktop.locations import migrate_data
+        source, target = self.root / 'personal-data', self.root / 'moved-personal-data'
+        source.mkdir()
+        payloads = [(1, b'favorite attachment bytes'), (2, b'viewed attachment bytes')]
+        with closing(sqlite3.connect(source / 'school_watcher.db')) as original:
+            original.execute('CREATE TABLE announcement_resources (announcement_id INTEGER, payload BLOB)')
+            original.executemany('INSERT INTO announcement_resources VALUES (?, ?)', payloads)
+            original.commit()
+        migrate_data(source, target)
+        for folder in (source, target):
+            with closing(sqlite3.connect(folder / 'school_watcher.db')) as database:
+                self.assertEqual(database.execute('SELECT * FROM announcement_resources ORDER BY announcement_id').fetchall(), payloads)
+
     def test_move_preserves_sqlite_wal_content_secrets_and_original(self):
         from desktop.locations import migrate_data
         source, target = self.root / 'source', self.root / 'target'
@@ -167,6 +181,28 @@ class LocationTests(unittest.TestCase):
             with self.assertRaises(LocationError): apply_locations(self.root / 'new')
             with self.assertRaises(LocationError): remove_personal_data()
         self.assertEqual((source / '.field-key').read_text(), 'keep')
+
+    def test_uninstall_removes_managed_monthly_logs_and_preserves_other_files(self):
+        from desktop.locations import save_locations, remove_personal_data
+        data = self.root / 'data'
+        month = data / 'logs' / '2026-10'
+        month.mkdir(parents=True)
+        invalid_date = month / '2026-10-00-web-123.log'
+        invalid_date.write_text('keep', encoding='utf8')
+        managed = month / '2026-10-20-web-123.log'
+        lock = managed.with_name(managed.name + '.lock')
+        for path in (managed, lock): path.write_text('fixture', encoding='utf8')
+        unrelated = month / 'personal.log'
+        unrelated.write_text('keep', encoding='utf8')
+        mismatched_month = month / '2026-09-20-web-123.log'
+        mismatched_month.write_text('keep', encoding='utf8')
+        save_locations(data_dir=data)
+        remove_personal_data()
+        self.assertFalse(managed.exists())
+        self.assertFalse(lock.exists())
+        self.assertEqual(unrelated.read_text('utf8'), 'keep')
+        self.assertEqual(invalid_date.read_text('utf8'), 'keep')
+        self.assertEqual(mismatched_month.read_text('utf8'), 'keep')
 
 
 if __name__ == '__main__': unittest.main()

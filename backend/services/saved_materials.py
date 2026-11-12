@@ -1,4 +1,4 @@
-"""Local favorite snapshots: body plus observed resources, with shared retention."""
+"""Personal-data copies of favorite resources and attachments opened by readers."""
 from datetime import datetime, timedelta
 from email.message import Message
 import hashlib
@@ -62,11 +62,15 @@ def resource_url(value, base=''):
 
 
 def observed_resources(ann):
+    return resources_in_html(ann.content_html, ann.url)
+
+
+def resources_in_html(html, base_url):
     from backend.scraper.sanitizer import sanitize_html
-    soup = BeautifulSoup(sanitize_html(ann.content_html or ''), 'lxml')
+    soup = BeautifulSoup(sanitize_html(html or ''), 'lxml')
     resources = {}
     for node in soup.select('a[href], img[src]'):
-        url = resource_url(node.get('href') or node.get('src'), ann.url)
+        url = resource_url(node.get('href') or node.get('src'), base_url)
         if not url:
             continue
         kind = 'image' if node.name == 'img' else 'attachment'
@@ -78,6 +82,35 @@ def observed_resources(ann):
         resources.setdefault(resource_key(url), {'url': url, 'kind': kind,
             'filename': (label or filename or '官网附件')[:1000]})
     return resources
+
+
+def queue_attachment(ann, key, *, touch=True):
+    """Queue only the opened, observed attachment; never wait for the website."""
+    ann = db.session.execute(select(Announcement).where(Announcement.id == ann.id)
+        .with_for_update().execution_options(populate_existing=True)).scalar_one_or_none()
+    if not ann:
+        raise ValueError('通知中没有这个附件')
+    values = observed_resources(ann).get(key)
+    if not values or values['kind'] != 'attachment':
+        raise ValueError('通知中没有这个附件')
+    from backend.services import tasks
+    db.session.execute(insert(AnnouncementResource).values(announcement_id=ann.id,
+        url_key=key, state='pending', **values).on_conflict_do_nothing(
+            index_elements=['announcement_id', 'url_key']))
+    row = db.session.get(AnnouncementResource, (ann.id, key))
+    now = datetime.utcnow()
+    if touch:
+        ann.content_accessed_at = now
+    if row.state != 'ready':
+        job = BackgroundTask.query.filter_by(identity=f'saved_resource:{ann.id}:{key}').first()
+        # Repeated opens must neither duplicate reads nor bypass retry backoff.
+        if not job or job.state == 'done' or (job.state == 'failed' and
+                (not job.next_run_at or job.next_run_at <= now)):
+            row.state, row.error = 'pending', ''
+            tasks.enqueue('saved_resource', f'{ann.id}:{key}',
+                {'announcement_id': ann.id, 'url_key': key, 'cache': True}, commit=False)
+    db.session.commit()
+    return row
 
 
 def queue_materials(ann, *, retry=False):
@@ -137,7 +170,7 @@ def download_resource(url, article_url, kind='attachment'):
     from backend.scraper.acquisition import FetchRequest
     from backend.scraper.acquisition.http_transport import fetch_http
     from backend.services.discovery_policy import get_policy
-    from backend.scraper.article_images import MAX_IMAGE_BYTES, _image_type
+    from backend.services.article_images import MAX_IMAGE_BYTES, _image_type
     limit = MAX_IMAGE_BYTES if kind == 'image' else int(current_app.config.get('SAVED_ATTACHMENT_MAX_BYTES', MAX_ATTACHMENT_BYTES))
     result = fetch_http(FetchRequest(url, purpose='article', source_id='saved-resource:' + resource_key(url),
         timeout_seconds=get_policy()['http_total_seconds'], browser_allowed=False), capture_binary=True,
@@ -167,10 +200,18 @@ def download_resource(url, article_url, kind='attachment'):
     return payload, mime, filename
 
 
-def save_resource(ann_id, key):
+def _resource_retained(ann, row, cache):
+    if is_pinned(ann.id):
+        return True
+    # Only an explicit attachment open can create an ordinary cache copy.
+    return bool(cache and row.kind == 'attachment' and
+        observed_resources(ann).get(row.url_key, {}).get('url') == row.url)
+
+
+def save_resource(ann_id, key, *, cache=False):
     row = db.session.get(AnnouncementResource, (ann_id, key))
     ann = db.session.get(Announcement, ann_id)
-    if not row or not ann or not is_pinned(ann_id):
+    if not row or not ann or not _resource_retained(ann, row, cache):
         return {'skipped': True}
     if row.state == 'ready':
         return {'cached': True}
@@ -185,10 +226,12 @@ def save_resource(ann_id, key):
             row.state, row.error = 'failed', str(exc)[:500]
             db.session.commit()
         raise
-    # A long request cannot resurrect a file after its last retention pin expired.
-    ann = db.session.execute(select(Announcement).where(Announcement.id == ann_id).with_for_update()).scalar_one_or_none()
-    row = db.session.get(AnnouncementResource, (ann_id, key))
-    if not ann or not row or row.url != url or not is_pinned(ann_id):
+    # Cleanup and favorite changes take the same parent-row lock. A slow read
+    # must not recreate a resource removed while the website was responding.
+    ann = db.session.execute(select(Announcement).where(Announcement.id == ann_id)
+        .with_for_update().execution_options(populate_existing=True)).scalar_one_or_none()
+    row = db.session.get(AnnouncementResource, (ann_id, key), populate_existing=True)
+    if not ann or not row or row.url != url or not _resource_retained(ann, row, cache):
         db.session.rollback()
         return {'skipped': True}
     row.payload, row.mime_type, row.filename = payload, mime, filename
@@ -200,6 +243,8 @@ def save_resource(ann_id, key):
 
 def resume_saved_materials(limit=20):
     """Bounded startup recovery for existing favorites and overdue failed reads."""
+    from backend.services import tasks
+    missing_image_module = "No module named 'backend.scraper.article_images'"
     busy_bodies = select(BackgroundTask.payload['announcement_id'].as_integer()).where(BackgroundTask.kind == 'content',
         or_(BackgroundTask.state.in_(('pending','running','waiting')),
             (BackgroundTask.state == 'failed') & (BackgroundTask.next_run_at > datetime.utcnow())))
@@ -209,8 +254,27 @@ def resume_saved_materials(limit=20):
     for ann in pending:
         queue_materials(ann)
     jobs = BackgroundTask.query.filter_by(kind='saved_resource', state='failed').filter(
-        BackgroundTask.next_run_at <= datetime.utcnow()).order_by(BackgroundTask.next_run_at).limit(limit).all()
+        or_(BackgroundTask.next_run_at <= datetime.utcnow(), BackgroundTask.error == missing_image_module)
+        ).order_by(BackgroundTask.next_run_at).limit(limit).all()
     for job in jobs:
         ann = db.session.get(Announcement, job.payload.get('announcement_id'))
-        if ann and is_pinned(ann.id):
+        key = job.payload.get('url_key')
+        row = db.session.get(AnnouncementResource, (ann.id, key)) if ann and key else None
+        cache = job.payload.get('cache') is True
+        if not ann or not row or not _resource_retained(ann, row, cache):
+            continue
+        if job.error == missing_image_module:
+            # The fixed import cannot recover through network backoff. Resume
+            # only this known failed resource; leave other files' cooldowns intact.
+            key = job.payload.get('url_key')
+            row = db.session.get(AnnouncementResource, (ann.id, key)) if key else None
+            if not row or row.state != 'failed' or row.error != missing_image_module:
+                continue
+            row.state, row.error = 'pending', ''
+            tasks.enqueue('saved_resource', f'{ann.id}:{key}',
+                dict(job.payload), commit=False)
+            db.session.commit()
+        elif cache and not is_pinned(ann.id):
+            queue_attachment(ann, key, touch=False)
+        else:
             queue_materials(ann, retry=True)

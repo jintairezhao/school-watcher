@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "submitted_on": "2026-10-23",
+  "origin": "User supplied must-find sources in this conversation",
+  "reviewer": "user",
+  "verification_time": null,
+  "independent_holdout_certified": false,
+  "schools": [
+    {
+      "name": "中国石油大学（华东）",
+      "root_url": "https://www.upc.edu.cn/",
+      "targets": [
+        {"id": "upc-geori-undergraduate", "submitted_unit_name": "地球科学与技术学院", "section": "通知公告/本科生", "url": "https://geori.upc.edu.cn/17045/list.htm", "importance": "user_required", "address_status": "supplied_exact_unchecked"},
+        {"id": "upc-geori-graduate", "submitted_unit_name": "地球与技术学院", "section": "通知公告/研究生", "url": "https://geori.upc.edu.cn/yjs/list.htm", "importance": "user_required", "address_status": "supplied_exact_unchecked"},
+        {"id": "upc-geori-research", "submitted_unit_name": "地球与技术学院", "section": "通知公告/科研", "url": "https://geori.upc.edu.cn/17046/list.htm", "importance": "user_required", "address_status": "supplied_exact_unchecked"},
+        {"id": "upc-cmee-undergraduate", "submitted_unit_name": "机电工程学院", "section": "通知公告/本科生", "url": "https://cmee.upc.edu.cn/21206/list.htm", "importance": "user_required", "address_status": "supplied_exact_unchecked"}
+      ]
+    },
+    {
+      "name": "中国社会科学院大学",
+      "root_url": "https://www.ucass.edu.cn/",
+      "targets": [
+        {"id": "ucass-marxism-notices", "submitted_unit_name": "马克思主义学院", "section": "通知公告", "submitted_url": "https://www.ucass.edu.cn/", "url": null, "importance": "user_required", "address_status": "school_home_supplied_actual_column_unresolved"}
+      ]
+    }
+  ],
+  "constraints": [
+    "Preserve submitted names literally; observed names and aliases require separate evidence",
+    "Keep must-find target labels separate from discovery-strategy-visible inputs",
+    "Do not infer verification dates, complete coverage, independence or a new source installation",
+    "User requested automatic candidate collection and batch review instead of more manual typing"
+  ]
+}

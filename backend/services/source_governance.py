@@ -21,8 +21,9 @@ from backend.database.models import Department, School
 from backend.database.source_governance_models import (
     SourceProposal, SourceConfigVersion, SourceReviewEvent, SchoolOnboarding)
 from backend.services.source_inventory import canonical_url, site_key
+from shared.source_limits import MAX_SELECTOR_CHARS
 
-VERSION = 'source-governance-8'
+VERSION = 'source-governance-24'
 FIELDS = ('name', 'list_url', 'list_selector', 'title_selector', 'link_selector',
           'date_selector', 'content_selector', 'group_name')
 ACTION_LABEL = re.compile(r'^(?:read(?:\s+more)?|more|learn\s+more|了解|更多|查看|详情)$', re.I)
@@ -42,16 +43,27 @@ UNVERIFIED_COLUMN_NAME = '栏目名称待核实'
 # sample extends within this ceiling rather than abandoning a real public column.
 ARTICLE_SAMPLE_TARGET = 3
 ARTICLE_SAMPLE_LIMIT = 5
-GATED_OUTCOMES = ('denied', 'needs_manual')
 GATED_CODES = ('source_login_required', 'access_denied', 'access_denied_page',
-               'human_verification', 'access_challenge', 'http_401', 'http_403')
+               'source_access_restricted', 'human_verification', 'access_challenge',
+               'http_401', 'http_403', 'http_451')
 
 
 def gated_sample(exc):
     """True when the site refused this entry rather than the program misreading it."""
     from backend.scraper.acquisition import FetchFailure
-    return isinstance(exc, FetchFailure) and (exc.outcome in GATED_OUTCOMES
-                                              or exc.error_code in GATED_CODES)
+    return isinstance(exc, FetchFailure) and (exc.error_code in GATED_CODES
+        or exc.outcome == 'needs_manual' and not exc.error_code.startswith('http_'))
+
+
+def access_limited_sample(value):
+    """Recheck saved labels too: a legacy generic denial can be HTTP 404."""
+    return isinstance(value, str) and value.startswith('access_limited:') and (
+        value.split(':', 1)[1] in (*GATED_CODES, 'needs_manual'))
+
+
+def invalid_access_limited_samples(bundle):
+    return [key for key, value in (bundle.get('samples') or {}).items()
+        if isinstance(value, str) and value.startswith('access_limited:') and not access_limited_sample(value)]
 
 
 def unverified_column_name(name):
@@ -86,7 +98,7 @@ def _candidate(value, *, allow_missing_list=False):
     result = {k: v.strip() for k, v in result.items()}
     if not result['name'] or len(result['name']) > 200 or ACTION_LABEL.fullmatch(result['name']):
         raise ValueError('栏目名称应使用官网正式标题')
-    if len(result['group_name']) > 200 or any(len(result[k]) > 500 for k in FIELDS if k.endswith('selector')):
+    if len(result['group_name']) > 200 or any(len(result[k]) > MAX_SELECTOR_CHARS for k in FIELDS if k.endswith('selector')):
         raise ValueError('来源字段过长')
     validate_public_url(result['list_url'], resolve=False)
     if not result['list_selector'] and not allow_missing_list:
@@ -123,12 +135,32 @@ def _snapshot(html, url, *, outcome=None, role='list'):
                     'error_code': raw.error_code, 'message': raw.message,
                     'evidence': list(raw.evidence), 'retry_after': raw.retry_after}
     outcome = outcome or 'usable'
+    from backend.scraper.discovery.script_materials import verified_scripts
+    scripts = verified_scripts(html, url)
     html = str(html)
     if len(html.encode()) > 8 * 1024 * 1024:
         raise ValueError('网页证据超过单页限制')
     digest = _hash(html)
     root = _evidence_root()
     root.mkdir(parents=True, exist_ok=True)
+    attachment = getattr(raw, 'attachment', {}) if isinstance(raw, FetchResult) else {}
+    embedded_pdf = None
+    if attachment.get('format') == 'pdf':
+        from backend.scraper.acquisition.attachments import read_pdf_material
+        pdf_digest = attachment.get('sha256')
+        payload = read_pdf_material(root, pdf_digest)
+        if attachment.get('verified') is not True or attachment.get('bytes') != len(payload):
+            raise ValueError('PDF材料尚未完整核实')
+        evidence = {key: attachment[key] for key in ('format', 'verified', 'filename', 'bytes', 'sha256', 'verification') if key in attachment}
+        if attachment.get('embedding'):
+            from backend.scraper.acquisition.embedded_pdf import valid_binding
+            if not valid_binding(attachment, html, url):
+                raise ValueError('PDF引用依据与网页原文不一致')
+            embedded_pdf = dict(evidence, resource_url=attachment['resource_url'],
+                                embedding=dict(attachment['embedding']))
+        else:
+            return {'hash': pdf_digest, 'url': canonical_url(url), 'role': role, 'outcome': outcome,
+                    'captured_at': datetime.utcnow().isoformat(), **metadata, 'attachment': evidence}
     path = root / (digest + '.html.gz')
     if not path.exists():
         # Exclusive creation is safe for simultaneous identical snapshots.
@@ -137,14 +169,29 @@ def _snapshot(html, url, *, outcome=None, role='list'):
                 stream.write(gzip.compress(html.encode()))
         except FileExistsError:
             pass
-    return {'hash': digest, 'url': canonical_url(url), 'role': role, 'outcome': outcome,
-            'captured_at': datetime.utcnow().isoformat(), **metadata}
+    reference = {'hash': digest, 'url': canonical_url(url), 'role': role, 'outcome': outcome,
+                 'captured_at': datetime.utcnow().isoformat(), **metadata}
+    if embedded_pdf is not None:
+        reference['embedded_pdf'] = embedded_pdf
+    if scripts:
+        reference['script_materials'] = [dict(_snapshot(text, proof['script_url'], role='script'),
+            page_url=proof['page_url'], page_hash=proof['page_hash'], observed_at=proof['observed_at'], status=200)
+            for _, text, proof in scripts]
+    return reference
 
 
 def read_snapshot(reference):
     digest = reference.get('hash', '')
     if not re.fullmatch('[0-9a-f]{64}', digest):
         raise ValueError('网页证据标识无效')
+    if reference.get('attachment'):
+        from backend.scraper.acquisition.attachments import read_pdf_material
+        attachment = reference['attachment']
+        payload = read_pdf_material(_evidence_root(), digest)
+        if (attachment.get('format') != 'pdf' or attachment.get('verified') is not True
+                or attachment.get('sha256') != digest or attachment.get('bytes') != len(payload)):
+            raise ValueError('PDF材料依据与原文不一致')
+        return ''
     path = _evidence_root() / (digest + '.html.gz')
     try:
         # Hashes cover the original HTML, including CRLF and lone CR characters.
@@ -154,6 +201,41 @@ def read_snapshot(reference):
         raise ValueError('网页证据不可用，请重新检查') from exc
     if _hash(html) != digest:
         raise ValueError('网页证据已变化，请重新检查')
+    if reference.get('embedded_pdf'):
+        from backend.scraper.acquisition import FetchResult, FetchedHTML
+        from backend.scraper.acquisition.attachments import read_pdf_material
+        from backend.scraper.acquisition.embedded_pdf import valid_binding
+        attachment = reference['embedded_pdf']
+        payload = read_pdf_material(_evidence_root(), attachment.get('sha256'))
+        if (attachment.get('format') != 'pdf' or attachment.get('verified') is not True
+                or attachment.get('bytes') != len(payload)
+                or not valid_binding(attachment, html, reference.get('url') or '')):
+            raise ValueError('PDF引用依据与网页原文不一致')
+        html = FetchedHTML(FetchResult(reference['url'], status=reference.get('status', 200),
+            html=html, attachment=attachment, outcome=reference.get('outcome', 'usable'),
+            transport=reference.get('transport', 'http'), error_code=reference.get('error_code', ''),
+            message=reference.get('message', ''), evidence=tuple(reference.get('evidence') or ()),
+            retry_after=reference.get('retry_after')))
+    if reference.get('script_materials'):
+        from backend.scraper.discovery.script_materials import ScriptHTML, verified_scripts
+        scripts = []
+        refs = reference['script_materials']
+        if isinstance(refs, list) and len(refs) <= 8:
+            for ref in refs:
+                if not isinstance(ref, dict):
+                    continue
+                try:
+                    # Nested references cannot recursively load an arbitrary material graph.
+                    text = read_snapshot({'hash': ref.get('hash')})
+                    scripts.append(dict(ref, text=text))
+                except (ValueError, OSError):
+                    continue  # Missing material is a gap, never guessed tab order.
+        value = ScriptHTML(html, scripts, reference.get('url') or '')
+        # Only relationships executable on the original page survive restoration.
+        valid = verified_scripts(value, value.final_url)
+        return ScriptHTML(html, [dict(url=proof['script_url'], text=text, hash=proof['script_hash'],
+            page_url=proof['page_url'], page_hash=proof['page_hash'], observed_at=proof['observed_at'], status=200)
+            for _, text, proof in valid], value.final_url)
     return html
 
 
@@ -198,13 +280,17 @@ def _fetch_snapshot(url, purpose, fetcher):
         # The transport's generic list recognizer is not the authority for an
         # AI-declared CSS plan. Retain readable material and let _column_scope,
         # article identity and the independent sample validate the actual plan.
-        return _snapshot(FetchedHTML(exc.result), exc.result.final_url or url,
-                         outcome='needs_adapter', role=purpose)
+        reference = _snapshot(FetchedHTML(exc.result), exc.result.final_url or url,
+                              outcome='needs_adapter', role=purpose)
+        reference['requested_url'] = canonical_url(url)
+        return reference
     result = getattr(html, 'result', None)
     outcome = getattr(result, 'outcome', 'usable')
     if outcome not in ('usable', 'empty'):
         raise ValueError('网页内容尚未就绪，不能审核来源')
-    return _snapshot(html, getattr(html, 'final_url', url), outcome=outcome, role=purpose)
+    reference = _snapshot(html, getattr(html, 'final_url', url), outcome=outcome, role=purpose)
+    reference['requested_url'] = canonical_url(url)
+    return reference
 
 
 def _exploration_html(url):
@@ -244,14 +330,19 @@ def _extract(config, reference, *, html=None):
     from backend.scraper.detectors.title_quality import is_junk_title, extract_title_text
     from backend.scraper.date_elements import publication_date_text, listing_date_observation
     from backend.scraper.change_detector import parse_date
+    from backend.services.source_inventory import resolve_page_link, has_fragment_route
     soup = BeautifulSoup(read_snapshot(reference) if html is None else html, 'lxml')
     items = soup.select(config['list_selector'])
     records, errors = [], []
     for item in items:
         anchor = select_node(item, config['link_selector'] or 'a[href]')
         title_node = select_node(item, config['title_selector']) if config['title_selector'] else item
-        href = anchor.get('href', '') if anchor else ''
-        url = canonical_url(urljoin(reference['url'], href)) if href and not href.startswith(('javascript:', 'mailto:', 'tel:')) else ''
+        href = (anchor.get('href', '') if anchor else '').strip()
+        if href.startswith('#') and not has_fragment_route(href):
+            # A disabled official row has no article address. Retain its DOM
+            # position for scope checks without inventing a list-page notice.
+            continue
+        url = resolve_page_link(reference['url'], href)
         title = extract_title_text(title_node, anchor=anchor, page_url=reference['url'])
         if not url or not title or len(title) > 300 or is_junk_title(title, article_url=url):
             errors.append('invalid_list_item')
@@ -392,7 +483,9 @@ def _column_scope(config, reference, scope_evidence=None, *, html=None):
                         regions.append(breadcrumb)
         except (ValueError, TypeError, SelectorSyntaxError):
             pass
-    for feed in ([] if regions else publication_lists(html, reference['url'])):
+    # An explicitly supplied but invalid region must be corrected and recorded
+    # by the caller; a template match cannot silently replace that evidence.
+    for feed in ([] if regions or scope_evidence else publication_lists(html, reference['url'])):
         if not feed.get('name') or feed.get('heading_ambiguous'):
             continue
         if unnamed:
@@ -414,6 +507,40 @@ def _column_scope(config, reference, scope_evidence=None, *, html=None):
                 regions.append({'name': feed['name'], 'container': feed.get('container_locator', ''),
                                 'heading': feed.get('heading_locator', ''),
                                 **({'container': locator(actual), 'heading': locator(heading_nodes[0])} if actual else {})})
+    if (not regions and items and config.get('list_url')
+            and canonical_url(config['list_url']) != canonical_url(reference['url'])):
+        # A followed page can point its terminal crumb to the configured first
+        # page. Bind only the complete reviewed widget; ordinary discovery still
+        # requires a self-link and cannot invent this configured identity.
+        from backend.scraper.discovery.listing_headings import right_news_breadcrumb_heading
+        heading = right_news_breadcrumb_heading(items[0],reference['url'],column_url=config['list_url'])
+        listing = items[0].find_parent('ul',class_='list-ul')
+        if (heading and heading.get('name') and not heading.get('heading_ambiguous')
+                and listing is not None
+                and {id(node) for node in listing.find_all('li',recursive=False)} == {id(node) for node in items}
+                and _column_matches(config['name'],heading['name'],config.get('group_name',''))):
+            regions.append(dict(name=heading['name'],container=locator(listing),
+                heading=heading['heading_locator'],canonical_list_url=heading['column_url'],
+                basis='executed_configured_column_breadcrumb'))
+    if not regions and len(items) == 1:
+        # A final ZCMS page may contain one genuine entry. The optional feed
+        # detector requires two, but its exact breadcrumb/pager proof remains
+        # usable for this already configured complete list. A selector taking
+        # only one item from a larger list must not pass this fallback.
+        from backend.scraper.discovery.listing_headings import zcms_notice_heading
+        heading = zcms_notice_heading(items[0], reference['url'])
+        listing = (items[0] if items[0].name == 'ul' and
+                   'middleNotice__notice' in items[0].get('class', []) else
+                   items[0].find_parent('ul', class_='middleNotice__notice'))
+        if (heading and heading.get('name') and not heading.get('heading_ambiguous')
+                and listing is not None and len(listing.find_all(recursive=False)) == 1
+                and (adoptable_column_name(heading['name']) if unnamed else
+                     _column_matches(config['name'], heading['name'], config.get('group_name', '')))):
+            headings = soup.select(heading['heading_locator'])
+            actual = _heading_region(headings[0], soup, items) if len(headings) == 1 else None
+            if actual:
+                regions.append(dict(name=heading['name'], container=locator(actual),
+                    heading=heading['heading_locator'], basis='single_entry_breadcrumb'))
     if not regions:
         # Small genuine lists frequently have just one or two entries. A common
         # nearest section with its own exact heading is sufficient evidence.
@@ -448,6 +575,89 @@ def _page_problem_errors(errors):
     return [error for error in errors if error in PAGE_PROBLEMS]
 
 
+def _identity_observations(report, paths, *, relationships=None):
+    """Small immutable page observations for rechecking captured website bindings."""
+    from backend.services.source_ownership import BRANDING_PREFIX, PREFIX, PROFILE_PREFIX
+    from backend.services.publisher_identity import PREFIX as PUBLISHER_PREFIX
+    from backend.services.source_relationships import SourceRelationships
+    references = {reference['url'] for path in paths for reference in path.get('references', [])}
+    references.update(node['url'] for path in paths for node in path.get('nodes', [])
+                      if node.get('kind') == 'unit' and node.get('url'))
+    if relationships is None:
+        # Legacy read-only callers can supply only the official root. Derive
+        # its cache key for address observations; do not invent a school name
+        # or change the identity fields returned from the original report.
+        alias_site = dict(report['site'])
+        alias_site.setdefault('site_key', site_key(alias_site['root_url']))
+        alias_site.setdefault('name', '')
+        relations = SourceRelationships(dict(report, site=alias_site), [])
+    else:
+        relations = relationships
+    # Keep a separately observed response page as well as the older request
+    # reference. Its newer material (or newer failure) takes precedence.
+    while True:
+        addresses = {address for url in references for address in relations._addresses(url)}
+        addresses.update(reference['url'] for address in tuple(addresses)
+                         for reference in relations.alias_references.get(address, []))
+        responses = {page['final_url'] for page in report.get('pages', [])
+                     if page['url'] in references and page.get('state') == 'fetched'
+                     and page.get('health') != 'dynamic_content' and page.get('final_url')}
+        if responses | addresses <= references:
+            break
+        # Retain the same observed redirect/list witnesses used by the live
+        # projection, including a newer failure at the recorded unit entrance.
+        # Unobserved protocol variants never become page records here.
+        references.update(responses | addresses)
+    # A retained school homepage may also enter publisher_material. Preserve
+    # its acquisition time instead of dating old DOM by the later proposal.
+    references.add(report['site']['root_url'])
+    result = {'identity_site': {field: report['site'].get(field)
+                                for field in ('site_key', 'name', 'root_url')}, 'identity_pages': []}
+    for page in report.get('pages', []):
+        if page['url'] not in references:
+            continue
+        observed = {field: page.get(field) for field in (
+            'url', 'final_url', 'title', 'label', 'kind', 'state', 'health',
+            'content_hash', 'checked_at', 'feed_json')}
+        observed['notes_json'] = _json([note for note in json.loads(page.get('notes_json') or '[]')
+            if isinstance(note, str) and note.startswith((BRANDING_PREFIX, PREFIX, PROFILE_PREFIX, PUBLISHER_PREFIX, 'unit_profile_page:'))])
+        result['identity_pages'].append(observed)
+    return result
+
+
+def _captured_identity_responses(snapshots, pages, root_url):
+    """Index retained identity DOMs by their witnessed successful response too."""
+    from backend.scraper.http_client import same_school_url
+    from backend.services.source_material_publication import _time
+    captured = {ref['url']: ref for ref in snapshots}
+    observed = {page['url']: page for page in pages}
+    for page in pages:
+        reference = captured.get(page.get('url'))
+        final = page.get('final_url')
+        if (not reference or reference.get('outcome') != 'usable' or page.get('state') != 'fetched'
+                or page.get('health') == 'dynamic_content' or not page.get('checked_at')
+                or reference.get('hash') != page.get('content_hash') or not final
+                or not same_school_url(final, root_url)):
+            continue
+        try:
+            final = canonical_url(final)
+        except (TypeError, ValueError):
+            continue
+        explicit = observed.get(final)
+        if explicit is not None and explicit is not page:
+            try:
+                if _time(explicit.get('checked_at')) >= _time(page['checked_at']):
+                    continue  # Missing newer bytes are a gap, not an old alias.
+            except ValueError:
+                continue
+        if final != page['url']:
+            captured.setdefault(final, dict(reference, url=final, requested_url=page['url'],
+                captured_at=page['checked_at'], observed_at=page['checked_at'],
+                response_observation={field: page.get(field) for field in
+                    ('url', 'final_url', 'content_hash', 'checked_at', 'state', 'health')}))
+    return captured
+
+
 def capture_source_evidence(school_id, candidate, *, department_id=None, seed_html=None,
                             inventory=None, fetcher=None, scope_evidence=None, publisher_material=None):
     """Acquire bounded fresh checks. Called by trusted workers, never model output."""
@@ -466,6 +676,10 @@ def capture_source_evidence(school_id, candidate, *, department_id=None, seed_ht
     first = (_snapshot(seed_html, getattr(seed_html, 'final_url', config['list_url']),
                        outcome=getattr(getattr(seed_html, 'result', None), 'outcome', 'usable'))
              if seed_html is not None else _fetch_snapshot(config['list_url'], 'list', fetcher))
+    if seed_html is not None and first['url'] != canonical_url(config['list_url']):
+        # A seed provides response bytes, not the request that obtained them.
+        # Observe the configured entrance before claiming a redirect alias.
+        first = _fetch_snapshot(config['list_url'], 'list', fetcher)
     records, errors, region = _column_scope(config, first, scope_evidence)
     # The official page's own region heading names an unnamed column. Adopt it
     # here, before the evidence hash binds this capture to a config, so the
@@ -491,10 +705,16 @@ def capture_source_evidence(school_id, candidate, *, department_id=None, seed_ht
             owners = relations.publication_owners(first['url'], paths)
             bundle['identity_paths'] = [p for p in paths if p.get('unit_name') in owners]
             references = {r['url'] for p in bundle['identity_paths'] for r in p.get('references', []) if r.get('url')}
+            bundle.update(_identity_observations(report, bundle['identity_paths'], relationships=relations))
+            references.update(page['url'] for page in bundle['identity_pages']
+                if page['url'] != canonical_url(root_url) and page.get('state') == 'fetched'
+                and page.get('health') != 'dynamic_content' and page.get('content_hash'))
             for ref_url in references:
                 html = inventory.snapshot(key, ref_url)
                 if not html:
                     stored = next((r for p in bundle['identity_paths'] for r in p.get('references', []) if r.get('url') == ref_url), {})
+                    if not stored:
+                        stored = next((p for p in bundle['identity_pages'] if p['url'] == ref_url), {})
                     try:
                         html = read_snapshot({'hash': stored.get('content_hash', '')})
                     except ValueError:
@@ -513,6 +733,7 @@ def capture_source_evidence(school_id, candidate, *, department_id=None, seed_ht
                     raise
                 except (FetchFailure, ValueError, OSError):
                     continue
+            captured = _captured_identity_responses(bundle['identity_snapshots'], bundle['identity_pages'], root_url)
             for path in bundle['identity_paths']:
                 if path.get('unit_name') != config.get('group_name'):
                     continue
@@ -524,9 +745,9 @@ def capture_source_evidence(school_id, candidate, *, department_id=None, seed_ht
                     continue
                 root_ref = next((r for r in bundle['publisher_material'].values() if r['url'] == canonical_url(root_url)), None)
                 if not root_ref:
-                    root_html = inventory.snapshot(key, root_url)
+                    root_html = inventory.snapshot(key, canonical_url(root_url))
                     if not root_html:
-                        page = inventory.get_page(key, root_url) or {}
+                        page = inventory.get_page(key, canonical_url(root_url)) or {}
                         try:
                             root_html = read_snapshot({'hash': page.get('content_hash', '')})
                         except ValueError:
@@ -569,6 +790,9 @@ def capture_source_evidence(school_id, candidate, *, department_id=None, seed_ht
             # us read it" is not "the program could not read it".
             bundle['samples'][key] = (('access_limited:' + (exc.error_code or exc.outcome))
                                       if gated_sample(exc) else 'failed: ' + str(exc)[:160])
+            bundle.setdefault('acquisition_failures', {})[key] = {
+                'outcome': exc.outcome, 'error_code': exc.error_code,
+                'status': exc.result.status, 'final_url': exc.result.final_url or url}
             if purpose == 'body' and exc.outcome == 'needs_adapter' and exc.result.html:
                 bundle.setdefault('exploration_pages', []).append(_snapshot(exc.result.html,
                     exc.result.final_url or url, role='article', outcome=exc.outcome))
@@ -643,12 +867,16 @@ def propose_source(school_id, candidate, evidence=None, *, department_id=None, o
         identity_key=identity, proposal_key=key, origin=origin, state='proposed', candidate_json=_json(config),
         expected_config_hash=expected_hash, evidence_json=_json(bundle), evidence_hash=evidence_hash,
         validation_json='{}', revision=1, created_at=datetime.utcnow(), updated_at=datetime.utcnow())
-    db.session.execute(statement.on_conflict_do_nothing(index_elements=['proposal_key']))
+    inserted = db.session.execute(statement.on_conflict_do_nothing(index_elements=['proposal_key']))
+    proposal = SourceProposal.query.filter_by(proposal_key=key).one()
+    if inserted.rowcount:
+        from backend.services.structure_versions import mark_structure_changed
+        mark_structure_changed(school_id, 'proposal', proposal.id, fields=('state', 'candidate_json', 'evidence_json'))
     if commit:
         db.session.commit()
     else:
         db.session.flush()
-    return SourceProposal.query.filter_by(proposal_key=key).one()
+    return proposal
 
 
 def _inside(url, root):
@@ -658,23 +886,45 @@ def _inside(url, root):
     return a.netloc == b.netloc and (a.path == b.path.rstrip('/') or a.path.startswith(b.path.rstrip('/') + '/'))
 
 
-def _identity_errors(proposal, config, bundle):
+def _identity_errors(proposal, config, bundle, *, region=None):
     from backend.scraper.http_client import same_school_url
     group = config['group_name']
     expected = bundle.get('expected_config', {})
     paths = bundle.get('identity_paths', [])
     owners = set()
     snapshots = {r['url']: r for r in bundle.get('identity_snapshots', [])}
+    binding_relationships = None
+    observed_site = bundle.get('identity_site') or {}
+    if (bundle.get('identity_pages') and canonical_url(observed_site.get('root_url') or '') == canonical_url(bundle.get('root_url') or '')
+            and observed_site.get('name') == bundle.get('school_name')
+            and observed_site.get('site_key') == site_key(bundle['root_url'])):
+        from backend.services.source_relationships import SourceRelationships
+        binding_relationships = SourceRelationships(
+            {'site': observed_site, 'pages': bundle['identity_pages']}, [])
+    bodies = {}
+    def material(url):
+        if url not in bodies:
+            bodies[url] = read_snapshot(snapshots[url]) if url in snapshots else ''
+        return bodies[url]
+    from types import SimpleNamespace
+    from backend.services.source_placements import _within_unit
+    from backend.services.school_structure import _publisher_material_assertion
+    source_addresses={bundle['list']['url']}
+    if binding_relationships:
+        from backend.services.source_relationships import material_source_addresses
+        source_addresses.update(material_source_addresses(binding_relationships,bundle['list']['url'],material))
     for path in paths:
         unit = next((n for n in reversed(path.get('nodes', [])) if n.get('kind') == 'unit'), None)
-        if not unit or not _inside(bundle['list']['url'], unit.get('url', '')):
-            continue
-        refs = path.get('references', [])
-        if not refs or any(ref.get('url') not in snapshots for ref in refs):
-            continue
-        if any(_hash(read_snapshot(snapshots[ref['url']])) != ref.get('content_hash') for ref in refs):
-            continue
-        owners.add(path.get('unit_name'))
+        # Both ordinary and multi-website paths use the writer's original-DOM
+        # assertion. Unrelated navigation references may lack raw material;
+        # the exact publisher identity and source entrance still must exist.
+        if (unit and binding_relationships and any(
+                _within_unit(source_address, address, bundle['root_url'])
+                for source_address in source_addresses
+                for address in binding_relationships.website_addresses(path))
+                and _publisher_material_assertion(path, SimpleNamespace(list_url=bundle['list']['url']),
+                                                 material, binding_relationships)):
+            owners.add(path.get('unit_name'))
     from backend.services.source_workflow import publisher_proven, school_publisher_proven
     if publisher_proven(bundle, config) or school_publisher_proven(bundle, config):
         return []
@@ -684,10 +934,12 @@ def _identity_errors(proposal, config, bundle):
     # Only a prior gated version can supply continuity when current evidence is
     # silent; contrary official ownership above always wins and blocks it.
     if proposal.department_id and expected:
+        from backend.services.source_identity import same_column_selection
         latest = SourceConfigVersion.query.filter_by(department_id=proposal.department_id).order_by(SourceConfigVersion.version.desc()).first()
         if (latest and latest.config_hash == _hash(expected) and config['name'] == expected.get('name')
                 and group == expected.get('group_name', '')
-                and canonical_url(config['list_url']) == canonical_url(expected.get('list_url', ''))):
+                and canonical_url(config['list_url']) == canonical_url(expected.get('list_url', ''))
+                and same_column_selection(expected, config, bundle['list'], region or {})):
             return []
     # A school-root list can belong to the school itself. A shared domain alone
     # cannot assert a college publisher for its internal pages.
@@ -697,6 +949,56 @@ def _identity_errors(proposal, config, bundle):
     if confirmations and same_school_url(config['list_url'], bundle.get('root_url', '')):
         return []
     return ['publisher_requires_review']
+
+
+def _captured_article_samples(config, records, bundle):
+    """Replay observed bodies through the native identity/body checker, without I/O."""
+    from backend.services.source_validation import article_samples, article_sample_summary
+    from backend.scraper.acquisition import FetchResult, FetchedHTML
+    sampled = {key[len('article:'):]: value for key, value in (bundle.get('samples') or {}).items()
+               if key.startswith('article:')}
+    if not sampled:
+        sampled = {row['url']: 'unsampled' for row in records[:ARTICLE_SAMPLE_TARGET]}
+    articles = {ref.get('listed_url'): ref for ref in bundle.get('articles', [])}
+    failed_pages = {ref.get('url'): ref for ref in bundle.get('exploration_pages', [])
+                    if ref.get('role') == 'article' and ref.get('outcome') not in ('usable', 'empty')}
+    checked = []
+    for url, outcome in sampled.items():
+        record = next((row for row in records if row['url'] == url), {'url': url, 'title': ''})
+        if isinstance(outcome, str) and outcome.startswith('access_limited:'):
+            code = outcome.split(':', 1)[1]
+            checked.append(dict(record, matched=False,
+                reason='needs_manual' if access_limited_sample(outcome) else 'invalid_access_limited_label',
+                error_code=code if access_limited_sample(outcome) else 'invalid_access_limited_label'))
+            continue
+        ref = articles.get(url)
+        if ref is None:
+            failure = (bundle.get('acquisition_failures') or {}).get('article:'+url) or failed_pages.get(url) or {}
+            checked.append(dict(record, matched=False, reason=failure.get('outcome') or 'article_sample_missing',
+                error_code=failure.get('error_code') or 'article_sample_missing'))
+            continue
+        html = read_snapshot(ref)
+        result = FetchResult(ref['url'], status=ref.get('status', 200), html=html,
+            outcome=ref.get('outcome', 'usable'), transport=ref.get('transport', 'http'),
+            attachment=ref.get('attachment') or getattr(getattr(html, 'result', None), 'attachment', {}),
+            error_code=ref.get('error_code', ''),
+            message=ref.get('message', ''), retry_after=ref.get('retry_after'))
+        def retained_reader(address, purpose):
+            assert canonical_url(address) == canonical_url(url) and purpose == 'article'
+            if not result.ok:
+                from backend.scraper.acquisition import FetchFailure
+                raise FetchFailure(result)
+            return FetchedHTML(result)
+        # This is a fixed local read; the reader cannot ask for an unsampled URL.
+        local_samples = article_samples(config, [record], retained_reader)['samples']
+        for sample in local_samples:
+            if sample.get('snapshot'):
+                # Rechecking bytes is not a new website observation. Preserve
+                # the original time, response identity and material reference.
+                assert sample['snapshot']['hash'] == ref['hash']
+                sample['snapshot'] = dict(ref)
+        checked.extend(local_samples)
+    return article_sample_summary(checked, len(records))
 
 
 def validate_proposal(proposal_id, *, independent_evidence=None):
@@ -727,6 +1029,9 @@ def validate_proposal(proposal_id, *, independent_evidence=None):
             raise ValueError('复测证据不属于此配置')
         proposal.evidence_json, proposal.evidence_hash = _json(bundle), _hash(bundle)
     errors, records, limitations = [], [], []
+    attachment_witnesses = []
+    article_result = None
+    publication = None
     if not bundle or not bundle.get('list'):
         errors.append('evidence_missing')
     else:
@@ -734,54 +1039,52 @@ def validate_proposal(proposal_id, *, independent_evidence=None):
             if _hash(bundle) != proposal.evidence_hash or bundle.get('config_hash') != _hash(config):
                 raise ValueError('evidence_changed')
             records, errors, region = _column_scope(config, bundle['list'], bundle.get('scope_evidence'))
-            errors += _identity_errors(proposal, config, bundle)
+            errors += _identity_errors(proposal, config, bundle, region=region)
             independent = bundle.get('independent')
             if not independent:
                 errors.append('independent_sample_missing')
             else:
-                _, independent_errors, _ = _column_scope(config, independent, bundle.get('scope_evidence'))
+                _, independent_errors, independent_region = _column_scope(config, independent, bundle.get('scope_evidence'))
                 errors += ['independent_' + e for e in independent_errors]
-            # Entries the capture actually tried to read, so a gated entry is
-            # judged as gated rather than reported as a missing sample.
-            sampled = {key[len('article:'):]: value
-                       for key, value in (bundle.get('samples') or {}).items() if key.startswith('article:')}
-            articles = {ref.get('listed_url'): ref for ref in bundle.get('articles', [])}
-            if not sampled and records:
-                # Capture never sampled (the address is not a column at all);
-                # the entries stay required and unconfirmed, exactly as before.
-                sampled = {record['url']: 'unsampled' for record in records[:ARTICLE_SAMPLE_TARGET]}
-            conclusive = 0
-            for url, outcome in sorted(sampled.items()):
-                ref = articles.get(url)
-                if not ref:
-                    if str(outcome).startswith('access_limited:'):
-                        limitations.append(outcome + ':' + url)
+                if not errors:
+                    from backend.services.source_material_publication import latest_list_reference
+                    latest = latest_list_reference(bundle)
+                    # Keep the region actually executed on the same DOM that
+                    # the catalogue publishes, not an optional caller hint.
+                    publication = dict(list_snapshot=dict(latest),
+                        region=independent_region if latest is independent else region)
+            if records or any(key.startswith('article:') for key in (bundle.get('samples') or {})):
+                from backend.services.source_validation import sample_failure_kind
+                article_result = _captured_article_samples(config, records, bundle)
+                for sample in article_result['samples']:
+                    if sample.get('matched'):
+                        if sample.get('attachment'):
+                            attachment_witnesses.append(dict(sample))
+                        continue
+                    kind = sample_failure_kind([sample])
+                    if kind == 'access_restricted':
+                        limitations.append('access_limited:' + (sample.get('error_code') or sample['reason']) + ':' + sample['url'])
+                    elif sample.get('reason') == 'article_title_abbreviated' and article_result['passed']:
+                        limitations.append('article_title_abbreviated:' + sample['url'])
+                    elif sample.get('reason') in ('article_identity_conflict', 'article_redirects_to_listing',
+                            'article_redirect_outside_site', 'article_is_listing', 'attachment_identity_unconfirmed'):
+                        errors.append('article_identity_mismatch')
+                    elif sample.get('reason') == 'article_identity_or_body_mismatch':
+                        errors.append('article_body_missing' if sample.get('title_matched') else 'article_identity_mismatch')
                     else:
                         errors.append('article_sample_missing')
-                    continue
-                conclusive += 1
-                record = next((item for item in records if item['url'] == url), {'title': ''})
-                soup = BeautifulSoup(read_snapshot(ref), 'lxml')
-                visible = _normal(soup.get_text(' ', strip=True))
-                title = _normal(record['title'])
-                if ref.get('outcome') != 'usable' or title[:min(len(title), 20)] not in visible:
-                    errors.append('article_identity_mismatch')
-                body = soup.select(config['content_selector']) if config.get('content_selector') else [soup]
-                body_text = _normal(' '.join(node.get_text(' ', strip=True) for node in body))
-                if len(body_text) < 15 or len(visible) < len(title) + 15:
-                    errors.append('article_body_missing')
-            if sampled and not conclusive:
-                # Nothing here could be confirmed as an article of this column.
-                # That is what the missing-sample check exists for, so a list
-                # whose every entry is unreadable is still refused. The refusal
-                # stands either way; only the reason changes when the site's own
-                # sign-in requirement is what made every entry unreadable.
-                # "缺少正文样本，请重新检查" would send the reader to re-check a
-                # column that is simply not public, and no re-check can help.
-                gated = [str(value) for value in sampled.values()
-                         if str(value).startswith('access_limited:')]
-                errors.append('source_login_required'
-                              if gated and len(gated) == len(sampled) else 'article_sample_missing')
+                if not article_result['passed'] and not any(code.startswith('article_') for code in errors):
+                    if article_result['failure_kind'] == 'access_restricted':
+                        # A permission page or HTTP refusal does not establish
+                        # that signing in would grant access. Keep each sample's
+                        # actual code and only summarize unanimous login evidence
+                        # as a login requirement.
+                        codes = {sample.get('error_code') or sample.get('reason')
+                                 for sample in article_result['samples'] if not sample.get('matched')}
+                        errors.append('source_login_required' if codes == {'source_login_required'}
+                                      else 'source_access_restricted')
+                    else:
+                        errors.append('article_sample_missing')
             from backend.scraper.engine import _next_page_url
             next_url = (_next_page_url(read_snapshot(bundle['list']), bundle['list']['url'], 1,
                         list_selector=config['list_selector'], scope=bundle.get('scope_evidence')) if records else None)
@@ -796,12 +1099,24 @@ def validate_proposal(proposal_id, *, independent_evidence=None):
                         errors.append('pagination_repeats_first_page')
         except (ValueError, OSError) as exc:
             errors.append(str(exc)[:160])
+    from backend.services.source_scope import configured_joint_scope
+    joint_scope = configured_joint_scope(proposal)
+    if joint_scope:
+        errors.append('configured_joint_scope_requires_review')
     errors = sorted(set(errors))
     limitations = sorted(set(limitations))
     # A column whose entries are partly gated still installs; the gate is reported
     # alongside the result so the review shows what the site would not hand over.
     result = {'passed': not errors, 'errors': errors, 'item_count': len(records),
               'samples': records[:3], 'limitations': limitations, 'validator_version': VERSION}
+    if article_result is not None:
+        result['articles'] = article_result
+    if publication is not None:
+        result['publication'] = publication
+    if attachment_witnesses:
+        result['attachment_samples'] = attachment_witnesses
+    if joint_scope:
+        result['configured_scope'] = joint_scope
     proposal.validation_json = _json(result)
     proposal.validator_version = VERSION
     proposal.validated_hash = _hash([proposal.candidate_json, proposal.evidence_hash, VERSION]) if not errors else None
@@ -811,13 +1126,107 @@ def validate_proposal(proposal_id, *, independent_evidence=None):
     return result
 
 
+def _supersede_equivalent_reviews(proposal, department):
+    """Resolve only older reviews of the exact configuration actually saved."""
+    config = source_config(department)
+    if config != json.loads(proposal.candidate_json):
+        return []
+    version = SourceConfigVersion.query.filter_by(department_id=department.id).order_by(SourceConfigVersion.version.desc()).first()
+    if version is None or version.config_hash != _hash(config):
+        return []
+    resolved = []
+    rows = SourceProposal.query.filter(SourceProposal.school_id == proposal.school_id,
+        SourceProposal.identity_key == proposal.identity_key, SourceProposal.id != proposal.id,
+        SourceProposal.expected_config_hash == proposal.expected_config_hash,
+        SourceProposal.state.in_(('proposed', 'needs_review', 'validated', 'stale')),
+        SourceProposal.created_at <= version.created_at).order_by(SourceProposal.id).all()
+    for old in rows:
+        if json.loads(old.candidate_json) != config:
+            continue
+        previous_state = old.state
+        old.state, old.department_id = 'superseded', department.id
+        db.session.add(SourceReviewEvent(proposal_id=old.id, action='superseded_by_configuration', detail_json=_json(dict(
+            previous_state=previous_state, replacement_proposal_id=proposal.id, department_id=department.id,
+            config_version=version.version, config_hash=version.config_hash))))
+        resolved.append(old.id)
+    return resolved
+
+
+def _apply_activation_intents(proposal_ids, department):
+    from backend.database.models import Subscription
+    for event in SourceReviewEvent.query.filter(SourceReviewEvent.proposal_id.in_(proposal_ids),
+            SourceReviewEvent.action == 'subscribe_on_activation'):
+        sub = Subscription.query.filter_by(school_id=department.school_id, user_id=event.actor_id).first()
+        if sub and sub.department_ids is not None:
+            sub.department_ids = sorted(set(sub.department_ids + [department.id]))
+
+
 def activate_proposal(proposal_id):
+    """Commit rules, retained directory material and ownership in one fence."""
+    from backend.services.school_structure import published_structure_writer
+    try:
+        with db.session.no_autoflush:
+            school_id = db.session.execute(select(SourceProposal.school_id).where(
+                SourceProposal.id == proposal_id)).scalar_one_or_none()
+        if school_id is None:
+            raise ValueError('待核实来源不存在')
+        # Follow the catalogue publisher's lock order: catalogue first, then the
+        # school/source write locks. Resolve the immutable reader before DML,
+        # so its committed-pointer read cannot disturb an activation transaction.
+        with published_structure_writer(school_id) as catalog:
+            proposal = db.session.execute(select(SourceProposal).where(SourceProposal.id == proposal_id)
+                .execution_options(populate_existing=True)).scalar_one()
+            if invalid_access_limited_samples(json.loads(proposal.evidence_json)):
+                raise ValueError('来源尚未通过统一检查')
+            if proposal.state == 'activated':
+                return _activate_proposal(proposal_id, structure_catalog=catalog)
+            if (proposal.state != 'validated' or proposal.validator_version != VERSION
+                    or proposal.validated_hash != _hash([proposal.candidate_json, proposal.evidence_hash, VERSION])):
+                raise ValueError('来源尚未通过统一检查')
+            bundle = json.loads(proposal.evidence_json)
+            if _hash(bundle) != proposal.evidence_hash:
+                raise ValueError('来源证据已经变化')
+            from backend.services.source_scope import configured_joint_scope
+            if preserved_scope := configured_joint_scope(proposal):
+                from backend.services.source_scope import configured_scope_reason
+                raise ValueError(configured_scope_reason(preserved_scope))
+            # Persist a stale-review outcome before opening any material draft.
+            # The locked source is checked again by the activation core.
+            source = db.session.get(Department, proposal.department_id) if proposal.department_id else None
+            if _hash(source_config(source)) != proposal.expected_config_hash:
+                from backend.services import tasks
+                proposal.state = 'stale'
+                tasks.assert_owned()
+                db.session.commit()
+                raise ValueError('来源配置已经更新，请重新检查此建议')
+            from backend.services.source_material_publication import proposal_structure_writer
+            with proposal_structure_writer(db.session.get(School, school_id), bundle,
+                    json.loads(proposal.candidate_json), catalog) as material_catalog:
+                return _activate_proposal(proposal_id, structure_catalog=material_catalog, commit=False)
+    except BaseException:
+        db.session.rollback()
+        raise
+
+
+def _activate_proposal(proposal_id, *, structure_catalog, commit=True):
     from backend.services import tasks
+    from backend.services.school_structure import sync_source_structure
     proposal = db.session.execute(select(SourceProposal).where(SourceProposal.id == proposal_id).with_for_update()).scalar_one_or_none()
     if not proposal:
         raise ValueError('待核实来源不存在')
     if proposal.state == 'activated':
-        return db.session.get(Department, proposal.department_id)
+        if proposal.department_id:
+            from backend.services.source_lifecycle import ensure_source_active
+            ensure_source_active(proposal.department_id, lock=True)
+        department = db.session.get(Department, proposal.department_id)
+        if department is not None:
+            resolved = _supersede_equivalent_reviews(proposal, department)
+            if resolved:
+                _apply_activation_intents([proposal.id, *resolved], department)
+        tasks.assert_owned()
+        if commit:
+            db.session.commit()
+        return department
     if proposal.state != 'validated' or proposal.validator_version != VERSION or proposal.validated_hash != _hash([proposal.candidate_json, proposal.evidence_hash, VERSION]):
         raise ValueError('来源尚未通过统一检查')
     # Evidence corruption/cleanup after validation cannot bypass the gate.
@@ -835,12 +1244,22 @@ def activate_proposal(proposal_id):
                   .execution_options(populate_existing=True).with_for_update()).scalar_one_or_none()
                   if proposal.department_id else None)
     previous = source_config(department)
+    if department is not None:
+        from backend.services.source_lifecycle import ensure_source_active
+        ensure_source_active(department.id, lock=True)
     if _hash(previous) != proposal.expected_config_hash:
         proposal.state = 'stale'
-        db.session.commit()
+        if commit:
+            db.session.commit()
         raise ValueError('来源配置已经更新，请重新检查此建议')
     config = json.loads(proposal.candidate_json)
+    from backend.services.source_scope import configured_joint_scope
+    if preserved_scope := configured_joint_scope(proposal):
+        from backend.services.source_scope import configured_scope_reason
+        raise ValueError(configured_scope_reason(preserved_scope))
     tasks.assert_owned()
+    from backend.services.source_material_publication import proposal_publication
+    publication = proposal_publication(bundle, json.loads(proposal.validation_json))
     reused_equivalent = False
     if department is None:
         existing = Department.query.filter_by(school_id=proposal.school_id, list_url=config['list_url'], list_selector=config['list_selector']).first()
@@ -850,7 +1269,7 @@ def activate_proposal(proposal_id):
             department = existing
         else:
             from backend.services.source_identity import same_observed_column, observed_home_aliases
-            validation = {'status': 'full', 'list_snapshot': bundle['list'], 'region': bundle.get('region') or {}}
+            validation = dict(status='full', **publication)
             candidates = Department.query.filter(Department.school_id == proposal.school_id,
                 Department.list_url.in_(observed_home_aliases(validation)),
                 Department.kind == 'column').order_by(Department.id).all()
@@ -865,20 +1284,25 @@ def activate_proposal(proposal_id):
         invalidate_source(department.id)
         for field, value in config.items():
             setattr(department, field, value)
+    from backend.services.source_lifecycle import ensure_source_active
+    ensure_source_active(department.id, lock=True)
     latest = db.session.query(db.func.max(SourceConfigVersion.version)).filter_by(department_id=department.id).scalar() or 0
     if not reused_equivalent:
-        db.session.add(SourceConfigVersion(department_id=department.id, proposal_id=proposal.id,
-            version=latest + 1, config_json=_json(config), config_hash=_hash(config), previous_json=_json(previous)))
+        version_record = SourceConfigVersion(department_id=department.id, proposal_id=proposal.id,
+            version=latest + 1, config_json=_json(config), config_hash=_hash(config), previous_json=_json(previous))
+        db.session.add(version_record)
+        db.session.flush()
+        from backend.services.source_execution_events import record_configuration_saved
+        record_configuration_saved(version_record, department,
+            publication, writer='validated_proposal')
     proposal.department_id, proposal.state = department.id, 'activated'
+    resolved = _supersede_equivalent_reviews(proposal, department)
     from backend.services.directory_work import resolve_column_material
     resolve_column_material(proposal)
     # Submission is a pending intent, never an early subscription to a guessed
     # source. Only still-subscribed users receive the now-validated column.
     from backend.database.models import Subscription
-    for event in SourceReviewEvent.query.filter_by(proposal_id=proposal.id, action='subscribe_on_activation'):
-        sub = Subscription.query.filter_by(school_id=proposal.school_id, user_id=event.actor_id).first()
-        if sub and sub.department_ids is not None:
-            sub.department_ids = sorted(set(sub.department_ids + [department.id]))
+    _apply_activation_intents([proposal.id, *resolved], department)
     db.session.add(SourceReviewEvent(proposal_id=proposal.id, action='activate',
         detail_json=_json({'version': latest if reused_equivalent else latest + 1})))
     if Subscription.query.filter_by(school_id=proposal.school_id).first():
@@ -886,13 +1310,18 @@ def activate_proposal(proposal_id):
                                    replace_finished=False, commit=False)
         if collection.state == 'pending' and collection.claim_count == 0:
             collection.phase = 'onboarding_collection'
+    # The new receipt must be visible to the same writer used by automatic
+    # onboarding. A structural failure rolls back this entire activation.
+    db.session.flush()
+    sync_source_structure(department, structure_catalog, commit=False)
     # Re-check immediately before committing all source/version/result changes.
     tasks.assert_owned()
-    db.session.commit()
+    if commit:
+        db.session.commit()
     return department
 
 
-def review_proposal(proposal_id, action, actor_id, note=''):
+def review_proposal(proposal_id, action, actor_id, note='', *, commit=True):
     from backend.database.models import User
     actor = db.session.get(User, actor_id)
     if not actor or not actor.is_admin:
@@ -914,7 +1343,10 @@ def review_proposal(proposal_id, action, actor_id, note=''):
     else:
         proposal.state = 'proposed'
         proposal.validated_hash = None
-    db.session.commit()
+    if commit:
+        db.session.commit()
+    else:
+        db.session.flush()
     return serialize_proposal(proposal)
 
 
@@ -1136,12 +1568,20 @@ def rollback_source_version(department_id, version, actor_id):
 
 def prune_governance_evidence(days=30, *, all_cache=False):
     """Only expired orphans may be removed; review/active/history proofs survive."""
+    from backend.services.runtime_catalog import retained_evidence_references
+    # Hold the publisher's existing lock through both reference discovery and
+    # deletion. A concurrent publication cannot become visible between them.
+    with retained_evidence_references() as published:
+        return _prune_governance_evidence(days, all_cache=all_cache, published=published)
+
+
+def _prune_governance_evidence(days, *, all_cache, published):
     import time
-    protected = set()
+    protected = set(published)
     def collect(value):
         if isinstance(value, dict):
             for key, item in value.items():
-                if key in ('hash', 'reference_hash') and isinstance(item, str) and re.fullmatch('[0-9a-f]{64}', item):
+                if key in ('hash', 'reference_hash', 'sha256') and isinstance(item, str) and re.fullmatch('[0-9a-f]{64}', item):
                     protected.add(item)
                 else:
                     collect(item)
@@ -1166,8 +1606,9 @@ def prune_governance_evidence(days=30, *, all_cache=False):
     cutoff = time.time() - max(1, 1 if all_cache else int(days or 365000)) * 86400
     root, removed, size, files = _evidence_root(), 0, 0, 0
     if root.exists():
-        for path in root.glob('*.html.gz'):
-            digest = path.name.removesuffix('.html.gz')
+        from itertools import chain
+        for path in chain(root.glob('*.html.gz'), root.glob('*.pdf')):
+            digest = path.name.removesuffix('.html.gz') if path.name.endswith('.html.gz') else path.stem
             if not re.fullmatch('[0-9a-f]{64}', digest) or path.is_symlink():
                 continue
             if digest not in protected and path.stat().st_mtime < cutoff:
@@ -1336,6 +1777,9 @@ def verify_source_proposal(proposal_id, *, fetcher=None, inventory=None):
     proposal = db.session.get(SourceProposal, proposal_id)
     if not proposal or proposal.state in ('activated', 'rejected', 'superseded'):
         return serialize_proposal(proposal) if proposal else None
+    from backend.services.source_scope import hold_configured_joint_scope
+    if hold_configured_joint_scope(proposal):
+        return serialize_proposal(proposal)
     config = json.loads(proposal.candidate_json)
     evidence = capture_source_evidence(proposal.school_id, config, department_id=proposal.department_id,
                                       inventory=inventory, fetcher=fetcher,
@@ -1356,6 +1800,9 @@ def run_source_skill_for_proposal(proposal_id, *, inventory=None):
 
 
 def queue_source_review(school_id, candidate, *, department_id=None, requested_by=None, subscribe=False):
+    if department_id:
+        from backend.services.source_lifecycle import ensure_source_active
+        ensure_source_active(department_id)
     from backend.services.tasks import enqueue
     proposal = propose_source(school_id, candidate, department_id=department_id,
                               origin='configuration' if candidate.get('list_selector') else 'submitted_entry')
@@ -1426,8 +1873,12 @@ def _process_source_review(payload):
     config = json.loads(proposal.candidate_json)
     seed = None
     from backend.services.runtime_catalog import RuntimeCatalog
-    from backend.services.source_review_recovery import cached_page, resolve_non_column, page_problem
+    from backend.services.source_review_recovery import (
+        cached_page, resolve_non_column, page_problem, prepare_configured_scope_review, configured_scope_current)
     catalog = RuntimeCatalog(current_app.config.get('SOURCE_CATALOG_PATH'))
+    from backend.services.source_scope import hold_configured_joint_scope
+    if hold_configured_joint_scope(proposal):
+        return serialize_proposal(proposal)
     from backend.services.source_exploration import STEP_ACTION
     saved_material = json.loads(proposal.evidence_json)
     steps = SourceReviewEvent.query.filter_by(proposal_id=proposal.id, action=STEP_ACTION).all()
@@ -1471,6 +1922,11 @@ def _process_source_review(payload):
     cached = cached_page(proposal, catalog)
     if cached and page_problem(cached) in ('article_instead_of_column', 'search_instead_of_column') and resolve_non_column(proposal, cached):
         return serialize_proposal(proposal)
+    scope_known = bool(cached) and (prepare_configured_scope_review(proposal, cached)
+                                  or configured_scope_current(proposal, cached))
+    if scope_known:
+        config = json.loads(proposal.candidate_json)
+        seed = cached
     if not config.get('list_selector'):
         url = config['list_url']
         db.session.commit()
@@ -1532,7 +1988,7 @@ def _process_source_review(payload):
         ai_available = True
     except AIConfigError:
         ai_available = False
-    if ai_available:
+    if ai_available and not scope_known:
         seed = seed or cached or _exploration_html(config['list_url'])
         school = db.session.get(School, proposal.school_id)
         bundle = {'schema': 1, 'school_id': school.id, 'school_name': school.name, 'root_url': school.url,

@@ -38,6 +38,8 @@ async def read_http(request, permit=None, trace=None, *, capture_binary=False, m
     admission_wait = 0
     trace = trace if trace is not None else {}
     trace['notes'] = notes
+    trace['proxy_route_urls'] = []
+    trace['direct_retry_urls'] = []
     # The enclosing timeout also bounds DNS and the entire redirect chain. A
     # steady trickle of bytes cannot keep a response alive past this deadline.
     async with asyncio.timeout(budget) as deadline:
@@ -100,10 +102,14 @@ async def read_http(request, permit=None, trace=None, *, capture_binary=False, m
                     proxy = select_proxy(target, get_environ_proxies(target))
                     required_proxy = proxy_required(request.policy)
                     if not required_proxy and retry_direct_for(target):
-                        trace['direct_after_proxy_failure']=bool(proxy)
+                        if proxy:
+                            trace['direct_retry_urls'].append(target)
+                            trace['direct_after_proxy_failure'] = True
                         proxy = None
                         notes.append('direct_on_durable_retry')
                     trace['retry_direct_url'] = target if proxy and not required_proxy else None
+                    if trace['retry_direct_url']:
+                        trace['proxy_route_urls'].append(target)
                     address = next((ip for ip in addresses if ':' not in ip), addresses[0])
                     options = dict(headers=headers, timeout=timeout, allow_redirects=False,
                                    server_hostname=host if parsed.scheme == 'https' else None)
@@ -182,7 +188,7 @@ async def read_http(request, permit=None, trace=None, *, capture_binary=False, m
                                 evidence=tuple(notes) + ('public_dns_ipv4:' + address,))
                         if pdf:
                             from .attachments import pdf_observation
-                            attachment = pdf_observation(bytes(payload), target, response_headers)
+                            attachment = pdf_observation(bytes(payload), target, response_headers, retain=True)
                             return FetchResult(target, status=response.status, headers=response_headers,
                                 attachment=attachment or {}, outcome='usable' if attachment else 'denied',
                                 error_code='' if attachment else 'invalid_pdf_response',
@@ -208,6 +214,35 @@ async def read_http(request, permit=None, trace=None, *, capture_binary=False, m
     return FetchResult(target, outcome='denied', error_code='redirect_limit', message='官网跳转次数超出本次读取上限')
 
 
+def _remember_failed_proxy_route(trace, failed_url):
+    # A later retry starts at the entrance, not at the last redirect target.
+    # Keep only actually proxied hops; a final direct failure cannot blame them.
+    for url in dict.fromkeys([*trace.get('proxy_route_urls', ()), failed_url]):
+        remember_proxy_failure(url)
+
+
+def _network_failure(request, exc, trace, start):
+    if trace.get('retry_direct_url'):
+        _remember_failed_proxy_route(trace, trace['retry_direct_url'])
+    from backend.scraper.auth_routes import is_sign_in_route, LOGIN_REQUIRED_MESSAGE
+    target = trace.get('redirect_target', '')
+    if target and is_sign_in_route(target):
+        return FetchResult(target, outcome='denied', error_code='source_login_required',
+                           message=LOGIN_REQUIRED_MESSAGE)
+    if isinstance(exc, aiohttp.SocketTimeoutError):
+        code = 'http_idle_timeout'
+    elif isinstance(exc, aiohttp.ConnectionTimeoutError) or trace.get('timeout_kind') == 'connect':
+        code = 'http_connect_timeout'
+    else:
+        code = 'http_budget_exhausted' if isinstance(exc, TimeoutError) else 'http_' + type(exc).__name__.lower()
+    message = ('连接或读取官网超时，系统稍后自动重试' if isinstance(exc, TimeoutError)
+               else '官网安全证书或加密连接校验失败，未能读取页面' if isinstance(exc, aiohttp.ClientSSLError)
+               else '官网网络连接失败，系统稍后自动重试')
+    return FetchResult(request.url, outcome='network_error', error_code=code, message=message,
+        evidence=tuple(trace.get('notes', ())),
+        timings={'http_ms': round((time.monotonic() - start - trace.get('admission_wait', 0)) * 1000)})
+
+
 def fetch_http(request, *, capture_binary=False, max_bytes=None, extra_headers=None):
     permit = None
     start = time.monotonic()
@@ -221,15 +256,20 @@ def fetch_http(request, *, capture_binary=False, max_bytes=None, extra_headers=N
         reader = (read_http(request, permit, trace, capture_binary=True, max_bytes=max_bytes, extra_headers=extra_headers)
                   if capture_binary else read_http(request, permit, trace))
         result = loop.run_until_complete(reader)
-        if 200 <= result.status < 300 and trace.get('direct_after_proxy_failure'):
+        if 200 <= result.status < 300 and trace.get('direct_retry_urls'):
             from backend.services.http_route_memory import remember_verified_direct
-            remember_verified_direct(result.final_url)
+            for url in dict.fromkeys(trace['direct_retry_urls']):
+                remember_verified_direct(url)
         if 'proxy_route_retry_available' in result.evidence:
-            remember_proxy_failure(result.final_url)
+            _remember_failed_proxy_route(trace, result.final_url)
         return result
     except FetchAdmissionBusy as exc:
         return FetchResult(request.url, outcome='busy', error_code='origin_busy',
                            retry_after=exc.retry_after, message=str(exc))
+    except aiohttp.ClientSSLError as exc:
+        # Certificate exceptions also inherit ValueError. They describe a TLS
+        # connection failure, not an invalid or non-public input address.
+        return _network_failure(request, exc, trace, start)
     except ValueError as exc:
         if 'No public IPv4 address could be verified' in str(exc):
             return FetchResult(request.url, outcome='network_error', error_code='http_dns_failure',
@@ -237,23 +277,7 @@ def fetch_http(request, *, capture_binary=False, max_bytes=None, extra_headers=N
         return FetchResult(request.url, outcome='denied', error_code='invalid_public_url',
                            message='官网地址必须是可公开访问的 HTTP 或 HTTPS 地址')
     except (TimeoutError, aiohttp.ClientError) as exc:
-        if trace.get('retry_direct_url'):
-            remember_proxy_failure(trace['retry_direct_url'])
-        from backend.scraper.auth_routes import is_sign_in_route, LOGIN_REQUIRED_MESSAGE
-        target = trace.get('redirect_target', '')
-        if target and is_sign_in_route(target):
-            return FetchResult(target, outcome='denied', error_code='source_login_required',
-                               message=LOGIN_REQUIRED_MESSAGE)
-        if isinstance(exc, aiohttp.SocketTimeoutError):
-            code = 'http_idle_timeout'
-        elif isinstance(exc, aiohttp.ConnectionTimeoutError) or trace.get('timeout_kind') == 'connect':
-            code = 'http_connect_timeout'
-        else:
-            code = 'http_budget_exhausted' if isinstance(exc, TimeoutError) else 'http_' + type(exc).__name__.lower()
-        return FetchResult(request.url, outcome='network_error', error_code=code,
-            message='连接或读取官网超时，系统稍后自动重试' if isinstance(exc, TimeoutError) else '官网网络连接失败，系统稍后自动重试',
-            evidence=tuple(trace.get('notes', ())),
-            timings={'http_ms': round((time.monotonic() - start - trace.get('admission_wait', 0)) * 1000)})
+        return _network_failure(request, exc, trace, start)
     except Exception as exc:
         return FetchResult(request.url, outcome='network_error', error_code='http_' + type(exc).__name__.lower(),
             message='官网网络连接失败，系统稍后自动重试',

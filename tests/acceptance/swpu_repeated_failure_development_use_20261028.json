@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-28T11:29:56.911299+00:00",
+  "school_name": "西南石油大学",
+  "role": "development_used_not_independent_acceptance",
+  "reason": "Retained failed model candidates drove exact zero-match repair guard",
+  "report": "deploy/STRUCTURE_REPEATED_COLUMN_FAILURE_20261028.md",
+  "product_hashes": {
+    "backend/services/source_onboarding.py": "08bd508b58f026f37ccff3778242992b31014bee606b20429ab87d6ca9948359"
+  },
+  "independent_acceptance_for_this_change": false,
+  "old_first_native_run_preserved": true,
+  "predecessor": "tests/acceptance/swpu_rule_recovery_development_use_20261028.json"
+}

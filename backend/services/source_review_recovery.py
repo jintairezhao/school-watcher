@@ -44,6 +44,116 @@ def cached_page(proposal, catalog):
     return catalog.snapshot(key, config['list_url']) if key and catalog.report(key) else None
 
 
+def observed_scope_revision(config, html):
+    """Name the complete existing selection from one executed publishing region.
+
+    This supplies a review candidate only. It cannot turn a joint selector into
+    one column, change its URLs/selectors/publisher, or grant a receipt.
+    """
+    from backend.services import source_governance as governance
+    from backend.scraper.discovery.publication_lists import publication_lists
+    from soupsieve.util import SelectorSyntaxError
+    url = getattr(html, 'final_url', '') or config['list_url']
+    if canonical_url(url) != canonical_url(config['list_url']):
+        return None
+    reference = {'url': url}
+    try:
+        _, errors, _ = governance._column_scope(config, reference, html=html)
+        if errors != ['column_identity_or_scope_unconfirmed']:
+            return None
+        names = {feed['name'] for feed in publication_lists(html, url)
+                 if feed.get('name') and not feed.get('heading_ambiguous')
+                 and governance.adoptable_column_name(feed['name'])}
+        candidates = {}
+        soup = BeautifulSoup(html, 'lxml')
+        for name in names:
+            candidate = {**config, 'name': name}
+            _, errors, region = governance._column_scope(candidate, reference, html=html)
+            if errors or not region.get('container') or not region.get('heading'):
+                continue
+            containers, headings = soup.select(region['container']), soup.select(region['heading'])
+            if len(containers) != 1 or len(headings) != 1 or containers[0].name in ('body', 'html'):
+                continue
+            candidate['name'] = region['name']
+            signature = (region['container'], region['heading'], region['name'])
+            candidates[signature] = {'config': candidate, 'region': region, 'url': url,
+                'scope_evidence': {'container_selector': region['container'],
+                                   'heading_selector': region['heading']}}
+        return next(iter(candidates.values())) if len(candidates) == 1 else None
+    except (KeyError, ValueError, TypeError, SelectorSyntaxError):
+        return None
+
+
+def prepare_configured_scope_review(proposal, html):
+    """Keep the stable source untouched while repairing its unedited review draft."""
+    from backend.database.models import Department
+    from backend.services import source_governance as governance
+    if proposal.state in ('activated', 'rejected', 'superseded', 'stale') or proposal.origin == 'repair':
+        return False
+    source = db.session.get(Department, proposal.department_id) if proposal.department_id else None
+    if source is None or source.school_id != proposal.school_id:
+        return False
+    previous = governance.source_config(source)
+    config = json.loads(proposal.candidate_json)
+    if config != previous or proposal.expected_config_hash != governance._hash(previous):
+        return False
+    revision = observed_scope_revision(config, html)
+    if revision is None:
+        return False
+    candidate = governance._candidate(revision['config'])
+    old_bundle = json.loads(proposal.evidence_json)
+    reference = old_bundle.get('list')
+    if (not reference or reference.get('hash') != governance._hash(str(html))
+            or canonical_url(reference.get('url', '')) != canonical_url(revision['url'])):
+        reference = governance._snapshot(html, revision['url'], role='list')
+    detail = {'source_id': source.id, 'previous_config_hash': governance._hash(previous),
+        'candidate_config_hash': governance._hash(candidate), 'previous_name': previous['name'],
+        'observed_name': candidate['name'], 'list_url': revision['url'],
+        'list_hash': reference['hash'], 'region': revision['region'], 'origin': 'retained_list'}
+    bundle = {'schema': 1, 'school_id': source.school_id, 'school_name': source.school.name,
+        'root_url': source.school.url, 'expected_config': previous, 'config': candidate,
+        'config_hash': governance._hash(candidate), 'list': reference, 'articles': [],
+        'identity_paths': [], 'identity_snapshots': [], 'region': revision['region'],
+        'scope_evidence': revision['scope_evidence'], 'scope_revision': detail}
+    proposal.candidate_json = governance._json(candidate)
+    proposal.evidence_json, proposal.evidence_hash = governance._json(bundle), governance._hash(bundle)
+    proposal.revision += 1
+    proposal.validated_hash = None
+    db.session.add(SourceReviewEvent(proposal_id=proposal.id, action='configured_scope_observed',
+                                    detail_json=governance._json(detail)))
+    from backend.services.structure_versions import mark_structure_changed
+    mark_structure_changed(source.school_id, 'proposal', proposal.id,
+                           fields=('candidate_json', 'evidence_json', 'state'))
+    # Reuse the real validator: absent independent/identity/article evidence
+    # remains a material gap rather than a fabricated successful validation.
+    governance.validate_proposal(proposal.id)
+    return True
+
+
+def configured_scope_current(proposal, html):
+    """A resumed draft may reuse its bound scope, never a stale/editable claim."""
+    from backend.database.models import Department
+    from backend.services import source_governance as governance
+    bundle = json.loads(proposal.evidence_json)
+    detail = bundle.get('scope_revision') or {}
+    source = db.session.get(Department, proposal.department_id) if proposal.department_id else None
+    if source is None or detail.get('source_id') != source.id or source.school_id != proposal.school_id:
+        return False
+    config, previous = json.loads(proposal.candidate_json), governance.source_config(source)
+    url = getattr(html, 'final_url', '') or config['list_url']
+    if (bundle.get('config') != config or governance._hash(bundle) != proposal.evidence_hash
+            or governance._hash(config) != detail.get('candidate_config_hash')
+            or governance._hash(previous) != proposal.expected_config_hash
+            or {**config, 'name': previous['name']} != previous
+            or governance._hash(str(html)) != detail.get('list_hash')
+            or canonical_url(url) != canonical_url(detail.get('list_url', ''))):
+        return False
+    _, errors, region = governance._column_scope(config, {'url': url}, bundle.get('scope_evidence'), html=html)
+    observed = detail.get('region') or {}
+    return not errors and all(region.get(key) and region[key] == observed.get(key)
+                              for key in ('container', 'heading', 'name'))
+
+
 def resolve_non_column(proposal, html):
     from backend.services import source_governance as governance, tasks
     from backend.scraper.discovery.wordpress_publications import column_links
@@ -111,6 +221,7 @@ def resolve_non_column(proposal, html):
 
 
 def schedule_recovery():
+    from backend.services.source_lifecycle import task_sources_active
     """One bounded retry after upgrading; finished discoveries recover as well."""
     from backend.services import source_governance as governance, tasks
     from backend.services.runtime_catalog import RuntimeCatalog
@@ -122,6 +233,8 @@ def schedule_recovery():
     from datetime import datetime, timedelta
     from backend.database.models import BackgroundTask
     for proposal in SourceProposal.query.filter_by(state='needs_review').filter(SourceProposal.origin != 'repair').order_by(SourceProposal.id).limit(300):
+        if not task_sources_active('source_review', {'proposal_id': proposal.id}):
+            continue
         failure = json.loads(proposal.validation_json).get('workflow', {})
         if failure.get('outcome') not in ('network_error', 'unavailable'):
             continue
@@ -139,6 +252,8 @@ def schedule_recovery():
         if count >= 20:
             return count
     for proposal in rows:
+        if not task_sources_active('source_review', {'proposal_id': proposal.id}):
+            continue
         validation = json.loads(proposal.validation_json)
         if validation.get('validator_version') == governance.VERSION:
             continue

@@ -10,6 +10,13 @@ from playwright.sync_api import sync_playwright, expect
 from test_storage_management import StorageManagementTests
 from backend.auth.desktop import ensure_local_owner
 
+
+def show_control(page, selector):
+    """Reach controls through their native disclosure, as a user would."""
+    for disclosure in page.locator('.storage-page details').all():
+        if disclosure.locator(selector).count() and not disclosure.evaluate('node => node.open'):
+            disclosure.locator(':scope > summary').click()
+
 fixture = StorageManagementTests(); fixture.setUp()
 fixture.app.config.update(DESKTOP_MODE=True, DESKTOP_FRAMELESS=True, DESKTOP_TOKEN='a'*64, DESKTOP_ORIGIN='http://localhost')
 ensure_local_owner()
@@ -33,6 +40,8 @@ try:
                 choose_location:async()=> 'E:/SchoolWatcher', change_locations:async(values)=>{window.chosen=values;return {cancelled:true}},
                 window_action:async(name)=>{window.nativeAction=name;return {cancelled:true}}, open_location:async()=>true, reinstall:async()=>({cancelled:true})}};""")
             page.goto('http://localhost/admin/storage')
+            expect(page.locator('.storage-page')).to_have_attribute('data-storage-ready', 'true')
+            show_control(page, '[data-location-change=data]')
             expect(page.locator('#location-data')).to_have_value('D:/SchoolWatcher')
             page.locator('[data-location-change=data]').click()
             expect(page.locator('#location-backups')).to_have_value('E:/SchoolWatcher/backups')
@@ -41,6 +50,7 @@ try:
             assert page.evaluate("window.chosen.data === 'E:/SchoolWatcher'")
             page.locator('#resetLocations').click()
             expect(page.locator('#location-data')).to_have_value('D:/SchoolWatcher')
+            show_control(page, '#policy-body_cache_mb')
             page.locator('#policy-body_cache_mb').fill('1024')
             page.locator('#policy-backup_keep_count').fill('250')
             page.locator('#policy-scrape_log_retention_days').fill('12')
@@ -48,19 +58,22 @@ try:
             expect(page.locator('#policyStatus')).to_have_text('保留规则已保存')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.evaluate('window.scrollTo(0,0)')
-            page.screenshot(path=str(output/f'storage-{width}.png'),full_page=True)
+            if not os.environ.get('SKIP_STORAGE_SCREENSHOTS'):
+                page.screenshot(path=str(output/f'storage-{width}.png'),full_page=True)
             page.goto('http://localhost/')
             assert page.locator('#desktopChrome').count()==1
             page.get_by_label('应用菜单').click()
             expect(page.get_by_role('button', name='卸载学校通知…')).to_be_visible()
-            page.screenshot(path=str(output/f'uninstall-menu-{width}.png'))
+            if not os.environ.get('SKIP_STORAGE_SCREENSHOTS'):
+                page.screenshot(path=str(output/f'uninstall-menu-{width}.png'))
             page.get_by_role('button', name='卸载学校通知…').click()
             assert page.evaluate("window.nativeAction === 'uninstall'")
             assert not page.locator('.desktop-menu').evaluate('(menu)=>menu.open')
             rect=page.locator('.navbar').bounding_box()
             assert rect['y']==0 and rect['height']==56,rect
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-            page.screenshot(path=str(output/f'inbox-{width}.png'))
+            if not os.environ.get('SKIP_STORAGE_SCREENSHOTS'):
+                page.screenshot(path=str(output/f'inbox-{width}.png'))
             assert not errors,errors
             page.close()
         browser.close()

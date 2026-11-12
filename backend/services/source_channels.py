@@ -1,9 +1,10 @@
-"""Readable publication channels from saved evidence, without an organisation audit.
+"""Publication labels over the same committed facts used by the source graph.
 
-This projection never fetches websites or calls AI. A publisher is the observed
-website or unit carrying a column; it is not a claim about an article's author.
+The legacy hierarchy adapter remains separate for old subscription scopes.
+Neither adapter fetches websites, calls AI or changes saved source identities.
 """
 from collections import defaultdict
+from copy import deepcopy
 import hashlib
 import json
 import re
@@ -265,8 +266,8 @@ def _hide_internal_addresses(result):
         row.pop('_publisher_address', None)
 
 
-def channels_for(departments):
-    """Batch descriptors, reusing database/catalogue evidence within one request."""
+def legacy_channels_for(departments):
+    """Compatibility presentation for legacy subscription scopes, not ownership."""
     departments = list(departments)
     if not departments or not has_app_context():
         return {}
@@ -338,3 +339,80 @@ def channels_for(departments):
         result[source.id] = dict(cache['descriptors'][identity])
     _hide_internal_addresses(result)
     return result
+
+
+def descriptors_from_structure(capture, school):
+    """Read-only captions from one already captured structure version."""
+    from backend.services.structure_snapshot import department_records
+    from backend.services.localization import translate
+    records = {row['id']: row for row in department_records(capture)}
+    nodes = {node['id']: node for node in capture['facts']['nodes']}
+    ownership = defaultdict(lambda: defaultdict(list))
+    for edge in capture['facts']['relations']:
+        if edge['type'] == 'source_ownership':
+            ownership[edge['target']][edge['source']].append(edge['id'])
+    result = {}
+    for ident, record in records.items():
+        source = nodes.get(f'source:{ident}')
+        publishers = [dict(key=key, label=nodes[key]['label'], url=nodes[key].get('url') or '',
+            relation_ids=sorted(relation_ids))
+            for key, relation_ids in sorted(ownership.get(f'source:{ident}', {}).items())]
+        # An owner is an entity identity, not a hash of its current name/URL.
+        # Several owners are parallel facts and must never become a parent chain.
+        units = [dict(key=p['key'], name=p['label'], url=p['url']) for p in publishers] if len(publishers) == 1 else []
+        publisher_label = '、'.join(p['label'] for p in publishers)
+        label = source_label(source['label'] if source else record['name'], '官网栏目')
+        # Stored grouping remains useful reading context even when no current
+        # publisher relationship is proven. It does not populate publishers.
+        recorded_group = source_label(record.get('group_name')) if not publishers else ''
+        names = [school.name, publisher_label, recorded_group, label]
+        if not publishers:
+            names.append(translate('栏目（归属待核实）') if source else translate('历史通知范围'))
+        result[ident] = dict(source_id=ident, school_id=school.id, school_name=school.name,
+            publisher_key=publishers[0]['key'] if len(publishers) == 1 else
+                _key(school.id, 'publishers', *(p['key'] for p in publishers)) if publishers else
+                _key(school.id, 'unverified-source', ident),
+            publisher_label=publisher_label, publishers=publishers, units=units,
+            column_label=label, breadcrumb=' / '.join(dict.fromkeys(name for name in names if name)),
+            official_url=source.get('url') or '' if source else _publication_url(record.get('list_url') or ''),
+            display_group=record.get('group_name') or '',
+            basis='source_ownership' if publishers else 'ownership_pending' if source else 'historical_reference',
+            verification=source.get('verification') if source else None,
+            lifecycle=source.get('lifecycle') if source else None,
+            access=source.get('access', 'unknown') if source else 'unknown',
+            access_observed_at=source.get('access_observed_at') if source else None,
+            access_observation=deepcopy(source.get('access_observation')) if source else None,
+            structure_version=deepcopy(capture['version']))
+    return result
+
+
+def channels_for(departments):
+    """Batch current publication labels, invalidated by committed structure version."""
+    departments = list(departments)
+    if not departments or not has_app_context():
+        return {}
+    from backend.services.structure_snapshot import read_structure, STRUCTURE_PROJECTION_VERSION
+    from backend.services.structure_versions import current_version
+    request_object = request._get_current_object() if has_request_context() else None
+    catalog_path = current_app.config['SOURCE_CATALOG_PATH']
+    locale = getattr(g, 'ui_locale', 'zh-CN')
+    cache = getattr(g, '_structure_channel_cache', None) if request_object is not None else None
+    if (cache is None or cache['request'] is not request_object
+            or cache['catalog_path'] != catalog_path or cache['locale'] != locale):
+        cache = dict(request=request_object, catalog_path=catalog_path, locale=locale, schools={})
+        if request_object is not None:
+            g._structure_channel_cache = cache
+    for school_id in {source.school_id for source in departments}:
+        version = current_version(school_id)
+        saved = cache['schools'].get(school_id)
+        if (saved and saved['version'] == version and saved['projection'] == STRUCTURE_PROJECTION_VERSION):
+            continue
+        school = School.query.filter_by(id=school_id).populate_existing().first()
+        if school is None:
+            continue
+        capture = read_structure(school)
+        cache['schools'][school_id] = dict(version=deepcopy(capture['version']),
+            projection=STRUCTURE_PROJECTION_VERSION, descriptors=descriptors_from_structure(capture, school))
+    return {source.id: deepcopy(cache['schools'][source.school_id]['descriptors'][source.id])
+        for source in departments if source.school_id in cache['schools']
+        and source.id in cache['schools'][source.school_id]['descriptors']}

@@ -82,7 +82,7 @@ def infer_publication_date_selector(items):
     candidates = Counter()
     for item in items:
         dated = []
-        for node in item.find_all(['time', 'span', 'em', 'i', 'div', 'p', 'td']):
+        for node in item.find_all(['time', 'span', 'em', 'i', 'div', 'p', 'td', 'li']):
             ancestors = []
             for ancestor in node.parents:
                 if ancestor is item:
@@ -106,7 +106,16 @@ def infer_publication_date_selector(items):
             cell = node if node.name == 'td' else node.find_parent('td')
             table_date = (item.name == 'tr' and cell is not None and cell.parent is item
                           and not cell.find('a') and COMPLETE_DATE.fullmatch(publication_date_text(cell)))
-            if not explicit and not adjacent and not table_date:
+            # Card layouts can place date/author metadata in a nested ul/ol.
+            # Keep this field scoped to that metadata list; date-only bullets
+            # inside an article excerpt, quote or title link are not evidence.
+            metadata_date = (node.name == 'li' and node.parent.name in ('ul', 'ol')
+                and node.parent is not item and not node.parent.find('a')
+                and not any(a.name in ('a', 'article', 'blockquote') or re.search(
+                    r'article|excerpt|content', ' '.join(a.get('class', [])), re.I) for a in ancestors))
+            if node.name == 'li' and not metadata_date:
+                continue
+            if not explicit and not adjacent and not table_date and not metadata_date:
                 continue
             selector = node.name + ''.join('.' + soupsieve.escape(c) for c in classes)
             if not classes:
@@ -115,6 +124,9 @@ def infer_publication_date_selector(items):
             if table_date:
                 cell_selector = f'td:nth-of-type({1 + len(cell.find_previous_siblings("td"))})'
                 selector = cell_selector if node is cell else cell_selector + ' ' + selector
+            if metadata_date:
+                parent_selector = node.parent.name + ''.join('.' + soupsieve.escape(c) for c in node.parent.get('class', []))
+                selector = parent_selector + ' > ' + selector
             dated.append((selector, text))
         # Multiple distinct dates may be event start/end times. Leave unresolved.
         if len({text for _, text in dated}) != 1:

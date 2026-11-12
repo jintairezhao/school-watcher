@@ -3,7 +3,7 @@ from dataclasses import replace
 import re
 from urllib.parse import urlsplit, urljoin, urlunsplit, unquote
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
 from ..auth_routes import LOGIN_REQUIRED_MESSAGE, is_sign_in_route
 from .contracts import FetchRequest, FetchResult
@@ -140,6 +140,38 @@ def _missing_script_navigation(html, soup, page_url):
     return not any(len(region.select('a[href]')) >= 2 for region in regions)
 
 
+def _wzws_access_challenge(soup, page_url):
+    """Recognize an empty, same-origin WZWS gate, not a library on readable pages."""
+    try:
+        origin = urlsplit(page_url)
+        origin_key = (origin.scheme.lower(), origin.hostname,
+                      origin.port or (443 if origin.scheme == 'https' else 80))
+        runtime = False
+        for script in soup.select('script[src]'):
+            target = urlsplit(urljoin(page_url, script['src']))
+            target_key = (target.scheme.lower(), target.hostname,
+                          target.port or (443 if target.scheme == 'https' else 80))
+            if target_key == origin_key and target.path.startswith('/wzws-waf-cgi/'):
+                runtime = True
+                break
+    except ValueError:
+        return False
+    if not runtime or not any(re.fullmatch(
+            r'please\s+enable\s+javascript\s+and\s+refresh\s+the\s+page\.?',
+            node.get_text(' ', strip=True), re.I) for node in soup.select('noscript')):
+        return False
+    body = soup.body or soup
+    for node in body.find_all(string=True):
+        if isinstance(node, Comment) or not str(node).strip():
+            continue
+        if any(parent.name in ('script', 'style', 'template', 'noscript', 'head')
+               for parent in node.parents):
+            continue
+        if _visible(node.parent):
+            return False
+    return not any(_visible(node) for node in body.select('img[src],video,iframe,object,svg,canvas'))
+
+
 def _login_wall(raw, soup, visible, title):
     """True when we landed on an identity provider instead of the content asked for.
 
@@ -177,11 +209,12 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
     lower = html[:300000].lower()
     soup = BeautifulSoup(html, 'lxml')
     script_text = '\n'.join(node.get_text() for node in soup.select('script:not([src])'))
+    wzws_challenge = _wzws_access_challenge(soup, raw.final_url or request.url)
     for node in soup.select('script, style, template, noscript'):
         node.decompose()
     visible = soup.get_text(' ', strip=True)
     title = soup.title.get_text(' ', strip=True).lower() if soup.title else ''
-    automatic = (headers.get('cf-mitigated') == 'challenge' or
+    automatic = (wzws_challenge or headers.get('cf-mitigated') == 'challenge' or
                  any(marker in lower for marker in _AUTO_CHALLENGE))
     manual = any(marker in visible.lower() for marker in _MANUAL_CHALLENGE)
     # Embedded reCAPTCHA on an ordinary contact page is not an access challenge.
@@ -234,7 +267,8 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
             return _decision(raw, 'needs_adapter', 'invalid_empty_selector', '来源的空列表规则需要核对')
         if any(node.get_text(' ', strip=True) and _visible(node) for node in nodes):
             empty_evidence = ('verified_empty_selector',)
-    if request.purpose != 'article' and any(_EMPTY.fullmatch(str(text).strip()) and _visible(text.parent)
+    if request.purpose != 'article' and any(not isinstance(text, Comment)
+            and _EMPTY.fullmatch(str(text).strip()) and _visible(text.parent)
             for text in soup.find_all(string=True)):
         empty_evidence = empty_evidence or ('explicit_empty_message',)
     from backend.scraper.article_resources import has_public_body_resource
@@ -244,7 +278,11 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
     expected_title = request.policy.get('expected_article_title') if request.purpose == 'article' else ''
     if expected_title:
         from backend.scraper.article_observation import title_bound_material, article_heading, publication_nodes, article_material
-        if not request.readiness_selector:
+        # Cached reading supplies a stored article title and treats old body CSS
+        # as a hint. Only title-bound, locally dated body evidence can replace
+        # that hint; every other caller retains the explicit selector contract.
+        selector_hint = request.policy.get('article_selector_hint') is True
+        if not request.readiness_selector or selector_hint:
             body, body_state = title_bound_material(soup,raw.final_url or request.url,expected_title)
             if body is not None:
                 return _decision(raw,'usable',evidence=('title_bound_article',))
@@ -258,7 +296,7 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
             from backend.services.publication_dates import inspect_article_date
             if inspect_article_date(html,raw.final_url or request.url,expected_title)['state']=='verified':
                 return _decision(raw,'usable',evidence=('title_bound_publication_metadata',))
-        elif not request.readiness_selector and raw.transport!='browser' and '<script' in lower:
+        elif (not request.readiness_selector or selector_hint) and raw.transport!='browser' and '<script' in lower:
             from backend.scraper.article_observation import article_heading,publication_nodes
             heading=article_heading(soup,expected_title)
             if heading is not None and publication_nodes(soup,heading)[0]:
@@ -293,6 +331,15 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
             return _dynamic_material_decision(raw, ('article_material_pending',))
         if empty_evidence:
             return _decision(raw, 'empty', evidence=empty_evidence)
+        # A rendered, present but empty article region proves a material gap;
+        # it cannot prove that a different selector would recover the body.
+        # A missing target retains the separate rule-mismatch outcome below.
+        if (raw.transport == 'browser' and request.purpose == 'article' and len(ready) == 1
+                and _visible(ready[0]) and not ready[0].get_text(' ', strip=True)
+                and not ready[0].select('img[src],a[href],iframe[src],object[data],embed[src]')
+                and not has_public_body_resource(ready, raw.final_url)):
+            return _decision(raw, 'needs_adapter', 'article_body_missing_after_render',
+                             '目标正文区域在渲染后仍为空，正文材料尚不可用', ('rendered_article_region_empty',))
         # A configured region is a contract, not a hint. A static news widget
         # must not satisfy a request for a script-injected directory or list.
         if raw.transport != 'browser' and '<script' in lower:
@@ -313,6 +360,18 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
             return _decision(raw, 'usable', evidence=('article_region',))
         if any(state == 'pending' for _, state in materials):
             return _dynamic_material_decision(raw, ('article_material_pending',))
+        if soup.select_one('div.gp-article'):
+            # The extractor already supports this CMS layout. Its class alone
+            # is weaker than the established article containers above: require
+            # an actual visible headline and the shared title-bound body proof.
+            from backend.scraper.article_observation import article_heading, title_bound_material
+            for heading in soup.select('h1,h2,h3,[itemprop="headline"]'):
+                title = heading.get_text(' ', strip=True)
+                if not title or article_heading(soup, title) is not heading:
+                    continue
+                body, state = title_bound_material(soup, raw.final_url or request.url, title)
+                if body is not None and state == 'ready':
+                    return _decision(raw, 'usable', evidence=('title_bound_article_region',))
     elif request.purpose == 'directory':
         if raw.transport != 'browser' and _missing_script_navigation(html, soup, raw.final_url or request.url):
             return _decision(raw, 'requires_render', 'navigation_not_loaded',
@@ -331,6 +390,18 @@ def classify_result(request: FetchRequest, raw: FetchResult) -> FetchResult:
             if len(label) >= 4 and (_DATE.search(surrounding) or
                     re.search(r'/(?:info|article|news|content)/|(?:newsDetail|ArticleID)[?=/]', href, re.I)):
                 return _decision(raw, 'usable', evidence=('publication_link',))
+        # Titles and dates can occupy different children of one list row.
+        # Reuse the production parser's grouped article evidence instead of
+        # maintaining a second set of CMS address/layout rules at this gate.
+        from backend.scraper.discovery.publication_lists import publication_lists
+        for feed in publication_lists(html, raw.final_url or request.url):
+            visible_targets = set()
+            for link in feed.get('article_links', []):
+                node = soup.select_one(link['locator'])
+                if node is not None and _visible(node):
+                    visible_targets.add(link['url'])
+            if len(visible_targets) >= 2:
+                return _decision(raw, 'usable', evidence=('publication_list_parser',))
     if empty_evidence:
         return _decision(raw, 'empty', evidence=empty_evidence)
     scripts = '<script' in lower

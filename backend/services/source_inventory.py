@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 import sqlite3
 from urllib.parse import urljoin, urlsplit, urlunsplit, parse_qsl, urlencode
+from backend.ai.material_capture import capture_inventory_claim
 
 DEFAULT_PATH = Path(__file__).resolve().parents[2] / 'data' / 'source_inventory.sqlite3'
 KINDS = {'root': 0, 'directory': 1, 'unit': 2, 'major': 2, 'channel': 3, 'navigation': 4}
@@ -27,6 +28,23 @@ def resolve_page_link(base_url, href):
     if (not href or href.lower().startswith(('javascript:', 'mailto:', 'tel:'))
             or href in ('{栏目URL}', '{栏目url}')
             or (href.startswith('#') and not has_fragment_route(href))):
+        return ''
+    try:
+        link, base = urlsplit(href), urlsplit(base_url)
+        if (link.scheme.lower() in ('http', 'https') and not link.netloc
+                and link.scheme.lower() != base.scheme.lower()):
+            # Browsers treat a cross-scheme special URL such as http:host/path
+            # as an absolute address. Support the observed same-host spelling;
+            # same-scheme relative references retain their existing meaning.
+            if '\\' in href or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in href):
+                return ''
+            absolute = urlsplit(link.scheme + '://' + link.path)
+            if (not base.hostname or absolute.hostname != base.hostname
+                    or absolute.username or absolute.password
+                    or absolute.port not in (None, 443 if link.scheme.lower() == 'https' else 80)):
+                return ''
+            href = urlunsplit((link.scheme, absolute.netloc, absolute.path, link.query, link.fragment))
+    except (ValueError, UnicodeError):
         return ''
     return canonical_url(urljoin(base_url, href))
 
@@ -134,6 +152,8 @@ class Inventory:
                     PRIMARY KEY(site_key,baseline_id)
                 );
             """)
+            from .exploration_events import ensure_schema
+            ensure_schema(c)
             # A short write transaction serializes upgrades with other launchers.
             c.execute('BEGIN IMMEDIATE')
             columns = {r['name'] for r in c.execute('PRAGMA table_info(pages)')}
@@ -169,6 +189,8 @@ class Inventory:
         if not url:
             return
         with self.connect() as c:
+            c.execute('BEGIN IMMEDIATE')
+            existed = c.execute('SELECT 1 FROM pages WHERE site_key=? AND url=?', (key, url)).fetchone()
             c.execute("""INSERT INTO pages(site_key,url,label,kind,priority,depth,path_json,authority)
                 VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(site_key,url) DO UPDATE SET
                 kind=CASE WHEN pages.state='reference_only' OR excluded.priority<pages.priority THEN excluded.kind ELSE pages.kind END,
@@ -177,8 +199,14 @@ class Inventory:
                 state=CASE WHEN pages.state='reference_only' THEN 'pending' ELSE pages.state END,
                 priority=min(pages.priority,excluded.priority),depth=min(pages.depth,excluded.depth)""",
                 (key, url, label, kind, KINDS.get(kind, 5), depth, json.dumps(path, ensure_ascii=False), authority))
+            if not existed:
+                from .exploration_events import record_enqueue
+                record_enqueue(c, self, key, url, label, kind)
 
-    def record_edges(self, key, parent_url, links, content_hash):
+    def record_edges(self, key, parent_url, links, content_hash, *, observed_at=None):
+        # Delayed interpretation is not another observation of the material.
+        # An explicit empty time keeps legacy evidence unknown.
+        stamp = now() if observed_at is None else observed_at
         with self.connect() as c:
             previous = [dict(r) for r in c.execute('SELECT * FROM edges WHERE site_key=? AND parent_url=?',
                                                   (key, parent_url))]
@@ -200,9 +228,12 @@ class Inventory:
                     observed_at=excluded.observed_at,kind=excluded.kind""",
                     (key, parent_url, link.get('url', ''), link['label'], link['kind'],
                      json.dumps(link.get('path', []), ensure_ascii=False), link.get('locator', ''),
-                     link['decision'], content_hash, now()))
+                     link['decision'], content_hash, stamp))
+        from .exploration_events import observe_links
+        observe_links(self, key, parent_url, links, content_hash)
 
-    def record_structure(self, key, reference_url, nodes, content_hash):
+    def record_structure(self, key, reference_url, nodes, content_hash, *, observed_at=None):
+        stamp = now() if observed_at is None else observed_at
         # The database keeps one final interpretation per placement. Generic
         # navigation parsing can emit the same heading first as an entry and
         # later as an ancestor. Compare that persisted result, not intermediate
@@ -230,12 +261,13 @@ class Inventory:
                     DO UPDATE SET content_hash=excluded.content_hash,observed_at=excluded.observed_at,
                     relation=excluded.relation""",
                     (key, n['key'], n['name'], n['kind'], n.get('url', ''), n.get('parent', ''),
-                     reference_url, n['locator'], content_hash, n['relation'], now()))
+                     reference_url, n['locator'], content_hash, n['relation'], stamp))
 
     def structure(self, key):
         with self.connect() as c:
             return [dict(r) for r in c.execute('SELECT * FROM structure WHERE site_key=? ORDER BY rowid', (key,))]
 
+    @capture_inventory_claim
     def claim(self, key, focus='all', *, resume_url=None):
         if focus not in ('all', 'student', 'layered', 'valuable'):
             raise ValueError('Unknown discovery focus')
@@ -313,17 +345,23 @@ class Inventory:
                         "WHERE s.site_key=? AND p.state='fetched' AND p.content_hash=s.content_hash", (key,))]
                     claims = c.execute('SELECT coalesce(sum(attempts),0) FROM pages WHERE site_key=?', (key,)).fetchone()[0]
                     policy = get_policy()
+                    attention_policy = get_attention_policy(root_url=school['root_url'] if school else None)
                     row = choose_route(candidates, edges=edges, parents=parents, claim_count=claims,
                                        interval=policy['frontier_exploration_interval'],
                                        slice_size=policy['discovery_slice_pages'],
                                        branches=branch_assignments, history=history,
-                                       attention=get_attention_policy(root_url=school['root_url'] if school else None),
+                                       attention=attention_policy,
                                        structure=structure,
-                                       receipts=load_source_receipts(dict(school)) if school else (),
+                                       receipts=load_source_receipts(dict(school),
+                                           material=lambda url:self.snapshot(key,url)) if school else (),
                                        costs=load_discovery_costs(dict(school)) if school else None,
                                        foraging_policy={'unseen_prior': policy['frontier_unseen_prior'],
                                                         'path_credit_weight': policy['frontier_path_credit']},
                                        explain=choice.update)
+                    if policy.get('_tuning'):
+                        choice['tuning_context'] = policy['_tuning']
+                    from backend.services.source_attention import policy_snapshot
+                    choice['attention_policy'] = policy_snapshot(attention_policy)
                 else:
                     row = c.execute(selection + ' LIMIT 1', (key, now())).fetchone()
                 if row is None:
@@ -350,7 +388,7 @@ class Inventory:
             c.execute("UPDATE pages SET state='running',attempts=attempts+1 WHERE site_key=? AND url=?",
                       (key, row['url']))
             c.execute("UPDATE sites SET state='running',updated_at=? WHERE site_key=?", (now(), key))
-            return dict(row)
+            return dict(row, exploration_selection=choice)
 
     def exploration_choices(self, key):
         """Explain actual claimed work without treating its score as coverage."""
@@ -381,7 +419,8 @@ class Inventory:
         pages, assignments = branches(self, key)
         return {'site': site, 'attention_policy': get_attention_policy(root_url=site['root_url']),
                 'coverage': coverage_state(pages, branches=assignments,
-                    validated_sources=load_source_receipts(site), edges=edges),
+                    validated_sources=load_source_receipts(site,
+                        material=lambda url:self.snapshot(key,url)), edges=edges),
                 'coverage_state': 'observed_scopes_only',
                 'choices': self.exploration_choices(key), 'costs': load_discovery_costs(site)}
 
@@ -511,6 +550,7 @@ class Inventory:
 
     def report(self, key):
         with self.connect() as c:
+            c.execute('BEGIN')
             site = c.execute('SELECT * FROM sites WHERE site_key=?', (key,)).fetchone()
             if site is None:
                 return None
@@ -544,7 +584,10 @@ class Inventory:
                     page = by_url[check['reference_url']]
                     if check.get('feed_hash') != publication_hash(page.get('feed_json')):
                         check.update(reference_current=False, scope_passed=False, status='publication_changed')
+            from .exploration_events import read_events
+            events, history = read_events(c, key)
             return {'site': dict(site), 'pages': pages, 'states': states, 'metrics': metrics,
+                    'exploration_events': events, 'exploration_history': history,
                     'reference_checks': reference_checks, 'match_threshold': MATCH_THRESHOLD,
                     'accepted': accepted, 'acceptance_source': 'school_onboarding',
                     'edge_count': c.execute('SELECT count(*) FROM edges WHERE site_key=?', (key,)).fetchone()[0]}

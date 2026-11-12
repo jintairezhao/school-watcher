@@ -1,6 +1,30 @@
 """Portable source review records; candidate discovery never changes live rules."""
 from datetime import datetime
+from uuid import uuid4
+from sqlalchemy import event, inspect
 from backend.database.db import db
+from backend.database.models import Department
+
+
+class SourceTransferIdentity(db.Model):
+    """Portable record keys map to existing sources, never to ownership facts."""
+    __tablename__ = 'source_transfer_identities'
+    transfer_key = db.Column(db.String(80), primary_key=True)
+    source_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='CASCADE'), nullable=False, index=True)
+    kind = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+
+@event.listens_for(Department, 'after_insert')
+def _new_source_transfer_identity(mapper, connection, source):
+    # The key is born with this record, not from its mutable URL or CSS. A
+    # deliberately unmigrated legacy database remains readable/writable; its
+    # export entry explicitly requires the additive identity migration.
+    if source.kind != 'column' or not inspect(connection).has_table(SourceTransferIdentity.__tablename__):
+        return
+    key = getattr(source, '_import_transfer_key', None) or 'source:' + uuid4().hex
+    connection.execute(SourceTransferIdentity.__table__.insert().values(
+        source_id=source.id, transfer_key=key, kind='record', created_at=datetime.utcnow()))
 
 
 class SourceProposal(db.Model):
@@ -33,6 +57,8 @@ class SourceConfigVersion(db.Model):
     config_json = db.Column(db.Text, nullable=False)
     config_hash = db.Column(db.String(64), nullable=False)
     previous_json = db.Column(db.Text, nullable=False)
+    # Nullable for legacy versions: a saved rule alone proves no execution path.
+    execution_json = db.Column(db.JSON)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     __table_args__ = (db.UniqueConstraint('department_id', 'version', name='uq_source_version'),)
 

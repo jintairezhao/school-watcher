@@ -20,7 +20,7 @@ def source_groups(departments):
 
 
 def source_hierarchy(departments, known_departments=None, directory_entries=(), *, available_only=False, retained_ids=()):
-    """Project official directory paths without changing source IDs or subscriptions.
+    """Legacy subscription/bookmark projection, never current ownership facts.
 
     Explicit directory memberships take precedence. Published website paths then
     supply missing ancestors; legacy unit-column metadata and observed website
@@ -30,7 +30,7 @@ def source_hierarchy(departments, known_departments=None, directory_entries=(), 
     """
     from backend.services.source_placements import official_source_placements, _within_unit, _same_page
     from backend.services.source_ownership import normalized_name
-    from backend.services.source_channels import channels_for
+    from backend.services.source_channels import legacy_channels_for as channels_for
     from backend.services.source_labels import source_label
     departments = list(departments)
     known = sorted(known_departments if known_departments is not None else departments,
@@ -226,6 +226,44 @@ def source_hierarchy(departments, known_departments=None, directory_entries=(), 
     return dict(sorted(ordered.items(), key=group_priority))
 
 
+def source_filter_ids(school_id, ids, entries=None, *, capture=None, historical_ids=None):
+    """A configured source leaf selects itself; legacy directories keep scope."""
+    if ids is None or not ids:
+        return ids
+    from backend.services.directory_options import expand_directory_ids
+    from backend.services.announcement_sources import source_counts
+    from backend.services.structure_snapshot import department_records
+    records = (department_records(capture) if capture is not None else
+        [dict(id=row.id, kind=row.kind, list_selector=row.list_selector)
+         for row in Department.query.filter_by(school_id=school_id)])
+    history = set(source_counts(school_id) if historical_ids is None else historical_ids)
+    by_id = {row['id']:row for row in records}
+    direct = {ident for ident in ids if ident in by_id and (ident in history
+        or by_id[ident].get('kind', 'column') == 'column' and by_id[ident].get('list_selector'))}
+    return sorted(direct | set(expand_directory_ids(school_id, set(ids) - direct, entries)))
+
+
+def source_group_ids(school_id, group, *, capture=None):
+    """Modern groups share the typed view; old explicit URLs stay compatibility."""
+    from backend.services.structure_snapshot import SOURCE_GROUP_LABELS, read_structure, inbox_choices, department_records
+    from backend.services.announcement_sources import source_counts
+    if group in SOURCE_GROUP_LABELS:
+        school = db.session.get(School, school_id)
+        if school is None:
+            return set()
+        capture = capture if capture is not None else read_structure(school)
+        tree = inbox_choices(capture, allowed_ids=[row['id'] for row in department_records(capture)],
+            historical_ids=source_counts(school_id))
+    else:
+        # These names only interpret an explicitly supplied historical filter.
+        # This result is never rendered as a verified ownership tree.
+        from backend.services.directory_options import directory_entries_for
+        rows = capture['departments'] if capture is not None else Department.query.filter_by(school_id=school_id).all()
+        entries = capture['directory_entries'] if capture is not None else directory_entries_for(school_id)
+        tree = source_hierarchy(rows, directory_entries=entries)
+    return {column['department'].id for unit in tree.get(group, []) for column in unit['columns']}
+
+
 def read_expression(user_id):
     return db.session.query(UserRead.user_id).filter(
         UserRead.user_id == user_id, UserRead.announcement_id == Announcement.id).exists()
@@ -269,7 +307,7 @@ def inbox_mailbox(args):
     return view if view in ('inbox', 'saved', 'trash') else 'inbox'
 
 
-def filtered_inbox(user_id, args, include_read=True):
+def filtered_inbox(user_id, args, include_read=True, *, structure_capture=None):
     """Parameters are shared with the GET page; invalid source IDs cannot widen scope."""
     args = normalize_inbox_args(args)
     view = inbox_mailbox(args)
@@ -288,16 +326,20 @@ def filtered_inbox(user_id, args, include_read=True):
     if school_id:
         from backend.services.directory_options import directory_entries_for, expand_directory_ids
         entries = directory_entries_for(school_id)
-        school_departments = Department.query.filter_by(school_id=school_id).all()
-        valid_ids = {d.id for d in school_departments}
-        dept_ids = expand_directory_ids(school_id, [i for i in args.getlist('dept', type=int) if i in valid_ids], entries)
+        if structure_capture is not None and structure_capture.get('school_id') == school_id:
+            from backend.services.structure_snapshot import department_records
+            valid_ids = {row['id'] for row in department_records(structure_capture)}
+        else:
+            valid_ids = {d.id for d in Department.query.filter_by(school_id=school_id)}
+        dept_ids = source_filter_ids(school_id, [i for i in args.getlist('dept', type=int) if i in valid_ids], entries,
+            capture=structure_capture)
         group = args.get('group', '').strip()
         if group:
-            group_ids = {column['department'].id for unit in source_hierarchy(school_departments, directory_entries=entries).get(group, [])
-                         for column in unit['columns']}
+            group_ids = source_group_ids(school_id, group, capture=structure_capture)
             dept_ids = [i for i in dept_ids if i in group_ids] if args.getlist('dept') else list(group_ids)
         query = query.filter(source_expression(school_ids=[school_id],
-                            department_ids=dept_ids if group or any(args.getlist('dept')) else None,
+                            department_ids=dept_ids if group or any(args.getlist('dept')) else
+                                sorted(valid_ids) if structure_capture is not None else None,
                             include_disabled=view in ('saved','trash')))
     period = args.get('period', 'all' if view != 'inbox' else 'week')
     if period not in ('week', 'all', 'archive'):

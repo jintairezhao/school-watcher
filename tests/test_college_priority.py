@@ -81,7 +81,9 @@ class CollegeListTests(unittest.TestCase):
             with self.subTest(selector=selector):
                 result = fetch(FetchRequest(COLLEGE + 'notice.htm', purpose='article',
                     readiness_selector=selector, browser_allowed=False),
-                    http_transport=lambda request: FetchResult(request.url, status=200, html=html))
+                    http_transport=lambda request: (FetchResult(request.url, status=200, attachment={
+                        'format':'pdf','verified':True,'sha256':'f'*64,'text':'实际PDF公示内容','filename':'result.pdf'})
+                        if request.url.endswith('/files/result.pdf') else FetchResult(request.url, status=200, html=html)))
                 self.assertTrue(result.ok, result.to_dict())
 
     def test_navigation_pdf_and_private_resources_do_not_prove_an_article(self):

@@ -7,7 +7,7 @@ import re
 from bs4.element import Comment
 
 from backend.scraper.article_observation import (
-    DATE, NOISE, article_node_state, compact_publication_date, title_key,
+    DATE, NOISE, article_node_state, compact_publication_date, date_with_editorial_metadata, title_key,
 )
 from backend.scraper.date_elements import NON_PUBLICATION, TIME_RANGE
 
@@ -89,7 +89,7 @@ def _field_text(node):
     dates = list(DATE.finditer(text))
     if len(dates) != 1:
         return None
-    if semantic or DATE.fullmatch(text):
+    if semantic or DATE.fullmatch(text) or date_with_editorial_metadata(text):
         return text
     if FIELD.match(text) or EDITOR.search(text):
         # Header-only short fields may use 时间/日期; prose after that field

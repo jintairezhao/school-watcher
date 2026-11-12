@@ -198,7 +198,9 @@ def api_school_departments(school_id):
     if not school:
         return jsonify({'error': '学校不存在'}), 404
     depts = school.departments.order_by(Department.name).all()
-    return jsonify([d.to_dict() for d in depts])
+    from backend.services.source_lifecycle import states_for
+    lifecycle = states_for([d.id for d in depts])
+    return jsonify([dict(d.to_dict(), kind=d.kind, lifecycle_state=lifecycle[d.id]) for d in depts])
 
 
 @bp.route('/api/departments', methods=['POST'])

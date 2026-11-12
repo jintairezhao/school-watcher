@@ -1,6 +1,6 @@
 """Provider-native snapshots, rotating backups, and checked restoration."""
 from datetime import datetime
-from contextlib import closing
+from contextlib import closing, nullcontext
 import json
 from pathlib import Path
 import shutil
@@ -23,9 +23,13 @@ def create_backup():
     folder.mkdir(parents=True, exist_ok=True)
     catalog = Path(current_app.config['SOURCE_CATALOG_PATH']).resolve()
     catalog.parent.mkdir(parents=True, exist_ok=True)
+    from backend.services.discovery_history import archive_lock, backup_members, verify_restored
+    discovery = Path(current_app.config['DISCOVERY_CACHE_PATH']).absolute()
+    include_discovery = discovery.is_file()
+    history_guard = archive_lock(discovery) if include_discovery else nullcontext()
     target = folder / ('watcher-' + datetime.utcnow().strftime('%Y%m%dT%H%M%S%f') + '.zip')
     pending = target.with_suffix('.tmp')
-    with FileLock(str(catalog) + '.publish.lock', timeout=60), tempfile.TemporaryDirectory(dir=folder) as scratch:
+    with FileLock(str(catalog) + '.publish.lock', timeout=60), history_guard, tempfile.TemporaryDirectory(dir=folder) as scratch:
         scratch = Path(scratch)
         manifest, checksums, versions = {}, {}, []
         provider = db.engine.dialect.name
@@ -42,6 +46,23 @@ def create_backup():
         else:
             raise RuntimeError('不支持此数据库的完整备份')
         sources = [(main, main.name, False)]
+        discovery_info = {}
+        if include_discovery:
+            if discovery.resolve() in {main.resolve(), catalog.resolve(), Path(db.engine.url.database).resolve() if provider == 'sqlite' else None}:
+                raise ValueError('Discovery backup must use a separate working database')
+            snapshot = scratch / discovery.name
+            if discovery.name in {main.name, catalog.name, 'manifest.json', 'backup-info.json'}:
+                raise ValueError('Discovery backup filename conflicts with another member')
+            sqlite_snapshot(discovery, snapshot)
+            sources.append((snapshot, discovery.name, False))
+            discovery_info = dict(discovery_file=discovery.name, discovery_history_format=1)
+            for source, relative in backup_members(discovery, snapshot):
+                name = discovery.name + '.history/' + relative
+                retained = scratch / name
+                retained.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, retained)
+                sources.append((retained, name, False))
+            verify_restored(snapshot, [name for _, name, _ in sources])
         if catalog.exists():
             sources.append((catalog, catalog.name, True))
         for relative in set(versions):
@@ -52,8 +73,9 @@ def create_backup():
         from backend.services.source_governance import _evidence_root
         evidence_root = _evidence_root().resolve()
         if evidence_root.is_dir():
-            for evidence_file in sorted(evidence_root.glob('*.html.gz')):
-                if evidence_file.is_symlink() or not re.fullmatch(r'[0-9a-f]{64}\.html\.gz', evidence_file.name):
+            from itertools import chain
+            for evidence_file in sorted(chain(evidence_root.glob('*.html.gz'), evidence_root.glob('*.pdf'))):
+                if evidence_file.is_symlink() or not re.fullmatch(r'[0-9a-f]{64}\.(?:html\.gz|pdf)', evidence_file.name):
                     raise ValueError('网页证据文件路径无效，备份已停止')
                 if evidence_file.resolve().parent != evidence_root:
                     raise ValueError('网页证据文件超出配置目录')
@@ -66,6 +88,8 @@ def create_backup():
         try:
             with zipfile.ZipFile(pending, 'w', zipfile.ZIP_DEFLATED) as archive:
                 for source, name, snapshot_required in sources:
+                    if name in manifest:
+                        raise ValueError('Duplicate backup member')
                     snapshot = scratch / name
                     if snapshot_required:
                         snapshot.parent.mkdir(parents=True, exist_ok=True)
@@ -76,7 +100,7 @@ def create_backup():
                         checksums[name] = hashlib.file_digest(reader, 'sha256').hexdigest()
                 archive.writestr('manifest.json', json.dumps(manifest))
                 archive.writestr('backup-info.json', json.dumps(dict(version=2, provider=provider,
-                    database_file=main.name, catalog_file=catalog.name, checksums=checksums)))
+                    database_file=main.name, catalog_file=catalog.name, checksums=checksums, **discovery_info)))
             pending.replace(target)
         finally:
             pending.unlink(missing_ok=True)
@@ -130,6 +154,13 @@ def restore_backup(archive_path, destination, *, postgres_url=None):
             raise ValueError('Invalid backup metadata')
         if info['provider'] == 'postgresql' and not postgres_url:
             raise ValueError('PostgreSQL 完整备份需要指定空的目标数据库')
+        discovery_file = info.get('discovery_file')
+        if discovery_file is not None and (not isinstance(discovery_file, str) or
+                Path(discovery_file).name != discovery_file or '/' in discovery_file or '\\' in discovery_file or
+                discovery_file not in manifest or discovery_file == info.get('database_file') or
+                discovery_file == info.get('catalog_file') or info.get('discovery_history_format') != 1):
+            raise ValueError('Invalid discovery backup metadata')
+        history_prefix = discovery_file+'.history/' if discovery_file else None
         for name, size in manifest.items():
             target = (destination / name).resolve()
             if ('\\' in name or ':' in name or Path(name).is_absolute() or '..' in Path(name).parts or
@@ -149,10 +180,17 @@ def restore_backup(archive_path, destination, *, postgres_url=None):
                 if len(Path(name).parts) != 2:
                     raise ValueError('Invalid evidence path')
                 verify_evidence_file(target)
+            elif history_prefix and name.startswith(history_prefix):
+                # Cross-check all segments with the restored SQL manifest once
+                # extraction is complete, independent of ZIP member order.
+                continue
             elif name != info.get('database_file') or info['provider'] == 'sqlite':
                 with closing(sqlite3.connect(target.as_uri() + '?mode=ro', uri=True)) as connection:
                     if connection.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
                         raise ValueError('Restored database failed integrity check')
+        if discovery_file:
+            from backend.services.discovery_history import verify_restored
+            verify_restored(destination / discovery_file, manifest)
         if info['provider'] == 'postgresql':
             from sqlalchemy import create_engine
             from backend.database.provider_backup import restore_postgres
@@ -160,13 +198,16 @@ def restore_backup(archive_path, destination, *, postgres_url=None):
             try:
                 restore_postgres(destination / info['database_file'], engine)
                 from backend.database.provider_backup import fence_restored_ai
+                from backend.services.structure_versions import reset_restored_structure_epochs
                 with engine.begin() as connection:
                     fence_restored_ai(connection)
+                    reset_restored_structure_epochs(connection, 'full_backup_restore')
             finally:
                 engine.dispose()
     if info['provider'] == 'sqlite':
         from sqlalchemy import create_engine
         from backend.database.provider_backup import fence_restored_ai
+        from backend.services.structure_versions import reset_restored_structure_epochs
         database_name = info.get('database_file')
         if not database_name:
             database_name = next((name for name in manifest if name.endswith('.db')), None)
@@ -175,6 +216,7 @@ def restore_backup(archive_path, destination, *, postgres_url=None):
             try:
                 with engine.begin() as connection:
                     fence_restored_ai(connection)
+                    reset_restored_structure_epochs(connection, 'full_backup_restore')
             finally:
                 engine.dispose()
     return list(manifest)
@@ -205,6 +247,10 @@ def expire_rollback():
 
 def verify_evidence_file(path):
     """Bound decompression and check immutable evidence identity before accepting it."""
+    if re.fullmatch(r'[0-9a-f]{64}\.pdf', path.name):
+        from backend.scraper.acquisition.attachments import read_pdf_material
+        read_pdf_material(path.parent, path.stem)
+        return
     if not re.fullmatch(r'[0-9a-f]{64}\.html\.gz', path.name):
         raise ValueError('Invalid evidence filename')
     with gzip.open(path, 'rb') as reader:

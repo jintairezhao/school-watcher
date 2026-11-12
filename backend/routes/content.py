@@ -1,10 +1,11 @@
 """Nonblocking article content requests. URLs are always taken from stored notices."""
-from flask import Blueprint, Response, jsonify, request, g, send_file
+from flask import Blueprint, Response, jsonify, request, g, send_file, redirect, current_app
 from requests import RequestException
 from backend.database.models import Announcement
 from backend.services.announcement_sources import source_expression
 from backend.services.content_cache import status, request_content
 from backend.services.article_images import render_article_html, image_sources, fetch_article_image
+from backend.scraper.http_client import FetchAdmissionBusy
 
 bp = Blueprint('content', __name__)
 
@@ -69,8 +70,8 @@ def article_content(ann_id):
         request_content(ann)
     state = status(ann)
     from backend.services.publication_dates import publication_date_label, publication_date_stamp
-    from backend.services.content_cache import progress_message
-    return jsonify(content_status=state, error=ann.content_error if state == 'failed' else '',
+    from backend.services.content_cache import progress_message, reader_error
+    return jsonify(content_status=state, error=reader_error(ann) if state == 'failed' else '',
                    progress_message=progress_message(ann) if state=='loading' else '',
                    published_at=publication_date_stamp(ann.published_at),
                    publication_date_label=publication_date_label(ann.published_at),
@@ -106,9 +107,50 @@ def article_image(ann_id, image_key):
     db.session.commit()  # Release the read transaction before the outbound request.
     try:
         data, mime = fetch_article_image(url, article_url)
+    except FetchAdmissionBusy as busy:
+        import math
+        wait = max(1, min(900, math.ceil(busy.retry_after)))
+        return jsonify(error='图片正在排队，稍后会自动显示', error_code='origin_busy'), 503, {
+            'Retry-After': str(wait), 'Cache-Control': 'no-store'}
     except (RequestException, ValueError):
         return jsonify(error='图片暂时无法读取，请稍后重试或打开官网原文'), 502
     return Response(data, mimetype=mime, headers={'Cache-Control': 'private, max-age=3600'})
+
+
+@bp.get('/api/announcements/<int:ann_id>/attachments/<string:key>')
+def open_attachment(ann_id, key):
+    from backend.database.db import db
+    from backend.database.models import AnnouncementResource
+    from backend.services.saved_materials import readable_expression, observed_resources, queue_attachment
+    from sqlalchemy.exc import SQLAlchemyError
+    ann = Announcement.query.filter(Announcement.id == ann_id,
+        readable_expression(g.user.id if g.get('user') else None)).with_for_update().first()
+    values = observed_resources(ann).get(key) if ann else None
+    if not values or values['kind'] != 'attachment':
+        return jsonify(error='通知中没有这个附件'), 404
+    url = values['url']
+    row = db.session.get(AnnouncementResource, (ann_id, key))
+    if row and row.state == 'ready':
+        response = redirect(f'/api/announcements/{ann_id}/resources/{key}')
+        response.headers['Cache-Control'] = 'private, no-store'
+        return response
+    from backend.auth.rate_limit import check_rate_limit
+    reader = f'user:{g.user.id}' if g.get('user') else f'ip:{request.remote_addr}'
+    try:
+        if check_rate_limit(f'attachment:{reader}', 120, 3600)[0]:
+            queue_attachment(ann, key)
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.warning('Attachment cache could not be queued for announcement %s', ann_id)
+    except ValueError:
+        # The body may have been cleaned between the rate-limit commit and the
+        # resource lock. The already observed official URL can still be opened.
+        db.session.rollback()
+    # The local worker saves independently; opening the official file never waits
+    # for a download and does not show a confirmation dialog.
+    response = redirect(url)
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
 
 
 @bp.get('/api/announcements/<int:ann_id>/resources/<string:key>')
@@ -127,6 +169,11 @@ def saved_resource(ann_id, key):
         return jsonify(error='附件尚未保存完成'), 404
     if resource.sha256 and hashlib.sha256(resource.payload).hexdigest() != resource.sha256:
         return jsonify(error='本地附件校验未通过，请重新保存收藏'), 503
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    if not ann.content_accessed_at or now - ann.content_accessed_at > timedelta(hours=1):
+        ann.content_accessed_at = now
+        db.session.commit()
     response = send_file(io.BytesIO(resource.payload), mimetype='application/octet-stream',
         as_attachment=True, download_name=resource.filename or '官网附件',
         etag=resource.sha256 or None, max_age=0)

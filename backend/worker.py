@@ -8,6 +8,7 @@ import socket
 import threading
 import time
 from uuid import uuid4
+from backend.ai.material_capture import capture_task
 
 from backend.database.db import db
 from backend.database.models import BackgroundTask, School, Subscription, AppConfig
@@ -112,6 +113,9 @@ def schedule_due(owner_id='local'):
 
 
 def dispatch(kind, payload):
+    from backend.services.source_lifecycle import task_sources_active
+    if not task_sources_active(kind, payload):
+        return {'skipped': True, 'source_inactive': True}
     from flask import current_app
     from backend.services.runtime_catalog import RuntimeCatalog
     from backend.services.source_inventory import site_key
@@ -124,7 +128,7 @@ def dispatch(kind, payload):
         return fetch_content(payload['announcement_id'])
     if kind == 'saved_resource':
         from backend.services.saved_materials import save_resource
-        return save_resource(payload['announcement_id'], payload['url_key'])
+        return save_resource(payload['announcement_id'], payload['url_key'], cache=payload.get('cache') is True)
     if kind == 'publication_date':
         from backend.services.publication_dates import check_date
         return check_date(payload['announcement_id'])
@@ -283,7 +287,9 @@ def dispatch(kind, payload):
                         task_id=handle.get('id'), task_generation=handle.get('generation'), task_token=handle.get('token'))
         db.session.add(log); db.session.commit()
         try:
-            result = collect_source(dept)
+            from backend.services.task_fetch import collection_observation_context
+            with collection_observation_context(dept, log):
+                result = collect_source(dept)
             log.new_count, log.total_count = result['new_count'], result['checked']
             log.status = 'partial' if result.get('partial') else 'success'
             if result.get('partial'):
@@ -317,7 +323,9 @@ def dispatch(kind, payload):
         for dept in [dept]:
             url = dept.list_url
             db.session.commit()
-            html = _fetch_html(url, raise_fetch_errors=True, purpose='list', source_id=str(dept.id)) if url else ''
+            from backend.services.task_fetch import source_health_observation_context
+            with source_health_observation_context(dept):
+                html = _fetch_html(url, raise_fetch_errors=True, purpose='list', source_id=str(dept.id)) if url else ''
             if html:
                 result = evaluate_and_repair(dept, html)
                 if result['action'] == 'browser_needed':
@@ -350,6 +358,7 @@ def dispatch(kind, payload):
     raise ValueError('Unknown task kind')
 
 
+@capture_task
 def execute(app, handle, pause=None):
     from backend.services.desktop_maintenance import before_fetch
     stop = threading.Event()
@@ -373,11 +382,12 @@ def execute(app, handle, pause=None):
     with app.app_context():
         try:
             from backend.scraper.acquisition import execution_context, profile_fingerprint, FetchFailure
-            from backend.services.task_fetch import browser_dispatch, cache_lookup, cache_store
+            from backend.services.task_fetch import browser_dispatch, cache_lookup, cache_store, record_collection_observation
             fingerprint = profile_fingerprint()
             handle['policy_validator'] = lambda: profile_fingerprint() == fingerprint
             with tasks.execution_scope(handle), execution_context(browser_dispatch=browser_dispatch,
-                    cache_lookup=cache_lookup, cache_store=cache_store, before_fetch=lambda: before_fetch(pause)):
+                    cache_lookup=cache_lookup, cache_store=cache_store, before_fetch=lambda: before_fetch(pause),
+                    observation_store=record_collection_observation):
                 from backend.services.discovery_control import pause_if_requested
                 pause_if_requested()
                 before_fetch(pause)

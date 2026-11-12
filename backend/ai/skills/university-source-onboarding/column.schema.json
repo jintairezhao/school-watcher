@@ -13,13 +13,13 @@
         "required": ["name", "list_selector", "title_selector", "link_selector", "date_selector", "content_selector", "container_selector", "heading_selector"],
         "properties": {
           "name": {"type": "string", "minLength": 1, "maxLength": 200},
-          "list_selector": {"type": "string", "minLength": 1, "maxLength": 500},
-          "title_selector": {"type": "string", "minLength": 1, "maxLength": 500},
-          "link_selector": {"type": "string", "minLength": 1, "maxLength": 500},
-          "date_selector": {"type": "string", "maxLength": 500},
-          "content_selector": {"type": "string", "maxLength": 500},
-          "container_selector": {"type": "string", "minLength": 1, "maxLength": 500},
-          "heading_selector": {"type": "string", "minLength": 1, "maxLength": 500}
+          "list_selector": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "title_selector": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "link_selector": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "date_selector": {"type": "string", "maxLength": 4096},
+          "content_selector": {"type": "string", "maxLength": 4096},
+          "container_selector": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "heading_selector": {"type": "string", "minLength": 1, "maxLength": 4096}
         }
       }
     }

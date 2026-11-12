@@ -5,12 +5,17 @@
     function start(panel, retry = false) {
         const previous = sessions.get(panel);
         if (previous) clearTimeout(previous.timer);
-        const session = {timer: null, until: Date.now() + 60000};
+        const session = {timer: null, resume: null};
         sessions.set(panel, session);
         const id = panel.dataset.savedMaterials;
         const current = () => panel.isConnected && sessions.get(panel) === session;
         async function read(method = 'GET') {
             if (!current()) return;
+            if (document.hidden) {
+                session.resume = () => read(method);
+                return;
+            }
+            session.resume = null;
             const button = panel.querySelector('[data-retry-saved]');
             if (button) button.disabled = true;
             try {
@@ -37,7 +42,7 @@
                     files.append(item);
                 });
                 button.hidden = data.state !== 'failed';
-                if (data.state === 'saving' && Date.now() < session.until) session.timer = setTimeout(() => read(), 2000);
+                if (data.state === 'saving') session.timer = setTimeout(() => read(), 2000);
             } catch (error) {
                 if (!current()) return;
                 panel.hidden = false;
@@ -61,6 +66,11 @@
         if (panel) { panel.dataset.active = 'true'; start(panel); }
     });
     window.addEventListener('inbox:navigated', init);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) document.querySelectorAll('[data-saved-materials]').forEach(panel => {
+            sessions.get(panel)?.resume?.();
+        });
+    });
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();

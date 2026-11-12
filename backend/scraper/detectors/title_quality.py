@@ -81,7 +81,7 @@ def _title_score(t: str) -> int:
     return score
 
 
-_HEADLINE = '[itemprop="headline"], .title, .headline, .news-title, .article-title, h1, h2, h3, h4, h5, h6'
+_HEADLINE = '[itemprop="headline"], .title, .tit, .headline, .news-title, .article-title, h1, h2, h3, h4, h5, h6'
 _METADATA = re.compile(r'^(?:time|date|datetime|calendar|address|venue|location|person|author|speaker|tag|tags|summary|description|views|hits)(?:[-_].*)?$', re.I)
 
 
@@ -114,11 +114,24 @@ def extract_title_text(element, *, anchor=None, page_url=''):
         return attribute
     fields = [element] if (element.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6')
         or element.get('itemprop') == 'headline'
-        or set(element.get('class', [])) & {'title', 'headline', 'news-title', 'article-title'}) else element.select(_HEADLINE)
+        or set(element.get('class', [])) & {'title', 'tit', 'headline', 'news-title', 'article-title'}) else element.select(_HEADLINE)
     candidates = {node.get_text(' ', strip=True) for node in fields
                   if _belongs(node, anchor, page_url) and node.get_text(' ', strip=True)}
     if candidates:
-        return next(iter(candidates)) if len(candidates) == 1 else ''
+        if len(candidates) != 1:
+            return ''
+        visible = next(iter(candidates))
+        # A multilingual CMS can clip an English h3 while its very same link
+        # retains the literal complete English+Chinese title. Keep this narrow:
+        # a long matching English prefix, not a generic label or another link.
+        full = (anchor.get('title') or anchor.get('data-title') or '').strip() if anchor else ''
+        prefix = re.sub(r'\s+', '', re.sub(r'(?:\.{3,}|…+)\s*$', '', visible))
+        if (anchor is not None and element.find_parent('a') is anchor
+                and 32 <= len(re.findall(r'[A-Za-z]', prefix)) and not re.search(r'[\u3400-\u9fff]', visible)
+                and re.search(r'[\u3400-\u9fff]', full) and len(full) <= 300
+                and len(full) > len(visible) and re.sub(r'\s+', '', full).startswith(prefix)):
+            return full
+        return visible
     # A configured wrapper may contain a date and a plain text headline. Read
     # its remaining DOM text after removing whole observed metadata fields.
     fragment = copy(element)

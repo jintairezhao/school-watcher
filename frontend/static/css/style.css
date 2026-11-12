@@ -215,6 +215,7 @@ body {
 a { color: var(--color-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 img { max-width: 100%; height: auto; }
+.body-loader-content img[data-article-image-src]:not([src]) { min-height: 5rem; min-width: min(100%, 12rem); }
 
 ::selection { background: rgba(99, 102, 241, 0.22); }
 
@@ -1473,6 +1474,8 @@ select.form-input { cursor: pointer; }
 .manage-detail .manage-meta { display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; }
 .manage-meta > span { white-space:nowrap; }
 .manage-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.source-state-control { display: inline-flex; align-items: center; gap: 8px; }
+.source-state-control .form-input { width: auto; min-width: 0; }
 
 /* ---- 空状态 ---- */
 .empty-state {

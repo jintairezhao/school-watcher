@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from backend.database.db import db
 from backend.database.models import School, Department, Announcement, ScrapeLog
 from backend.scraper.change_detector import parse_date
-from backend.scraper.date_elements import publication_date_text
+from backend.scraper.date_elements import publication_date_text, infer_publication_date_selector
 from backend.scraper.detectors.title_quality import (
     is_junk_title, extract_best_title, date_from_url, extract_title_text, observed_title_variants)
 from backend.scraper.selector.selector_store import save_element_signatures, auto_heal_selectors
@@ -86,9 +86,8 @@ def _extract_attachment_links(content_elem) -> list:
 
 
 def _resolve_url(base_url: str, link: str) -> str:
-    if not link:
-        return None
-    return urljoin(base_url, link)
+    from backend.services.source_inventory import resolve_page_link
+    return resolve_page_link(base_url, link)
 
 
 PAGINATION_SCOPE_VERSION = 1
@@ -107,6 +106,23 @@ def _pagination_root(items):
         roots.append(root)
     if all(root is not None for root in roots):
         if len({id(root) for root in roots}) != 1:
+            # Some templates wrap each row in its own ul. Treat those wrappers
+            # as one list only when they exhaust one local, uniform container;
+            # partial selections and independently headed lists stay ambiguous.
+            parent = roots[0].parent
+            wrappers = {id(root) for root in roots}
+            signature = lambda node: (node.name, tuple(sorted(node.get('class', []))), node.get('role'))
+            if (parent is not None and parent.name in ('div', 'section', 'article', 'main')
+                    and parent.find_parent(['nav', 'header', 'footer', 'aside']) is None
+                    and len(wrappers) == len(items)
+                    and all(root.parent is parent and root.name in ('ul', 'ol')
+                            and signature(root) == signature(roots[0])
+                            and len(root.find_all('li', recursive=False)) == 1
+                            and (item is root or item is root.find('li', recursive=False))
+                            for root, item in zip(roots, items))
+                    and {id(child) for child in parent.find_all(recursive=False)
+                         if child.name not in ('script', 'style')} == wrappers):
+                return parent
             raise PaginationScopeError()
         return roots[0]
     # Card lists need not use ul/li. Their selected entries must still share a
@@ -123,11 +139,110 @@ def _pagination_root(items):
     raise PaginationScopeError()
 
 
+def _counted_pager(node):
+    """Recognize counts or an explicit current-page strip, not article labels."""
+    text = node.get_text(' ', strip=True)
+    if len(text) > 500:
+        return False
+    counter = re.search(r'共\s*\d+\s*条(?:记录)?\s*[，,]?\s*每页\s*\d+\s*条|共\s*\d+\s*页', text)
+    ratio = None
+    if not counter:
+        ratio = re.search(r'共\s*[1-9]\d*\s*条(?:记录)?\s*[，,]?\s*'
+                          r'(?P<current>[1-9]\d*)\s*/\s*(?P<pages>[1-9]\d*)(?!\d)', text)
+        if ratio:
+            if int(ratio['current']) > int(ratio['pages']):
+                return False
+            counter = ratio
+    if not counter:
+        # Some counted controls render "第 [input value] /N页". The current
+        # page is absent from get_text(), so require its actual visible field
+        # to agree with one disabled marker in the same numbered strip.
+        input_ratio = re.search(r'共\s*[1-9]\d*\s*条(?:记录)?\s*第\s*/\s*'
+                                r'(?P<pages>[1-9]\d*)\s*页', text)
+        strips = ([node] if 'p_pages' in node.get('class', []) else node.select('.p_pages'))
+        fields = [field for field in node.select('input') if field.get('type', '').lower() != 'hidden']
+        if input_ratio and len(strips) == len(fields) == 1:
+            current = strips[0].select('.p_no_d')
+            value = str(fields[0].get('value') or '').strip()
+            numbers = [link.get_text(' ', strip=True) for link in strips[0].select('a[href]')
+                       if re.fullmatch(r'[1-9]\d*', link.get_text(' ', strip=True))]
+            if (len(current) == 1 and not current[0].select('a[href]') and current[0].find_parent('a') is None
+                    and fields[0].get('type', '').lower() in ('', 'text', 'number')
+                    and not fields[0].has_attr('hidden')
+                    and 'display:none' not in fields[0].get('style', '').replace(' ', '').lower()
+                    and re.fullmatch(r'[1-9]\d*', value)
+                    and value == current[0].get_text(' ', strip=True)
+                    and int(value) <= int(input_ratio['pages']) and numbers
+                    and all(int(number) <= int(input_ratio['pages']) for number in numbers)):
+                counter = input_ratio
+    if not counter:
+        # This CMS also emits a numbered strip without a total-count sentence.
+        # Its disabled current-page marker and several numeric link controls
+        # provide bounded evidence. A class name alone cannot hide a widget.
+        strips = ([node] if 'p_pages' in node.get('class', []) else node.select('.p_pages'))
+        if len(strips) != 1:
+            return False
+        current = strips[0].select('.p_no_d')
+        numbers = [link.get_text(' ', strip=True) for link in strips[0].select('a[href]')
+                   if re.fullmatch(r'[1-9]\d*', link.get_text(' ', strip=True))]
+        if (len(current) != 1 or current[0].select('a[href]') or current[0].find_parent('a') is not None
+                or not re.fullmatch(r'[1-9]\d*', current[0].get_text(' ', strip=True))
+                or len(set(numbers)) < 2):
+            return False
+    labels, jump_labels = [], []
+    for link in node.select('a[href]'):
+        label = link.get_text(' ', strip=True)
+        if (label == '跳转' and link.get('href', '').strip().lower().startswith('javascript:')
+                and node.select('input:not([type="hidden"])')):
+            # This is an observed page-number control, not a followable URL.
+            jump_labels.append(label)
+        else:
+            labels.append(label)
+    control = r'\d+|[‹›«»<>]|首页|尾页|第一页|最后一页|最末页|末页|上一页|下一页|上页|下页|next|prev'
+    if len(set(labels)) < 2 or not all(re.fullmatch(control, label, re.I) for label in labels):
+        return False
+    remainder = text[:counter.start()] + text[counter.end():] if counter else text
+    for label in labels + jump_labels:
+        remainder = remainder.replace(label, ' ')
+    remainder = re.sub(r'(?:到\s*)?第\s*\d*\s*页', ' ', remainder)
+    # Disabled first/previous controls are often plain spans on page one.
+    remainder = re.sub(r'第一页|最后一页|最末页|上一页|下一页|首页|尾页|末页|上页|下页', ' ', remainder)
+    if ratio and re.fullmatch(r'\s*页\s*', remainder):
+        # A trailing page unit belongs to this observed jump widget only when
+        # its one visible page field and one jump button are both present.
+        inputs = [field for field in node.select('input') if field.get('type', '').lower() != 'hidden']
+        fields = [field for field in inputs if field.get('type', '').lower() in ('', 'text', 'number')]
+        jumps = [field for field in inputs if field.get('type', '').lower() == 'button'
+                 and field.get('value', '').strip() in ('转到', '跳转')]
+        if len(inputs) == 2 and len(fields) == len(jumps) == 1:
+            remainder = ''
+    return not re.sub(r'[\s\d:：/|\[\]()（）,，.·<>«»‹›…-]+', '', remainder)
+
+
+def _local_sibling_pager(anchor, container):
+    """A complete column may have a separate pager in its immediate owner."""
+    owner = container.parent
+    if (owner is None or owner.name in ('body', 'html', '[document]')
+            or anchor.find_parent(['nav', 'header', 'footer', 'aside']) is not None
+            or any(parent is container for parent in anchor.parents)
+            or not any(parent is owner for parent in anchor.parents)):
+        return False
+    for region in anchor.parents:
+        if region is owner:
+            break
+        if _counted_pager(region):
+            return True
+    return False
+
+
 def _pagination_owner(soup, anchor, selected_root, scope=None):
     """Bind an observed pager to its nearest actual list and heading region."""
+    counted_groups = {id(parent) for parent in anchor.parents if _counted_pager(parent)}
     def paging_or_navigation(node):
         for parent in [node, *node.parents]:
             if parent.name in ('nav', 'header', 'footer'):
+                return True
+            if id(parent) in counted_groups:
                 return True
             marker = ' '.join([parent.get('id', ''), *parent.get('class', [])])
             if re.search(r'(?:^|[ _-])(?:pag(?:e|ing|ination)|pager)(?:[ _-]|$)|wp_paging', marker, re.I):
@@ -137,7 +252,8 @@ def _pagination_owner(soup, anchor, selected_root, scope=None):
                                              link.get_text(' ', strip=True), re.I) for link in links))
 
     roots = [node for node in soup.select('ul,ol,table,[role="list"]')
-             if node.select('a[href]') and (node is selected_root or not paging_or_navigation(node))]
+             if node.select('a[href]') and not any(parent is selected_root for parent in node.parents)
+             and (node is selected_root or not paging_or_navigation(node))]
     # Neighboring publication cards may use div/article instead of ul. Their
     # repeated linked children are equally real list boundaries.
     for node in soup.select('div,section,article'):
@@ -229,7 +345,8 @@ def _next_page_url(html: str, current_url: str, page_number: int, *,
                 if heading is not None and (heading is container or any(parent is container for parent in heading.parents)):
                     from backend.services.source_governance import _heading_region
                     boundary = _heading_region(heading, container, items)
-                    if boundary and not (anchor is boundary or any(parent is boundary for parent in anchor.parents)):
+                    if (boundary and not (anchor is boundary or any(parent is boundary for parent in anchor.parents))
+                            and not _local_sibling_pager(anchor, container)):
                         continue
             if _pagination_owner(soup, anchor, root, scope) is not root:
                 continue
@@ -255,6 +372,49 @@ def _probe_selectors(html: str, department: Department) -> tuple | None:
     return result, True
 
 
+def _complete_configured_page(html, page_url, config):
+    """Verify every configured page region ends here, without claiming its history."""
+    from backend.services.source_scope import observe_joint_selection
+    from backend.services.source_governance import _hash
+    reference = {'url': page_url, 'hash': _hash(str(html))}
+    observed_at = getattr(getattr(html, 'result', None), 'observed_at', '')
+    if observed_at:
+        reference['observed_at'] = observed_at
+    observation = observe_joint_selection(config, reference, html)
+    if not observation or any(not region['complete_region'] for region in observation['regions']):
+        return None
+    soup = BeautifulSoup(html, 'lxml')
+    for region in observation['regions']:
+        scope = {'container_selector': region['container'], 'heading_selector': region['heading']}
+        try:
+            root = _pagination_root(soup.select(region['list_selector']))
+        except PaginationScopeError:
+            return None
+        for control in soup.select('a,button,input'):
+            label = (control.get('aria-label') or control.get('value') or control.get_text(' ', strip=True)).strip()
+            if (re.fullmatch(r'下一页|下页|next(?:\s+page)?|[>›»]', label, re.I)
+                    and not control.has_attr('disabled') and control.get('aria-disabled') != 'true'
+                    and 'disabled' not in control.get('class', [])
+                    and _pagination_owner(soup, control, root, scope) is root):
+                # A script-only next control has no safe URL for this reader;
+                # its presence cannot be mistaken for the end of a member list.
+                return None
+        try:
+            next_page = _next_page_url(html, page_url, 1, list_selector=region['list_selector'],
+                scope=scope)
+        except PaginationScopeError:
+            return None
+        if next_page:
+            # One branch with more pages makes the combined run unfinished;
+            # never select one branch and silently discard the other branches.
+            return None
+    return {'kind': observation['kind'], 'coverage': 'selected_page',
+            'selected_items': observation['selected_items'], 'material': reference,
+            'regions': [{key: region[key] for key in ('name', 'selected_items', 'column_url')}
+                        for region in observation['regions']],
+            'full_column_equivalent': False, 'publisher_assertion': False}
+
+
 def _save_probed_selectors(department: Department, profile: dict):
     """Compatibility hook: record a proposal; never install guessed selectors."""
     from backend.services.source_governance import propose_source, source_config
@@ -263,7 +423,7 @@ def _save_probed_selectors(department: Department, profile: dict):
     return propose_source(department.school_id, candidate, department_id=department.id, origin='probe')
 
 
-def _process_announcement_item(item, department, school_base_url: str) -> bool:
+def _process_announcement_item(item, department, school_base_url: str, *, date_selector=None) -> bool:
     """处理单个列表项，返回 True 表示新增了公告"""
     try:
         from backend.scraper.discovery.publication_lists import select_node
@@ -281,11 +441,13 @@ def _process_announcement_item(item, department, school_base_url: str) -> bool:
         # A dated article address supports short real titles; bare institution
         # introduction links must not gain that exception.
         date_text = ''
-        if department.date_selector:
-            date_elem = select_node(item, department.date_selector)
+        effective_date_selector = department.date_selector if date_selector is None else date_selector
+        date_elem = None
+        if effective_date_selector:
+            date_elem = select_node(item, effective_date_selector)
             date_text = publication_date_text(date_elem)
         from backend.scraper.date_elements import listing_date_observation
-        observation = listing_date_observation(date_elem if department.date_selector else None)
+        observation = listing_date_observation(date_elem)
         candidate_date = parse_date(observation['raw'])
         published_at = parse_date(date_text)
         from datetime import timedelta, timezone
@@ -328,11 +490,14 @@ def scrape_department(department: Department, school_base_url: str,
 
     如果部门的选择器为空或未匹配到内容，会自动探测常见的 CMS 模式。
     """
+    from backend.services.source_lifecycle import ensure_source_active
+    ensure_source_active(department.id)
     from backend.scraper.discovery.publication_lists import select_node
     from backend.services.collection_settings import since_date, coverage_complete, record_coverage
     from backend.services import tasks
     cutoff = datetime(since_year, 1, 1) if since_year is not None else since_date()
     department._fetch_confirmed_empty = False
+    department._fetch_collection_scope = None
     new_count = 0
     total = 0
     page = 1
@@ -374,16 +539,19 @@ def scrape_department(department: Department, school_base_url: str,
 
     from backend.services.source_collection import collection_progress, save_collection_progress
     from backend.services.source_governance import source_config, _hash, _column_scope
-    from backend.database.source_governance_models import SourceValidation
+    from backend.services.source_path_receipts import load_source_receipts
     config = source_config(department)
     config_hash = _hash(config)
     column_scope = None
-    for validation in SourceValidation.query.filter_by(department_id=department.id, config_hash=config_hash).order_by(SourceValidation.id.desc()):
-        detail = json.loads(validation.validation_json)
-        region = detail.get('region') or {}
-        if detail.get('status') in ('full', 'limited') and region.get('container') and region.get('heading'):
-            column_scope = {'container_selector': region['container'], 'heading_selector': region['heading']}
-            break
+    # Collection, source paths and graph projection must consume the same
+    # current executed receipt. This includes activated proposals and rejects a
+    # stale positive region when a newer validation has failed.
+    receipt = next((item for item in load_source_receipts({
+        'name': department.school.name, 'root_url': department.school.url})
+        if item['source_id'] == department.id and item['config_hash'] == config_hash), None)
+    if receipt:
+        region = receipt['region']
+        column_scope = {'container_selector': region['container'], 'heading_selector': region['heading']}
     scope_hash = _hash([config, column_scope])
     progress_key = f'column:{department.id}:{cutoff:%Y-%m}'
     saved = collection_progress(progress_key)
@@ -400,6 +568,7 @@ def scrape_department(department: Department, school_base_url: str,
             old_pages = saved.get('old_pages', 0)
             incremental_mode = saved.get('incremental_mode', incremental_mode)
             department._fetch_confirmed_empty = saved.get('confirmed_empty', False)
+            department._fetch_collection_scope = saved.get('collection_scope')
             column_scope = column_scope or saved.get('column_scope')
         else:
             # Old cursors could point at a neighboring widget. Re-read the
@@ -415,6 +584,7 @@ def scrape_department(department: Department, school_base_url: str,
             'pagination_scope_version': PAGINATION_SCOPE_VERSION,
             'scope_hash': scope_hash, 'column_scope': column_scope,
             'confirmed_empty': department._fetch_confirmed_empty, 'finished': finished,
+            'collection_scope': department._fetch_collection_scope,
             'selectors': {name: getattr(department, name) for name in
                 ('list_selector', 'title_selector', 'link_selector', 'date_selector', 'content_selector')}})
 
@@ -493,16 +663,25 @@ def scrape_department(department: Department, school_base_url: str,
             raise ParserRepairPending(queue_parser_repair(department, html))
         if region and not column_scope:
             column_scope = {'container_selector': region['container'], 'heading_selector': region['heading']}
+        elif page == 1 and not column_scope:
+            department._fetch_collection_scope = _complete_configured_page(html, page_url, config)
+            if department._fetch_collection_scope:
+                # Every visible region must be inspected even if older generic
+                # coverage marked a homepage as a fully collected column.
+                incremental_mode = False
 
         total += len(items)
         page_new = 0
         page_old = 0
+        effective_date_selector = department.date_selector or ''
+        if not any(publication_date_text(select_node(item, effective_date_selector)) for item in items):
+            effective_date_selector = infer_publication_date_selector(items) or effective_date_selector
 
         for item in items:
             # Filter before ingestion; undated entries remain eligible.
             date_text = ''
-            if department.date_selector:
-                date_elem = select_node(item, department.date_selector)
+            if effective_date_selector:
+                date_elem = select_node(item, effective_date_selector)
                 date_text = publication_date_text(date_elem)
             pub_date = parse_date(date_text)
             if pub_date and pub_date.replace(tzinfo=None) < cutoff:
@@ -516,7 +695,7 @@ def scrape_department(department: Department, school_base_url: str,
                 link = select_node(item, department.link_selector or 'a[href]')
                 _, key = article_identity(_resolve_url(page_url, link.get('href', '')) if link else '')
                 prior = bool(key and Announcement.query.filter_by(school_id=department.school_id, url_key=key).first())
-            if _process_announcement_item(item, department, school_base_url):
+            if _process_announcement_item(item, department, school_base_url, date_selector=effective_date_selector):
                 new_count += 1
                 page_new += 1
                 consecutive_existing = 0  # 有新通知 → 重置连续计数
@@ -550,11 +729,14 @@ def scrape_department(department: Department, school_base_url: str,
         else:
             consecutive_empty = 0
 
-        try:
-            next_page = _next_page_url(html, page_url, page, list_selector=list_sel, scope=column_scope)
-        except PaginationScopeError:
-            from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
-            raise ParserRepairPending(queue_parser_repair(department, html))
+        if department._fetch_collection_scope:
+            next_page = None
+        else:
+            try:
+                next_page = _next_page_url(html, page_url, page, list_selector=list_sel, scope=column_scope)
+            except PaginationScopeError:
+                from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
+                raise ParserRepairPending(queue_parser_repair(department, html))
         if not next_page:
             checkpoint_page(page_url, page, finished=True)
             break
@@ -572,7 +754,8 @@ def scrape_department(department: Department, school_base_url: str,
     # --- 更新上次抓取时间（用于下次增量抓取）---
     if total > 0 or department._fetch_confirmed_empty:
         department.last_scraped_at = datetime.utcnow()
-        record_coverage(department, cutoff)
+        if not department._fetch_collection_scope:
+            record_coverage(department, cutoff)
     db.session.commit()
 
     # --- 探测后处理：保存成功的探测结果，或恢复原始选择器 ---
@@ -696,7 +879,9 @@ def scrape_school(school: School, since_year: int | None = None,
             depts = [dept]
 
         # DAILY NEWS was a synthetic date filter, never an official source.
-        depts = [d for d in depts if d.name.upper() != 'DAILY NEWS']
+        from backend.services.source_lifecycle import states_for
+        lifecycle = states_for([d.id for d in depts])
+        depts = [d for d in depts if d.name.upper() != 'DAILY NEWS' and lifecycle[d.id] == 'active']
         # Fetch only the union of subscribed columns; an all-column subscription includes new sources.
         from backend.database.models import Subscription
         from backend.services.directory_options import directory_entries_for, expand_directory_ids

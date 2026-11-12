@@ -5,6 +5,7 @@
     const find = selector => root.querySelector(selector);
     let loaded = false, generation = 0, anchor = '', retentionLoaded = false;
     let states = {};
+    const uiMessage = value => (value || '').split(/\r?\n/).map(line => uiT(line)).join('\n');
     function element(tag, text, className) {
         const node = document.createElement(tag);
         if (text != null) node.textContent = text;
@@ -22,7 +23,7 @@
         const response = await fetch(url, {...options, signal: AbortSignal.timeout(15000)});
         let data;
         try { data = await response.json(); } catch (_) { throw new Error(uiT('记录未能加载，请稍后重试。')); }
-        if (!response.ok) throw new Error(data.error || uiT('操作未完成，请稍后重试。'));
+        if (!response.ok) throw new Error(uiMessage(data.error || uiT('操作未完成，请稍后重试。')));
         return data;
     }
     function newState(period) {
@@ -56,9 +57,9 @@
         times.append(started, element('small', uiT('结束：') + time(record.finished_at)));
         const source = element('td', null, 'scrape-log-source');
         source.append(element('strong', record.source_name), element('small', uiT('记录 #') + record.id));
-        if (record.error_message) source.append(element('p', record.error_message, 'scrape-log-message'));
+        if (record.error_message) source.append(element('p', uiMessage(record.error_message), 'scrape-log-message'));
         const status = element('td', null, 'scrape-log-result');
-        const badge = element('span', record.status_label, 'scrape-log-badge');
+        const badge = element('span', uiT(record.status_label || record.status || '未知'), 'scrape-log-badge');
         badge.dataset.status = record.status; status.append(badge);
         const counts = element('td', null, 'scrape-log-counts');
         counts.append(element('span', uiT('新增 ') + (record.new_count || 0)), element('span', uiT('检查 ') + (record.total_count || 0)));
@@ -101,7 +102,7 @@
             more.textContent = period === 'recent' ? uiT('继续加载记录') : uiT('加载更早记录');
         } catch (error) {
             if (number !== generation) return;
-            status.textContent = (state.count ? uiT('已保留 {count} 条已加载记录。',{count:state.count}) : '') + error.message;
+            status.textContent = (state.count ? uiT('已保留 {count} 条已加载记录。',{count:state.count}) : '') + uiMessage(error.message);
             more.textContent = uiT('重试加载'); more.hidden = false;
         } finally {
             state.busy = false;
@@ -112,7 +113,7 @@
             const data = await request('/api/admin/scrape-logs/retention');
             find('#logRetentionDays').value = String(data.days); retentionLoaded = true;
             find('#logRetentionStatus').textContent = '';
-        } catch (error) { find('#logRetentionStatus').textContent = error.message; }
+        } catch (error) { find('#logRetentionStatus').textContent = uiMessage(error.message); }
     }
     function reload() {
         ++generation; anchor = ''; states = {recent: newState('recent'), archive: newState('archive')};
@@ -148,8 +149,8 @@
                 headers: {'Content-Type': 'application/json'}, body: JSON.stringify({days})});
             retentionLoaded = true;
             find('#logRetentionDays').value = String(data.days);
-            find('#logRetentionStatus').textContent = data.days === 0 ? uiT('已设置为永久保留记录。') : data.message;
-        } catch (error) { find('#logRetentionStatus').textContent = uiT('未保存。') + error.message; }
+            find('#logRetentionStatus').textContent = data.days === 0 ? uiT('已设置为永久保留记录。') : uiMessage(data.message);
+        } catch (error) { find('#logRetentionStatus').textContent = uiT('未保存。') + uiMessage(error.message); }
         finally { button.disabled = false; }
     });
 })();

@@ -42,8 +42,40 @@ def unregistered_template_copy(source):
     return problems
 
 
+def _translated_key_map_spans(source):
+    """Recognize flat const maps whose every reference is a direct translation.
+
+    This deliberately leaves ambiguous bindings, mutations, key composition and
+    unwrapped reads to the ordinary warning path. It is not general JS analysis.
+    """
+    literal = '(?:' + QUOTED + ')'
+    entry = r'\s*(?:[A-Za-z_$][\w$]*|' + literal + r')\s*:\s*' + literal + r'\s*'
+    declarations = list(re.finditer(r'\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*('
+        + r'\{' + entry + r'(?:,' + entry + r')*,?\s*\})\s*;', source))
+    candidates = [m for m in declarations if HAN.search(m[2])]
+    if not candidates:
+        return []
+    masked = re.sub(r'//[^\n]*|/\*[\s\S]*?\*/|' + QUOTED + r'|`(?:\\.|[^`\\])*`',
+                    lambda match:' ' * len(match[0]), source)
+    spans = []
+    for declaration in candidates:
+        name = declaration[1]
+        if sum(m[1] == name for m in declarations) != 1:
+            continue
+        references = [m for m in re.finditer(r'(?<![\w$])' + re.escape(name) + r'(?![\w$])', masked)
+                      if not declaration.start() <= m.start() < declaration.end()]
+        def translated(reference):
+            return bool(re.search(r'\b(?:uiT|tr|t)\s*\(\s*$', masked[:reference.start()])
+                and re.match(r'\s*\[\s*[A-Za-z_$][\w$]*(?:\s*\.\s*[A-Za-z_$][\w$]*)*\s*\]\s*'
+                    + r'(?:\|\|\s*' + literal + r'\s*)?(?:\)|,)', source[reference.end():]))
+        if references and all(translated(reference) for reference in references):
+            spans.append(declaration.span(2))
+    return spans
+
+
 def unregistered_script_copy(source, catalog=None):
     problems, stack = [], []
+    translated_maps = _translated_key_map_spans(source)
     tokens = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|'+QUOTED+r'|`(?:\\.|[^`\\])*`|[()]')
     for match in tokens.finditer(source):
         raw = match[0]; prefix = source[:match.start()]
@@ -65,9 +97,24 @@ def unregistered_script_copy(source, catalog=None):
                 if HAN.search(message) and message not in catalog:
                     problems.append('Missing script UI translation: '+message)
             continue
+        # Dataset markers store the untranslated message key for later locale
+        # changes. They are not rendered copy, but must still exist in the catalog.
+        if re.search(r'\.dataset\.i18n(?:AriaLabel|Placeholder|Title|Alt)?\s*=\s*[^;\n]*$',prefix):
+            try: message=ast.literal_eval(raw)
+            except (SyntaxError,ValueError): message=''
+            if catalog is not None and HAN.search(message) and message not in catalog:
+                problems.append('Missing script UI translation: '+message)
+            continue
         # Object keys and selectors can be stable protocol identifiers. A ternary
         # value followed by ':' is *not* an object key, including on another line.
         if re.match(r'\s*:',source[match.end():]) and re.search(r'[{,]\s*$',prefix):
+            continue
+        if any(start <= match.start() < end for start, end in translated_maps):
+            if catalog is not None:
+                try: message=ast.literal_eval(raw)
+                except (SyntaxError,ValueError): message=''
+                if HAN.search(message) and message not in catalog:
+                    problems.append('Missing script UI translation: '+message)
             continue
         if raw[1:].startswith('[data-'):
             continue

@@ -306,13 +306,16 @@ def coverage_state(pages, *, branches=None, validated_sources=(), edges=()):
             hints = need_evidence(dict(page, url=url), incoming=incoming.get(url, ()),
                                   parents=pages, region=region)
         # A receipt for one list never borrows another list's sample titles.
+        from backend.services.source_identity import receipt_count_identity
         for category in hints['needs']:
             current = cell(scope, category)
-            identity = str(source_id)
+            identity = receipt_count_identity(receipt)
             if identity not in current['validated']:
                 current['validated'].append(identity)
             record = {key: receipt[key] for key in ('source_id', 'config_hash', 'content_hash')}
             record.update(url=url, region=dict(region_record) if region_record else region)
+            if receipt.get('column_observation') and identity.startswith('column:'):
+                record['column_observation'] = dict(receipt['column_observation'])
             if record not in current['validation_records']:
                 current['validation_records'].append(record)
     return {'cells': cells}

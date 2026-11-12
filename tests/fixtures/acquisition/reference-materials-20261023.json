@@ -1,0 +1,38 @@
+[
+  {
+    "file": "upc-root-20261023.html.gz",
+    "url": "https://www.upc.edu.cn/",
+    "observed_at": "2026-10-23T06:24:03.947916+00:00",
+    "raw_sha256": "9ab85ad217656ab5ccb9d41c56d4e051c021f8adebe365ea332958ac2a70688f",
+    "title": "中国石油大学",
+    "purpose": "Retained development material, not independent acceptance",
+    "browser_observation": false
+  },
+  {
+    "file": "ucass-wzws-home-20261023.html.gz",
+    "url": "https://www.ucass.edu.cn/",
+    "observed_at": "2026-10-23T06:24:06.792826+00:00",
+    "raw_sha256": "00602e8243867e604ca9aef595c75522c7d31c0dc5e4f0d2ed305c286e21321c",
+    "title": "",
+    "purpose": "Retained development material, not independent acceptance",
+    "browser_observation": false
+  },
+  {
+    "file": "upc-marxism-root-20261023.html.gz",
+    "url": "http://szjyb.upc.edu.cn/",
+    "observed_at": "2026-10-23T06:24:07.917039+00:00",
+    "raw_sha256": "d8789b0d5b377d969f00dd39f25fcd3d0d58d2d3262a8a28e645061401693f72",
+    "title": "马克思主义学院",
+    "purpose": "Retained development material, not independent acceptance",
+    "browser_observation": false
+  },
+  {
+    "file": "upc-marxism-article-20261023.html.gz",
+    "url": "http://szjyb.upc.edu.cn/2026/1022/c22394a504021/page.htm",
+    "observed_at": "2026-10-23T06:24:08.405415+00:00",
+    "raw_sha256": "90eb418326f8fb7eb7480be9fa5ba4eba4b510055dbc9448f02d3a84d2a7939c",
+    "title": "学院举办“石大师说”系列导师培训交流沙龙活动",
+    "purpose": "Retained development material, not independent acceptance",
+    "browser_observation": false
+  }
+]

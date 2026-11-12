@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-28T11:04:45.405207+00:00",
+  "school_name": "西南石油大学",
+  "role": "development_used_not_independent_acceptance",
+  "reason": "Retained SWPU task27 and material drove pager-generated rule recovery",
+  "report": "deploy/STRUCTURE_PAGER_RULE_RECOVERY_20261028.md",
+  "product_hashes": {
+    "backend/services/source_onboarding.py": "5dfe28374209502ddce56b70243bef8cc6704221a8ddc3de75dfdc9e46de2c23",
+    "backend/services/source_validation.py": "0cc0d6ebde1c94aa8994c49492bd7215c65759465d822d545c2f591c23a0ceff"
+  },
+  "source_validation_version": 9,
+  "old_first_native_run_preserved": true,
+  "independent_acceptance_for_this_change": false,
+  "predecessor": "tests/acceptance/swpu_development_use_20261028.json"
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "url": "https://www.cupk.edu.cn/xszz/",
+    "status": 200,
+    "observed_at": "2026-10-25T06:50:46.001048+00:00",
+    "body_file": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9.html.gz",
+    "body_sha256": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9"
+  },
+  {
+    "url": "https://www.cupk.edu.cn/xszz/js/home.js",
+    "status": 200,
+    "observed_at": "2026-10-25T06:50:46.669860+00:00",
+    "body_file": "04453c08831a956895183038ce5e31fca202bbd77054defa7d86de154468b6e0.js.gz",
+    "body_sha256": "04453c08831a956895183038ce5e31fca202bbd77054defa7d86de154468b6e0"
+  }
+]

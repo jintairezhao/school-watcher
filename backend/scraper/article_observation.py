@@ -38,6 +38,26 @@ def compact_publication_date(value):
         return None
 
 
+def date_with_editorial_metadata(value):
+    """A short date-first publication row with explicit author/source fields.
+
+    This supplies header evidence only; callers still bind it to a unique
+    visible title and a separate body. Event dates and prose remain excluded.
+    """
+    from backend.scraper.date_elements import NON_PUBLICATION,TIME_RANGE
+    text=' '.join((value or '').split())
+    dates=list(DATE.finditer(text))
+    if (not text or len(text)>220 or len(dates)!=1 or dates[0].start()!=0
+            or NON_PUBLICATION.search(text) or TIME_RANGE.search(text)
+            or not EDITOR.match(text[dates[0].end():].lstrip())):
+        return False
+    try:
+        datetime(*map(int,dates[0].groups()))
+        return True
+    except ValueError:
+        return False
+
+
 def article_node_state(node):
     """Read visibility/loading on this material and its enclosing region."""
     for current in [node, *node.parents]:
@@ -149,6 +169,10 @@ def _scope_metadata(scope, heading):
             continue
         semantic = node.get('itemprop') == 'datePublished'
         text = (node.get('datetime') or node.get('content') or node.get_text(' ',strip=True)) if semantic else node.get_text(' ',strip=True)
+        # CMS indentation inside text nodes is layout, not a long publication
+        # statement. Keep the length guard on visible text; the archived HTML
+        # and the original metadata node remain unchanged for evidence.
+        text = ' '.join(text.split())
         if node.find_parent('a') or node.select('a[href]') and len(text) < 25:
             continue  # Back/print/share controls are not prose boundaries.
         if node.name in ('p','td') and (NON_PUBLICATION.search(text) or len(text)>180):
@@ -159,10 +183,11 @@ def _scope_metadata(scope, heading):
         date_only = bool(DATE.fullmatch(text.strip()))
         parent_text = node.parent.get_text(' ',strip=True)
         editorial = date_only and len(parent_text)<220 and len(DATE.findall(parent_text))==1 and EDITOR.search(parent_text)
-        if node.name in ('p','td') and not (explicit or editorial or semantic or date_only):
+        editorial_line = date_with_editorial_metadata(text)
+        if node.name in ('p','td') and not (explicit or editorial or editorial_line or semantic or date_only):
             prose = True; break
         dates = len(DATE.findall(text)) + bool(compact_publication_date(text))
-        if dates==1 and (explicit or editorial or semantic):
+        if dates==1 and (explicit or editorial or editorial_line or semantic):
             candidates.append((node,text))
     return candidates, prose
 

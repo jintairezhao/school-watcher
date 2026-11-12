@@ -128,12 +128,29 @@ def check():
                         seen = open_notice(LOGIN_NOTICE, 'login-notice')
                         assert seen == LOGIN_REQUIRED_MESSAGE, seen
                         assert GENERIC_FAILURE not in seen, seen
+                        assert_failure_stays_settled(seen)
 
                     def broken_read_still_names_the_site_problem():
                         seen = open_notice(TIMEOUT_NOTICE, 'timeout-notice')
                         assert seen == TIMEOUT_ERROR, seen
                         assert seen != LOGIN_REQUIRED_MESSAGE, seen
                         assert GENERIC_FAILURE not in seen, seen
+                        assert_failure_stays_settled(seen)
+
+                    def assert_failure_stays_settled(reason):
+                        panel = page.locator('[data-content-id]').last
+                        expect(panel).to_have_attribute('data-load-state', 'failed')
+                        expect(panel.locator('.body-loader-placeholder')).to_be_hidden()
+                        expect(panel.locator('.body-loader-content')).to_have_attribute('aria-busy', 'false')
+                        expect(panel.locator('.body-loader-retry')).to_be_visible()
+                        # A later localized fragment refresh must not restore the
+                        # old loading message on a completed failed read.
+                        page.evaluate('window.I18n.apply()')
+                        expect(panel.locator('.body-loader-status')).to_have_text(reason)
+                        page.evaluate("window.I18n.setLocale('en')")
+                        translated = page.evaluate('(reason) => window.I18n.t(reason)', reason)
+                        expect(panel.locator('.body-loader-status')).to_have_text(translated)
+                        expect(panel.locator('.body-loader-placeholder')).to_be_hidden()
 
                     # Opening a notice POSTs and would queue a fresh read, which
                     # puts the panel back to "正在读取官网正文" and hides the finished

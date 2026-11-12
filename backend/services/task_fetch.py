@@ -1,5 +1,7 @@
 """Bridge pure acquisition to the one durable task queue and bounded replay files."""
 from dataclasses import replace
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import json
@@ -11,6 +13,147 @@ from backend.scraper.acquisition import FetchRequest, FetchResult
 from backend.scraper.acquisition.browser_client import BrowserClient
 from backend.services import tasks
 from backend.services.runtime_leases import reserve_origin, release_origin, renew_origin
+
+_collection_observation = ContextVar('collection_fetch_observation', default=None)
+
+
+@contextmanager
+def collection_observation_context(department, log):
+    """Freeze the actual collecting configuration before reading any resource."""
+    with _source_observation_context(department, 'collect', log):
+        yield
+
+
+@contextmanager
+def source_health_observation_context(department):
+    """Attribute a due health read without inventing a collection run/log."""
+    with _source_observation_context(department, 'source_health'):
+        yield
+
+
+@contextmanager
+def _source_observation_context(department, task_kind, log=None):
+    from backend.services.source_governance import source_config, _hash
+    handle = tasks.current_execution() or {}
+    value = None
+    if handle.get('kind') == task_kind and (task_kind == 'source_health' or log is not None and log.id):
+        config = source_config(department)
+        value = dict(schema_version=1, log_id=log.id if log is not None else None, task_id=handle['id'],
+            task_generation=handle['generation'], school_id=department.school_id,
+            source_id=department.id, config_hash=_hash(config), config=config)
+        if task_kind != 'collect':
+            value['task_kind'] = task_kind
+    token = _collection_observation.set(value)
+    try:
+        yield
+    finally:
+        _collection_observation.reset(token)
+
+
+def _collection_identity():
+    value = _collection_observation.get()
+    return {key: value[key] for key in ('school_id', 'source_id', 'config_hash')} if value else None
+
+
+def _cache_key(request):
+    identity = _collection_identity()
+    if identity is None:
+        return request_key(request)
+    return sha256(json.dumps([request_key(request), identity], sort_keys=True).encode()).hexdigest()
+
+
+def collection_observation_path(log):
+    """The existing log/task identity locates optional, retention-bound metadata."""
+    identifiers = (log.task_id, log.task_generation, log.id)
+    if not all(type(value) is int and value > 0 for value in identifiers):
+        return None
+    return evidence_root() / f'{log.task_id}-{log.task_generation}-observations-{log.id}.json'
+
+
+def read_collection_observations(log):
+    path = collection_observation_path(log)
+    if path is None:
+        return None
+    try:
+        if path.is_symlink() or path.stat().st_size > 2 * 1024 * 1024:
+            return None
+        data = json.loads(path.read_text(encoding='utf-8'))
+        context = data['collection']
+        from backend.services.source_governance import _hash
+        if not isinstance(data, dict) or not isinstance(context, dict) or not isinstance(data.get('observations'), list):
+            return None
+        if (data.get('schema_version') != 1 or context.get('school_id') != log.school_id
+                or context.get('log_id') != log.id or context.get('task_id') != log.task_id
+                or context.get('task_generation') != log.task_generation
+                or context.get('config_hash') != _hash(context.get('config'))):
+            return None
+        return data
+    except (OSError, ValueError, TypeError, KeyError):
+        return None
+
+
+def record_collection_observation(request, result, *, replay_ref=None):
+    """Keep response metadata beside existing replay files, without copying DOM."""
+    context = _collection_observation.get()
+    handle = tasks.current_execution()
+    if not context or not handle or (not result.observed_at and not replay_ref):
+        return
+    if request.source_id and str(request.source_id) != str(context['source_id']):
+        return  # A read explicitly attributed to another source is not ours.
+    tasks.assert_owned(handle)
+    from backend.services.collection_access import save_entry_observation
+    save_entry_observation(context, request, result, replay_ref=replay_ref)
+    if context['log_id'] is None:
+        return  # Health evidence belongs to the existing entry row, not a fake ScrapeLog.
+    from types import SimpleNamespace
+    path = collection_observation_path(SimpleNamespace(id=context['log_id'],
+        task_id=context['task_id'], task_generation=context['task_generation']))
+    root = evidence_root()
+    root.mkdir(parents=True, exist_ok=True)
+    observation = dict(request_url=request.url, final_url=result.final_url,
+        purpose=request.purpose, embedded_pdf=bool(request.policy.get('embedded_pdf_child')),
+        is_configured_entry=request.url == context['config']['list_url'],
+        request_source_id=request.source_id, observed_at=result.observed_at,
+        transport=result.transport, status=result.status, outcome=result.outcome,
+        error_code=result.error_code,
+        html_sha256=sha256(result.html.encode('utf-8')).hexdigest() if result.html else None)
+    if replay_ref:
+        observation['cache_file'] = replay_ref
+    from filelock import FileLock
+    with FileLock(str(root) + '.lock', timeout=30):
+        tasks.assert_owned(handle)
+        if path.exists():
+            try:
+                data = json.loads(path.read_text(encoding='utf-8'))
+                if (not isinstance(data, dict) or data.get('collection') != context
+                        or not isinstance(data.get('observations'), list)):
+                    return
+            except (OSError, ValueError, TypeError):
+                return
+        else:
+            data = dict(schema_version=1, collection=context, observations=[], reused_materials=[], omitted_records=0)
+        field = 'reused_materials' if replay_ref else 'observations'
+        entries = data.setdefault(field, [])
+        if not isinstance(entries, list):
+            return
+        if observation in entries:
+            return
+        entries.append(observation)
+        if len(entries) > 500:
+            data['omitted_records'] = data.get('omitted_records', 0) + len(entries) - 500
+            data[field] = entries[-500:]
+        payload = json.dumps(data, ensure_ascii=False)
+        if len(payload.encode('utf-8')) > 2 * 1024 * 1024:
+            return
+        prune_fetch_evidence(_locked=True)
+        from backend.services.storage_policy import capacity_bytes
+        capacity = capacity_bytes('fetch_cache_mb', 'FETCH_EVIDENCE_BYTES', 100 * 1048576)
+        occupied = sum(p.stat().st_size for p in root.iterdir() if p.is_file() and p.name != path.name)
+        if capacity and occupied + len(payload.encode('utf-8')) > capacity:
+            return
+        temporary = root / ('.' + handle['token'] + '.tmp')
+        temporary.write_text(payload, encoding='utf-8')
+        temporary.replace(path)
 
 
 def evidence_root():
@@ -31,36 +174,53 @@ def cache_lookup(request):
         return None
     handle['_fetch_request'] = request
     pending = handle.get('checkpoint', {}).get('browser') or {}
-    if pending.get('original_key') == request_key(request):
+    if (pending.get('original_key') == request_key(request)
+            and pending.get('collection_context') == _collection_identity()):
         from backend.scraper.acquisition import classify_result
         raw = browser_dispatch(FetchRequest.from_dict(pending['request']))
         result = raw if raw.outcome in ('busy', 'unavailable', 'network_error', 'needs_manual') else classify_result(request, raw)
+        from backend.scraper.acquisition.coordinator import complete_observation
+        result = complete_observation(request, result)
         if result.replayable:
             cache_store(request, result)
         return result
-    entry = (handle.get('checkpoint', {}).get('completed_fetches') or {}).get(request_key(request))
+    entry = (handle.get('checkpoint', {}).get('completed_fetches') or {}).get(_cache_key(request))
     if not entry or not isinstance(entry, str) or Path(entry).name != entry:
         return None
     path = evidence_root() / entry
     try:
         if path.stat().st_size > 12 * 1024 * 1024:
             return None
-        result = FetchResult.from_dict(json.loads(path.read_text(encoding='utf-8')))
-        return result if result.replayable else None
+        payload = json.loads(path.read_text(encoding='utf-8'))
+        if _collection_identity() is not None and payload.get('collection_context') != _collection_identity():
+            return None
+        result = FetchResult.from_dict(payload)
+        if not result.replayable:
+            return None
     except (OSError, ValueError, TypeError):
         return None
+    # A metadata-write error must not masquerade as a cache miss and spend an
+    # extra website request. Surface it through the normal task error handling.
+    record_collection_observation(request, result, replay_ref=entry)
+    return result
 
 
 def cache_store(request, result):
     handle = tasks.current_execution()
     if not handle or not result.replayable:
         return
-    key = request_key(request)
+    key = _cache_key(request)
     root = evidence_root()
     root.mkdir(parents=True, exist_ok=True)
     name = f"{handle['id']}-{handle['generation']}-{key}.json"
-    temporary = root / (name + '.' + handle['token'] + '.tmp')
-    payload = json.dumps(result.to_dict(), ensure_ascii=False)
+    # The root lock serializes writes, so one short token-scoped name is
+    # sufficient. Repeating the request digest can exceed Windows' path limit
+    # even when the final cache path itself is valid.
+    temporary = root / ('.' + handle['token'] + '.tmp')
+    value = result.to_dict()
+    if _collection_identity() is not None:
+        value['collection_context'] = _collection_identity()
+    payload = json.dumps(value, ensure_ascii=False)
     if len(payload.encode('utf-8')) > 12 * 1024 * 1024:
         return
     from filelock import FileLock
@@ -90,13 +250,17 @@ def browser_dispatch(request):
     source_id = request.source_id or str(handle.get('payload', {}).get('department_id') or handle['identity'])
     request = replace(request, source_id=source_id)
     key = request_key(request)
-    execution_id = sha256(f"{handle['id']}:{handle['generation']}:{handle.get('attempts', 0)}:{key}".encode()).hexdigest()
+    collection_identity = _collection_identity()
+    suffix = ':' + collection_identity['config_hash'] if collection_identity else ''
+    execution_id = sha256(f"{handle['id']}:{handle['generation']}:{handle.get('attempts', 0)}:{key}{suffix}".encode()).hexdigest()
     request = replace(request, request_id=execution_id)
     data = dict(handle.get('checkpoint') or {})
     pending = data.get('browser') or {}
-    if pending.get('key') != key or pending.get('request_id') != execution_id:
+    if (pending.get('key') != key or pending.get('request_id') != execution_id
+            or pending.get('collection_context') != collection_identity):
         pending = {'key': key, 'request_id': execution_id, 'request': request.to_dict(), 'submitted': False,
-                   'original_key': request_key(handle.get('_fetch_request') or request)}
+                   'original_key': request_key(handle.get('_fetch_request') or request),
+                   'collection_context': collection_identity}
     data['browser'] = pending
     if handle['capability'] != 'browser':
         tasks.defer(capability='browser', phase='render', checkpoint=data, reason='等待读取动态网页')

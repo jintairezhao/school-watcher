@@ -42,6 +42,18 @@ def progress_message(ann):
     return ''
 
 
+def reader_error(ann):
+    """Keep technical evidence stored, but explain the reading failure plainly."""
+    error = ann.content_error or ''
+    if error in {
+            '未找到配置要求的目标内容，需要核对来源规则',
+            '来源的内容识别规则需要核对',
+            '正文仍在适配中，可先打开官网原文',
+            '目标正文区域在渲染后仍为空，正文材料尚不可用'}:
+        return '暂时没能提取这篇文章的正文，可以重新加载，或打开官网原文阅读。'
+    return error
+
+
 def request_content(ann):
     _discard_navigation_cache(ann)
     if ann.content_cached_at or ann.content_html:
@@ -86,7 +98,7 @@ def fetch_content(ann_id):
     try:
         html = _fetch_html(url, raise_fetch_errors=True, purpose='article', source_id='content:' + str(ann_id),
                            readiness_selector=', '.join(dict.fromkeys(configured)),
-                           policy={'expected_article_title':title})
+                           policy={'expected_article_title': title, 'article_selector_hint': True})
         final_url = getattr(html, 'final_url', url)
         attachment = getattr(getattr(html, 'result', None), 'attachment', {})
         if attachment.get('verified'):

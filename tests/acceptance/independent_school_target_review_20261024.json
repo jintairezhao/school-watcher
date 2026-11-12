@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "school_name": "中国科学院大学",
+  "source_question_id": "call_3906e3f9e18b49399b87d4667d1df278",
+  "user_reply": "7项全部纳入必找，名称和地址正确",
+  "reviewer": "user",
+  "review_method": "explicit_batch_required_target_and_name_address_confirmation",
+  "recorded_at_utc": "2026-10-24T13:15:06.690869+00:00",
+  "reference_record": ".local/structure-facts-20261021/ucas-notification-curation-20261024/references.json",
+  "reference_sha256": "0356f7c933f99f5f19d3b319b187f9dcbba862f1d855c08f28a861becf40edfc",
+  "targets": [
+    {
+      "number": 1,
+      "observation_id": "ucas-notice-observation:1c256280cc1d7be9b7e5",
+      "scope_id": "ucas-required-scope:math-notices",
+      "group": "数学科学学院",
+      "column_name": "院内通知",
+      "url": "https://math.ucas.ac.cn/index.php/zh-CN/yntz",
+      "required": true,
+      "name_and_address_correct": true
+    },
+    {
+      "number": 2,
+      "observation_id": "ucas-notice-observation:383f352ef110c6d32df3",
+      "scope_id": "ucas-required-scope:earth-notices",
+      "group": "地球与行星科学学院",
+      "column_name": "通知公告",
+      "url": "https://earth.ucas.ac.cn/index.php/zh-CN/xwgg/tzgg",
+      "required": true,
+      "name_and_address_correct": true
+    },
+    {
+      "number": 3,
+      "observation_id": "ucas-notice-observation:28f6a618313b4a58c777",
+      "scope_id": "ucas-required-scope:undergraduate-education-notices",
+      "group": "本科教育网／本科部",
+      "column_name": "通知公告",
+      "url": "https://bkjy.ucas.ac.cn/index.php/tzgg",
+      "required": true,
+      "name_and_address_correct": true
+    },
+    {
+      "number": 4,
+      "observation_id": "ucas-notice-observation:d4a24605df34cf608e68",
+      "scope_id": "ucas-required-scope:graduate-education-notices",
+      "group": "教务部（研究生教育范围候选）",
+      "column_name": "通知公告",
+      "url": "https://jwb.ucas.ac.cn/index.php/zh/tzgg",
+      "required": true,
+      "name_and_address_correct": true
+    },
+    {
+      "number": 5,
+      "observation_id": "ucas-notice-observation:d1762f37c8d52f2c9fce",
+      "scope_id": "ucas-required-scope:undergraduate-admission-notices",
+      "group": "本科招生",
+      "column_name": "通知公告",
+      "url": "https://admission.ucas.ac.cn/ShowArticle/newslist1/0659c1ad-c6df-4c2a-8c53-dacb1c2b69e8",
+      "required": true,
+      "name_and_address_correct": true
+    },
+    {
+      "number": 6,
+      "observation_id": "ucas-notice-observation:d5e1a1d33c5223aa4971",
+      "scope_id": "ucas-required-scope:graduate-admission-notices",
+      "group": "硕士招生",
+      "column_name": "通知公告",
+      "url": "https://admission.ucas.ac.cn/ShowArticle/newslist/4c7e0e9f-2311-47a0-8f12-b0ec992078ac",
+      "required": true,
+      "name_and_address_correct": true
+    },
+    {
+      "number": 7,
+      "observation_id": "ucas-notice-observation:3cc905b2d0bab98e6d41",
+      "scope_id": "ucas-required-scope:graduate-admission-notices",
+      "group": "博士招生",
+      "column_name": "通知公告",
+      "url": "https://admission.ucas.ac.cn/ShowArticle/newslist/94e6b364-4d3b-4e7c-9eea-37bb18b5ace0",
+      "required": true,
+      "name_and_address_correct": true
+    }
+  ],
+  "human_confirmed_concrete_targets": 7,
+  "all_important_targets_in_scope_exhaustively_known": false,
+  "reviewer_independent_site_visit": "not_stated",
+  "native_installation_receipts": 0,
+  "certified_branch_episodes": 0,
+  "holdout_certified": false,
+  "threshold_gate": "insufficient_evidence_no_evaluator"
+}

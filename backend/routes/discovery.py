@@ -41,6 +41,30 @@ def monitor_data(school_id):
     return response
 
 
+@bp.route('/api/schools/<int:school_id>/structure-snapshot')
+@login_required
+def structure_snapshot_data(school_id):
+    from backend.services.discovery_monitor import snapshot
+    from backend.services.structure_snapshot import read_structure, graph_projection, transport_update
+    school = _monitor_school(school_id)
+    scope = request.args.get('scope', 'connected')
+    if scope not in ('connected', 'exploration'):
+        return jsonify(error='不支持的结构视图'), 400
+    try:
+        capture = read_structure(school)
+        _monitor_school(school_id)
+        graph = graph_projection(capture, school, scope=scope)
+        value = snapshot(school, capture=capture)
+        value.pop('nodes'); value.pop('relations')
+        value.update(transport_update(graph, school_id=school.id, since=request.args.get('since')))
+    except (OSError, RuntimeError) as exc:
+        logger.warning('Structure snapshot unavailable for school %s: %s', school_id, type(exc).__name__)
+        return jsonify(error='结构正在更新，请稍后重试'), 503
+    response = jsonify(value)
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
 @bp.route('/api/schools/<int:school_id>/discovery-monitor/control', methods=['POST'])
 @admin_required
 def monitor_control(school_id):

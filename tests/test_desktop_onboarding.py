@@ -113,7 +113,7 @@ class FirstSubscriptionTests(unittest.TestCase):
         self.assertEqual(self.client.get(f'/api/subscriptions/{other.id}/discovery').status_code, 403)
         self.assertEqual(self.client.post(f'/api/subscriptions/{other.id}/discovery', headers=self.headers).status_code, 403)
 
-    def test_progress_renders_official_path_references_after_a_column_is_added(self):
+    def test_unverified_legacy_path_is_not_promoted_to_official_evidence(self):
         from types import SimpleNamespace
         from backend.database.db import db
         from backend.database.models import Department
@@ -128,8 +128,8 @@ class FirstSubscriptionTests(unittest.TestCase):
         with patch('backend.services.runtime_catalog.relationships_for', return_value=relationships):
             response = self.client.get(f'/api/subscriptions/{self.school.id}/discovery')
         self.assertEqual(response.status_code, 200)
-        self.assertIn('院系设置', response.json['choices_html'])
-        self.assertIn(f'/schools/{self.school.id}/structure', response.json['choices_html'])
+        self.assertNotIn('院系设置', response.json['choices_html'])
+        self.assertIn('培训招生', response.json['choices_html'])
 
     def test_pending_columns_and_partial_ai_success_are_explained(self):
         from backend.database.db import db

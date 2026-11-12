@@ -209,7 +209,8 @@ class ExplorationTests(unittest.TestCase):
         reference = g._snapshot(html, ROOT+'units.html', role='structure')
         path = {'unit_name': '示例学院', 'references': [{'url': reference['url'], 'content_hash': reference['hash']}]}
         inventory = MagicMock()
-        inventory.report.return_value = {'pages': []}
+        inventory.report.return_value = {'site': {
+            'site_key': g.site_key(ROOT), 'name': '示例大学', 'root_url': ROOT}, 'pages': []}
         inventory.snapshot.return_value = ''
         with patch('backend.services.source_relationships.SourceRelationships') as relation, \
              patch('backend.scraper.acquisition.fetch_or_raise', side_effect=self.transport):
@@ -333,7 +334,7 @@ class ExplorationTests(unittest.TestCase):
         from backend.services.tasks import TaskDeferred
         from backend.services.source_exploration import references
         home = '<title>示例大学</title><a href="/notices/">通知公告</a>'
-        listing = '<title>示例大学通知公告</title>' + LIST
+        listing = '<title>示例大学</title>' + LIST
         old_bundle = json.loads(self.p.evidence_json)
         old_bundle['list'] = g._snapshot(home, ROOT)
         self.p.evidence_json = g._json(old_bundle); self.p.evidence_hash = g._hash(old_bundle); db.session.commit()

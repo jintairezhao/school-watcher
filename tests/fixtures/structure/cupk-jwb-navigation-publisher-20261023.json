@@ -1,0 +1,117 @@
+{
+  "scope": "Exact declared homepage bytes plus selected unchanged current page/roster/receipt fields; unrelated feeds and navigation links omitted. This is development material, not an independent threshold sample.",
+  "body_file": "cupk-jwb-home-20261023.html.gz",
+  "body_sha256": "90abe410c81079d102d59df5e9a2c4ec0adf7d1241f978a624b4ce6067be05db",
+  "captured_at": "2026-10-23T11:40:39.003343+00:00",
+  "site": {
+    "site_key": "d4d8ca3b35408034cbb3",
+    "name": "中国石油大学（北京）克拉玛依校区",
+    "root_url": "https://www.cupk.edu.cn/",
+    "state": "pending",
+    "updated_at": "2026-10-23T11:46:11+00:00",
+    "review_state": "unverified"
+  },
+  "pages": [
+    {
+      "url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "final_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "title": "中国石油大学（北京）克拉玛依校区",
+      "label": "组织机构",
+      "state": "fetched",
+      "kind": "directory",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "checked_at": "2026-10-23T04:48:43.584600+00:00",
+      "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"d4d8ca3b35408034cbb3\\\", \\\"reference_url\\\": \\\"https://www.cupk.edu.cn/c/2017-04-21/485097.shtml\\\", \\\"final_url\\\": \\\"https://www.cupk.edu.cn/c/2017-04-21/485097.shtml\\\", \\\"content_hash\\\": \\\"03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"中国石油大学（北京）克拉玛依校区\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\", \"site_navigation_evidence:{\\\"site_key\\\": \\\"d4d8ca3b35408034cbb3\\\", \\\"reference_url\\\": \\\"https://www.cupk.edu.cn/c/2017-04-21/485097.shtml\\\", \\\"final_url\\\": \\\"https://www.cupk.edu.cn/c/2017-04-21/485097.shtml\\\", \\\"content_hash\\\": \\\"03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7\\\", \\\"links\\\": []}\"]"
+    },
+    {
+      "url": "https://www.cupk.edu.cn/jwb/",
+      "final_url": "https://www.cupk.edu.cn/jwb/",
+      "title": "中国石油大学（北京）克拉玛依校区教务部",
+      "label": "教务部",
+      "state": "fetched",
+      "kind": "unit",
+      "content_hash": "90abe410c81079d102d59df5e9a2c4ec0adf7d1241f978a624b4ce6067be05db",
+      "checked_at": "2026-10-23T11:40:39.003343+00:00",
+      "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"d4d8ca3b35408034cbb3\\\", \\\"reference_url\\\": \\\"https://www.cupk.edu.cn/jwb/\\\", \\\"final_url\\\": \\\"https://www.cupk.edu.cn/jwb/\\\", \\\"content_hash\\\": \\\"90abe410c81079d102d59df5e9a2c4ec0adf7d1241f978a624b4ce6067be05db\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"中国石油大学（北京）克拉玛依校区教务部\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\", \"site_navigation_evidence:{\\\"site_key\\\": \\\"d4d8ca3b35408034cbb3\\\", \\\"reference_url\\\": \\\"https://www.cupk.edu.cn/jwb/\\\", \\\"final_url\\\": \\\"https://www.cupk.edu.cn/jwb/\\\", \\\"content_hash\\\": \\\"90abe410c81079d102d59df5e9a2c4ec0adf7d1241f978a624b4ce6067be05db\\\", \\\"links\\\": []}\"]",
+      "navigation_edges": [
+        {
+          "parent_url": "https://www.cupk.edu.cn/jwb/",
+          "target_url": "https://www.cupk.edu.cn/jwb/jcxx/",
+          "label": "教材信息",
+          "kind": "navigation",
+          "path_json": "[\"教育教学\"]",
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > a:nth-of-type(6)",
+          "decision": "follow",
+          "content_hash": "90abe410c81079d102d59df5e9a2c4ec0adf7d1241f978a624b4ce6067be05db",
+          "observed_at": "2026-10-23T11:46:09+00:00"
+        }
+      ]
+    }
+  ],
+  "records": [
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "6271db18cc737c006535ba28",
+      "name": "组织机构",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "parent_key": "",
+      "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "locator": "document",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "relation": "page_identity",
+      "observed_at": "2026-10-23T05:22:22+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "eca2dfe015240b351ba95455",
+      "name": "教务部",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/jwb/",
+      "parent_key": "6271db18cc737c006535ba28",
+      "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(5) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "relation": "directory_entry",
+      "observed_at": "2026-10-23T05:22:22+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "eca2dfe015240b351ba95455",
+      "name": "教务部",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/jwb/",
+      "parent_key": "",
+      "reference_url": "https://www.cupk.edu.cn/jwb/",
+      "locator": "document",
+      "content_hash": "90abe410c81079d102d59df5e9a2c4ec0adf7d1241f978a624b4ce6067be05db",
+      "relation": "page_identity",
+      "observed_at": "2026-10-23T11:46:09+00:00"
+    }
+  ],
+  "source": {
+    "id": 1317,
+    "school_id": 1,
+    "name": "教材信息",
+    "list_url": "https://www.cupk.edu.cn/jwb/jcxx/",
+    "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(li.middleNotice__notice--list)",
+    "title_selector": "a",
+    "link_selector": "a",
+    "date_selector": "span.middleNotice--dates",
+    "content_selector": "div.c-main__right",
+    "group_name": ""
+  },
+  "receipt": {
+    "source_id": 1317,
+    "url": "https://www.cupk.edu.cn/jwb/jcxx/",
+    "content_hash": "e87047624fbc70433b1500738430f5eddc00cfc9966c816e468f90c666eeb37a",
+    "receipt_id": "native:347",
+    "config_hash": "8646af50f6b7a83017e2da483d033e39fb413e6a8d62c24321795dbe9855b7d8",
+    "region": {
+      "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3)",
+      "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(2)",
+      "name": "教材信息"
+    }
+  },
+  "home": "https://www.cupk.edu.cn/jwb/"
+}

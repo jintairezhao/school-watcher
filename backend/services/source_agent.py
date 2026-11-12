@@ -4,6 +4,7 @@ The onboarding worker owns the observe/execute/repair loop. This module keeps
 model decisions replayable across worker restarts and within the shared budget.
 """
 from backend.services import tasks
+from shared.source_limits import MAX_SELECTOR_CHARS
 
 
 SELECTORS = ('container_selector', 'heading_selector', 'list_selector',
@@ -102,7 +103,7 @@ def validation_feedback(column, codes, records=(), *, execution=None, articles=N
               'codes': list(dict.fromkeys(str(code)[:100] for code in codes))[:10]}
     for field in SELECTORS:
         if isinstance(column.get(field), str):
-            result[field] = column[field][:500]
+            result[field] = column[field][:MAX_SELECTOR_CHARS]
     result['sample_records'] = [{key: str(record.get(key) or '')[:limit]
         for key, limit in (('title', 200), ('url', 2000), ('date', 64))}
         for record in list(records)[:3]]

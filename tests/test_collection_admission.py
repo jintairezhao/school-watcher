@@ -1,5 +1,6 @@
 """Reader visits share a timed collection gate; only admins can force updates."""
 import sys
+import json
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -76,7 +77,7 @@ class CollectionAdmissionTests(unittest.TestCase):
             response = self.sync({'manual': True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()['scheduled'], 0)
-        self.assertFalse(response.get_json()['tracked'])
+        self.assertTrue(response.get_json()['tracked'])  # The omission reason is now durably tracked.
         self.assertEqual(BackgroundTask.query.count(), 0)
 
     def test_expired_or_never_checked_sources_are_queued_with_subscription_isolation(self):
@@ -118,7 +119,7 @@ class CollectionAdmissionTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.sync().get_json()['scheduled'], 1)
 
-    def test_fresh_visit_does_not_replace_finished_tracking_pointer(self):
+    def test_fresh_visit_tracks_no_new_batch_without_touching_finished_task(self):
         self.sync()
         pointer = AppConfig.query.filter_by(key=f'inbox_refresh:user:{self.reader_id}').one()
         before = pointer.value
@@ -126,8 +127,12 @@ class CollectionAdmissionTests(unittest.TestCase):
         task.result = {'new_count': 2}; db.session.commit()
         data = self.sync().get_json()
         db.session.refresh(pointer)
-        self.assertEqual(pointer.value, before)
-        self.assertEqual((data['scheduled'], data['done'], data['new_count']), (0, 1, 2))
+        self.assertEqual(json.loads(pointer.value)['department_ids'], [])
+        self.assertEqual((data['scheduled'], data['scope_summary']['batch_total']), (0, 0))
+        self.assertEqual([(row['id'], row['state'], row['new_count']) for row in data['outside_batch']],
+                         [(self.dept_id, 'done', 2)])
+        db.session.refresh(task)
+        self.assertEqual((task.state, task.result), ('done', {'new_count':2}))
 
     def test_active_shared_job_is_not_reordered_or_retried_by_reader(self):
         task = tasks.enqueue('collect', self.dept_id, {'school_id': self.school_id,

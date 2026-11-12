@@ -481,6 +481,8 @@ def run_window(runtime, smoke_test=False):
                     time.sleep(.05)
                 if window.native is None or not window.native.IsHandleCreated:
                     raise RuntimeError('窗口初始化超时')
+                from desktop.downloads import install_download_location
+                install_download_location(window, runtime.data_dir)
                 from desktop.window_bounds import install_work_area, install_browser_fullscreen
                 install_work_area(window)
                 from urllib.parse import urlsplit

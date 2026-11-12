@@ -23,6 +23,71 @@ def section(name, start, count=4, self_anchors=False):
 
 
 class PublicationListTests(unittest.TestCase):
+    def table_with_pager(self, pager, *, article_marker=''):
+        rows=''.join('<tr><td'+article_marker+'><a href="/info/1001/'+str(i)+'.htm">'
+            '关于本学期面向全体学生组织专业实验课程补选报名及教学安排调整的通知'+str(i)+
+            '</a></td><td><span>2026-09-18</span></td></tr>' for i in range(3))
+        return '<section><h2>招生通知</h2><table class="results">'+rows+pager+'</table></section>'
+
+    def assert_executable_article_rows(self, html):
+        from backend.services.source_governance import _extract
+        feeds=publication_lists(html,URL+'admission/list.htm')
+        expected={URL+'info/1001/'+str(i)+'.htm' for i in range(3)}
+        matches=[f for f in feeds if set(f['article_urls'])==expected]
+        self.assertTrue(matches,'The observed article list must remain discoverable')
+        for feed in matches:
+            _,items,records,errors=_extract(dict(feed,list_url=URL+'admission/list.htm'),
+                {'url':URL+'admission/list.htm'},html=html)
+            self.assertEqual(len(items),3,'The executable collector rule must exclude the pager row')
+            self.assertEqual({r['url'] for r in records},expected)
+            self.assertEqual(errors,[])
+
+    def test_generated_table_rules_exclude_disabled_pager_controls(self):
+        for text in ('共3条 1/1 首页 上页 下页 尾页',
+                     'Page 1 of 1 First Previous Next Last'):
+            with self.subTest(pager=text):
+                html=self.table_with_pager('<tr><td colspan="2"><span>'+text+'</span></td></tr>')
+                self.assert_executable_article_rows(html)
+
+    def test_generated_table_rules_preserve_linked_pager_as_separate_evidence(self):
+        pager=('<tr><td colspan="2"><div class="pagination">Page 1 of 2 '
+            '<a href="list.htm">First</a><a href="list2.htm">Next</a>'
+            '<a href="list2.htm">Last</a></div></td></tr>')
+        html=self.table_with_pager(pager)
+        self.assert_executable_article_rows(html)
+        self.assertEqual(len(BeautifulSoup(html,'lxml').select('.pagination a[href]')),3)
+
+    def test_pager_markers_and_words_do_not_hide_article_content(self):
+        html=self.table_with_pager('',article_marker=' class="pager"')
+        html=html.replace('报名及教学安排调整的通知0','报名及教学安排调整的通知0：共3条 1/1 首页 上页 下页 尾页说明')
+        self.assert_executable_article_rows(html)
+
+    def test_saved_pager_exclusion_survives_new_article_rows(self):
+        from backend.services.source_governance import _extract
+        pager='<tr><td colspan="2">共3条 1/1 首页 上页 下页 尾页</td></tr>'
+        html=self.table_with_pager(pager)
+        feed=next(f for f in publication_lists(html,URL+'admission/list.htm') if f['name']=='招生通知')
+        added=('<tr><td><a href="/info/1001/3.htm">关于新增加的学生课程安排及报名时间的通知</a></td>'
+               '<td><span>2026-09-19</span></td></tr>')
+        updated=html.replace(pager,added+pager.replace('共3条','共4条'))
+        _,items,records,errors=_extract(dict(feed,list_url=URL+'admission/list.htm'),
+            {'url':URL+'admission/list.htm'},html=updated)
+        self.assertEqual(len(items),4)
+        self.assertEqual({r['url'] for r in records},{URL+'info/1001/'+str(i)+'.htm' for i in range(4)})
+        self.assertEqual(errors,[])
+
+    def test_unmarked_linked_pager_keeps_uncertainty_and_strict_rejection(self):
+        from backend.services.source_governance import _extract
+        pager=('<tr><td colspan="2">Page 1 of 2 <a href="list.htm">First</a>'
+               '<a href="list2.htm">Next</a><a href="list2.htm">Last</a></td></tr>')
+        html=self.table_with_pager(pager)
+        feed=next(f for f in publication_lists(html,URL+'admission/list.htm') if f['name']=='招生通知')
+        self.assertTrue(feed['unresolved_list_controls'])
+        _,items,_,errors=_extract(dict(feed,list_url=URL+'admission/list.htm'),
+            {'url':URL+'admission/list.htm'},html=html)
+        self.assertEqual(len(items),4)
+        self.assertIn('invalid_list_item',errors)
+
     def test_table_rows_ignore_empty_decoration_links_before_actual_titles(self):
         html = '<html><head><title>教务通知</title></head><body><div id="notices"><table class="main">' + ''.join(
             f'<tr><td><img src="bullet.gif"></td><td class="main"><a href="/2026/0901/a{i}/page.htm"></a>'
@@ -188,8 +253,9 @@ class PublicationListTests(unittest.TestCase):
         self.assertEqual(publication_lists(html, URL), [])
 
     def test_candidates_keep_official_column_names_without_inventing_unit_groups(self):
+        from backend.services.source_inventory import site_key
         evidence = publication_evidence(section('通知公告', 10000) + section('学术活动', 20000), URL)
-        report = {'site': {'root_url': URL}, 'pages': [{'feed_json': json.dumps(evidence), 'state': 'fetched', 'path_json': '["院系设置"]',
+        report = {'site': {'root_url': URL, 'site_key': site_key(URL)}, 'pages': [{'feed_json': json.dumps(evidence), 'state': 'fetched', 'path_json': '["院系设置"]',
                              'kind': 'unit', 'label': '工程学院', 'url': URL, 'final_url': URL, 'health': 'date_unknown'}]}
         sources = publication_candidates(report)
         self.assertEqual({s['name'] for s in sources}, {'通知公告', '学术活动'})

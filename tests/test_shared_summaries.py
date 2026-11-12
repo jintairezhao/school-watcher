@@ -348,6 +348,8 @@ class SharedSummaryTests(unittest.TestCase):
         self.assertEqual(result['sources_pending_review'], 1)
         db.session.refresh(self.ann.department)
         self.assertEqual(self.ann.department.list_selector, 'ul.current li')
+        data['departments'][0].pop('stable_id', None)
+        data['departments'][0].pop('transfer_key', None)
         data['departments'][0]['name'] = '导入的另一个栏目'
         merge_data(data)
         imported = Department.query.filter_by(name='导入的另一个栏目').one()
@@ -404,6 +406,8 @@ class SharedSummaryTests(unittest.TestCase):
         self.assertEqual(merge_data(data)['schools_added'], 0)
         self.assertEqual(School.query.one().id, original_id)
         self.assertEqual(School.query.one().url, 'https://example.edu.cn')
+        for source in data['departments']:
+            source.pop('transfer_key', None)
         data['schools'][0]['name'] = '测试学校异地校区'
         data['schools'][0]['url'] = 'https://example.edu.cn'
         self.assertEqual(merge_data(data)['schools_added'], 1)

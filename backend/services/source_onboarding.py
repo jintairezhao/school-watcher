@@ -4,6 +4,7 @@ Each page is independent durable work. Existing proposal workflows are reserved
 for legacy/admin edits; automatic onboarding never creates a review proposal.
 """
 from datetime import datetime
+from contextlib import contextmanager
 from functools import partial
 import hashlib
 import json
@@ -19,10 +20,195 @@ from backend.services.source_inventory import canonical_url
 CONFIG_FIELDS = ('name', 'list_url', 'list_selector', 'title_selector', 'link_selector',
                  'date_selector', 'content_selector', 'group_name')
 RETAINED_VALIDATION_CORRECTIONS = frozenset({
-    'pagination_repeats_first_page', 'column_identity_or_scope_unconfirmed', 'article_sample_mismatch'})
+    'pagination_repeats_first_page', 'column_identity_or_scope_unconfirmed', 'article_sample_mismatch',
+    'invalid_list_item', 'list_missing'})
 
 
-def _validation_upgrade_codes(checkpoint):
+@contextmanager
+def preserve_onboarding_tasks(task_ids):
+    """Exclude existing tasks from this module's automatic scheduling writes.
+
+    Default production recovery is unchanged. A bounded caller may preserve
+    earlier work; nested scopes cannot remove an outer preservation rule.
+    """
+    with tasks.preserve_existing_tasks(task_ids):
+        yield
+
+
+def _repair_evidence_key(feedback, page_hash, validation_version):
+    """Ignore unrelated rule edits only for a measured, empty list selection.
+
+    Full feedback remains the model input. A zero-match list cannot be repaired
+    by changing its heading, container, date or body rule on the same document.
+    Other failures keep their complete observation, including missing material.
+    """
+    observations = []
+    for row in feedback:
+        execution = row.get('execution') or {}
+        if (set(row.get('codes', [])) == {'list_missing'}
+                and isinstance(row.get('list_selector'), str) and row['list_selector'].strip()
+                and type(execution.get('list_item_count')) is int and execution['list_item_count'] == 0
+                and not execution.get('selector_errors')
+                and not row.get('sample_records') and not row.get('article_trials')):
+            observations.append({'zero_match_list': row['list_selector']})
+        else:
+            observations.append(row)
+    return hashlib.sha256(json.dumps({'page_hash': page_hash, 'validation_version': validation_version,
+        'feedback': observations}, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def _refresh_unexecuted_rule_headings(saved, *, html, url):
+    """Refresh an unpaid pending name only with the same DOM and list members.
+
+    A template heading can be corrected by a new local breadcrumb adapter.
+    Executed validations and model plans retain their original identities.
+    """
+    if (saved.get('stage') != 'trial' or saved.get('trial_origin_stage') != 'rules'
+            or any(saved.get(key) for key in ('trial_decision_ids','trial_request_key',
+                'completed','failures','department_ids','validation_replay'))
+            or saved.get('page_hash') != hashlib.sha256((url + '\\0' + html).encode()).hexdigest()):
+        return saved, 0
+    retained = saved.get('trial_columns') or []
+    if not retained:
+        return saved, 0
+    detected = publication_lists(html, url)
+    replacements, corrections = [], []
+    fields = ('name','heading_locator','heading_method','column_url','column_link_locator',
+              'heading_ambiguous','identity')
+    for column in retained:
+        matches = [fresh for fresh in detected
+            if fresh.get('heading_method') == 'current_page_breadcrumb'
+            and fresh.get('name') and not fresh.get('heading_ambiguous')
+            and canonical_url(fresh.get('column_url') or '') == canonical_url(url)
+            and all(fresh.get(key) and fresh.get(key) == column.get(key)
+                    for key in ('list_selector','container_locator','article_urls'))]
+        if (column.get('method') not in ('profile_match','dom_analysis') or column.get('verified') is True
+                or column.get('column_url') and canonical_url(column['column_url']) != canonical_url(url)
+                or len(matches) != 1 or matches[0]['name'] == column.get('name')):
+            replacements.append(column)
+            continue
+        fresh = matches[0]
+        replacement = dict(column)
+        for key in fields:
+            if key in fresh:
+                replacement[key] = fresh[key]
+            else:
+                replacement.pop(key, None)
+        replacements.append(replacement)
+        corrections.append(dict(from_name=column.get('name'),to_name=fresh['name'],
+            page_hash=saved['page_hash'],heading_locator=fresh['heading_locator'],
+            basis='same_material_scope_members_terminal_self_breadcrumb'))
+    if not corrections:
+        return saved, 0
+    return dict(saved, trial_columns=replacements,
+        rule_heading_corrections=[*(saved.get('rule_heading_corrections') or []), *corrections]), len(corrections)
+
+
+def _refresh_unverified_profile_bodies(columns, *, html, url, origin_stage,
+                                       decision_ids, request_key):
+    """Correct only an unpaid template default re-observed on the same list.
+
+    A stored explicit rule or a paid plan is not a template suggestion. Old
+    candidates need the same scope, fields, and article members before the
+    default can become unknown body CSS, just as it is for new discovery.
+    """
+    if origin_stage != 'rules' or decision_ids or request_key:
+        return columns
+    eligible = [column for column in columns if column.get('method') == 'profile_match'
+                and column.get('verified') is False and column.get('content_selector')]
+    if not eligible:
+        return columns
+    fresh = publication_lists(html, url)
+    result = []
+    for column in columns:
+        matches = [candidate for candidate in fresh
+                   if candidate.get('method') == 'profile_match' and candidate.get('verified') is False
+                   and candidate.get('suggested_content_selector') == column.get('content_selector')
+                   and candidate.get('article_urls') and candidate['article_urls'] == column.get('article_urls')
+                   and all(candidate.get(key) == column.get(key) for key in (
+                       'name', 'identity', 'list_selector', 'container_locator',
+                       'title_selector', 'link_selector', 'date_selector'))]
+        if column not in eligible or len(matches) != 1:
+            result.append(column)
+            continue
+        result.append(dict(column, content_selector='',
+            suggested_content_selector=column['content_selector'],
+            body_rule_correction={'from_selector': column['content_selector'],
+                'to_selector': '', 'basis': 'same_material_list_profile_not_article_evidence'}))
+    return result
+
+
+def _retained_pager_rule_plan(checkpoint, *, html=None):
+    """Prove new generated rules for the same failed region on retained material."""
+    from bs4 import BeautifulSoup
+    from soupsieve import SelectorSyntaxError
+    from backend.services.source_governance import read_snapshot, _column_scope, _normal, _column_label
+    from backend.services.source_validation import VALIDATION_VERSION
+    saved = (checkpoint or {}).get('column_validation') or {}
+    version = saved.get('validation_version')
+    if type(version) is not int or version >= 9 or VALIDATION_VERSION < 9:
+        return None
+    failures = saved.get('failures') or []
+    eligible = [(i, f) for i, f in enumerate(failures) if f.get('repairable') is not False
+                and f.get('config') and set(f.get('issue', {}).get('codes', []))
+                and set(f['issue']['codes']) <= {'invalid_list_item', 'list_missing'}]
+    reference = checkpoint.get('onboarding_page') or {}
+    if not eligible or not reference.get('url') or not reference.get('hash'):
+        return None
+    try:
+        html = read_snapshot(reference) if html is None else html
+        if (hashlib.sha256(html.encode()).hexdigest() != reference['hash']
+                or saved.get('page_hash') != hashlib.sha256((reference['url'] + r'\0' + html).encode()).hexdigest()):
+            return None
+        soup = BeautifulSoup(html, 'lxml')
+        feeds = [f for f in publication_lists(html, reference['url']) if f.get('name')
+                 and f.get('excluded_list_controls') and not f.get('unresolved_list_controls')]
+        columns, indexes = {}, []
+        for index, failure in eligible:
+            old = failure['config']
+            if canonical_url(old.get('list_url') or reference['url']) != canonical_url(reference['url']):
+                continue
+            name = _normal(_column_label(old.get('name', ''), old.get('group_name', '')))
+            prior_items = soup.select(old.get('list_selector') or ':not(*)')
+            containers = soup.select(old.get('container_selector') or ':not(*)')
+            headings = soup.select(old.get('heading_selector') or ':not(*)')
+            choices = []
+            for feed in feeds:
+                if _normal(feed['name']) != name:
+                    continue
+                items = soup.select(feed['list_selector'])
+                bound = bool(prior_items and items and {id(n) for n in items} <= {id(n) for n in prior_items}
+                    and {id(n.parent) for n in items} == {id(n.parent) for n in prior_items})
+                if not bound and len(containers) == len(headings) == 1:
+                    container, heading = containers[0], headings[0]
+                    common = any(parent.name not in ('html', 'body', '[document]')
+                        and (parent is container or any(node is parent for node in container.parents))
+                        for parent in [heading, *heading.parents])
+                    bound = (common and container.name not in ('html', 'body')
+                        and _normal(heading.get_text(' ', strip=True)) == name and items
+                        and all(n is container or any(p is container for p in n.parents) for n in items))
+                if not bound:
+                    continue
+                config = {key: feed.get(key, '') for key in CONFIG_FIELDS}
+                config.update(list_url=reference['url'], group_name=old.get('group_name', ''))
+                records, errors, region = _column_scope(config, reference, html=html)
+                if records and not errors and len(headings) == 1:
+                    scopes = soup.select(region.get('container') or ':not(*)')
+                    if (len(scopes) != 1 or not (headings[0] is scopes[0]
+                            or any(parent is scopes[0] for parent in headings[0].parents))):
+                        continue
+                if records and not errors:
+                    choices.append(feed)
+            if len(choices) == 1:
+                feed = choices[0]
+                columns[feed['identity']] = feed
+                indexes.append(index)
+        return dict(columns=list(columns.values()), failure_indexes=indexes) if columns else None
+    except (ValueError, OSError, KeyError, TypeError, NotImplementedError, SelectorSyntaxError):
+        return None
+
+
+def _validation_upgrade_codes(checkpoint, *, pager_plan=None):
     from backend.services.source_validation import VALIDATION_VERSION
     saved = (checkpoint or {}).get('column_validation') or {}
     version = saved.get('validation_version')
@@ -47,11 +233,92 @@ def _validation_upgrade_codes(checkpoint):
         fixed.add('article_sample_mismatch')
     if version < 8 and VALIDATION_VERSION >= 8 and 'column_identity_or_scope_unconfirmed' in codes:
         fixed.add('column_identity_or_scope_unconfirmed')
+    if version < 9 and VALIDATION_VERSION >= 9 and codes.intersection({'invalid_list_item', 'list_missing'}):
+        plan = pager_plan or _retained_pager_rule_plan(checkpoint)
+        if plan:
+            fixed.update(code for i in plan['failure_indexes'] for code in saved['failures'][i]['issue']['codes'])
     return fixed
 
 
 def _validation_upgrade(checkpoint):
     return bool(_validation_upgrade_codes(checkpoint))
+
+
+def _reclassify_retained_article_failures(checkpoint, school_id):
+    """Correct v12 failure categories, using complete saved trials when available.
+
+    The small model feedback holds only three trials. It cannot override a later
+    contradictory identity in the full validation record. No reads or decisions
+    are purchased to recover missing history.
+    """
+    from copy import deepcopy
+    from backend.database.source_governance_models import SourceValidation
+    from backend.services.source_governance import _hash
+    from backend.services.source_validation import sample_failure_kind
+    saved = checkpoint.get('column_validation') or {}
+    reference = checkpoint.get('onboarding_page') or {}
+    if (saved.get('validation_version') != 12 or not reference.get('hash') or not reference.get('url')
+            or (checkpoint.get('column_pending_decision') or {}).get('blocked') in ('result', 'usage')):
+        return checkpoint, 0
+    result = deepcopy(checkpoint)
+    saved = result['column_validation']
+    changed = 0
+    for failure in saved.get('failures') or []:
+        if (set(failure.get('issue', {}).get('codes') or ()) != {'article_sample_mismatch'}
+                or failure.get('repairable') is False):
+            continue
+        config = failure.get('config') or {}
+        trials = (failure.get('observation') or {}).get('article_trials') or []
+        try:
+            same_source = bool(config.get('list_url') and canonical_url(config['list_url']) == canonical_url(reference['url']))
+        except (TypeError, ValueError):
+            same_source = False
+        if (not same_source or not trials or any(not isinstance(row, dict) or not row.get('url')
+                or 'matched' not in row or not row.get('reason') for row in trials)):
+            continue
+        digest = _hash({field: config.get(field) or '' for field in CONFIG_FIELDS})
+        complete = None
+        source_event = None
+        for event in SourceValidation.query.filter_by(school_id=school_id, config_hash=digest).order_by(
+                SourceValidation.id.desc()).limit(20):
+            try:
+                detail = json.loads(event.validation_json)
+                body = detail.get('articles') or {}
+                rows = body.get('samples') or []
+                observed = detail.get('list_snapshot') or {}
+                matches = (detail.get('validation_version') == 12 and body.get('passed') is False
+                    and isinstance(rows, list) and rows and type(body.get('sample_count')) is int
+                    and body['sample_count'] == len(rows)
+                    and len(rows) >= len(trials) and observed.get('hash') == reference['hash']
+                    and canonical_url(observed.get('url') or '') == canonical_url(reference['url'])
+                    and all(all(row.get(key) == recorded.get(key) for key in
+                        ('url', 'final_url', 'reason', 'error_code', 'matched', 'title_matched', 'content_selector_count')
+                        if key in row) for row, recorded in zip(trials, rows)))
+            except (ValueError, TypeError, AttributeError):
+                continue
+            if matches:
+                complete, source_event = rows, event.id
+                break
+        if complete is not None:
+            kind = sample_failure_kind(complete)
+            if kind not in ('material_incomplete', 'access_restricted'):
+                continue
+            basis = 'complete_saved_validation'
+        else:
+            if sample_failure_kind(trials) not in ('material_incomplete', 'access_restricted'):
+                continue
+            kind, basis = 'material_incomplete', 'incomplete_retained_validation'
+        original_issue = deepcopy(failure['issue'])
+        reason = ('旧正文核验记录不完整，保留规则和进度，待补齐核验依据'
+                  if complete is None else '正文材料尚未齐备，保留现有规则和核验进度')
+        failure.update(repairable=False, failure_kind=kind)
+        failure['issue'] = dict(original_issue, reason=reason,
+            codes=['article_access_restricted' if kind == 'access_restricted' else 'article_material_incomplete'])
+        saved.setdefault('article_failure_migrations', []).append(dict(
+            from_version=12, to_version=13, basis=basis, source_validation_id=source_event,
+            list_hash=reference['hash'], trial_key=failure.get('trial_key'), original_issue=original_issue))
+        changed += 1
+    return (result, changed) if changed else (checkpoint, 0)
 
 
 def _resume_pagination_validation(task, now):
@@ -86,20 +353,57 @@ def _retained_scope_is_correctable(checkpoint):
 
 def _resume_retained_validation(task, now):
     """Wake corrected program checks without changing paid task identity."""
+    if tasks.task_is_preserved(task.id):
+        return False
     from backend.services.discovery_control import should_pause
+    if (task.kind == 'onboard' and task.state in ('done', 'failed')
+            and not should_pause(task.kind, task.payload)
+            and ((task.checkpoint or {}).get('column_validation') or {}).get('stage') == 'done'
+            and not task.error_code):
+        checkpoint, reclassified = _reclassify_retained_article_failures(task.checkpoint, task.payload.get('school_id'))
+        if reclassified:
+            saved = checkpoint['column_validation']
+            failures = saved.get('failures') or []
+            blocked = [f for f in failures if f.get('repairable') is False]
+            result = dict(task.result or saved.get('result') or {})
+            result.update(issues=[f['issue'] for f in failures],
+                recovery_rules=[f['config'] for f in blocked if f.get('config')],
+                unresolved_rules=[f['config'] for f in failures if f.get('repairable') is not False and f.get('config')])
+            from datetime import timedelta
+            from backend.services.discovery_policy import get_policy
+            not_before = now + timedelta(seconds=get_policy()['recovery_seconds'])
+            try:
+                if datetime.fromisoformat(result.get('recovery_not_before') or '') > not_before:
+                    not_before = datetime.fromisoformat(result['recovery_not_before'])
+            except (TypeError, ValueError):
+                pass
+            result['recovery_not_before'] = not_before.isoformat()
+            if any(row.get('basis') == 'incomplete_retained_validation' for row in saved.get('article_failure_migrations', [])):
+                result['retained_validation_review_required'] = True
+            if blocked and len(blocked) == len(failures):
+                result['state'] = ('connected' if saved.get('department_ids') else 'access_limited'
+                    if all(f.get('failure_kind') == 'access_restricted' for f in blocked) else 'material_limited')
+                result['reason'] = blocked[0]['issue']['reason']
+                if result.get('error_code') in ('no_progress', 'article_sample_mismatch'):
+                    result.pop('error_code')
+            saved['result'] = result
+            task.checkpoint, task.result = checkpoint, result
+            return True  # Category-only correction; no requeue or generation change.
     previous_state, previous_generation, previous_update = task.state, task.generation, task.updated_at
     checkpoint = task.checkpoint or {}
     validation = checkpoint.get('column_validation') or {}
+    upgrade_codes = _validation_upgrade_codes(checkpoint)
     scope_upgrade = (validation.get('validation_version') == 7
-                     and 'column_identity_or_scope_unconfirmed' in _validation_upgrade_codes(checkpoint))
-    budget_wait = (scope_upgrade and task.state == 'waiting' and task.phase == 'ai_budget'
+                     and 'column_identity_or_scope_unconfirmed' in upgrade_codes)
+    pager_upgrade = bool(upgrade_codes.intersection({'invalid_list_item', 'list_missing'}))
+    budget_wait = ((scope_upgrade or pager_upgrade) and task.state == 'waiting' and task.phase == 'ai_budget'
                    and validation.get('stage') in ('ai', 'repair'))
     if (task.kind != 'onboard' or task.state not in ('done', 'failed') and not budget_wait
             or task.error_code and not (budget_wait and task.error_code == 'budget_exhausted')
             or validation.get('stage') != 'done' and not budget_wait
             or (checkpoint.get('column_pending_decision') or {}).get('blocked') in ('result', 'usage')
             or should_pause(task.kind, task.payload)
-            or not RETAINED_VALIDATION_CORRECTIONS.intersection(_validation_upgrade_codes(task.checkpoint))):
+            or not RETAINED_VALIDATION_CORRECTIONS.intersection(upgrade_codes)):
         return False
     if scope_upgrade and not _retained_scope_is_correctable(checkpoint):
         return False
@@ -137,7 +441,10 @@ def queue_columns(school_id, inventory, key):
     from backend.services.source_catalog import publication_candidates
     from backend.services.source_governance import _snapshot
     report = inventory.report(key)
-    candidates = publication_candidates(report, inventory.structure(key))
+    records = inventory.structure(key)
+    candidates = publication_candidates(report, records)
+    from backend.services.source_relationships import SourceRelationships
+    relationships = SourceRelationships(report, records)
     root_page = next((p for p in report['pages'] if p['state'] == 'fetched' and
         canonical_url(p['url']) == canonical_url(report['site']['root_url'])), None)
     root_html = None
@@ -150,7 +457,10 @@ def queue_columns(school_id, inventory, key):
             continue
         by_url.setdefault(address, []).append(candidate)
     jobs = []
-    for page in report['pages']:
+    from backend.services.discovery_policy import get_attention_policy
+    from backend.services.source_attention import onboarding_order
+    ordered_pages, attention = onboarding_order(report, by_url, get_attention_policy(school_id))
+    for page in ordered_pages:
         url = canonical_url(page.get('final_url') or page['url'])
         configs = by_url.get(url, [])
         previous_url = canonical_url(page['url'])
@@ -198,6 +508,8 @@ def queue_columns(school_id, inventory, key):
             continue
         identity = f'{school_id}:' + hashlib.sha256(url.encode()).hexdigest()[:24]
         old = BackgroundTask.query.filter_by(identity='onboard:' + identity).first()
+        if old and tasks.task_is_preserved(old.id):
+            continue
         # Finished pages only reopen on an explicit refresh. Crawl slices and
         # process restarts must not repeat paid calls for the same unresolved page.
         handle = tasks.current_execution() or {}
@@ -220,8 +532,13 @@ def queue_columns(school_id, inventory, key):
                     not changed and not (manual and unresolved) and not validation_upgrade):
                 continue
         snapshot = _snapshot(html, url, role='list') if html else None
+        if snapshot and page.get('checked_at'):
+            snapshot['captured_at'] = page['checked_at']
+        from backend.services.source_material_publication import capture_retained_structure
+        structure_material = capture_retained_structure(inventory, key, snapshot, report=report, relationships=relationships)
         groups = {c['group_name'] for c in configs if c.get('group_name')}
         payload = {'school_id': school_id, 'url': url,
+                   'discovery_attention': attention[page['url']],
                    'observed_kind': page['kind'], 'root_url': report['site']['root_url'],
                    'group_name': next(iter(groups)) if len(groups) == 1 else '',
                    'label': page['label'], 'snapshot': snapshot,
@@ -231,6 +548,8 @@ def queue_columns(school_id, inventory, key):
                    'parent_generation': handle.get('generation'),
                    'ai_assist': handle.get('payload', {}).get('ai_assist', True),
                    'official_external': bool(configs and not same_school_url(url, report['site']['root_url']))}
+        if structure_material:
+            payload['structure_material'] = structure_material
         job = tasks.enqueue('onboard', identity, payload, replace_finished=bool(old))
         if preserved_checkpoint is not None:
             job.checkpoint = preserved_checkpoint
@@ -254,7 +573,14 @@ def _unconnected_columns(school_id, *, automatic=False):
         from backend.services.discovery_policy import get_policy
         query = query.filter(checked <= datetime.utcnow() - timedelta(seconds=get_policy()['recovery_seconds']))
     for row in query.order_by(checked, BackgroundTask.id):
+        if tasks.task_is_preserved(row.id):
+            continue
+        from backend.services.source_lifecycle import task_sources_active
+        if not task_sources_active(row.kind, row.payload):
+            continue
         result = row.result or {}
+        if automatic and result.get('retained_validation_review_required'):
+            continue  # A new fetch cannot recover a missing historical validation.
         if requested(row):
             continue
         website_wait = result.get('website_not_before')
@@ -371,6 +697,22 @@ def _sample_matches(config, records, fetcher):
 
 
 def _install(school_id, config, records, *, repair=False, previous_url=None, ai_assist=True, repair_department_id=None, validation=None):
+    from backend.services.school_structure import published_structure_writer
+    with published_structure_writer(school_id) as catalog:
+        from backend.services.source_material_publication import native_structure_bundle, proposal_structure_writer
+        material = native_structure_bundle(validation or {}, config)
+        if material:
+            with proposal_structure_writer(db.session.get(School, school_id), material, config, catalog) as staged:
+                return _install_with_structure(school_id, config, records, structure_catalog=staged,
+                    repair=repair, previous_url=previous_url, ai_assist=ai_assist,
+                    repair_department_id=repair_department_id, validation=validation, commit=False)
+        return _install_with_structure(school_id, config, records, structure_catalog=catalog,
+            repair=repair, previous_url=previous_url, ai_assist=ai_assist,
+            repair_department_id=repair_department_id, validation=validation)
+
+
+def _install_with_structure(school_id, config, records, *, structure_catalog, repair=False,
+                            previous_url=None, ai_assist=True, repair_department_id=None, validation=None, commit=True):
     """Keep source/version/notices/next collection in the same commit fence."""
     from backend.services.source_governance import _hash, _json
     from backend.services.announcement_identity import upsert_listing
@@ -382,6 +724,7 @@ def _install(school_id, config, records, *, repair=False, previous_url=None, ai_
     from backend.services.source_identity import same_observed_column, same_publisher, observed_home_aliases
     tasks.assert_owned()
     db.session.execute(db.update(School).where(School.id == school_id).values(name=School.name))
+    version_record = None
     source = db.session.get(Department, repair_department_id) if repair_department_id else None
     if source is not None and (source.school_id != school_id or canonical_url(source.list_url) not in {
             canonical_url(config['list_url']), canonical_url(previous_url or '')}):
@@ -408,19 +751,24 @@ def _install(school_id, config, records, *, repair=False, previous_url=None, ai_
                 and (repair or (row.link_selector or 'a[href]') == (config.get('link_selector') or 'a[href]'))
                 and same_column(row, config, records, validation or {})]
             source = matches[0] if len(matches) == 1 else None
+    if source is not None:
+        from backend.services.source_lifecycle import ensure_source_active
+        ensure_source_active(source.id, lock=True)
     if source is not None and repair:
         previous = {field: getattr(source, field) or '' for field in CONFIG_FIELDS}
         if previous != config:
             last = SourceConfigVersion.query.filter_by(department_id=source.id).order_by(SourceConfigVersion.version.desc()).first()
-            db.session.add(SourceConfigVersion(department_id=source.id, version=last.version + 1 if last else 1,
-                config_json=_json(config), config_hash=_hash(config), previous_json=_json(previous)))
+            version_record = SourceConfigVersion(department_id=source.id, version=last.version + 1 if last else 1,
+                config_json=_json(config), config_hash=_hash(config), previous_json=_json(previous))
+            db.session.add(version_record)
             for field, value in config.items():
                 setattr(source, field, value)
     if source is None:
         source = Department(school_id=school_id, **config)
         db.session.add(source); db.session.flush()
-        db.session.add(SourceConfigVersion(department_id=source.id, version=1,
-            config_json=_json(config), config_hash=_hash(config), previous_json=_json(None)))
+        version_record = SourceConfigVersion(department_id=source.id, version=1,
+            config_json=_json(config), config_hash=_hash(config), previous_json=_json(None))
+        db.session.add(version_record)
     if config['group_name']:
         from backend.services.source_placements import _within_unit
         legacy = Department.query.filter_by(school_id=school_id, name=config['group_name'], kind='column').all()
@@ -454,10 +802,13 @@ def _install(school_id, config, records, *, repair=False, previous_url=None, ai_
     source.last_scraped_at = datetime.utcnow()
     if validation:
         record_validation(school_id, config, validation, source.id)
-    from flask import current_app
-    from backend.services.runtime_catalog import RuntimeCatalog
-    from backend.services.school_structure import sync_official_structure
-    sync_official_structure(source.school, RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH']), commit=False)
+    if version_record is not None:
+        db.session.flush()
+        from backend.services.source_execution_events import record_configuration_saved
+        record_configuration_saved(version_record, source, validation or {}, writer='automatic_onboarding')
+    from backend.services.school_structure import sync_source_structure
+    db.session.flush()
+    sync_source_structure(source, structure_catalog, commit=False)
     subscriptions = Subscription.query.filter_by(school_id=school_id).all()
     if any(source.id in {d.id for d in subscribed_sources(source.school, sub.department_ids)} for sub in subscriptions):
         job = tasks.enqueue('collect', source.id, {'school_id': school_id, 'department_id': source.id,
@@ -466,7 +817,8 @@ def _install(school_id, config, records, *, repair=False, previous_url=None, ai_
         if job.state == 'pending' and job.claim_count == 0:
             job.phase = 'onboarding_collection'
     tasks.assert_owned()
-    db.session.commit()
+    if commit:
+        db.session.commit()
     return source.id, new_count
 
 
@@ -620,11 +972,23 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
     page_hash = hashlib.sha256((url + '\\0' + html).encode()).hexdigest()
     saved = dict(checkpoint.get('column_validation') or {})
     same_retained_page = saved.get('page_hash') == page_hash
-    upgrade_codes = _validation_upgrade_codes({'column_validation': saved})
+    replay_context = dict(checkpoint, onboarding_page=reference, column_validation=saved)
+    reclassified_articles = 0
+    if same_retained_page:
+        replay_context, reclassified_articles = _reclassify_retained_article_failures(replay_context, school_id)
+        saved = replay_context['column_validation']
+    pager_plan = _retained_pager_rule_plan(replay_context, html=html)
+    upgrade_codes = _validation_upgrade_codes(replay_context, pager_plan=pager_plan)
     pending_replay = ((saved.get('validation_replay') or {}).get('validation_version') == VALIDATION_VERSION
                       and saved.get('stage') != 'done')
     retained_corrections = RETAINED_VALIDATION_CORRECTIONS.intersection(upgrade_codes)
-    if (saved.get('page_hash') != page_hash and not retained_corrections
+    if pager_plan:
+        saved.update(stage='trial', new_count=0, validation_replay={
+            'from_version': saved['validation_version'], 'validation_version': VALIDATION_VERSION,
+            'columns': pager_plan['columns'], 'correction': 'generated_pagination_controls'})
+        corrected = set(pager_plan['failure_indexes'])
+        saved['failures'] = [failure for i, failure in enumerate(saved['failures']) if i not in corrected]
+    elif (saved.get('page_hash') != page_hash and not retained_corrections
             and not pending_replay):
         saved = {'page_hash': page_hash, 'stage': 'ai' if _force_ai else 'rules',
                  'department_ids': [], 'new_count': 0, 'completed': [], 'failures': [],
@@ -678,6 +1042,8 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
     saved.setdefault('progress_ids', [])
     saved.setdefault('empty_columns', [])
     saved.setdefault('empty_rules', [])
+    if same_retained_page and not checkpoint.get('column_pending_decision'):
+        saved, _ = _refresh_unexecuted_rule_headings(saved, html=html, url=url)
     if same_retained_page and saved['stage'] != 'done' and not saved.get('trial_columns'):
         retained = (checkpoint.get('column_regions') or {}).get('columns', [])
         if retained:
@@ -706,6 +1072,9 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
         result = {'state': 'connected' if saved['department_ids'] else state,
                   'department_ids': saved['department_ids'], 'new_count': saved['new_count'],
                   'issues': issues, 'reason': issues[0]['reason'] if issues else reason}
+        from backend.services.source_attention import validation_context
+        context=validation_context(payload,html)
+        if context:result['discovery_attention']=context
         if not saved['department_ids'] and state == 'unsupported' and saved['empty_columns'] and not issues:
             result.update(state='empty', reason='栏目暂无内容，后续将自动更新')
         result['empty_columns'] = saved['empty_columns']
@@ -716,6 +1085,8 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                                          if failure.get('repairable') is not False and failure.get('config')]
             wait = max(get_policy()['recovery_seconds'], max(f.get('retry_after', 0) for f in blocked))
             result['recovery_not_before'] = (datetime.utcnow() + timedelta(seconds=wait)).isoformat()
+            if any(row.get('basis') == 'incomplete_retained_validation' for row in saved.get('article_failure_migrations', [])):
+                result['retained_validation_review_required'] = True
             website_wait = max(f.get('retry_after', 0) for f in blocked)
             if website_wait:
                 result['website_not_before'] = (datetime.utcnow() + timedelta(seconds=website_wait)).isoformat()
@@ -724,6 +1095,11 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
         persist(stage='done', result=result)
         return result
 
+    if (reclassified_articles and saved['stage'] in ('repair', 'done')
+            and not saved.get('material_pending') and not checkpoint.get('column_pending_decision')
+            and not any(f.get('repairable') is not False for f in saved.get('failures') or [])
+            and not any((saved.get('unresolved_region_plan') or {}).get(k) for k in ('pending', 'active'))):
+        return finish()
     if saved['stage'] == 'done':
         return saved['result']
     replay_completed_before = set(saved.get('completed', []))
@@ -781,7 +1157,10 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
             feedback = ([] if discovery_plan.get('active') else saved.get('material_feedback', []) if saved.get('material_pending') else
                         [failure['observation'] for failure in saved['failures'] if failure.get('repairable') is not False])
             request_key = hashlib.sha256(json.dumps(feedback, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
-            if not saved.get('material_pending') and saved.get('last_request_key') == request_key:
+            repair_evidence_key = _repair_evidence_key(feedback, page_hash, VALIDATION_VERSION)
+            if not saved.get('material_pending') and (saved.get('last_request_key') == request_key
+                    or not latest_checkpoint.get('column_pending_decision')
+                    and saved.get('last_repair_evidence_key') == repair_evidence_key):
                 return finish(error_code='no_new_validation_evidence')
             extra = ({'discovery_selectors': tuple(discovery_plan.get('selectors', []))}
                      if discovery_plan.get('active') and discovery_plan.get('selectors') else {})
@@ -815,6 +1194,9 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
             if result.get('unresolved_regions'):
                 recognition_issues.append({'name': payload.get('label', ''), 'reason': '部分发布区域仍待识别，已接入的栏目可以使用'})
 
+        columns = _refresh_unverified_profile_bodies(columns, html=html, url=url,
+            origin_stage=origin_stage, decision_ids=decision_ids, request_key=request_key)
+
         # A handoff caused by network I/O resumes this execution plan first.
         # Changed prompt/skill hashes cannot turn a pending read into a new fee.
         if replaying:
@@ -824,20 +1206,44 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                     trial_decision_ids=decision_ids, trial_request_key=request_key,
                     trial_recognition_issues=recognition_issues)
 
+        plan_key = hashlib.sha256(json.dumps({'page_hash': page_hash,
+            'validation_version': VALIDATION_VERSION, 'origin_stage': origin_stage,
+            'columns': columns, 'decision_ids': decision_ids, 'request_key': request_key},
+            sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        previous_outcomes = saved.get('trial_outcomes') or {}
+        finished_columns = (set(previous_outcomes.get('completed', []))
+                            if previous_outcomes.get('key') == plan_key else set())
+
         def retried(observation):
             # A corrected selector/name can change; matching either the named
             # column or its observed heading/list keeps omitted failures visible.
-            return any(_normal(_column_label(column.get('name', ''), payload.get('group_name', ''))) ==
+            return any(index not in finished_columns and (
+                       _normal(_column_label(column.get('name', ''), payload.get('group_name', ''))) ==
                        _normal(_column_label(observation['name'], payload.get('group_name', '')))
                        or any(column.get(key) and column.get(key) == observation.get(key)
-                              for key in ('heading_selector', 'list_selector')) for column in columns)
+                              for key in ('heading_selector', 'list_selector')))
+                       for index, column in enumerate(columns))
 
-        failures = (list(saved['failures']) if replaying else
-                    [failure for failure in saved['failures'] if failure.get('repairable') is False
-                     or not retried(failure['observation'])])
+        # A durable network retry re-executes its original column, including
+        # retained validator replays. Access/material verdicts remain pinned.
+        failures = [failure for failure in saved['failures'] if
+                    not retried(failure['observation']) or
+                    (failure.get('failure_kind') != 'network_error' and
+                     (replaying or failure.get('repairable') is False))]
         network_error = None
-        for column in columns:
+        for column_index, column in enumerate(columns):
             pause_if_requested()
+            if column_index in finished_columns:
+                continue
+
+            def column_finished():
+                # Persist verdict and plan position together before another
+                # column can yield. A changed material/rule/paid plan gets a
+                # different key and retains its real correction opportunity.
+                finished_columns.add(column_index)
+                persist(failures=failures, trial_outcomes={
+                    'key': plan_key, 'completed': sorted(finished_columns)})
+
             config = {field: column.get(field, '') for field in CONFIG_FIELDS}
             config.update(list_url=url, group_name=payload.get('group_name', ''))
             # Pre-upgrade DOM observations guessed a CMS body rule. That was
@@ -856,12 +1262,17 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                 status = 'rejected' if repairable else 'access_limited' if failure_kind == 'access_restricted' else 'material_limited'
                 record_validation(school_id, config, dict(validation, status=status, errors=codes))
                 db.session.commit()
+                if failure_kind == 'network_error':
+                    persist(failures=failures)
+                else:
+                    column_finished()
 
             # A prior explicit rejection remains a user decision after upgrading.
             from backend.database.source_governance_models import SourceProposal
             rejected = [json.loads(p.candidate_json) for p in SourceProposal.query.filter_by(school_id=school_id, state='rejected')]
             if any(canonical_url(item['list_url']) == url and
                    (not item.get('list_selector') or item['list_selector'] == config['list_selector']) for item in rejected):
+                column_finished()
                 continue
             scope = ({'container_selector': column['container_selector'], 'heading_selector': column['heading_selector']}
                      if column.get('container_selector') and column.get('heading_selector') else None)
@@ -876,6 +1287,13 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                     records, errors, region = _column_scope(config, reference, scope)
             validation = {'status': 'pending', 'page_hash': page_hash, 'list_snapshot': reference,
                           'region': region, 'articles': {}, 'pagination': {}}
+            if column.get('body_rule_correction'):
+                validation['body_rule_correction'] = column['body_rule_correction']
+            if payload.get('structure_material'):
+                validation['structure_material'] = payload['structure_material']
+            from backend.services.source_attention import validation_context
+            context=validation_context(payload,html)
+            if context:validation['discovery_attention']=context
             if correction:
                 validation['scope_correction'] = correction
             if errors or not records:
@@ -887,7 +1305,7 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                     if empty['name'] not in saved['empty_columns']:
                         saved['empty_columns'].append(empty['name'])
                         saved['empty_rules'].append(dict(config, **(scope or {})))
-                    persist()
+                    column_finished()
                     continue
                 failed('提取规则未能正确读取该栏目', errors or ['list_empty'], records)
                 continue
@@ -901,8 +1319,10 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
             if any(f.get('repairable') is False and f.get('trial_key') == trial_key for f in failures):
                 # A new explanation or body selector does not make the same
                 # rejected HTTP read new evidence. Other columns can still repair.
+                column_finished()
                 continue
             if config_key in saved['completed']:
+                column_finished()
                 continue
             existing = Department.query.filter_by(school_id=school_id, list_url=url,
                 list_selector=config['list_selector'], name=config['name']).first()
@@ -910,7 +1330,7 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                 if existing.id not in saved['department_ids']:
                     saved['department_ids'].append(existing.id)
                 saved['completed'].append(config_key)
-                persist()
+                column_finished()
                 continue
             try:
                 for record in records:
@@ -954,9 +1374,14 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
                         if proof not in saved['progress_ids']:
                             saved['progress_ids'].append(proof)
             except FetchFailure as exc:
-                network_error = exc
-                failed('官网暂时无法读取，将自动重试', ['article_fetch_unavailable'])
-                continue
+                validation['articles'] = getattr(exc, 'article_sample_summary', {})
+                failed('官网暂时无法读取，进度已保存，将自动重试', ['article_fetch_unavailable'], records,
+                    failure_kind='network_error', retry_after=exc.result.retry_after or 0, trial_key=trial_key)
+                # Do not cross another column or an acquisition handoff before
+                # the queue can advance its durable network retry counter.
+                # A network failure never authorizes a selector repair turn.
+                persist(failures=failures)
+                raise
             if not samples['passed']:
                 kind = samples.get('failure_kind', 'rule_error')
                 if kind != 'rule_error':
@@ -999,7 +1424,7 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
             from backend.services.student_information import queue_source_assessment, queue_listing_assessment
             queue_source_assessment(source_id, ai_assist=assistance)
             queue_listing_assessment(source_id, ai_assist=assistance)
-            persist()
+            column_finished()
         if network_error:
             # Keep the current stage and its original model input. The queue
             # retries network I/O; connectivity failures never buy a new model turn.
@@ -1056,6 +1481,11 @@ def onboard_page(payload, *, fetcher=None, _force_ai=False):
             continue
         if origin_stage != 'rules':
             persist(last_request_key=request_key)
+            if 'material_feedback' in saved:
+                # Keep the paid request key exact. This separate guard survives
+                # handoffs without rewriting the model cursor or fee identity.
+                persist(last_repair_evidence_key=_repair_evidence_key(
+                    saved['material_feedback'], page_hash, VALIDATION_VERSION))
         if any(failure.get('repairable') is not False for failure in failures) and assistance and not saved['progress']['stopped']:
             # More evidence may justify further repair decisions. Replayed
             # decisions and repeated explanations cannot manufacture progress.
@@ -1068,12 +1498,13 @@ def resume_rule_discovery():
     """Resume obsolete internal blockers without resetting progress or user pauses."""
     from datetime import timedelta
     from backend.services.discovery_control import requested
+    from backend.services.source_lifecycle import task_sources_active
     now = datetime.utcnow()
     from backend.services.source_agent import recover_unknown_column_checkpoint
     from backend.scraper.discovery.ai_navigation import unknown_navigation_execution
     for task in BackgroundTask.query.filter(BackgroundTask.kind.in_(('onboard', 'navigation_review')),
             BackgroundTask.state.in_(('done', 'failed', 'pending', 'waiting'))).all():
-        if requested(task):
+        if tasks.task_is_preserved(task.id) or requested(task) or not task_sources_active(task.kind, task.payload):
             continue
         if task.kind == 'onboard':
             checkpoint, recovered = recover_unknown_column_checkpoint(task.checkpoint)
@@ -1098,7 +1529,7 @@ def resume_rule_discovery():
             BackgroundTask.kind.in_(('discover', 'directory')),
             BackgroundTask.state.in_(('failed', 'pending')),
             BackgroundTask.error.contains('调查缓存已达到容量上限')).all():
-        if requested(task):
+        if tasks.task_is_preserved(task.id) or requested(task):
             continue
         from sqlalchemy import update
         db.session.execute(update(BackgroundTask).where(
@@ -1110,7 +1541,7 @@ def resume_rule_discovery():
                  attempts=0, finished_at=None, token=None, worker_id=None, lease_until=None,
                  error='', error_code=''), execution_options={'synchronize_session': False})
     for task in BackgroundTask.query.filter_by(kind='discover', state='waiting', phase='ai_setup'):
-        if not requested(task):
+        if not tasks.task_is_preserved(task.id) and not requested(task):
             task.state, task.phase = 'pending', 'fetch'
             task.available_at = task.updated_at = now
             task.deadline_at = now + timedelta(hours=2)

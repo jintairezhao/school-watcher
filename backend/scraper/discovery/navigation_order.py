@@ -51,6 +51,9 @@ def _directory_member(link, page):
 
 def _trunk_prior(link, page, has_need):
     """A finite root-page layout pass; never turn a news item into a directory."""
+    from .notification_entrances import current_notification_hint
+    if current_notification_hint(page.get('primary_notification_routes'), page, link.get('url')):
+        return 2, 'observed_home_notification_block'
     if page.get('kind') == 'directory' or academic_collection_label(page.get('label')):
         if _directory_member(link, page):
             return (0 if has_need else 2), 'observed_directory_member_hint'

@@ -1,7 +1,10 @@
 """Durable discovery progress with an independently bounded HTML cache."""
 from datetime import datetime, timezone
+from time import monotonic
 
 from backend.services.source_inventory import Inventory, canonical_url
+
+CATALOG_PROGRESS_INTERVAL = 15.0
 
 
 class DiscoveryCache(Inventory):
@@ -35,21 +38,21 @@ class DiscoveryCache(Inventory):
             raise RuntimeError('本校待检查入口达到容量上限，已保留进度，不能认定检查完成')
         return super().enqueue(key, url, label, kind, depth, path, authority)
 
-    def record_edges(self, key, parent_url, links, content_hash):
+    def record_edges(self, key, parent_url, links, content_hash, *, observed_at=None):
         # Intermediate navigation is evidence of a discovered route, including
         # undergraduate/admission pages beyond the fourth level.
-        return super().record_edges(key, parent_url, links, content_hash)
+        return super().record_edges(key, parent_url, links, content_hash, observed_at=observed_at)
 
-    def record_structure(self, key, reference_url, nodes, content_hash):
+    def record_structure(self, key, reference_url, nodes, content_hash, *, observed_at=None):
         from backend.services.source_relationships import ROSTER_RELATIONS, PATH_RELATIONS
         relations = ROSTER_RELATIONS | PATH_RELATIONS | {
             'major_directory_entry', 'programme_college', 'programme_joint_group',
             'publication_column', 'unit_channel', 'navigation_entry', 'unit_profile_entry',
             'hidden_directory_entry', 'directory_label_pending'}
         nodes = [n for n in nodes if n['relation'] in relations]
-        with self.connect() as c:
-            c.execute('DELETE FROM structure WHERE site_key=? AND reference_url=?', (key, reference_url))
-        super().record_structure(key, reference_url, nodes, content_hash)
+        # Inventory compares the previous interpretation before replacing it;
+        # deleting first would bypass history and invalidate-review detection.
+        super().record_structure(key, reference_url, nodes, content_hash, observed_at=observed_at)
 
     def trim(self, *, all_cache=False):
         from flask import has_app_context
@@ -57,18 +60,19 @@ class DiscoveryCache(Inventory):
         days = policy()['discovery_cache_days'] if has_app_context() else 7
         limit = policy()['discovery_cache_mb'] * 1048576 if has_app_context() else self.max_bytes
         cutoff = retention_cutoff(days, datetime.now(timezone.utc)).isoformat(timespec='seconds') if days else None
+        from backend.services.discovery_history import rotate_history, rotate_events
+        rotate_history(self)
+        rotate_events(self)
         migrated = self.snapshots.migrate(self)
         deleted = self.snapshots.trim(cutoff=cutoff, limit=limit, all_cache=all_cache)
         with self.connect() as c:
-            c.execute('DELETE FROM structure_history')
-            c.execute('DELETE FROM edge_history')
             c.execute('DELETE FROM edges WHERE NOT EXISTS (SELECT 1 FROM pages p '
                       'WHERE p.site_key=edges.site_key AND p.url=edges.parent_url)')
             page_count = c.execute('PRAGMA page_count').fetchone()[0]
             free_pages = c.execute('PRAGMA freelist_count').fetchone()[0]
         # Visited pages, pending work and current official routes are progress,
         # not disposable cache. They must survive cleanup and never consume the
-        # HTML budget. Reclaim dead history without deleting this visited set.
+        # HTML budget. Reclaim archived rows without deleting this visited set.
         if migrated or free_pages > max(256, page_count // 5):
             self._compact_progress()
         return deleted
@@ -79,6 +83,7 @@ def adapt_site(name, root_url, *, monthly=False):
     from filelock import FileLock
     from backend.services.runtime_catalog import RuntimeCatalog
     from backend.scraper.discovery.inventory_crawler import crawl_site
+    from backend.scraper.discovery.parser_revision import ParserRevisionChanged
     path = current_app.config['DISCOVERY_CACHE_PATH']
     with FileLock(str(path) + '.worker.lock', timeout=0):
         inventory = DiscoveryCache(path)
@@ -122,9 +127,27 @@ def adapt_site(name, root_url, *, monthly=False):
         if handle:
             tasks.checkpoint(dict(handle.get('checkpoint') or {}, directory_refresh_started=True, student_scan_started=True))
         from backend.services.onboarding_progress import record_progress
-        from backend.services.school_structure import sync_official_structure
         queued_columns = []
+        last_publication = None
+        completed_pages = published_pages = 0
+        def publish_progress(*, force=False, enqueue=True):
+            nonlocal last_publication, published_pages
+            if not force and (not completed_pages or last_publication is not None and
+                    monotonic() - last_publication < CATALOG_PROGRESS_INTERVAL):
+                return
+            # Check before rebuilding a full catalogue, as well as its existing
+            # activation fence. Superseded workers must not flush late results.
+            tasks.assert_owned()
+            catalog.publish(inventory, key, merge=True)
+            published_pages = completed_pages
+            last_publication = monotonic()
+            if school:
+                if enqueue:
+                    queued_columns.extend(queue_columns(school.id, inventory, key)['onboarding_ids'])
+
         def progress(processed, snapshot):
+            nonlocal completed_pages
+            completed_pages = processed
             states = snapshot['states']
             if handle:
                 tasks.checkpoint(dict(handle.get('checkpoint') or {}, student_scan_pages=checked_this_round + processed))
@@ -134,15 +157,27 @@ def adapt_site(name, root_url, *, monthly=False):
                 unit_checked=snapshot.get('unit_checked', 0), unit_pending=snapshot.get('unit_pending', 0),
                 unit_failed=snapshot.get('unit_failed', 0),
                 current_label=snapshot.get('current_label', ''))
-            if processed:
-                catalog.publish(inventory, key, merge=True)
-                if school:
-                    sync_official_structure(school, catalog)
-                    queued_columns.extend(queue_columns(school.id, inventory, key)['onboarding_ids'])
+            publish_progress()
         background_retry = starting and (handle or {}).get('payload', {}).get('trigger') == 'background_discovery'
-        result = crawl_site(inventory, key, max_pages=slice_pages, workers=2,
-                            focus='valuable', retry_failed=monthly or background_retry, progress=progress)
+        try:
+            result = crawl_site(inventory, key, max_pages=slice_pages, workers=2,
+                                focus='valuable', retry_failed=monthly or background_retry, progress=progress)
+        except BaseException as error:
+            # A cooperative pause is a BaseException too. Publish completed
+            # pages without starting more work; the scratch inventory remains
+            # durable even if this best-effort snapshot cannot be activated.
+            if not isinstance(error, (tasks.LeaseLost, ParserRevisionChanged, KeyboardInterrupt, SystemExit)) and completed_pages > published_pages:
+                try:
+                    publish_progress(force=True, enqueue=False)
+                except BaseException:
+                    current_app.logger.exception(
+                        'Could not publish completed directory progress; durable discovery records are retained')
+            raise
         checked_this_round += result.get('processed_this_run', 0)
+        # Include settlement/reference changes after the last callback, and
+        # flush before a pause can hand off this completed slice. Onboarding
+        # below sees only a successfully published state.
+        publish_progress(force=True, enqueue=False)
         from backend.services.discovery_control import pause_if_requested
         pause_if_requested()
         from backend.services.source_governance import record_onboarding_slice
@@ -153,12 +188,6 @@ def adapt_site(name, root_url, *, monthly=False):
             governance['onboarding_ids'] = list(dict.fromkeys(queued_columns + governance['onboarding_ids']))
             result['official_units'] = [n for n in inventory.structure(key) if n['kind'] == 'unit' and n['relation'] in ROSTER_RELATIONS]
             record_onboarding_slice(school.id, result)
-        # Publish navigation separately; each page installs its first notices in
-        # an independent onboarding task without waiting for the school crawl.
-        catalog.publish(inventory, key, merge=True)
-        if school:
-            from backend.services.school_structure import sync_official_structure
-            sync_official_structure(school, catalog)
         inventory.trim()
         pending = result['states'].get('pending', 0) + result['states'].get('running', 0)
         with inventory.connect() as connection:

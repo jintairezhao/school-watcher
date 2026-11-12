@@ -18,7 +18,7 @@ DATE = re.compile(r'(?<!\d)(\d{4})\s*[年./-]\s*(\d{1,2})\s*[月./-]\s*(\d{1,2})
 PUBLISH = re.compile(r'^(?:发布日期|发布时间|发文日期|发布于)\s*[：:]?\s*')
 META_KEYS = {'pubdate','publishdate','publicationdate','article:published_time','datepublished'}
 EDITOR = re.compile(r'责任编辑|编辑[:：]|作者[:：]|来源[:：]|浏览(?:量|次数)?[:：]')
-PARSER_VERSION = 'title-bound-header-5'
+PARSER_VERSION = 'title-bound-header-6'
 
 
 def publication_date_stamp(value):

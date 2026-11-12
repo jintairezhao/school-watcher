@@ -428,7 +428,7 @@ class SourceRelationshipTests(unittest.TestCase):
                          (self.key, ROSTER, '科学学院'))
         self.assertEqual(self.paths(), [])
 
-    def test_subscription_keeps_one_choice_and_all_paths_without_changing_saved_selection(self):
+    def test_subscription_keeps_one_choice_without_promoting_unpublished_paths(self):
         from backend import create_app
         from backend.database.db import db
         from backend.database.models import School, Department, Subscription, User
@@ -436,8 +436,15 @@ class SourceRelationshipTests(unittest.TestCase):
         self.roster(''.join('<tr><td>' + parent + '</td><td><a href="' + UNIT + '">能源-材料研究中心</a></td></tr>'
                             for parent in ('科学学院', '工程学院')))
         self.unit()
+        # Both candidate website paths remain recorded. The subscription page
+        # reads published facts, not this unpublished discovery inventory.
+        paths = self.paths()
+        self.assertEqual(len(paths), 2)
+        self.assertEqual({p['nodes'][1]['name'] for p in paths}, {'科学学院', '工程学院'})
         app = create_app({'TESTING': True, 'SECRET_KEY': 'source-links', 'SQLALCHEMY_DATABASE_URI': 'sqlite://',
-                          'SOURCE_INVENTORY_PATH': self.inventory.path})
+                          'SOURCE_INVENTORY_PATH': self.inventory.path,
+                          'SOURCE_CATALOG_PATH': str(Path(self.temp.name) / 'published.db'),
+                          'DISCOVERY_CACHE_PATH': self.inventory.path})
         with app.app_context():
             db.create_all()
             user, school = User(username='reader', password_hash='unused'), School(name='某大学', url=ROOT)
@@ -457,9 +464,8 @@ class SourceRelationshipTests(unittest.TestCase):
             choices = soup.select(f'input[name="department"][value="{source.id}"]')
             self.assertEqual(len(choices), 1)
             self.assertTrue(choices[0].has_attr('checked'))
-            self.assertEqual(len(soup.select('.source-path')), 2)
-            self.assertIn('科学学院', response.text)
-            self.assertIn('工程学院', response.text)
+            self.assertNotIn('科学学院', response.text)
+            self.assertNotIn('工程学院', response.text)
             self.assertNotIn('未知栏目', response.text)  # Unconfigured, unselected leads remain background work.
             self.assertNotIn('单位与栏目关系待核实', response.text)
             self.assertEqual(subscription.department_ids, [source.id])

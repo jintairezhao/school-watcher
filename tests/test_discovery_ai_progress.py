@@ -267,7 +267,9 @@ class DiscoveryAIProgressTests(unittest.TestCase):
         progress = self.progress()
         self.assertEqual(progress['state'], 'running')
         self.assertIn('额度已用完，进度已保存', progress['message'])
-        self.assertIn('已接入的栏目继续更新', progress['message'])
+        self.assertEqual(progress['verified_source_count'], 0)
+        self.assertIn('历史通知仍保留', progress['message'])
+        self.assertNotIn('栏目继续更新', progress['message'])
         self.assertTrue(progress['active'])
         self.assertTrue(progress['busy'])
 

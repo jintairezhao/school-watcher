@@ -112,6 +112,10 @@
         {% include '_admin_ai.html' %}
 
     </div>
+    <details class="tuning-advanced-entry">
+        <summary data-i18n="高级调试（默认关闭）">{{ tr('高级调试（默认关闭）') }}</summary>
+        <p><a href="{{ url_for('discovery_tuning.page') }}" data-i18n="探索阈值调试">{{ tr('探索阈值调试') }}</a></p>
+    </details>
 </section>
 {% endblock %}
 
@@ -161,7 +165,11 @@ function applyHash() {
     }
     showTab(document.getElementById('panel-' + h) ? h : 'overview');
 }
-document.addEventListener('locale-changed', () => showTab(document.querySelector('.admin-tab.is-active')?.dataset.tab || 'overview', false));
+document.addEventListener('locale-changed', () => {
+    const tab = document.querySelector('.admin-tab.is-active')?.dataset.tab || 'overview';
+    showTab(tab, false);
+    if (tab === 'overview') loadStats();
+});
 window.addEventListener('hashchange', applyHash);
 document.addEventListener('DOMContentLoaded', applyHash);
 
@@ -188,10 +196,10 @@ async function loadStats() {
             return '<div class="stat-card"><div class="n">' + c[1] + '</div><div class="l">' + c[0] + (c[2] ? ' · ' + c[2] : '') + (c[3] || '') + '</div></div>';
         }).join('');
         document.getElementById('recentLogs').innerHTML = (s.recent_logs || []).map(function (l) {
-            var statusName = { success: uiT('成功'), failed: uiT('失败'), partial: uiT('部分完成'), interrupted: uiT('已中断') }[l.status] || l.status;
+            var statusName = { running: uiT('进行中'), success: uiT('成功'), waiting: uiT('等待处理'), failed: uiT('失败'), partial: uiT('部分完成'), interrupted: uiT('已中断') }[l.status] || l.status;
             return '<div class="log-item"><span class="log-status log-' + l.status + '">' + statusName + '</span>' +
                 (""+"<span class=\"log-info\">"+""+uiT("学校#")+"") + (l.school_id || '-') + uiT(' 新增 ') + l.new_count + uiT(' / 检查 ') + l.total_count +
-                (l.error_message ? ' <span class="log-error">' + escHtml(l.error_message).slice(0, 60) + '</span>' : '') + '</span>' +
+                (l.error_message ? ' <span class="log-error">' + escHtml(uiT(l.error_message)).slice(0, 60) + '</span>' : '') + '</span>' +
                 '<span class="log-time">' + window.formatScrapeLogTime(l.started_at, true) + '</span></div>';
         }).join('') || (""+"<p class=\"text-muted\">"+""+uiT("暂无记录")+""+"</p>"+"");
     } catch (e) {

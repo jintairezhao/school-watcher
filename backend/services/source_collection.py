@@ -58,6 +58,8 @@ def fetch_source_page(url, *, purpose='directory', source_id=''):
 
 
 def collect_source(department):
+    from backend.services.source_lifecycle import ensure_source_active
+    ensure_source_active(department.id)
     from backend.scraper.engine import scrape_department, _process_announcement_item
     from backend.scraper.discovery.publication_lists import publication_lists
     from backend.scraper.discovery.lightweight import discover_columns
@@ -92,7 +94,11 @@ def collect_source(department):
                 assistance = False
             queue_source_assessment(department.id, ai_assist=assistance)
             queue_listing_assessment(department.id, ai_assist=assistance)
-        return {'new_count': new, 'checked': total, 'message': f'更新完成，新增 {new} 条通知'}
+        result = {'new_count': new, 'checked': total, 'message': f'更新完成，新增 {new} 条通知'}
+        if scope := getattr(department, '_fetch_collection_scope', None):
+            result['collection_scope'] = scope
+            result['message'] = f'已检查首页展示内容，新增 {new} 条通知'
+        return result
 
     # Unit homepages and sources without a valid configured list enter the
     # directory pipeline. A temporary detector must never ingest homepage/news

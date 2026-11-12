@@ -26,8 +26,8 @@ assert.equal(model.actual.get('channel-a').parent, model.actual.get('channel-b')
 assert.notEqual(model.actual.get('channel-a'), model.actual.get('channel-b'));
 assert.notEqual(model.actual.get('channel-a').parent, model.actual.get('other').parent);
 assert.ok([...model.entries.values()].every(item => item.record?.url), 'Only URL-bearing recorded pages become nodes');
-assert.ok(model.actual.get('root').radius > model.actual.get('unit').radius);
-assert.ok(model.actual.get('unit').radius > model.actual.get('channel-a').radius);
+for(const item of model.actual.values())assert.equal(item.radius,3,
+    'Legacy navigation and kind labels cannot invent confirmed source counts or publisher size');
 assert.ok(new Set([...model.entries.values()].map(item => item.position.z)).size > 2, 'Layout must occupy genuine spatial depth');
 const collapsed = new Set([model.actual.get('unit').id]);
 assert.ok(!visibleEntries(model, {collapsed}).includes(model.actual.get('channel-a')));

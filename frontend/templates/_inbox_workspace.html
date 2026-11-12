@@ -9,7 +9,7 @@
 </section>
 {% else %}
 {% set source_school = current_school.name if current_school else tr('全部学校') %}
-{% set source_scope = tr('已选 {count} 个栏目', count=selected_dept_ids|length) if selected_dept_ids else (current_group or tr('全部栏目')) %}
+{% set source_scope = tr('已选 {count} 个栏目', count=selected_dept_ids|length) if selected_dept_ids else ((tr(current_group) if current_group_is_structural else current_group) or tr('全部栏目')) %}
 {% set focused_reading = reading_view == 'focus' %}
 <div class="inbox-workspace {% if detail_requested %}detail-requested{% endif %}" data-user-id="{{ current_user.id }}" data-source-mode="closed" data-reading-view="{{ 'focus' if focused_reading else 'split' }}" data-back-url="{{ back_to_list_url }}" data-view="{{ view }}" data-can-collect="{{ 'true' if current_user.is_admin and view != 'trash' else 'false' }}">
     {% include '_inbox_source_panel.html' %}
@@ -111,7 +111,11 @@
             <div class="inbox-refresh-activity" id="inboxRefreshActivity" data-i18n-aria-label="官网通知更新情况" aria-label="{{ tr('官网通知更新情况') }}" hidden>
                 <details id="inboxRefreshDetails">
                     <summary id="inboxRefreshSummary"><span id="inboxRefreshProgress" class="refresh-ring" role="progressbar" data-i18n-aria-label="官网通知更新进度" aria-label="{{ tr('官网通知更新进度') }}" hidden><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle class="refresh-ring-track" cx="16" cy="16" r="13"/><circle class="refresh-ring-value" cx="16" cy="16" r="13" pathLength="100"/></svg></span><span id="inboxRefreshStatus" role="status" aria-live="polite"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
-                    <div class="refresh-status-panel notice-popover"><strong data-i18n="更新情况">{{ tr("更新情况") }}</strong><ul id="inboxRefreshSources"></ul></div>
+                    <div class="refresh-status-panel notice-popover"><strong data-i18n="更新情况">{{ tr("更新情况") }}</strong>
+                        <div id="inboxRefreshScope" hidden></div>
+                        <ul id="inboxRefreshSources"></ul>
+                        <details id="inboxRefreshOutside" hidden><summary id="inboxRefreshOutsideSummary"></summary><p data-i18n="未参加原因按本轮安排时的记录显示；最近状态会继续更新。">{{ tr('未参加原因按本轮安排时的记录显示；最近状态会继续更新。') }}</p><ul id="inboxRefreshOutsideSources"></ul></details>
+                    </div>
                 </details>
             </div>
         </header>

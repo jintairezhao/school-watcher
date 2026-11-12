@@ -72,19 +72,19 @@ def cleanup(*, all_cache=False, category=None):
     scratch.parent.mkdir(parents=True, exist_ok=True)
     with FileLock(str(scratch) + '.worker.lock', timeout=0):
         result = {'evicted': 0, 'scrape_logs_deleted': 0, 'discovery_snapshots_deleted': 0, 'backups_deleted': 0}
-        if category in (None, 'body'):
-            result.update(prune_content(all_cache=all_cache or category == 'body'))
+        if category in (None, 'body', 'cache'):
+            result.update(prune_content(all_cache=all_cache or category in ('body', 'cache')))
         if category in (None, 'logs'):
             result['scrape_logs_deleted'] = prune_scrape_logs(all_logs=category == 'logs')
         result['discovery_snapshots_deleted'] = (
-            DiscoveryCache(scratch).trim(all_cache=all_cache or category == 'discovery')
-            if scratch.exists() and category in (None, 'discovery') else 0)
-        if category in (None, 'fetch'):
-            result['fetch_evidence'] = prune_fetch_evidence(all_cache=all_cache or category == 'fetch')
+            DiscoveryCache(scratch).trim(all_cache=all_cache or category in ('discovery', 'cache'))
+            if scratch.exists() and category in (None, 'discovery', 'cache') else 0)
+        if category in (None, 'fetch', 'cache'):
+            result['fetch_evidence'] = prune_fetch_evidence(all_cache=all_cache or category in ('fetch', 'cache'))
         from backend.services.source_governance import prune_governance_evidence
-        if category in (None, 'governance'):
+        if category in (None, 'governance', 'cache'):
             result['governance_evidence'] = prune_governance_evidence(
-                policy()['discovery_cache_days'], all_cache=all_cache or category == 'governance')
+                policy()['discovery_cache_days'], all_cache=all_cache or category in ('governance', 'cache'))
         from backend.services.runtime_catalog import prune_catalog_generations
         if category is None:
             result['catalog_generations'] = prune_catalog_generations()

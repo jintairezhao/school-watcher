@@ -1,0 +1,525 @@
+{
+  "scope": "Actual current student-service homepages and unchanged official directory row; development evidence, not independent threshold sample",
+  "site": {
+    "site_key": "d4d8ca3b35408034cbb3",
+    "name": "中国石油大学（北京）克拉玛依校区",
+    "root_url": "https://www.cupk.edu.cn/",
+    "state": "pending",
+    "updated_at": "2026-10-23T12:45:42+00:00",
+    "review_state": "unverified"
+  },
+  "pages": [
+    {
+      "url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "final_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "label": "组织机构",
+      "title": "中国石油大学（北京）克拉玛依校区",
+      "kind": "directory",
+      "state": "fetched",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "checked_at": "2026-10-23T04:48:43.584600+00:00",
+      "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"d4d8ca3b35408034cbb3\\\", \\\"reference_url\\\": \\\"https://www.cupk.edu.cn/c/2017-04-21/485097.shtml\\\", \\\"final_url\\\": \\\"https://www.cupk.edu.cn/c/2017-04-21/485097.shtml\\\", \\\"content_hash\\\": \\\"03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"中国石油大学（北京）克拉玛依校区\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]",
+      "navigation_edges": []
+    },
+    {
+      "url": "https://www.cupk.edu.cn/xszz/",
+      "final_url": "https://www.cupk.edu.cn/xszz/",
+      "label": "学生工作与安全保卫部-学生资助",
+      "title": "中国石油大学（北京）克拉玛依校区学生资助管理中心",
+      "kind": "channel",
+      "state": "fetched",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "checked_at": "2026-10-23T12:40:12.431323+00:00",
+      "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"d4d8ca3b35408034cbb3\\\", \\\"reference_url\\\": \\\"https://www.cupk.edu.cn/xszz/\\\", \\\"final_url\\\": \\\"https://www.cupk.edu.cn/xszz/\\\", \\\"content_hash\\\": \\\"637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"中国石油大学（北京）克拉玛依校区学生资助管理中心\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]",
+      "navigation_edges": [
+        {
+          "parent_url": "https://www.cupk.edu.cn/xszz/",
+          "target_url": "https://www.cupk.edu.cn/xszz/qgzx/bksjz/",
+          "label": "本科生奖助",
+          "kind": "navigation",
+          "path_json": "[\"奖助学金\"]",
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "decision": "follow",
+          "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+          "observed_at": "2026-10-23T12:45:41+00:00"
+        },
+        {
+          "parent_url": "https://www.cupk.edu.cn/xszz/",
+          "target_url": "https://www.cupk.edu.cn/xszz/qgzx/yjsjz/",
+          "label": "研究生奖助",
+          "kind": "navigation",
+          "path_json": "[\"奖助学金\"]",
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "decision": "follow",
+          "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+          "observed_at": "2026-10-23T12:45:41+00:00"
+        }
+      ]
+    },
+    {
+      "url": "https://www.cupk.edu.cn/xsgl/",
+      "final_url": "https://www.cupk.edu.cn/xsgl/",
+      "label": "学生管理",
+      "title": "中国石油大学（北京）克拉玛依校区学生工作与安全保卫部",
+      "kind": "group",
+      "state": "fetched",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "checked_at": "2026-10-23T12:40:12.734135+00:00",
+      "notes_json": "[\"page_branding_evidence:{\\\"site_key\\\": \\\"d4d8ca3b35408034cbb3\\\", \\\"reference_url\\\": \\\"https://www.cupk.edu.cn/xsgl/\\\", \\\"final_url\\\": \\\"https://www.cupk.edu.cn/xsgl/\\\", \\\"content_hash\\\": \\\"ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf\\\", \\\"candidates\\\": [{\\\"source\\\": \\\"title\\\", \\\"identity\\\": \\\"中国石油大学（北京）克拉玛依校区学生工作与安全保卫部\\\", \\\"locator\\\": \\\"html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)\\\"}]}\"]",
+      "navigation_edges": [
+        {
+          "parent_url": "https://www.cupk.edu.cn/xsgl/",
+          "target_url": "https://www.cupk.edu.cn/xsgl/xwdt/",
+          "label": "新闻动态",
+          "kind": "channel",
+          "path_json": "[\"学生管理\"]",
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(1)",
+          "decision": "follow",
+          "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+          "observed_at": "2026-10-23T12:45:41+00:00"
+        },
+        {
+          "parent_url": "https://www.cupk.edu.cn/xsgl/",
+          "target_url": "https://www.cupk.edu.cn/xsgl/xwdt/",
+          "label": "新闻动态",
+          "kind": "channel",
+          "path_json": "[]",
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(1)",
+          "decision": "follow",
+          "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+          "observed_at": "2026-10-23T12:45:41+00:00"
+        }
+      ]
+    }
+  ],
+  "records": [
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "6271db18cc737c006535ba28",
+      "name": "组织机构",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "parent_key": "",
+      "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "locator": "document",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "relation": "page_identity",
+      "observed_at": "2026-10-23T05:22:22+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "6271db18cc737c006535ba28",
+      "name": "组织机构",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "parent_key": "3f591f28315a87f4d92e09b8",
+      "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T05:22:22+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "f70dedb03fbdacb2abe26291",
+      "name": "学生工作与安全保卫部",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/xgybw/",
+      "parent_key": "6271db18cc737c006535ba28",
+      "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "relation": "directory_entry",
+      "observed_at": "2026-10-23T05:22:22+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "afa3756627e0d42b5d3dde0f",
+      "name": "学生资助管理中心",
+      "kind": "unit",
+      "url": "",
+      "parent_key": "f70dedb03fbdacb2abe26291",
+      "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(2)::text(4)",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "relation": "attached_unit",
+      "observed_at": "2026-10-23T05:22:22+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "7eefd07a9ddf2762f0efd32f",
+      "name": "学生管理",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/xsgl/",
+      "parent_key": "f70dedb03fbdacb2abe26291",
+      "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(3) > p:nth-of-type(3) > a:nth-of-type(1)",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "relation": "table_reference",
+      "observed_at": "2026-10-23T05:22:22+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "f8db97a9a1ccc5f2bbd97668",
+      "name": "学生资助",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/xszz/",
+      "parent_key": "f70dedb03fbdacb2abe26291",
+      "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(3) > p:nth-of-type(5) > a:nth-of-type(1)",
+      "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+      "relation": "table_reference",
+      "observed_at": "2026-10-23T05:22:22+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "7eefd07a9ddf2762f0efd32f",
+      "name": "学生管理",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/xsgl/",
+      "parent_key": "",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "document",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "page_identity",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "3cc6d6b026ad7d95645aaaaf",
+      "name": "新闻动态",
+      "kind": "channel",
+      "url": "https://www.cupk.edu.cn/xsgl/xwdt/",
+      "parent_key": "7eefd07a9ddf2762f0efd32f",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(1)",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "eac2dd92df834459ee38cf45",
+      "name": "通知公告",
+      "kind": "channel",
+      "url": "https://www.cupk.edu.cn/xsgl/pybz/",
+      "parent_key": "7eefd07a9ddf2762f0efd32f",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(1)",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "972bfa57f5653f76434c3c31",
+      "name": "规章制度",
+      "kind": "channel",
+      "url": "https://www.cupk.edu.cn/xsgl/gzzd/",
+      "parent_key": "7eefd07a9ddf2762f0efd32f",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(1)",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "834f1b7dd2b6ed6b22dc19aa",
+      "name": "石油学院",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/xsgl/fdyfc/syxy/",
+      "parent_key": "7eefd07a9ddf2762f0efd32f",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "6e9ba132275dc9bb7decdbe7",
+      "name": "工学院",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/xsgl/fdyfc/gxy/",
+      "parent_key": "7eefd07a9ddf2762f0efd32f",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(2)",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "37308f26e52e2784a12665a1",
+      "name": "文理学院/文化艺术学院",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/xsgl/fdyfc/wlxywhysxy/",
+      "parent_key": "7eefd07a9ddf2762f0efd32f",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(3)",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "ed1a44c2f78229f1135dd6d2",
+      "name": "工商管理学院/马克思主义学院",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/xsgl/fdyfc/gsglxy--mkszyxy/",
+      "parent_key": "7eefd07a9ddf2762f0efd32f",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(4)",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "134af8862454525eb08818b3",
+      "name": "军事训练与征兵入伍",
+      "kind": "channel",
+      "url": "https://www.cupk.edu.cn/xsgl/jsxl/",
+      "parent_key": "7eefd07a9ddf2762f0efd32f",
+      "reference_url": "https://www.cupk.edu.cn/xsgl/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(1)",
+      "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+      "relation": "publication_column",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "556fca58d6bdf405627b3898",
+      "name": "学生工作与安全保卫部-学生资助",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/xszz/",
+      "parent_key": "",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "document",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "page_identity",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "f6cad92476585047ce68c9e7",
+      "name": "资助政策",
+      "kind": "channel",
+      "url": "https://www.cupk.edu.cn/xszz/zzzc/",
+      "parent_key": "556fca58d6bdf405627b3898",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(3)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "c647a5c546a71bd5977171c4",
+      "name": "下载中心",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/xszz/xzzx/",
+      "parent_key": "556fca58d6bdf405627b3898",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(9)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "004eec2ca37e39a71ef75732",
+      "name": "校本部",
+      "kind": "unit",
+      "url": "http://www.cup.edu.cn/",
+      "parent_key": "556fca58d6bdf405627b3898",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "f6cad92476585047ce68c9e7",
+      "name": "资助政策",
+      "kind": "channel",
+      "url": "https://www.cupk.edu.cn/xszz/zzzc/",
+      "parent_key": "556fca58d6bdf405627b3898",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "46fe19d4f1f8a46d83bbd2b3",
+      "name": "奖助学金",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/xszz/qgzx/bksjz/",
+      "parent_key": "556fca58d6bdf405627b3898",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(6) > a:nth-of-type(1)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "menu_group",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "7259094d87b6c3b4b49cfa7f",
+      "name": "本科生奖助",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/xszz/qgzx/bksjz/",
+      "parent_key": "46fe19d4f1f8a46d83bbd2b3",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "1eb47dbe11b2c65a080b87ac",
+      "name": "研究生奖助",
+      "kind": "group",
+      "url": "https://www.cupk.edu.cn/xszz/qgzx/yjsjz/",
+      "parent_key": "46fe19d4f1f8a46d83bbd2b3",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "c647a5c546a71bd5977171c4",
+      "name": "下载中心",
+      "kind": "unit",
+      "url": "https://www.cupk.edu.cn/xszz/xzzx/",
+      "parent_key": "556fca58d6bdf405627b3898",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(9) > a:nth-of-type(1)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "bbfc10b343f96d37375bed8f",
+      "name": "全国学生资助管理中心",
+      "kind": "unit",
+      "url": "http://www.xszz.cee.edu.cn/",
+      "parent_key": "556fca58d6bdf405627b3898",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(2)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    },
+    {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "node_key": "acecc5da8e74b7ece7e7998c",
+      "name": "教育部",
+      "kind": "unit",
+      "url": "http://www.moe.edu.cn/",
+      "parent_key": "556fca58d6bdf405627b3898",
+      "reference_url": "https://www.cupk.edu.cn/xszz/",
+      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(3)",
+      "content_hash": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9",
+      "relation": "navigation_entry",
+      "observed_at": "2026-10-23T12:45:41+00:00"
+    }
+  ],
+  "sources": [
+    {
+      "id": 1441,
+      "school_id": 1,
+      "name": "本科生奖助",
+      "list_url": "https://www.cupk.edu.cn/xszz/qgzx/bksjz/",
+      "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(li.middleArticle--articleList)",
+      "title_selector": "a.middleArticle__articleList--article",
+      "link_selector": "a.middleArticle__articleList--article",
+      "date_selector": "span.middleArticle__articleList--date",
+      "content_selector": "div.c-main__right",
+      "group_name": ""
+    },
+    {
+      "id": 1442,
+      "school_id": 1,
+      "name": "研究生奖助",
+      "list_url": "https://www.cupk.edu.cn/xszz/qgzx/yjsjz/",
+      "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(li.middleArticle--articleList)",
+      "title_selector": "a.middleArticle__articleList--article",
+      "link_selector": "a.middleArticle__articleList--article",
+      "date_selector": "span.middleArticle__articleList--date",
+      "content_selector": "div.c-main__right",
+      "group_name": ""
+    },
+    {
+      "id": 1607,
+      "school_id": 1,
+      "name": "新闻动态",
+      "list_url": "https://www.cupk.edu.cn/xsgl/xwdt/",
+      "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(li.middleArticle--articleList)",
+      "title_selector": "a.middleArticle__articleList--article",
+      "link_selector": "a.middleArticle__articleList--article",
+      "date_selector": "span.middleArticle__articleList--date",
+      "content_selector": "div.c-main__right",
+      "group_name": ""
+    }
+  ],
+  "receipts": [
+    {
+      "source_id": 1441,
+      "url": "https://www.cupk.edu.cn/xszz/qgzx/bksjz/",
+      "content_hash": "eaf55f8173042c6ec2c6794c2d6af065c8c47d7ff11fd5426a128674a50e2ae2",
+      "receipt_id": "native:1031",
+      "config_hash": "e436fcd27783c812eb8f4b2a04a2a2839fd73c26aa999d728ba9fd3392381142",
+      "region": {
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(3)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(3)",
+        "name": "本科生奖助"
+      }
+    },
+    {
+      "source_id": 1442,
+      "url": "https://www.cupk.edu.cn/xszz/qgzx/yjsjz/",
+      "content_hash": "d0bcad762c615bc680a5c7c5242df6fe1f83c5c44a9461bd3acbfda617345f49",
+      "receipt_id": "native:1035",
+      "config_hash": "b206219c033e7fed6e93547ff2d640bfb807b215e14a6ec46147a32f632a5fa9",
+      "region": {
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(3)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(3)",
+        "name": "研究生奖助"
+      }
+    },
+    {
+      "source_id": 1607,
+      "url": "https://www.cupk.edu.cn/xsgl/xwdt/",
+      "content_hash": "9fa4afdfdc11785e6e724ab40122a5fd56cdcaa1861687ada49dd8307551b109",
+      "receipt_id": "native:44296",
+      "config_hash": "c559c90d8291702aa04bbf71a7e342e3c053f03693c91ced4ba4fd846c445aa3",
+      "region": {
+        "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3)",
+        "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(2)",
+        "name": "新闻动态"
+      }
+    }
+  ],
+  "materials": {
+    "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml": {
+      "file": "cupk-service-binding-03a8cc2ea0bb5a68-20261023.html.gz",
+      "sha256": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7"
+    },
+    "https://www.cupk.edu.cn/xszz/": {
+      "file": "cupk-service-binding-637e873acf6aa2cc-20261023.html.gz",
+      "sha256": "637e873acf6aa2cc911f85503795a85765d0b4791a31af0a35f9aaf9cf2cfee9"
+    },
+    "https://www.cupk.edu.cn/xsgl/": {
+      "file": "cupk-service-binding-ce58f4a9bb54e185-20261023.html.gz",
+      "sha256": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf"
+    }
+  }
+}

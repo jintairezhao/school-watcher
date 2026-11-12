@@ -39,31 +39,36 @@
                 "type": [
                   "string",
                   "null"
-                ]
+                ],
+                "maxLength": 4096
               },
               "title_selector": {
                 "type": [
                   "string",
                   "null"
-                ]
+                ],
+                "maxLength": 4096
               },
               "link_selector": {
                 "type": [
                   "string",
                   "null"
-                ]
+                ],
+                "maxLength": 4096
               },
               "date_selector": {
                 "type": [
                   "string",
                   "null"
-                ]
+                ],
+                "maxLength": 4096
               },
               "content_selector": {
                 "type": [
                   "string",
                   "null"
-                ]
+                ],
+                "maxLength": 4096
               },
               "group_name": {
                 "type": [
@@ -94,8 +99,8 @@
           "scope_evidence": {
             "type": "object",
             "properties": {
-              "container_selector": {"type": "string", "minLength": 1, "maxLength": 500},
-              "heading_selector": {"type": "string", "minLength": 1, "maxLength": 500}
+              "container_selector": {"type": "string", "minLength": 1, "maxLength": 4096},
+              "heading_selector": {"type": "string", "minLength": 1, "maxLength": 4096}
             },
             "required": ["container_selector", "heading_selector"],
             "additionalProperties": false

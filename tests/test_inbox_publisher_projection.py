@@ -17,7 +17,7 @@ from backend.database.models import (Announcement, Department, DepartmentDirecto
     School, Subscription, User, UserAnnouncementState, UserRead)
 from backend.services.inbox import source_hierarchy
 from backend.services.runtime_catalog import RuntimeCatalog, pack
-from backend.services.source_channels import channels_for
+from backend.services.source_channels import legacy_channels_for as channels_for
 from backend.services.source_inventory import site_key
 
 EVIDENCE = json.loads((Path(__file__).parent / 'fixtures' /

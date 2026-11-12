@@ -85,6 +85,7 @@
             <span data-i18n="添加部门">{{ tr("添加部门") }}</span>
         </button>
     </div>
+    <p id="deptLifecycleHint" class="text-muted" data-i18n="停用或移除来源会停止采集，历史通知、订阅和个人状态仍保留。">{{ tr('停用或移除来源会停止采集，历史通知、订阅和个人状态仍保留。') }}</p>
     <div id="deptList"></div>
 </div>
 
@@ -266,6 +267,7 @@ async function loadDepts(schoolId) {
     try {
         const resp = await fetch('/api/schools/' + schoolId + '/departments');
         const depts = await resp.json();
+        if (!resp.ok || !Array.isArray(depts)) throw new Error(uiT('加载部门列表失败'));
         const container = document.getElementById('deptList');
 
         if (!depts || depts.length === 0) {
@@ -285,6 +287,7 @@ async function loadDepts(schoolId) {
                             ${uiT('日期')}: ${escHtml(d.date_selector || '—')} |
                             ${uiT('正文')}: ${escHtml(d.content_selector || '—')}
                         </span>
+                        <span data-dept-state-status role="status" aria-live="polite"></span>
                     </div>
                 </div>
                 <div class="manage-actions">
@@ -299,6 +302,25 @@ async function loadDepts(schoolId) {
         `).join('');
         container.querySelectorAll('.manage-card').forEach((card, index) => {
             const d = depts[index];
+            if (d.kind === 'column') {
+                const label = document.createElement('label'), caption = document.createElement('span');
+                label.className = 'source-state-control';
+                I18n.setText(caption, '采集状态');
+                const control = document.createElement('select');
+                control.className = 'form-input';
+                control.dataset.deptState = '';
+                control.setAttribute('aria-describedby', 'deptLifecycleHint');
+                const active = new Option('', 'active'), disabled = new Option('', 'disabled'), removed = new Option('', 'removed');
+                I18n.setText(active, '已启用');
+                I18n.setText(disabled, '已停用');
+                I18n.setText(removed, '已移除');
+                control.append(active, disabled, removed);
+                control.value = d.lifecycle_state || 'active';
+                label.append(caption, control);
+                card.querySelector('.manage-actions').prepend(label);
+                I18n.setText(card.querySelector('[data-dept-action="delete"]'), '永久删除');
+                control.addEventListener('change', () => changeSourceState(d, control, card));
+            }
             card.querySelector('[data-dept-action="edit"]').addEventListener('click', () =>
                 editDept(d.id, d.name, d.group_name || '', d.list_url || '', d.list_selector || '',
                     d.title_selector || '', d.link_selector || '', d.date_selector || '', d.content_selector || ''));
@@ -306,6 +328,40 @@ async function loadDepts(schoolId) {
         });
     } catch(e) {
         showToast('error', uiT('加载部门列表失败'));
+    }
+}
+
+async function changeSourceState(source, control, card) {
+    const requested = control.value, previous = source.lifecycle_state || 'active';
+    control.value = previous;
+    if (requested === previous || card.getAttribute('aria-busy') === 'true') return;
+    const status = card.querySelector('[data-dept-state-status]');
+    const actions = Array.from(card.querySelectorAll('button, select'));
+    card.setAttribute('aria-busy', 'true');
+    actions.forEach(action => { action.disabled = true; });
+    I18n.setText(status, '正在保存…');
+    status.className = 'text-muted';
+    try {
+        const response = await fetch('/api/departments/' + source.id + '/lifecycle', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({state: requested}), signal: AbortSignal.timeout(30000)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.success || result.source_id !== source.id || result.state !== requested) {
+            throw new Error(result.error || uiT('未能确认保存结果，请刷新后重试。'));
+        }
+        source.lifecycle_state = result.state;
+        control.value = result.state;
+        I18n.setText(status, '状态已保存');
+        status.className = 'text-success';
+    } catch (failure) {
+        control.value = previous;
+        I18n.setText(status, failure.message && failure.name === 'Error'
+            ? failure.message : '未能确认保存结果，请刷新后重试。');
+        status.className = 'text-danger';
+    } finally {
+        card.removeAttribute('aria-busy');
+        actions.forEach(action => { action.disabled = false; });
     }
 }
 

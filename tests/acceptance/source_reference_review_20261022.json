@@ -1,0 +1,1290 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-22",
+  "reference_file": "tests/acceptance/source_references_20261016.json",
+  "reference_sha256": "c8a42e0efb53bbbecb5e5a575cf3019a4c421003a4dc7b5530b108947d8e115f",
+  "numbering": "School-grouped order shown to the user on 2026-10-22; stable source_key retained",
+  "user_statement": "3有中英文页面，26这个归属是对的，但咋到学生培养了，27也是这样的情况，其他的名称和地址都是对的",
+  "scope": "User confirmation of reference names/addresses, with three qualified items. Not certification of article retrieval, installation, importance, independent holdout or branch coverage.",
+  "counts": {
+    "entries": 70,
+    "unqualified_name_address_confirmations": 67,
+    "qualified_items": 3,
+    "independent_branch_episodes_certified": 0
+  },
+  "website_requests": 0,
+  "model_calls": 0,
+  "evaluator_development_allowed": false,
+  "original_reference_file_modified": false,
+  "reviews": [
+    {
+      "review_number": 1,
+      "source_key": "hust:0",
+      "name": [
+        "华中科技大学",
+        "生命科学与技术学院",
+        "通知公告"
+      ],
+      "url": "http://life.hust.edu.cn/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 2,
+      "source_key": "hust:6",
+      "name": [
+        "华中科技大学",
+        "机械科学与工程学院",
+        "通知公告"
+      ],
+      "url": "http://mse.hust.edu.cn/sylm/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 3,
+      "source_key": "hust:11",
+      "name": [
+        "华中科技大学",
+        "中欧清洁与可再生能源学院",
+        "News"
+      ],
+      "url": "http://icare.hust.edu.cn/English/News.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "qualified_confirmation",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed",
+      "retained_material": {
+        "path": ".local/remediation-20261016/oracle-hust-final-sources/2.html",
+        "sha256": "8443546270c3cd282f19b5b40c4437acb5bee45d255500ea6823ee52c4d17672",
+        "observed_at": "2026-10-16T08:25:57.866894+00:00",
+        "title": "News"
+      },
+      "issue_status": "recorded_with_existing_material_explanation; user_has_not_reviewed_explanation",
+      "user_note": "有中英文页面",
+      "user_reported_languages": [
+        "zh",
+        "en"
+      ],
+      "listed_page_language": "en",
+      "language_entrances": [
+        {
+          "text": "Chinese",
+          "url": "http://icare.hust.edu.cn/index.htm",
+          "locator": "a[href=\"../index.htm\"]"
+        }
+      ],
+      "chinese_news_counterpart": "unknown",
+      "translation_or_article_equivalence": "not_established"
+    },
+    {
+      "review_number": 4,
+      "source_key": "hust:13",
+      "name": [
+        "华中科技大学",
+        "电气与电子工程学院",
+        "通知公告"
+      ],
+      "url": "http://seee.hust.edu.cn/llxx/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 5,
+      "source_key": "hust:14",
+      "name": [
+        "华中科技大学",
+        "工程科学学院",
+        "学院通知"
+      ],
+      "url": "http://ses.hust.edu.cn/xwzx/xytz.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 6,
+      "source_key": "hust:15",
+      "name": [
+        "华中科技大学",
+        "计算机科学与技术学院",
+        "行政"
+      ],
+      "url": "http://www.cs.hust.edu.cn/sylm/tzgg/xz.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 7,
+      "source_key": "hust:16",
+      "name": [
+        "华中科技大学",
+        "建筑与城市规划学院",
+        "通知公告"
+      ],
+      "url": "http://aup.hust.edu.cn/index/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 8,
+      "source_key": "hust:17",
+      "name": [
+        "华中科技大学",
+        "土木与水利工程学院",
+        "通知公告"
+      ],
+      "url": "http://civil.hust.edu.cn/index/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 9,
+      "source_key": "hust:19",
+      "name": [
+        "华中科技大学",
+        "党委统战部",
+        "通知公告"
+      ],
+      "url": "http://tzb.hust.edu.cn/index/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 10,
+      "source_key": "hust:26",
+      "name": [
+        "华中科技大学",
+        "创新研究院",
+        "通知公告"
+      ],
+      "url": "http://ii.hust.edu.cn/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 11,
+      "source_key": "cupk:1",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "教务部",
+        "通知公告"
+      ],
+      "url": "https://www.cupk.edu.cn/jwb/tzgg/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 12,
+      "source_key": "cupk:2",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "教务部",
+        "教学运行",
+        "通知公告"
+      ],
+      "url": "https://www.cupk.edu.cn/jwb/jxyx/tzgg/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 13,
+      "source_key": "cupk:3",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "教务部",
+        "国际教育",
+        "通知公告"
+      ],
+      "url": "https://www.cupk.edu.cn/jwb/gjjy/tzgg/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 14,
+      "source_key": "cupk:4",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "教务部",
+        "教学研究",
+        "通知公告"
+      ],
+      "url": "https://www.cupk.edu.cn/jwb/jxyj/tzgg/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 15,
+      "source_key": "cupk:5",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "研究生部",
+        "通知公告",
+        "培养"
+      ],
+      "url": "https://www.cupk.edu.cn/yjsb/tzgg/py/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 16,
+      "source_key": "cupk:7",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "研究生部",
+        "通知公告",
+        "学位"
+      ],
+      "url": "https://www.cupk.edu.cn/yjsb/tzgg/xw/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 17,
+      "source_key": "cupk:8",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "研究生部",
+        "通知公告",
+        "继续教育"
+      ],
+      "url": "https://www.cupk.edu.cn/yjsb/tzgg/jxjy/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 18,
+      "source_key": "cupk:9",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "学生工作与安全保卫部",
+        "通知公告"
+      ],
+      "url": "https://www.cupk.edu.cn/xgybw/tzgg/tzgg/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 19,
+      "source_key": "cupk:10",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "研究生部",
+        "通知公告"
+      ],
+      "url": "https://www.cupk.edu.cn/yjsb/tzgg/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 20,
+      "source_key": "cupk:12",
+      "name": [
+        "中国石油大学（北京）克拉玛依校区",
+        "创新创业学院",
+        "通知公告"
+      ],
+      "url": "https://www.cupk.edu.cn/cxcy/tzgg/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 21,
+      "source_key": "sjtu:18",
+      "name": [
+        "上海交通大学",
+        "药学院",
+        "招生工作"
+      ],
+      "url": "https://pharm.sjtu.edu.cn/zsgz.html",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 22,
+      "source_key": "sjtu:20",
+      "name": [
+        "上海交通大学",
+        "设计学院",
+        "招生资讯"
+      ],
+      "url": "https://designschool.sjtu.edu.cn/dynamic/63664f5b6888d094311b211f64c74f56",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 23,
+      "source_key": "sjtu:21",
+      "name": [
+        "上海交通大学",
+        "研究生招生网",
+        "博士招生"
+      ],
+      "url": "https://yzb.sjtu.edu.cn/zkxx/bszs",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 24,
+      "source_key": "sjtu:22",
+      "name": [
+        "上海交通大学",
+        "心理学院",
+        "招生信息"
+      ],
+      "url": "https://psychology.sjtu.edu.cn/zsxx.html",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 25,
+      "source_key": "sjtu:23",
+      "name": [
+        "上海交通大学",
+        "研究生招生网",
+        "港澳台招生"
+      ],
+      "url": "https://yzb.sjtu.edu.cn/zkxx/gatzs",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 26,
+      "source_key": "sjtu:24",
+      "name": [
+        "上海交通大学",
+        "心理学院",
+        "学生培养"
+      ],
+      "url": "https://psychology.sjtu.edu.cn/pyfa.html",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "qualified_confirmation",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed",
+      "retained_material": {
+        "path": ".local/remediation-20261016/oracle-development-final-sources/15.html",
+        "sha256": "a873c2306c1eb868caa326802d8aa889fe628c217d988c825fcdbebc8401e2d1",
+        "observed_at": "2026-10-16T08:35:56.726374+00:00",
+        "title": "学生培养-上海交通大学心理学院",
+        "navigation_evidence": [
+          {
+            "text": "人才培养",
+            "href": "https://psychology.sjtu.edu.cn/rcpy.html",
+            "parent_classes": []
+          },
+          {
+            "text": "学生培养",
+            "href": "https://psychology.sjtu.edu.cn/pyfa.html",
+            "parent_classes": []
+          },
+          {
+            "text": "人才培养",
+            "href": "https://psychology.sjtu.edu.cn/rcpy.html",
+            "parent_classes": []
+          },
+          {
+            "text": "学生培养",
+            "href": "https://psychology.sjtu.edu.cn/pyfa.html",
+            "parent_classes": []
+          },
+          {
+            "text": "学生培养",
+            "href": "https://psychology.sjtu.edu.cn/pyfa.html",
+            "parent_classes": [
+              "active"
+            ]
+          },
+          {
+            "text": "学生培养",
+            "href": "https://psychology.sjtu.edu.cn/pyfa.html",
+            "parent_classes": [
+              "active"
+            ]
+          },
+          {
+            "text": "人才培养",
+            "href": "https://psychology.sjtu.edu.cn/rcpy.html",
+            "parent_classes": [
+              "adress",
+              "wl"
+            ]
+          },
+          {
+            "text": "学生培养",
+            "href": "https://psychology.sjtu.edu.cn/pyfa.html",
+            "parent_classes": [
+              "adress",
+              "wl"
+            ]
+          }
+        ]
+      },
+      "issue_status": "recorded_with_existing_material_explanation; user_has_not_reviewed_explanation",
+      "organization_ownership_review": "confirmed_by_user",
+      "user_note": "归属是对的，但栏目含义或归类有疑问",
+      "official_column_name": "学生培养",
+      "navigation_category": "人才培养",
+      "organization_membership_does_not_include_navigation_category": true,
+      "retained_article_examples": [
+        {
+          "title": "上海交通大学心理学、应用心理专业2026年博士研究生（2024级）学位论文开题（第二批）日程安排",
+          "url": "https://psychology.sjtu.edu.cn/pyfa/586.html"
+        },
+        {
+          "title": "上海交通大学心理学、应用心理专业 2026年硕士研究生学位论文中期检查考核通知",
+          "url": "https://psychology.sjtu.edu.cn/pyfa/584.html"
+        }
+      ]
+    },
+    {
+      "review_number": 27,
+      "source_key": "sjtu:25",
+      "name": [
+        "上海交通大学",
+        "船舶海洋与建筑工程学院",
+        "答辩公告"
+      ],
+      "url": "https://naoce.sjtu.edu.cn/dabiangonggao.html",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "qualified_confirmation",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed",
+      "retained_material": {
+        "path": ".local/remediation-20261016/oracle-development-final-sources/16.html",
+        "sha256": "5b970532dd2bb8eb4719c4a8c94dd6348300b467efe613e746eadac22a2a7bbb",
+        "observed_at": "2026-10-16T08:35:58.742190+00:00",
+        "title": "答辩公告-上海交通大学船舶海洋与建筑工程学院",
+        "navigation_evidence": [
+          {
+            "text": "人才培养",
+            "href": "https://naoce.sjtu.edu.cn/rcpy.html",
+            "parent_classes": [
+              "on"
+            ]
+          },
+          {
+            "text": "人才培养",
+            "href": "javascript:void(0)",
+            "parent_classes": [
+              "lm1_bt"
+            ]
+          },
+          {
+            "text": "答辩公告",
+            "href": "https://naoce.sjtu.edu.cn/dabiangonggao.html",
+            "parent_classes": [
+              "zz_lm"
+            ]
+          }
+        ]
+      },
+      "issue_status": "recorded_with_existing_material_explanation; user_has_not_reviewed_explanation",
+      "organization_ownership_review": "confirmed_by_user",
+      "user_note": "归属是对的，但栏目含义或归类有疑问",
+      "official_column_name": "答辩公告",
+      "navigation_category": "人才培养",
+      "organization_membership_does_not_include_navigation_category": true,
+      "retained_article_examples": [
+        {
+          "title": "博士生学位论文答辩公告-闫斌（指导教师：叶冠林）",
+          "url": "https://naoce.sjtu.edu.cn/dabiangonggao/15752.html"
+        },
+        {
+          "title": "博士生学位论文答辩公告-谢东东（指导教师：杨健）",
+          "url": "https://naoce.sjtu.edu.cn/dabiangonggao/15751.html"
+        }
+      ]
+    },
+    {
+      "review_number": 28,
+      "source_key": "sjtu:27",
+      "name": [
+        "上海交通大学",
+        "教务处",
+        "面向学生的通知"
+      ],
+      "url": "https://www.jwc.sjtu.edu.cn/index/mxxsdtz.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 29,
+      "source_key": "sjtu:28",
+      "name": [
+        "上海交通大学",
+        "电气工程学院",
+        "通知公告"
+      ],
+      "url": "https://see.sjtu.edu.cn/bks_tzgg.html",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 30,
+      "source_key": "sjtu:29",
+      "name": [
+        "上海交通大学",
+        "教务处",
+        "新闻通告"
+      ],
+      "url": "https://www.jwc.sjtu.edu.cn/xwtg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 31,
+      "source_key": "ustc:30",
+      "name": [
+        "中国科学技术大学",
+        "少年班学院",
+        "公告"
+      ],
+      "url": "https://sgy.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 32,
+      "source_key": "ustc:31",
+      "name": [
+        "中国科学技术大学",
+        "数学科学学院",
+        "学院新闻"
+      ],
+      "url": "https://math.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 33,
+      "source_key": "ustc:32",
+      "name": [
+        "中国科学技术大学",
+        "数学科学学院",
+        "通知公告"
+      ],
+      "url": "https://math.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 34,
+      "source_key": "ustc:33",
+      "name": [
+        "中国科学技术大学",
+        "数学科学学院",
+        "学术交流"
+      ],
+      "url": "https://math.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 35,
+      "source_key": "ustc:34",
+      "name": [
+        "中国科学技术大学",
+        "计算机科学与技术学院",
+        "新闻"
+      ],
+      "url": "https://cs.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 36,
+      "source_key": "ustc:35",
+      "name": [
+        "中国科学技术大学",
+        "计算机科学与技术学院",
+        "公告通知"
+      ],
+      "url": "https://cs.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 37,
+      "source_key": "ustc:36",
+      "name": [
+        "中国科学技术大学",
+        "计算机科学与技术学院",
+        "学术活动"
+      ],
+      "url": "https://cs.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 38,
+      "source_key": "ustc:37",
+      "name": [
+        "中国科学技术大学",
+        "计算机科学与技术学院",
+        "学生工作"
+      ],
+      "url": "https://cs.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 39,
+      "source_key": "ustc:38",
+      "name": [
+        "中国科学技术大学",
+        "物理学院",
+        "新闻中心",
+        "学院要闻"
+      ],
+      "url": "https://physics.ustc.edu.cn/",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 40,
+      "source_key": "ustc:39",
+      "name": [
+        "中国科学技术大学",
+        "物理学院",
+        "新闻中心",
+        "通知公告"
+      ],
+      "url": "https://physics.ustc.edu.cn/3584/list.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 41,
+      "source_key": "ruc:0",
+      "name": [
+        "中国人民大学",
+        "马克思主义学院",
+        "通知公告"
+      ],
+      "url": "http://marx.ruc.edu.cn/sy/tzgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 42,
+      "source_key": "ruc:1",
+      "name": [
+        "中国人民大学",
+        "外国语学院",
+        "通知公告"
+      ],
+      "url": "http://fl.ruc.edu.cn/sy/xwtz/tzgg_s/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 43,
+      "source_key": "ruc:2",
+      "name": [
+        "中国人民大学",
+        "哲学院",
+        "通知公告"
+      ],
+      "url": "https://phi.ruc.edu.cn/xwtz/tzgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 44,
+      "source_key": "ruc:3",
+      "name": [
+        "中国人民大学",
+        "财政金融学院",
+        "公告／全部"
+      ],
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/gg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 45,
+      "source_key": "ruc:4",
+      "name": [
+        "中国人民大学",
+        "财政金融学院",
+        "招生公告"
+      ],
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/zsgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 46,
+      "source_key": "ruc:5",
+      "name": [
+        "中国人民大学",
+        "财政金融学院",
+        "硕博教务"
+      ],
+      "url": "http://sf.ruc.edu.cn/sylm/gg_sy/yjsjw/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 47,
+      "source_key": "ruc:6",
+      "name": [
+        "中国人民大学",
+        "法学院",
+        "通知公告"
+      ],
+      "url": "http://www.law.ruc.edu.cn/home/xwzx/1/?pid=1",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 48,
+      "source_key": "ruc:7",
+      "name": [
+        "中国人民大学",
+        "信息学院",
+        "学院公告"
+      ],
+      "url": "http://info.ruc.edu.cn/xwgg/xygg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 49,
+      "source_key": "ruc:8",
+      "name": [
+        "中国人民大学",
+        "信息学院",
+        "教育公告"
+      ],
+      "url": "http://info.ruc.edu.cn/rcpy/jygg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 50,
+      "source_key": "ruc:9",
+      "name": [
+        "中国人民大学",
+        "外国语学院",
+        "研究生通知公告"
+      ],
+      "url": "http://fl.ruc.edu.cn/sy/rcpy/sss/tzgg_s/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 51,
+      "source_key": "tju:0",
+      "name": [
+        "天津大学",
+        "机械工程学院",
+        "通知公告"
+      ],
+      "url": "http://me.tju.edu.cn/xwzx/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 52,
+      "source_key": "tju:1",
+      "name": [
+        "天津大学",
+        "机械工程学院",
+        "研究生招生 / 通知公告"
+      ],
+      "url": "http://me.tju.edu.cn/zsxx/yjszs.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 53,
+      "source_key": "tju:2",
+      "name": [
+        "天津大学",
+        "精密仪器与光电子工程学院",
+        "学术活动通知"
+      ],
+      "url": "http://jyxy.tju.edu.cn/cn/xyfc/xshd/index.shtml",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 54,
+      "source_key": "tju:3",
+      "name": [
+        "天津大学",
+        "精密仪器与光电子工程学院",
+        "学生活动通知"
+      ],
+      "url": "http://jyxy.tju.edu.cn/cn/xsgz/hdfc/index.shtml",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 55,
+      "source_key": "tju:4",
+      "name": [
+        "天津大学",
+        "建筑工程学院",
+        "通知公告"
+      ],
+      "url": "http://jgxy.tju.edu.cn/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 56,
+      "source_key": "tju:5",
+      "name": [
+        "天津大学",
+        "建筑工程学院",
+        "通知公告"
+      ],
+      "url": "http://jgxy.tju.edu.cn/jyjx/bksjy/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 57,
+      "source_key": "tju:6",
+      "name": [
+        "天津大学",
+        "建筑工程学院",
+        "通知公告"
+      ],
+      "url": "http://jgxy.tju.edu.cn/jyjx/yjsjy/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 58,
+      "source_key": "tju:7",
+      "name": [
+        "天津大学",
+        "建筑学院",
+        "通知公告"
+      ],
+      "url": "http://arch.tju.edu.cn/xwzx/tzgg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 59,
+      "source_key": "tju:8",
+      "name": [
+        "天津大学",
+        "建筑学院",
+        "通知通告"
+      ],
+      "url": "http://arch.tju.edu.cn/kxyj/tztg.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 60,
+      "source_key": "bnu:0",
+      "name": [
+        "北京师范大学",
+        "心理学部",
+        "通知公告"
+      ],
+      "url": "https://psych.bnu.edu.cn/xwzx/tzgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 61,
+      "source_key": "bnu:1",
+      "name": [
+        "北京师范大学",
+        "心理学部",
+        "通知公告"
+      ],
+      "url": "https://psych.bnu.edu.cn/rcpy/tzgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 62,
+      "source_key": "bnu:2",
+      "name": [
+        "北京师范大学",
+        "心理学部",
+        "通知公告"
+      ],
+      "url": "https://psych.bnu.edu.cn/gjjl/tzggg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 63,
+      "source_key": "bnu:3",
+      "name": [
+        "北京师范大学",
+        "法学院",
+        "通知公告"
+      ],
+      "url": "https://law.bnu.edu.cn/xsyd/tzggxs/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 64,
+      "source_key": "bnu:4",
+      "name": [
+        "北京师范大学",
+        "法学院",
+        "通知公告"
+      ],
+      "url": "https://law.bnu.edu.cn/xwzx/xygg/tzgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 65,
+      "source_key": "bnu:5",
+      "name": [
+        "北京师范大学",
+        "文学院",
+        "通知公告"
+      ],
+      "url": "https://wxy.bnu.edu.cn/xstd/tzgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 66,
+      "source_key": "bnu:6",
+      "name": [
+        "北京师范大学",
+        "文学院",
+        "通知公告"
+      ],
+      "url": "https://wxy.bnu.edu.cn/djgz/tzgg1/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 67,
+      "source_key": "bnu:7",
+      "name": [
+        "北京师范大学",
+        "文学院",
+        "通知公告"
+      ],
+      "url": "https://wxy.bnu.edu.cn/sytzgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 68,
+      "source_key": "bnu:8",
+      "name": [
+        "北京师范大学",
+        "人工智能学院",
+        "通知公告"
+      ],
+      "url": "https://ai.bnu.edu.cn/zszl/yjszs/tzgg3/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 69,
+      "source_key": "bnu:9",
+      "name": [
+        "北京师范大学",
+        "人工智能学院",
+        "学术活动"
+      ],
+      "url": "https://ai.bnu.edu.cn/kxyj/xshd1/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    },
+    {
+      "review_number": 70,
+      "source_key": "bnu:10",
+      "name": [
+        "北京师范大学",
+        "人工智能学院",
+        "通知公告"
+      ],
+      "url": "https://ai.bnu.edu.cn/ggjxz/tzgg/index.htm",
+      "review_origin": "conversation_user",
+      "name_and_url_review": "confirmed",
+      "content_access_review": "not_reviewed",
+      "installation_review": "not_reviewed",
+      "importance_review": "not_reviewed",
+      "branch_coverage_review": "not_reviewed"
+    }
+  ]
+}

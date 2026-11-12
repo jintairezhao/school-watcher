@@ -1,6 +1,117 @@
+// One visible image at a time. A host permit wait is a delay, not a broken image.
+(() => {
+    const states = new Map(), queue = [];
+    let active = false, blockedUntil = 0, timer;
+    const observed = typeof IntersectionObserver === 'function'
+        ? new IntersectionObserver(entries => entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                observed.unobserve(entry.target);
+                enqueue(states.get(entry.target));
+            }
+        }), {rootMargin: '600px'}) : null;
+    function enqueue(state) {
+        if (!state || state.queued || state.ready || !state.image.isConnected) return;
+        state.queued = true;
+        queue.push(state);
+        pump();
+    }
+    function failed(state) {
+        state.image.setAttribute('aria-busy', 'false');
+        state.ready = false;
+        if (!state.image.isConnected || state.button?.isConnected) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'text-button article-image-retry';
+        window.I18n.setText(button, '重新加载图片');
+        button.addEventListener('click', () => {
+            button.remove();
+            state.attempts = 0;
+            enqueue(state);
+        });
+        (state.image.closest('a') || state.image).after(button);
+        state.button = button;
+    }
+    async function pump() {
+        if (active) return;
+        clearTimeout(timer);
+        if (Date.now() < blockedUntil) {
+            timer = setTimeout(pump, blockedUntil - Date.now());
+            return;
+        }
+        const state = queue.shift();
+        if (!state) return;
+        state.queued = false;
+        if (!state.image.isConnected) { pump(); return; }
+        active = true;
+        state.attempts += 1;
+        state.controller = new AbortController();
+        state.image.setAttribute('aria-busy', 'true');
+        try {
+            const response = await fetch(state.url, {signal: state.controller.signal});
+            if (response.status === 503) {
+                const result = await response.json();
+                if (result.error_code === 'origin_busy' && state.attempts < 6) {
+                    const seconds = Number(response.headers.get('Retry-After')) || 1;
+                    blockedUntil = Date.now() + Math.max(1, Math.min(900, seconds)) * 1000;
+                    state.queued = true;
+                    queue.unshift(state);
+                    return;
+                }
+            }
+            if (!response.ok || !response.headers.get('Content-Type')?.startsWith('image/')) {
+                failed(state);
+                return;
+            }
+            const blob = await response.blob();
+            if (blob.size > 8 * 1024 * 1024) { failed(state); return; }
+            const data = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+            if (state.image.isConnected) {
+                state.image.src = data;
+                state.image.setAttribute('aria-busy', 'false');
+                state.ready = true;
+                state.button?.remove();
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') failed(state);
+        } finally {
+            state.controller = null;
+            active = false;
+            pump();
+        }
+    }
+    window.initArticleImages = function (root) {
+        root?.querySelectorAll('img[data-article-image-src]').forEach(image => {
+            if (states.has(image)) return;
+            const id = image.closest('[data-content-id]')?.dataset.contentId;
+            const url = image.dataset.articleImageSrc;
+            if (!id || !new RegExp('^/api/announcements/' + id + '/images/[a-f0-9]{64}$').test(url)) return;
+            const state = {image, url, attempts: 0, queued: false, ready: false};
+            states.set(image, state);
+            image.addEventListener('error', () => failed(state));
+            if (observed) observed.observe(image);
+            else enqueue(state);
+        });
+    };
+    new MutationObserver(() => {
+        for (const [image, state] of states) {
+            if (image.isConnected) continue;
+            observed?.unobserve(image);
+            state.controller?.abort();
+            state.button?.remove();
+            states.delete(image);
+        }
+    }).observe(document.documentElement, {childList: true, subtree: true});
+})();
+
 // Normalize presentation in the rendered copy, leaving archived HTML untouched.
 window.normalizeArticleTypography = function (body) {
     if (!body) return;
+    window.initArticleImages(body);
     body.querySelectorAll('*').forEach(element => {
         const weight = element.style.fontWeight;
         const emphasis = element.style.fontStyle;
@@ -97,7 +208,11 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
                 method = 'GET';
                 if (!panel.isConnected) return;
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || uiT('正文暂时无法加载，请打开原文查看。'));
+                if (!response.ok) {
+                    phase('failed');
+                    setMessage(data.error || '正文暂时无法加载，请打开原文查看。');
+                    return;
+                }
                 updatePublicationDate(data);
                 if (data.content_status === 'saved') {
                     // HTML is sanitized by the server using the same policy as stored articles.
@@ -116,7 +231,9 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
                 // retry forever (see LOGIN_REQUIRED_MESSAGE). A failed read
                 // answers 200, so data.error never arrives through line 43.
                 if (data.content_status === 'failed') {
-                    throw new Error(data.error || uiT('正文暂时无法加载，可以重试或打开官网原文。'));
+                    phase('failed');
+                    setMessage(data.error || '正文暂时无法加载，可以重试或打开官网原文。');
+                    return;
                 }
                 if (data.content_status === 'unloaded') {
                     phase('unloaded');
@@ -124,17 +241,17 @@ root.querySelectorAll('[data-content-id]').forEach(panel => {
                     return;
                 }
                 phase('loading');
-                setMessage(data.progress_message || uiT('正文正在后台处理，完成后会自动显示，也可以先打开官网原文。'));
+                setMessage(data.progress_message || '正文正在后台处理，完成后会自动显示，也可以先打开官网原文。');
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         } catch (error) {
             if (!panel.isConnected) return;
             phase('failed');
-            if (message) message.textContent = error instanceof SyntaxError
-                ? uiT('应用返回的正文状态暂时无法读取，可重试查看结果或打开官网原文。') : error.message;
+            setMessage(error instanceof SyntaxError
+                ? '应用返回的正文状态暂时无法读取，可重试查看结果或打开官网原文。' : error.message);
         } finally {
             busy = false;
-            if (button?.isConnected) {button.disabled = false; button.textContent = uiT('重新加载正文');}
+            if (button?.isConnected) {button.disabled = false; window.I18n.setText(button, '重新加载正文');}
         }
     }
     if (button) button.addEventListener('click', load);

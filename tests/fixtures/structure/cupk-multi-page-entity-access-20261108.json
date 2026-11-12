@@ -1,0 +1,1343 @@
+{
+  "provenance": {
+    "kind": "retained_current_case_projection_subset",
+    "structure_version": {
+      "epoch": "3a86206bb1914c1fa27904b80b000f85",
+      "revision": 246
+    },
+    "projection_version": 14,
+    "publication": {
+      "site_key": "d4d8ca3b35408034cbb3",
+      "generation": "c101a193b22c48e1ada93b478f5b01c9",
+      "path": "catalog-generations/d4d8ca3b35408034cbb3-c101a193b22c48e1ada93b478f5b01c9.sqlite3",
+      "activated_at": "2026-11-06 09:49:17.915217",
+      "policy_version": "1"
+    },
+    "network_requests": 0,
+    "selection": "Induced recorded navigation and entity bindings on the four affected entities and their observed route pages; API IDs retained separately from renderer IDs."
+  },
+  "cases": [
+    {
+      "id": "entity:1:292df3ba61cfdf2f97c2f0bfd6bb0e6d4e83c2af3fb31789ac56b36815050fc2",
+      "label": "学生工作与安全保卫部"
+    },
+    {
+      "id": "entity:1:2e9afa532b3640b0201b25d0cedc366c0196c20b5ac574dcb8d9e69b4d6a2272",
+      "label": "组织人事部"
+    },
+    {
+      "id": "entity:1:6e0ae0297cf9297872e98c9606b00d1b1c8da4402f8087806c07cdf6b2e4f5c3",
+      "label": "党群工作部"
+    },
+    {
+      "id": "entity:1:f543fbbfd417e6b78a6056d510b8749d2cd909ccf67bc151103492d167f31a7c",
+      "label": "研究生部"
+    }
+  ],
+  "snapshot": {
+    "nodes": [
+      {
+        "id": "entity:1:292df3ba61cfdf2f97c2f0bfd6bb0e6d4e83c2af3fb31789ac56b36815050fc2",
+        "entity_type": "organization",
+        "label": "学生工作与安全保卫部",
+        "url": "https://www.cupk.edu.cn/xgybw/",
+        "kind": "unit"
+      },
+      {
+        "id": "entity:1:2e9afa532b3640b0201b25d0cedc366c0196c20b5ac574dcb8d9e69b4d6a2272",
+        "entity_type": "organization",
+        "label": "组织人事部",
+        "url": "https://www.cupk.edu.cn/rsb/",
+        "kind": "unit"
+      },
+      {
+        "id": "entity:1:6e0ae0297cf9297872e98c9606b00d1b1c8da4402f8087806c07cdf6b2e4f5c3",
+        "entity_type": "organization",
+        "label": "党群工作部",
+        "url": "https://www.cupk.edu.cn/dwxcb/",
+        "kind": "unit"
+      },
+      {
+        "id": "entity:1:f543fbbfd417e6b78a6056d510b8749d2cd909ccf67bc151103492d167f31a7c",
+        "entity_type": "organization",
+        "label": "研究生部",
+        "url": "https://www.cupk.edu.cn/yjsb/",
+        "kind": "unit"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:145c6d3a767fd53ba007d642",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+        "label": "组织机构",
+        "kind": "directory"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:20b93fb44dbf08576bf65682",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/xgybw/",
+        "label": "学生工作与安全保卫部",
+        "kind": "unit"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:2b6199d789f706aee6fdb52a",
+        "entity_type": "page",
+        "url": "http://www.cupk.edu.cn/dwxcb/",
+        "label": "党群工作部",
+        "kind": "unit"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:4649a76eb5cee510c1808add",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/rsb/",
+        "label": "组织人事部",
+        "kind": "unit"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:4bb9a838ced4258b13e93626",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/yjsb/",
+        "label": "研究生部",
+        "kind": "unit"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:561a7e328f26886e47610a47",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+        "label": "通知公告",
+        "kind": "channel"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:5a8f9eb5f59225d10b2f7ebd",
+        "entity_type": "page",
+        "url": "http://www.cupk.edu.cn/rsb/",
+        "label": "组织与人事工作部",
+        "kind": "unit"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:5d05404c0677d562201ff4c7",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/yjsb/sszs/tzgg/",
+        "label": "招生",
+        "kind": "channel"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:621a5986e8eb32bd62b1a88e",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/xsgl/",
+        "label": "学生管理",
+        "kind": "group"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:73c7e0c01463b7bc28e90482",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/",
+        "label": "中国石油大学（北京）克拉玛依校区",
+        "kind": "root"
+      },
+      {
+        "id": "page:d4d8ca3b35408034cbb3:bf0f1183514e187ee6240b7d",
+        "entity_type": "page",
+        "url": "https://www.cupk.edu.cn/dwxcb/",
+        "label": "党群工作部",
+        "kind": "unit"
+      }
+    ],
+    "relations": [
+      {
+        "id": "relation:27a71e7948eb70b84097173db7ee70dc",
+        "source": "page:d4d8ca3b35408034cbb3:561a7e328f26886e47610a47",
+        "target": "page:d4d8ca3b35408034cbb3:5d05404c0677d562201ff4c7",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(3)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": "3856a700fc2ecddcee668e6e",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(3)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": "3856a700fc2ecddcee668e6e",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": "6d4b5f7c1bac4e5f3d16a358",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": "a58d74de0c2493d4270331ab",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(2)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": "3856a700fc2ecddcee668e6e",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(2)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:36c3b80b5fa1c69e58572102f764454d",
+        "source": "entity:1:f543fbbfd417e6b78a6056d510b8749d2cd909ccf67bc151103492d167f31a7c",
+        "target": "page:d4d8ca3b35408034cbb3:5d05404c0677d562201ff4c7",
+        "type": "entity_page",
+        "observed_relation": "verified_directory_website",
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(3) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/sszs/tzgg/",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "content_hash": "88b424030d5fda77471d8454ea78b52dee816225fd38f06342f08edaa84a4902",
+            "observed_at": "2026-10-24T07:21:07.584237+00:00",
+            "record_id": null,
+            "parser_version": "c91429f2e6b36382aaba81d153abaae983467f68be445d77565c292677a4b180",
+            "material_available": true
+          }
+        ],
+        "assertions": [
+          {
+            "kind": "explicit_directory_website",
+            "direction": "organization_to_page",
+            "unit_key": "4f279cca312900fab36687ec",
+            "unit_name": "研究生部",
+            "directory_reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "unit_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "entry_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(3) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "website_url": "https://www.cupk.edu.cn/yjsb/sszs/tzgg/",
+            "identity_reference_url": "https://www.cupk.edu.cn/yjsb/sszs/tzgg/",
+            "identity_locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "identity_text": "中国石油大学（北京）克拉玛依校区研究生部"
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:3b26ddb4c13c7ddabadf83df3ce3089a",
+        "source": "page:d4d8ca3b35408034cbb3:145c6d3a767fd53ba007d642",
+        "target": "page:d4d8ca3b35408034cbb3:4bb9a838ced4258b13e93626",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "59643249c2a62bbf231df7ab",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "59643249c2a62bbf231df7ab",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "4f279cca312900fab36687ec",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:40635594fe9b091db16ba3a0e4623b4b",
+        "source": "entity:1:2e9afa532b3640b0201b25d0cedc366c0196c20b5ac574dcb8d9e69b4d6a2272",
+        "target": "page:d4d8ca3b35408034cbb3:4649a76eb5cee510c1808add",
+        "type": "entity_page",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "057a37385702c38a452df135",
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:46d4c5f278caeba6992265edf7f3d554",
+        "source": "page:d4d8ca3b35408034cbb3:73c7e0c01463b7bc28e90482",
+        "target": "page:d4d8ca3b35408034cbb3:5d05404c0677d562201ff4c7",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(5) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": "b481ec0648803a38907a89fd",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(5) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": "b481ec0648803a38907a89fd",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:56d738c717adee922946bd22a20eb95d",
+        "source": "entity:1:6e0ae0297cf9297872e98c9606b00d1b1c8da4402f8087806c07cdf6b2e4f5c3",
+        "target": "page:d4d8ca3b35408034cbb3:bf0f1183514e187ee6240b7d",
+        "type": "entity_page",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "5f01cf8d52b778190fe8f962",
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:5aa3cd47c566b1dc21542b6c943f2273",
+        "source": "page:d4d8ca3b35408034cbb3:20b93fb44dbf08576bf65682",
+        "target": "page:d4d8ca3b35408034cbb3:5a8f9eb5f59225d10b2f7ebd",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/xgybw/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "6a02eb8e7f9120dbbc24868c23955fe24658b827b7cdd8e58befdf502bee6515",
+            "observed_at": "2026-10-23T11:40:47.807509+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:613c3bd362ebc3911fe49d770d3f2cfc",
+        "source": "entity:1:6e0ae0297cf9297872e98c9606b00d1b1c8da4402f8087806c07cdf6b2e4f5c3",
+        "target": "page:d4d8ca3b35408034cbb3:2b6199d789f706aee6fdb52a",
+        "type": "entity_page",
+        "observed_relation": "verified_directory_website",
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(3) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "http://www.cupk.edu.cn/dwxcb/",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "content_hash": "3610efe93b4a22d395b9544491239cde2dd3a5caaf1095cb13ce1edabb5c3484",
+            "observed_at": "2026-10-15T10:24:11+00:00",
+            "record_id": null,
+            "parser_version": "7091dea7515b97354280a92dda82dda5b770cbb3b18c90105d366f4721e096f2",
+            "material_available": true
+          }
+        ],
+        "assertions": [
+          {
+            "kind": "explicit_directory_website",
+            "direction": "organization_to_page",
+            "unit_key": "5f01cf8d52b778190fe8f962",
+            "unit_name": "党群工作部",
+            "directory_reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "unit_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "entry_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(3) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "website_url": "http://www.cupk.edu.cn/dwxcb/",
+            "identity_reference_url": "http://www.cupk.edu.cn/dwxcb/",
+            "identity_locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "identity_text": "中国石油大学（北京）克拉玛依校区党群工作部"
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:66dd3e0e014317062cd71cdb3307618b",
+        "source": "entity:1:292df3ba61cfdf2f97c2f0bfd6bb0e6d4e83c2af3fb31789ac56b36815050fc2",
+        "target": "page:d4d8ca3b35408034cbb3:20b93fb44dbf08576bf65682",
+        "type": "entity_page",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "f70dedb03fbdacb2abe26291",
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:72d664044d5c825d21e2724665175bdf",
+        "source": "page:d4d8ca3b35408034cbb3:145c6d3a767fd53ba007d642",
+        "target": "page:d4d8ca3b35408034cbb3:20b93fb44dbf08576bf65682",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "f70dedb03fbdacb2abe26291",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:7bb442875af863c6ef8a9dd50a40f5fd",
+        "source": "entity:1:2e9afa532b3640b0201b25d0cedc366c0196c20b5ac574dcb8d9e69b4d6a2272",
+        "target": "page:d4d8ca3b35408034cbb3:5a8f9eb5f59225d10b2f7ebd",
+        "type": "entity_page",
+        "observed_relation": "verified_directory_website",
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(3) > p:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "http://www.cupk.edu.cn/rsb/",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "content_hash": "7e17242a393a304a1af74917ed81e1516fc3f4a7959e581fa2338204683024c8",
+            "observed_at": "2026-10-15T10:42:32+00:00",
+            "record_id": null,
+            "parser_version": "28a5372a95baef250d94d2352a0ecd7b5b3afcf7aa5b1fa33da9756daf6c5629",
+            "material_available": true
+          }
+        ],
+        "assertions": [
+          {
+            "kind": "explicit_directory_website",
+            "direction": "organization_to_page",
+            "unit_key": "057a37385702c38a452df135",
+            "unit_name": "组织人事部",
+            "directory_reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "unit_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "entry_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(3) > p:nth-of-type(2) > a:nth-of-type(1)",
+            "website_url": "http://www.cupk.edu.cn/rsb/",
+            "identity_reference_url": "http://www.cupk.edu.cn/rsb/",
+            "identity_locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "identity_text": "中国石油大学（北京）克拉玛依校区组织人事部"
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:7ff1e97ac0a97eed470771c5c0e3ba83",
+        "source": "page:d4d8ca3b35408034cbb3:4bb9a838ced4258b13e93626",
+        "target": "page:d4d8ca3b35408034cbb3:561a7e328f26886e47610a47",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": "f4e479b780251efe9ebef9b8",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:8f0db1b5d300788c53a86e16c328969b",
+        "source": "entity:1:6e0ae0297cf9297872e98c9606b00d1b1c8da4402f8087806c07cdf6b2e4f5c3",
+        "target": "page:d4d8ca3b35408034cbb3:bf0f1183514e187ee6240b7d",
+        "type": "entity_page",
+        "observed_relation": "verified_directory_website",
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(3) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/dwxcb/",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "content_hash": "3610efe93b4a22d395b9544491239cde2dd3a5caaf1095cb13ce1edabb5c3484",
+            "observed_at": "2026-10-27T05:43:22.755921+00:00",
+            "record_id": null,
+            "parser_version": "7091dea7515b97354280a92dda82dda5b770cbb3b18c90105d366f4721e096f2",
+            "material_available": true
+          }
+        ],
+        "assertions": [
+          {
+            "kind": "explicit_directory_website",
+            "direction": "organization_to_page",
+            "unit_key": "5f01cf8d52b778190fe8f962",
+            "unit_name": "党群工作部",
+            "directory_reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "unit_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "entry_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(3) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "website_url": "https://www.cupk.edu.cn/dwxcb/",
+            "identity_reference_url": "https://www.cupk.edu.cn/dwxcb/",
+            "identity_locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "identity_text": "中国石油大学（北京）克拉玛依校区党群工作部"
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:ab16ff1c1284cee95900077be084e1c6",
+        "source": "page:d4d8ca3b35408034cbb3:20b93fb44dbf08576bf65682",
+        "target": "page:d4d8ca3b35408034cbb3:2b6199d789f706aee6fdb52a",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/xgybw/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(5) > a:nth-of-type(1)",
+            "content_hash": "6a02eb8e7f9120dbbc24868c23955fe24658b827b7cdd8e58befdf502bee6515",
+            "observed_at": "2026-10-23T11:40:47.807509+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:b16b0203b3959ec40364caa3a3693881",
+        "source": "entity:1:292df3ba61cfdf2f97c2f0bfd6bb0e6d4e83c2af3fb31789ac56b36815050fc2",
+        "target": "page:d4d8ca3b35408034cbb3:621a5986e8eb32bd62b1a88e",
+        "type": "entity_page",
+        "observed_relation": "verified_directory_website",
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(3) > p:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/xsgl/",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "content_hash": "ce58f4a9bb54e185418a000105fe58a7d1c96cea8e5d52900ad55a4f9c6b2ecf",
+            "observed_at": "2026-10-23T12:40:12.734135+00:00",
+            "record_id": null,
+            "parser_version": "e0e4a861a5faf90352dd65acb4011635c6910d7ab6adad8b248c33f6867a9005",
+            "material_available": true
+          }
+        ],
+        "assertions": [
+          {
+            "kind": "explicit_directory_website",
+            "direction": "organization_to_page",
+            "unit_key": "f70dedb03fbdacb2abe26291",
+            "unit_name": "学生工作与安全保卫部",
+            "directory_reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "unit_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "entry_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(3) > p:nth-of-type(3) > a:nth-of-type(1)",
+            "website_url": "https://www.cupk.edu.cn/xsgl/",
+            "identity_reference_url": "https://www.cupk.edu.cn/xsgl/",
+            "identity_locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "identity_text": "中国石油大学（北京）克拉玛依校区学生工作与安全保卫部"
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:b9092770f20b7f2d7c73d285152db0c0",
+        "source": "page:d4d8ca3b35408034cbb3:5d05404c0677d562201ff4c7",
+        "target": "page:d4d8ca3b35408034cbb3:561a7e328f26886e47610a47",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/sszs/tzgg/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "88b424030d5fda77471d8454ea78b52dee816225fd38f06342f08edaa84a4902",
+            "observed_at": "2026-10-24T07:21:07.584237+00:00",
+            "record_id": "f4e479b780251efe9ebef9b8",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/sszs/tzgg/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "88b424030d5fda77471d8454ea78b52dee816225fd38f06342f08edaa84a4902",
+            "observed_at": "2026-10-24T07:21:07.584237+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:bc76c485bb459164e45029a7b0b58d12",
+        "source": "page:d4d8ca3b35408034cbb3:145c6d3a767fd53ba007d642",
+        "target": "page:d4d8ca3b35408034cbb3:bf0f1183514e187ee6240b7d",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "5f01cf8d52b778190fe8f962",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(3) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:c1ea773237a15722c5fbb3addc69117c",
+        "source": "page:d4d8ca3b35408034cbb3:145c6d3a767fd53ba007d642",
+        "target": "page:d4d8ca3b35408034cbb3:621a5986e8eb32bd62b1a88e",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(8) > td:nth-of-type(3) > p:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:c7d8db14fe74a72217f34bf1929b944f",
+        "source": "page:d4d8ca3b35408034cbb3:4bb9a838ced4258b13e93626",
+        "target": "page:d4d8ca3b35408034cbb3:5d05404c0677d562201ff4c7",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(3)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": "3856a700fc2ecddcee668e6e",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > a:nth-of-type(3)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": "3856a700fc2ecddcee668e6e",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": "6d4b5f7c1bac4e5f3d16a358",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": "a58d74de0c2493d4270331ab",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "42ad7a583253644e332aaadf6a3751d80129bd043a3aa8bd1663b09ff32252ae",
+            "observed_at": "2026-10-30T09:16:50.376646+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:c940d515edebeb798dbf2983b420519c",
+        "source": "entity:1:f543fbbfd417e6b78a6056d510b8749d2cd909ccf67bc151103492d167f31a7c",
+        "target": "page:d4d8ca3b35408034cbb3:4bb9a838ced4258b13e93626",
+        "type": "entity_page",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "4f279cca312900fab36687ec",
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:cb083e37edd7a66adcfb21eb85654a6b",
+        "source": "page:d4d8ca3b35408034cbb3:5a8f9eb5f59225d10b2f7ebd",
+        "target": "page:d4d8ca3b35408034cbb3:2b6199d789f706aee6fdb52a",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "http://www.cupk.edu.cn/rsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(4) > a:nth-of-type(1)",
+            "content_hash": "7e17242a393a304a1af74917ed81e1516fc3f4a7959e581fa2338204683024c8",
+            "observed_at": "2026-10-15T10:42:32+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:cb37cef629a6082c7bb6ae15c49c6663",
+        "source": "page:d4d8ca3b35408034cbb3:73c7e0c01463b7bc28e90482",
+        "target": "page:d4d8ca3b35408034cbb3:4bb9a838ced4258b13e93626",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": "59643249c2a62bbf231df7ab",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": "59643249c2a62bbf231df7ab",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:cd199b4cf1adb28da22433733989daae",
+        "source": "page:d4d8ca3b35408034cbb3:73c7e0c01463b7bc28e90482",
+        "target": "page:d4d8ca3b35408034cbb3:145c6d3a767fd53ba007d642",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": "6271db18cc737c006535ba28",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": "6271db18cc737c006535ba28",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+            "content_hash": "cdb97f7cda8c21888441109d1e6f80e987a59bfec40afbec67827a0ecce42b0f",
+            "observed_at": "2026-10-26T11:39:57.965396+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:d17993032b7efe175867a8c5882233c0",
+        "source": "page:d4d8ca3b35408034cbb3:4649a76eb5cee510c1808add",
+        "target": "page:d4d8ca3b35408034cbb3:2b6199d789f706aee6fdb52a",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/rsb/",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(4) > a:nth-of-type(1)",
+            "content_hash": "7e17242a393a304a1af74917ed81e1516fc3f4a7959e581fa2338204683024c8",
+            "observed_at": "2026-10-15T10:34:38+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:dcaefc9b10b15cd69025239011bb9950",
+        "source": "page:d4d8ca3b35408034cbb3:145c6d3a767fd53ba007d642",
+        "target": "page:d4d8ca3b35408034cbb3:4649a76eb5cee510c1808add",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > p:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(3) > p:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:dd29b6bd1a7a67b560c33ede6b007fca",
+        "source": "entity:1:f543fbbfd417e6b78a6056d510b8749d2cd909ccf67bc151103492d167f31a7c",
+        "target": "page:d4d8ca3b35408034cbb3:561a7e328f26886e47610a47",
+        "type": "entity_page",
+        "observed_relation": "verified_directory_website",
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(3) > p:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "content_hash": "527cadf0a3cf55f259944005a8a0e25fea327c9a0cf8602b88e13ed9914fe8e8",
+            "observed_at": "2026-10-18T15:28:49+00:00",
+            "record_id": null,
+            "parser_version": "c91429f2e6b36382aaba81d153abaae983467f68be445d77565c292677a4b180",
+            "material_available": true
+          }
+        ],
+        "assertions": [
+          {
+            "kind": "explicit_directory_website",
+            "direction": "organization_to_page",
+            "unit_key": "4f279cca312900fab36687ec",
+            "unit_name": "研究生部",
+            "directory_reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "unit_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "entry_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(3) > p:nth-of-type(2) > a:nth-of-type(1)",
+            "website_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "identity_reference_url": "https://www.cupk.edu.cn/yjsb/bkzs/klmyzx/",
+            "identity_locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "identity_text": "中国石油大学（北京）克拉玛依校区研究生部"
+          }
+        ],
+        "access": false
+      },
+      {
+        "id": "relation:deae151e1d29dfebb214273a8f8511f8",
+        "source": "page:d4d8ca3b35408034cbb3:145c6d3a767fd53ba007d642",
+        "target": "page:d4d8ca3b35408034cbb3:5d05404c0677d562201ff4c7",
+        "type": "navigation_link",
+        "observed_relation": null,
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(5) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "b481ec0648803a38907a89fd",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(5) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": "b481ec0648803a38907a89fd",
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(3) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(6) > td:nth-of-type(3) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": null,
+            "material_available": true
+          }
+        ],
+        "access": true
+      },
+      {
+        "id": "relation:ed8e8e1e57b07229bdf05094c632cc2d",
+        "source": "entity:1:2e9afa532b3640b0201b25d0cedc366c0196c20b5ac574dcb8d9e69b4d6a2272",
+        "target": "page:d4d8ca3b35408034cbb3:4649a76eb5cee510c1808add",
+        "type": "entity_page",
+        "observed_relation": "verified_directory_website",
+        "evidence": [
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(3) > p:nth-of-type(2) > a:nth-of-type(1)",
+            "content_hash": "03a8cc2ea0bb5a683625462c6cc445fdf96ddf7987aaf46e609c9584f84121d7",
+            "observed_at": "2026-10-23T04:48:43.584600+00:00",
+            "record_id": null,
+            "parser_version": "82f072ba2343f108b34c6b0f5ef18ea85b5c15330141bffaeea70bbe7048e947",
+            "material_available": true
+          },
+          {
+            "kind": "web_observation",
+            "reference_url": "https://www.cupk.edu.cn/rsb/",
+            "locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "content_hash": "7e17242a393a304a1af74917ed81e1516fc3f4a7959e581fa2338204683024c8",
+            "observed_at": "2026-10-15T10:34:38+00:00",
+            "record_id": null,
+            "parser_version": "28a5372a95baef250d94d2352a0ecd7b5b3afcf7aa5b1fa33da9756daf6c5629",
+            "material_available": true
+          }
+        ],
+        "assertions": [
+          {
+            "kind": "explicit_directory_website",
+            "direction": "organization_to_page",
+            "unit_key": "057a37385702c38a452df135",
+            "unit_name": "组织人事部",
+            "directory_reference_url": "https://www.cupk.edu.cn/c/2017-04-21/485097.shtml",
+            "unit_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+            "entry_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(3) > p:nth-of-type(2) > a:nth-of-type(1)",
+            "website_url": "https://www.cupk.edu.cn/rsb/",
+            "identity_reference_url": "https://www.cupk.edu.cn/rsb/",
+            "identity_locator": "html:nth-of-type(1) > head:nth-of-type(1) > title:nth-of-type(1)",
+            "identity_text": "中国石油大学（北京）克拉玛依校区组织人事部"
+          }
+        ],
+        "access": false
+      }
+    ]
+  }
+}

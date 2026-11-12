@@ -1,8 +1,11 @@
 /* Local WebGL scene. Viewing or touring never dispatches discovery work. */
-import {buildAtlas, ancestors, visibleEntries, trackingTarget, discoveryRoute} from './discovery-atlas-model.js';
-import {focusContext, displayLink, labelPolicy, labelImportance} from './discovery-atlas-view.js';
-import {identity, birthAnchor, growthPlan, growthAt, mix, smooth, clamp} from './discovery-atlas-motion.js';
+import {buildAtlas, ancestors, visibleEntries, trackingTarget, accessRoute, membershipRoute, explorationTrace, atlasLayoutSignature, refreshAtlasRecords} from './discovery-atlas-model.js';
+import {focusContext, displayLink, labelPolicy, labelImportance, labelSearchMatch, searchLabelLevel, placeLabelBox, labelHierarchyLevels, labelAncestors} from './discovery-atlas-view.js';
+import {identity, birthAnchor, growthPlan, recordedGrowthPlan, growthAt, mix, smooth, clamp} from './discovery-atlas-motion.js';
 import {pickSphere} from './discovery-atlas-picking.js';
+import {AtlasLayoutController} from './discovery-atlas-layout.js';
+import {appearanceColor} from './structure-appearance.js';
+import {AtlasRelationView} from './discovery-atlas-relations.js';
 
 const root = document.getElementById('discoveryMonitor');
 const el = id => document.getElementById(id);
@@ -72,18 +75,32 @@ async function initialize() {
     const sphereMaterial = new THREE.MeshStandardMaterial({roughness:.47, metalness:.16});
     const matrix = new THREE.Object3D(), raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(), projected = new THREE.Vector3();
-    const palette = {light:['#4386c3','#388e98','#8072b7','#698997','#aa778c'],
-        dark:['#75b7fa','#72b0b9','#a49bce','#98aeba','#be9aaa']};
     let model = null, nodes = [], spheres, rings, ringNodes = [], labelNodes = [], current = null;
-    let signature = '', theme, primary, manualColor, stateColors = {}, selectedPath = [], selectedRoute = {nodes:[],links:[],complete:false}, stageIndex = 0, tourTimer = null;
+    let relationView=null,lineMesh=null,relationSummary={availableRelations:0,summarizedNodes:0};
+    const expandedRelationGroups=new Set();
+    const relationBadge=document.createElement('span');relationBadge.id='atlasRelationBadge';relationBadge.hidden=true;el('atlasInspect').append(relationBadge);
+    let signature = '', dataSignature = '', theme, primary, manualColor, stateColors = {}, selectedPath = [], selectedRoute = {nodes:[],links:[],complete:false}, stageIndex = 0, tourTimer = null;
     let contextAvailable = true, explicitSelection = false, replayPosition = 1, replayPlan = null, replayScope = null;
+    let replayRecord=null,replayToken=null;
     let frames = new Map(), edges = [], lineGeometry = null, linePositions = null, lineColors = null, layoutMoving = false;
     let layoutSpacing = Number(el('atlasSpacing').value), lastTrackedKey = '', manualView = false;
     let fadingLinks = null, fadingAt = 0;
     let frame = null, lastFrame = 0, tween = null, dirty = true, active = false, inView = true, disposed = false;
     let bounds = new THREE.Sphere(new THREE.Vector3(), 260), extent = new THREE.Vector3(450, 300, 140), hover = null, press = null, lastPick = 0;
-    let overviewDistance = 600, contextIds = new Set();
-    const collapsed = new Set();
+    let overviewDistance = 600, overviewActive = false, contextIds = new Set();
+    let labelLevels=new Map(),upstreamIds=new Set();
+    let modelEpoch='',geometryFocus=null;
+    const geometry=new AtlasLayoutController({
+        onState:state=>{stage.dataset.layout=state.status;if(model)updateStatus();},
+        onReady:readyModel=>{
+            if(disposed||readyModel!==model)return;
+            const refit=overviewActive,focus=geometryFocus;geometryFocus=null;
+            paint();
+            if(refit)overview(false);else if(current?.id===focus)frameSelection(current);
+            requestFrame();
+        },
+    });
+    const collapsed = new Set(),expandedProofs=new Set();
     const tooltip = document.createElement('div'); tooltip.className = 'atlas-tooltip'; tooltip.hidden = true;
     stage.append(tooltip);
 
@@ -127,8 +144,14 @@ async function initialize() {
         }
         ctx.putImageData(pixels, 0, 0);
     }
+    function selectedNodeRoute(item=current) {
+        if(root.dataset.pathMode==='membership')return membershipRoute(model,item);
+        if(root.dataset.pathMode==='exploration')return explorationTrace(root.monitorSnapshot||{},item,model);
+        return accessRoute(model,item);
+    }
     function replayGrowthPlan() {
-        const route=replayScope&&current?discoveryRoute(model,current):null;
+        if(replayRecord)return recordedGrowthPlan(replayRecord);
+        const route=replayScope&&current?selectedNodeRoute():null;
         const parents=route?new Map(route.nodes.map((item,index)=>[item.id,index?route.nodes[index-1]:null])):null;
         return growthPlan(replayScope?nodes.filter(item=>replayScope.has(item.id)):nodes,{parents});
     }
@@ -141,6 +164,7 @@ async function initialize() {
         for (const item of labelNodes) {
             const button = document.createElement('button'); button.type = 'button';
             button.className = 'atlas-node-label'; button.textContent = item.label;
+            button.dataset.summaryLabel=item.relationSummaryCount?uiT('{count} 条关联',{count:item.relationSummaryCount}):'';
             button.dataset.kind=item.record.kind;
             button.dataset.atlasNode = item.id; button.dataset.selected = String(item === current);
             button.setAttribute('aria-label', item.label + ' · ' + uiT(item.record?.state_label || uiT('已记录的导航名称')));
@@ -157,9 +181,12 @@ async function initialize() {
         const previous=new Map(nodes.map(item=>[identity(item),{position:{...(item.renderPosition||item.position)},scale:item.baseScale ?? 1}]));
         const previousEdges=edges.filter(edge=>displayLink(edge,current,hover)).map(edge=>({from:identity(edge.from),to:identity(edge.to)}));
         disposeGroup(graph); disposeGroup(highlight);
-        fadingLinks=null;
-        const revealed=new Set(current&&el('atlasFollow').checked?discoveryRoute(model,current).nodes.map(item=>item.id):[]);
-        nodes=visibleEntries(model,{query:el('monitorSearch').value.trim(),state:el('monitorFilter').value,collapsed,revealed}).sort((a,b)=>a.depth-b.depth);
+        fadingLinks=null;lineMesh=null;
+        const revealed=new Set(current&&el('atlasFollow').checked?selectedNodeRoute().nodes.map(item=>item.id):[]);
+        const available=visibleEntries(model,{query:el('monitorSearch').value.trim(),state:el('monitorFilter').value,collapsed,revealed});
+        const projection=relationView.project(available,relationContext());relationSummary=projection;
+        nodes=projection.nodes.sort((a,b)=>a.depth-b.depth);
+        for(const item of nodes)item.relationSummaryCount=summaryEnabled()?relationView.summaryCount(item.id,expandedRelationGroups):0;
         const shown=new Set(nodes.map(item=>item.id)), now=performance.now();
         frames=new Map(nodes.map(item=>{
             const old=previous.get(identity(item));
@@ -170,10 +197,11 @@ async function initialize() {
         }));
         replayPlan=replayGrowthPlan();
         spheres=new THREE.InstancedMesh(sphereGeometry,sphereMaterial,nodes.length);
+        spheres.name='atlasNodes';
         spheres.instanceMatrix.setUsage(THREE.DynamicDrawUsage); spheres.frustumCulled=false;
-        nodes.forEach((item,index)=>spheres.setColorAt(index,new THREE.Color(palette[theme][item.branch])));
+        nodes.forEach((item,index)=>spheres.setColorAt(index,new THREE.Color(appearanceColor(item.presentation,theme))));
         graph.add(spheres);
-        edges=model.links.filter(edge=>shown.has(edge.from.id)&&shown.has(edge.to.id));
+        edges=projection.edges;
         const retained=new Set(nodes.map(identity)), nextEdges=new Set(edges.map(edge=>identity(edge.from)+'|'+identity(edge.to)));
         const rewired=previousEdges.filter(edge=>retained.has(edge.from)&&retained.has(edge.to)&&!nextEdges.has(edge.from+'|'+edge.to));
         if (rewired.length && !reduced.matches) {
@@ -182,18 +210,13 @@ async function initialize() {
             fadingLinks=new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color:theme==='dark'?0x8995a8:0x647384,transparent:true,opacity:.5,depthWrite:false}));
             fadingLinks.frustumCulled=false; fadingAt=now; graph.add(fadingLinks);
         }
-        linePositions=new Float32Array(edges.length*2*3);
-        lineGeometry=new THREE.BufferGeometry();
-        lineGeometry.setAttribute('position',new THREE.BufferAttribute(linePositions,3).setUsage(THREE.DynamicDrawUsage));
-        lineColors=new Float32Array(linePositions.length);
-        lineGeometry.setAttribute('color',new THREE.BufferAttribute(lineColors,3).setUsage(THREE.DynamicDrawUsage));
-        const lines=new THREE.LineSegments(lineGeometry,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.38,depthWrite:false}));
-        lines.name='atlasLinks';
-        lines.frustumCulled=false; graph.add(lines);
-        ringNodes=nodes.filter(item=>['running','connected','waiting','failed'].includes(item.record?.state));
+        installRelationLines(edges);
+        // Reserve one instance per visible entity. Status changes update colors
+        // and visibility without replacing the scene's geometry or positions.
+        ringNodes=nodes;
         rings=new THREE.InstancedMesh(ringGeometry,new THREE.MeshBasicMaterial({transparent:true,opacity:.8}),ringNodes.length);
         rings.instanceMatrix.setUsage(THREE.DynamicDrawUsage); rings.frustumCulled=false;
-        ringNodes.forEach((item,index)=>rings.setColorAt(index,new THREE.Color(stateColors[item.record.state])));
+        ringNodes.forEach((item,index)=>rings.setColorAt(index,new THREE.Color(stateColors[item.record.state]||0)));
         graph.add(rings);
         if (nodes.length) {
             const box=new THREE.Box3(); nodes.forEach(item=>box.expandByPoint(new THREE.Vector3().copy(item.position)));
@@ -202,6 +225,28 @@ async function initialize() {
         }
         updateHighlight(); updateStatus(); requestFrame();
         root.dataset.atlasNodeCount=String(nodes.length);
+    }
+    function summaryEnabled(){return !el('monitorSearch').value.trim()&&el('monitorFilter').value==='all';}
+    function relationContext(){
+        const route=current&&el('atlasFollow').checked?selectedNodeRoute():{nodes:[],links:[]};
+        return {selected:current,hovered:hover,forced:new Set(route.links.map(edge=>edge.id)),
+            revealed:new Set(route.nodes.map(item=>item.id)),expanded:expandedRelationGroups,enabled:summaryEnabled()};
+    }
+    function installRelationLines(next){
+        if(lineMesh){graph.remove(lineMesh);lineMesh.geometry.dispose();lineMesh.material.dispose();}
+        edges=next;linePositions=new Float32Array(edges.length*2*3);
+        lineGeometry=new THREE.BufferGeometry();
+        lineGeometry.setAttribute('position',new THREE.BufferAttribute(linePositions,3).setUsage(THREE.DynamicDrawUsage));
+        lineColors=new Float32Array(linePositions.length);
+        lineGeometry.setAttribute('color',new THREE.BufferAttribute(lineColors,3).setUsage(THREE.DynamicDrawUsage));
+        lineMesh=new THREE.LineSegments(lineGeometry,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.38,depthWrite:false}));
+        lineMesh.userData.relationIds=edges.map(edge=>edge.id);
+        lineMesh.name='atlasLinks';lineMesh.frustumCulled=false;graph.add(lineMesh);
+    }
+    function refreshRelationLines(){
+        const next=relationView.project(nodes,relationContext()).edges;
+        if(next.length!==edges.length||next.some((edge,index)=>edge!==edges[index]))installRelationLines(next);
+        root.dataset.atlasShownRelations=String(edges.length);
     }
     function animateGeometry(time) {
         if (!spheres || !replayPlan) return;
@@ -227,8 +272,7 @@ async function initialize() {
         for (const edge of edges) {
             const a=edge.from.renderPosition,b=edge.to.renderPosition;
             const reveal=Math.min(edge.from.growth,edge.to.growth);
-            const shown=displayLink(edge,current,hover);
-            for(const fraction of [0,shown?reveal:0]) {
+            for(const fraction of [0,reveal]) {
                 const point=mix(a,b,fraction);
                 linePositions[offset++]=point.x;linePositions[offset++]=point.y;linePositions[offset++]=point.z;
             }
@@ -244,15 +288,22 @@ async function initialize() {
 
     function updateHighlight() {
         disposeGroup(highlight);
-        selectedRoute = discoveryRoute(model,current);
+        selectedRoute = selectedNodeRoute();
         selectedPath = el('atlasFollow').checked ? selectedRoute.nodes : current ? [current] : [];
+        refreshRelationLines();
         const visible = new Set(nodes.map(item => item.id));
         const manualEdges=el('atlasFollow').checked ? selectedRoute.links.filter(edge=>visible.has(edge.from.id)&&visible.has(edge.to.id)) : [];
         const pair=edge=>[edge.from.id,edge.to.id].sort().join('|'),painted=new Set();
         const drawRoute=(items,color,kind)=>{
             for(const edge of items){
                 if(painted.has(pair(edge)))continue;painted.add(pair(edge));
-                const line=new THREE.Mesh(routeGeometry,new THREE.MeshBasicMaterial({color:color.clone().multiplyScalar(theme==='dark'?3.2:1.45)}));
+                // Only the chosen path crosses the bloom threshold. Directory
+                // adjacency can be dense and must remain readable underneath it.
+                const path=kind==='manual';
+                const line=new THREE.Mesh(routeGeometry,new THREE.MeshBasicMaterial({
+                    color:color.clone().multiplyScalar(path?(theme==='dark'?3.2:1.45):1),
+                    transparent:!path,opacity:path?1:(theme==='dark'?.52:.65),depthWrite:path
+                }));
                 line.userData.route=kind;line.userData.entry=edge.to.id;line.userData.source=edge.from.id;line.userData.edge=edge;
                 line.position.copy(edge.from.position).lerp(edge.to.position,.5);
                 const direction=new THREE.Vector3().copy(edge.to.position).sub(edge.from.position);
@@ -262,7 +313,7 @@ async function initialize() {
             }
         };
         drawRoute(manualEdges,manualColor,'manual');
-        const related=current?model.links.filter(edge=>(edge.from===current||edge.to===current)&&visible.has(edge.from.id)&&visible.has(edge.to.id)):[];
+        const related=current?edges.filter(edge=>(edge.from===current||edge.to===current)&&visible.has(edge.from.id)&&visible.has(edge.to.id)):[];
         drawRoute(related,primary,'connection');
         root.dataset.atlasHighlight=current?'manual':'none';
         root.dataset.atlasPathMode=selectedRoute.mode;
@@ -273,10 +324,11 @@ async function initialize() {
         for (const item of selectedPath) {
             if (!visible.has(item.id)) continue;
             // The fluorescent route and label convey selection; retain status hues.
-            if (stateColors[item.record?.state]) {
-                const stateColor = new THREE.Color(stateColors[item.record.state]);
+            {
+                const stateColor = new THREE.Color(stateColors[item.record.state]||0);
                 const ring = new THREE.Mesh(ringGeometry, new THREE.MeshBasicMaterial({color:stateColor.multiplyScalar(1.8)}));
                 ring.position.copy(item.position); ring.scale.setScalar(item.radius + 1.8); ring.userData.faceCamera = true;
+                ring.userData.status=item;ring.visible=Boolean(stateColors[item.record.state]);
                 ring.userData.running = item.record.state === 'running'; highlight.add(ring);
             }
         }
@@ -289,40 +341,123 @@ async function initialize() {
         el('atlasBranch').hidden = !current?.children.length;
         el('atlasBranch').textContent = uiT(collapsed.has(current?.id) ? '展开分支' : uiT('收起分支'));
         renderRouteEvidence();
-        updateEmphasis(); renderLabels(); updateNarration(); updateFollowInfo(); requestFrame();
+        updateEmphasis(false); renderLabels(); updateNarration(); updateFollowInfo(); updateStatus(); requestFrame();
     }
     function renderRouteEvidence() {
         el('atlasPathEvidence')?.remove();
+        el('atlasAppearanceEvidence')?.remove();
         if(!current)return;
         const section=document.createElement('section');section.id='atlasPathEvidence';section.className='atlas-path-evidence';
-        const association=selectedRoute.mode==='association';
-        const heading=document.createElement('h3');heading.textContent=uiT(association?'所选节点的关联路径':'所选节点的发掘路径');section.append(heading);
+        const heading=document.createElement('h3');heading.textContent=uiT(root.dataset.pathMode==='membership'?'目录或归属路径':
+            root.dataset.pathMode==='exploration'?'真实探索记录':'官网访问路径');section.append(heading);
         const note=document.createElement('p');note.className='monitor-caption';
-        note.textContent=uiT('连线表示有记录的网页导航或目录收录，不表示组织上下级。');section.append(note);
-        if(association){const note=document.createElement('p');note.className='monitor-caption';note.textContent=uiT('发掘记录未连通官网，以下按真实链接展示关联路径；反向步骤不表示实际发掘顺序。');section.append(note);}
-        else if(!selectedRoute.rootConnected){const gap=document.createElement('p');gap.className='monitor-caption';gap.textContent=uiT('当前分支尚未记录到官网的连接，已突出此节点的直接关联。');section.append(gap);}
-        const list=document.createElement('ol');
-        selectedRoute.nodes.forEach((node,index)=>{
-            const row=document.createElement('li'),button=document.createElement('button');button.type='button';button.textContent=node.label;
-            button.title=node.record.url;button.addEventListener('click',()=>pick(node));row.append(button);
-            if(index){
-                const step=selectedRoute.steps[index-1],edge=step.edge,proof=document.createElement('a');
-                proof.textContent=uiT(edge.type==='navigation'?'网页导航':'目录收录')+' · '+uiT(edge.basis);
-                if(step.reversed)proof.textContent+=' · '+uiT('反向关联；原链接：{from} → {to}',{from:edge.from.label,to:edge.to.label});
-                proof.href=edge.evidence_url;proof.target='_blank';proof.rel='noopener noreferrer';proof.title=edge.locator||edge.evidence_url;row.append(proof);
+        note.textContent=uiT(root.dataset.pathMode==='exploration'?'仅展示实际记录的探索事件，不从导航关系推测先后顺序。':
+            root.dataset.pathMode==='membership'?'目录收录与组织归属分别标识，多重关系均保留。':'沿官网中记录的链接方向显示访问路线。');section.append(note);
+        if(root.dataset.pathMode==='exploration'){
+            const scope=document.createElement('p');scope.className='monitor-caption';
+            scope.textContent=uiT('仅回放所选节点已记录的发现与配置保存过程，较早历史可能缺失。');section.append(scope);
+        }
+        if(!selectedRoute.complete){const gap=document.createElement('p');gap.className='monitor-caption';gap.textContent=uiT(root.dataset.pathMode==='exploration'?
+            '尚无完整的真实探索记录。':'上游依据不完整，仅显示有证据的部分。');section.append(gap);}
+        const labels={navigation:uiT('网页导航'),navigation_link:uiT('网页导航'),directory:uiT('目录收录'),directory_listing:uiT('目录收录'),
+            organization_membership:uiT('组织归属'),source_ownership:uiT('栏目归属'),column_membership:uiT('栏目归属'),
+            source_preview:uiT('栏目预览关联'),
+            discovered_from:uiT('实际发现入口'),source_configuration_saved:uiT('栏目配置已保存')};
+        for(const route of selectedRoute.paths || [selectedRoute]){
+            const list=document.createElement('ol');
+            route.nodes.forEach((node,index)=>{
+                const row=document.createElement('li'),button=document.createElement('button');button.type='button';button.textContent=node.label;
+                button.title=node.record.url||'';button.addEventListener('click',()=>pick(node));row.append(button);
+                const edge=index?route.steps[index-1]?.edge:null;
+                if(edge){
+                    const evidenceItems=edge.evidence?.length?edge.evidence:[{reference_url:edge.evidence_url,locator:edge.locator}];
+                    const proofs=document.createElement('details');proofs.className='atlas-route-proof';proofs.dataset.relationId=edge.id;
+                    proofs.open=expandedProofs.has(edge.id);
+                    proofs.addEventListener('toggle',()=>{
+                        if(!proofs.isConnected)return;
+                        if(proofs.open)expandedProofs.add(edge.id);else expandedProofs.delete(edge.id);
+                    });
+                    const summary=document.createElement('summary'),relation=edge.type==='organization_membership'?
+                        uiT(edge.observed_relation==='attached_unit'?'挂靠单位':'下属单位'):labels[edge.type]||uiT('已记录关系');
+                    summary.textContent=uiT('{relation} · {count} 项依据',{relation,count:evidenceItems.length});proofs.append(summary);
+                    const observations=document.createElement('ol');
+                    for(const evidence of evidenceItems){
+                        const observation=document.createElement('li'),proof=document.createElement('a');proof.textContent=uiT('查看来源页面');
+                        proof.href=evidence.reference_url||evidence.evidence_url||'#';proof.target='_blank';proof.rel='noopener noreferrer';
+                        proof.title=[evidence.locator,evidence.observed_at,evidence.content_hash].filter(Boolean).join(' · ');observation.append(proof);
+                        const locator=document.createElement('p');locator.textContent=evidence.locator||uiT('页面位置未记录');observation.append(locator);
+                        if(evidence.observed_at){const observed=document.createElement('time');observed.dateTime=evidence.observed_at;
+                            observed.textContent=window.I18n?.dateTime(evidence.observed_at)||evidence.observed_at;observation.append(observed);}
+                        observations.append(observation);
+                    }
+                    proofs.append(observations);row.append(proofs);
+                }
+                list.append(row);
+            });
+            if(route.nodes.length)section.append(list);
+        }
+        if(selectedRoute.targetSource){const source=document.createElement('p');source.textContent=uiT('栏目所在页面')+' → '+selectedRoute.targetSource.label;section.append(source);}
+        if(selectedRoute.targetEntity){const entity=document.createElement('p');entity.textContent=uiT('实体对应页面')+' → '+selectedRoute.targetEntity.label;section.append(entity);}
+        const eventLabels={exploration_started:uiT('开始检查官网入口'),page_discovered:uiT('首次发现并保存入口'),
+            page_inspection_started:uiT('开始检查页面'),page_inspection_finished:uiT('页面检查结束'),
+            page_inspection_interrupted:uiT('页面检查中断'),source_configuration_saved:uiT('栏目配置已保存'),
+            navigation_application_started:uiT('开始应用导航识别结果'),
+            navigation_application_finished:uiT('导航识别结果已保存'),
+            navigation_application_interrupted:uiT('导航识别结果保存中断'),
+            navigation_model_observed:uiT('导航判断使用记录')};
+        const outcomes={read_failed:uiT('读取失败，保留未知'),access_blocked:uiT('访问受阻'),
+            material_observed:uiT('页面材料已读取'),interrupted:uiT('检查中断'),reference_only:uiT('文档入口，等待适配'),
+            navigation_result_applied:uiT('已按实际材料更新入口')};
+        for(const event of selectedRoute.events||[]){const row=document.createElement('p');
+            row.textContent=[window.I18n?.dateTime(event.observed_at)||event.observed_at,
+                eventLabels[event.event_type]||uiT('已记录事件'),event.label,outcomes[event.outcome]].filter(Boolean).join(' · ');section.append(row);
+            const usage=event.model_usage;
+            if(usage){
+                const kinds={request_attempt:uiT('本次调用模型'),ledger_reuse:uiT('复用已有执行'),
+                    no_dispatch:uiT('未派发模型请求'),shared_cache_reuse:uiT('复用导航缓存')};
+                for(const execution of usage.executions||[]){const invoice=document.createElement('p');
+                    const label=execution.usage_status==='not_dispatched'?uiT('未派发模型请求'):
+                        execution.usage_status==='pending'?uiT('调用仍在处理中，用量待确认'):
+                        execution.total_tokens===null?uiT('调用用量未知'):
+                        execution.usage_status==='administrator_reconciled'?uiT('人工对账用量：{count} Token',{count:execution.total_tokens}):
+                        uiT('已确认用量：{count} Token',{count:execution.total_tokens});
+                    invoice.textContent=(kinds[execution.use_kind]||uiT('已记录事件'))+' · '+label;section.append(invoice);}
+                if(usage.cache_origin_unknown){const unknown=document.createElement('p');
+                    unknown.textContent=uiT('复用了 {count} 项导航缓存；原调用记录未知',{count:usage.cache_origin_unknown});section.append(unknown);}
+                if(usage.unrecorded_attempts){const unknown=document.createElement('p');unknown.textContent=uiT('部分调用缺少可核对的账本引用');section.append(unknown);}
+                const note=document.createElement('p');note.textContent=uiT('用量来自原调用账本，多处复用不重复计费；此处不表示本节点新增成本。');section.append(note);
             }
-            list.append(row);
-        });
-        section.append(list);el('monitorDetail').querySelector('h3').after(section);
+        }
+        el('monitorDetail').querySelector('h3')?.after(section);
+        const appearance=document.createElement('section');appearance.id='atlasAppearanceEvidence';appearance.className='atlas-path-evidence';
+        const headingAppearance=document.createElement('h3');headingAppearance.textContent=uiT('图谱显示依据');appearance.append(headingAppearance);
+        const presentation=current.presentation,count=document.createElement('p');
+        count.textContent=uiT('已确认的接入信源数：{count}',{count:presentation.connectedSourceCount});appearance.append(count);
+        const group=document.createElement('p'),names=presentation.groups.map(id=>model.actual.get(id)?.label).filter(Boolean);
+        group.textContent=names.length?uiT('颜色分组：{names}',{names:names.join(' / ')}):uiT('颜色分组：尚无已确认组织关联');appearance.append(group);
+        if(names.length){const groupBasis=document.createElement('p');
+            const basisTypes={entity_page:uiT('实体对应页面'),source_ownership:uiT('栏目归属'),column_membership:uiT('栏目归属')};
+            const basis=current.record.entity_type==='organization'?uiT('已记录的组织身份'):
+                [...new Set(presentation.groupRelationTypes.map(type=>basisTypes[type]||uiT('已记录关系')))].join(' / ');
+            groupBasis.textContent=uiT('颜色依据：{basis}',{basis});appearance.append(groupBasis);}
+        if(presentation.groupStatus==='shared'){const shared=document.createElement('p');
+            shared.textContent=uiT('关联多个组织，使用共享颜色；具体关系以记录的关系类型为准。');appearance.append(shared);}
+        const basis=document.createElement('p');basis.className='monitor-caption';
+        basis.textContent=uiT('数量按明确归属去重；0 表示暂无已确认数量，未知部分不计入。');appearance.append(basis);
+        section.after(appearance);
+        const grouped=el('monitorRelationGroups');
+        if(grouped&&relationView.groupsFor(current.id).some(group=>relationView.dense(group)))el('monitorDetail').querySelector('h3')?.after(grouped);
     }
-    function updateEmphasis() {
+    function updateEmphasis(refreshLinks=true) {
         if (!spheres || !model) return;
+        if(refreshLinks)refreshRelationLines();
         contextIds=focusContext(model.links,current,hover,selectedPath);
+        upstreamIds=labelAncestors(model.links,current,hover);
         const onPath = new Set(selectedPath.map(item=>item.id));
         nodes.forEach((item,index)=>{
             const focused=Boolean(current||hover),near=contextIds.has(item.id);
             const fade=focused && !near ? .8 : focused && !onPath.has(item.id) ? .25 : 0;
-            spheres.setColorAt(index,new THREE.Color(palette[theme][item.branch]).lerp(scene.background,fade));
+            spheres.setColorAt(index,new THREE.Color(appearanceColor(item.presentation,theme)).lerp(scene.background,fade));
         });
         if(spheres.instanceColor)spheres.instanceColor.needsUpdate=true;
         edges.forEach((edge,index)=>{
@@ -331,6 +466,7 @@ async function initialize() {
             for(let offset=index*6;offset<(index+1)*6;offset+=3){lineColors[offset]=color.r;lineColors[offset+1]=color.g;lineColors[offset+2]=color.b;}
         });
         if(lineGeometry)lineGeometry.attributes.color.needsUpdate=true;
+        root.dataset.atlasShownRelations=String(edges.length);
     }
     function updateStatus() {
         if (!contextAvailable) {
@@ -339,31 +475,51 @@ async function initialize() {
         }
         stage.dataset.renderer = 'ready';
         const actualCount = nodes.filter(item => item.record).length;
-        el('atlasStatus').textContent = actualCount ? uiT('{count} 个官网入口 · 三维视图', {count:actualCount}) :
+        el('atlasStatus').textContent = actualCount ? uiT(geometry.state.status==='pending'
+            ?'{count} 个官网入口 · 正在整理图谱位置':'{count} 个官网入口 · 三维视图', {count:actualCount}) :
             uiT(root.monitorSnapshot?.nodes.length ? '没有匹配的入口，请更换名称或状态。' : uiT('还没有已记录的官网路径。启动探索后，这里会显示真实入口。'));
-        el('atlasPlay').disabled = !nodes.length;
+        if(actualCount&&geometry.state.status==='failed')el('atlasStatus').textContent=uiT('图谱位置暂未整理完成，可刷新页面重试。节点与路径仍可查看。');
+        el('atlasRelationStatus').textContent=uiT('显示 {shown}/{total} 条关系；{count} 个入口已收纳',{
+            shown:edges.length,total:relationSummary.availableRelations,count:relationSummary.summarizedNodes});
+        const summarized=current&&summaryEnabled()?relationView.summaryCount(current.id,expandedRelationGroups):0;
+        relationBadge.hidden=!summarized;relationBadge.textContent=String(summarized||'');
+        const history=explorationTrace(root.monitorSnapshot||{},current,model);
+        const canReplay=Boolean(recordedGrowthPlan(history));
+        el('atlasPlay').disabled = !canReplay;
+        el('atlasPlay').title=uiT(canReplay?'按真实记录顺序回放':'尚无可回放的完整探索记录');
+        el('atlasScrubber').disabled=!replayRecord;
+        root.querySelectorAll('[data-atlas-chapter]').forEach(button=>button.disabled=true);
+        root.querySelector('.atlas-chapter-buttons').hidden=true;
+        root.querySelector('.atlas-growth-options').hidden=!canReplay;
     }
     function sendSelection(item, focus = true) {
         const node = item.record;
         root.dispatchEvent(new CustomEvent('monitor-select-node', {detail:{id:node.id, node, focus}}));
     }
+    function dismissHover() {
+        hover=null;tooltip.hidden=true;renderer.domElement.style.cursor='grab';
+    }
     function pick(item) {
+        dismissHover();
+        overviewActive = false;
         manualView = true;
-        if(tourTimer||replayPosition<1)completeReplay();else stopTour();
+        if(replayRecord||tourTimer||replayPosition<1)completeReplay();else stopTour();
         explicitSelection = true; current = item; sendSelection(item,false); updateHighlight();
     }
     function receiveSelection(event) {
         if (!model) return;
         const item = model.actual.get(event.detail.node.id) || model.entries.get(event.detail.node.id);
         if (!item) return;
+        dismissHover();
         current = item;
         if (event.detail.focus) {
             explicitSelection = true;
-            if(tourTimer||replayPosition<1)completeReplay();else stopTour();
+            if(replayRecord||tourTimer||replayPosition<1)completeReplay();else stopTour();
         }
         let revealed = false;
+        if(!nodes.includes(item))revealed=true;
         for (const part of ancestors(item).slice(0, -1)) if (collapsed.delete(part.id)) revealed = true;
-        if(el('atlasFollow').checked&&discoveryRoute(model,item).nodes.some(node=>!nodes.includes(node)))revealed=true;
+        if(el('atlasFollow').checked&&selectedNodeRoute(item).nodes.some(node=>!nodes.includes(node)))revealed=true;
         if (revealed) paint(); else updateHighlight();
         if (event.detail.focus) {
             manualView = true; updateFollowInfo();
@@ -371,21 +527,70 @@ async function initialize() {
         }
     }
     function update(snapshot) {
+        if(replayRecord&&snapshot.structure_token!==replayToken)completeReplay();
         active = snapshot.nodes.some(node => node.state === 'running');
-        const next = JSON.stringify([layoutSpacing,snapshot.nodes.map(node => [node.id, node.label, node.path, node.kind, node.state]),snapshot.relations]);
+        const next = atlasLayoutSignature(snapshot,layoutSpacing);
+        const nextData = JSON.stringify([snapshot.nodes,snapshot.relations,snapshot.exploration_events]);
         const initial = !model;
-        if (next !== signature) {
-            signature = next; const oldId = current?.record?.id || current?.id;
-            hover=null;tooltip.hidden=true;
-            model = buildAtlas(snapshot,{spacing:layoutSpacing});
+        const epoch=String(snapshot.structure_version?.epoch||snapshot._transport?.version?.epoch||'legacy');
+        if (next !== signature||epoch!==modelEpoch) {
+            signature = next; const oldId = current?.record?.id || current?.id,hoverId=hover?.id;
+            const retained=model&&epoch===modelEpoch?Object.fromEntries([...model.actual].map(([id,item])=>[id,item.position])):{};
+            modelEpoch=epoch;
+            model = buildAtlas(snapshot,{spacing:layoutSpacing,deferLayout:true,previousPositions:retained});
+            relationView=new AtlasRelationView(model.links);
             current = model.actual.get(oldId) || model.entries.get(oldId) || model.actual.get(root.dataset.selectedId) || null;
+            hover=model.actual.get(hoverId)||null;tooltip.hidden=true;
             paint();
+        } else if(nextData!==dataSignature&&refreshAtlasRecords(model,snapshot)) {
+            const route=selectedNodeRoute();
+            const revealed=new Set(current&&el('atlasFollow').checked?route.nodes.map(item=>item.id):[]);
+            const shown=relationView.project(visibleEntries(model,{query:el('monitorSearch').value.trim(),state:el('monitorFilter').value,collapsed,revealed}),relationContext()).nodes;
+            const ids=new Set(nodes.map(item=>item.id));
+            if(shown.length!==nodes.length||shown.some(item=>!ids.has(item.id)))paint();
+            else refreshMetadataVisuals(route);
         }
+        labelLevels=labelHierarchyLevels([...model.actual.values()],model.links);
+        dataSignature=nextData;
+        geometry.update(model,snapshot,{signature:next,spacing:layoutSpacing});
+        if(hover)tooltip.textContent=hover.label+' · '+uiT(hover.record.kind_label||'官网入口')+'\n'+(hover.record.url||hover.record.reference_url||'');
         if (initial && nodes.length) {
             overview(false);
         }
         syncFollowing();
+        updateStatus();
         requestFrame();
+    }
+    function refreshMetadataVisuals(route) {
+        for(const item of labelNodes){
+            const button=item.labelElement;
+            if(button.textContent!==item.label){
+                button.textContent=item.label;
+                const hidden=button.hidden,visibility=button.style.visibility;
+                button.hidden=false;button.style.visibility='hidden';
+                const rect=button.getBoundingClientRect();item.labelWidth=rect.width;item.labelHeight=rect.height;
+                button.hidden=hidden;button.style.visibility=visibility;
+            }
+            button.setAttribute('aria-label',item.label+' · '+uiT(item.record.state_label||'已记录的导航名称'));
+        }
+        ringNodes.forEach((item,index)=>rings.setColorAt(index,new THREE.Color(stateColors[item.record.state]||0)));
+        if(rings?.instanceColor)rings.instanceColor.needsUpdate=true;
+        highlight.children.forEach(object=>{
+            const item=object.userData.status;
+            if(!item)return;
+            object.visible=Boolean(stateColors[item.record.state]);
+            object.material.color.set(stateColors[item.record.state]||0).multiplyScalar(1.8);
+            object.userData.running=item.record.state==='running';
+        });
+        const changed=route.nodes.map(item=>item.id).join('|')!==selectedRoute.nodes.map(item=>item.id).join('|')
+            ||route.links.map(edge=>edge.id).join('|')!==selectedRoute.links.map(edge=>edge.id).join('|');
+        if(changed)updateHighlight();
+        else{
+            selectedRoute=route;
+            [...el('atlasBreadcrumb').children].forEach((button,index)=>{if(route.nodes[index])button.textContent=route.nodes[index].label;});
+            renderRouteEvidence();updateEmphasis();updateNarration();updateFollowInfo();
+        }
+        updateStatus();requestFrame();
     }
     function updateFollowInfo() {
         if(!contextAvailable)return;
@@ -393,8 +598,8 @@ async function initialize() {
         el('atlasLocate').disabled=!target;
         let message='';
         if(el('atlasFollow').checked)message=!current?uiT('选择节点，查看从官网入口到此处的完整路径'):
-            selectedRoute.mode==='association'?uiT('官网关联路径：{count} 个入口（含反向导航）',{count:selectedRoute.nodes.length}):
-            selectedRoute.complete?uiT('所选路径：{count} 个入口',{count:selectedRoute.nodes.length}):uiT('当前分支尚未记录到官网的连接，已突出此节点的直接关联。');
+            root.dataset.pathMode==='exploration'?(selectedRoute.complete?uiT('真实探索记录：{count} 个事件',{count:selectedRoute.events.length}):uiT('尚无完整的真实探索记录。')):
+            selectedRoute.complete?uiT('所选路径：{count} 个入口',{count:selectedRoute.nodes.length}):uiT('上游依据不完整，仅显示有证据的部分。');
         el('atlasFollowStatus').textContent=message;
         el('atlasFollowStatus').title=message;
     }
@@ -417,9 +622,10 @@ async function initialize() {
         updateFollowInfo();
     }
     function completeReplay() {
-        stopTour();replayScope=null;replayPlan=growthPlan(nodes);positionReplay(1);
+        stopTour();replayRecord=null;replayToken=null;replayScope=null;replayPlan=growthPlan(nodes);positionReplay(1);
     }
     function fly(target, distance, animate = true, front = false) {
+        overviewActive = false;
         hover=null;tooltip.hidden=true;updateEmphasis();
         const direction = front ? new THREE.Vector3(.03,.035,1).normalize() : camera.position.clone().sub(controls.target).normalize();
         if (!Number.isFinite(direction.x) || direction.lengthSq() < .1) direction.set(.06, .07, 1).normalize();
@@ -441,9 +647,12 @@ async function initialize() {
         distance*=1.08;
         overviewDistance=distance;
         fly(bounds.center,distance,animate,true);
+        overviewActive = true;
     }
     function frameSelection(item) {
-        const visible=new Set(nodes), neighbors=(el('atlasFollow').checked?discoveryRoute(model,item).nodes:[item]).filter(n=>visible.has(n));
+        if(geometry.state.status==='pending')geometryFocus=item.id;
+        const visible=new Set(nodes), neighbors=(el('atlasFollow').checked?selectedNodeRoute(item).nodes:[item]).filter(n=>visible.has(n));
+        if(!neighbors.length&&visible.has(item))neighbors.push(item);
         const box=new THREE.Box3();for(const node of neighbors)box.expandByPoint(new THREE.Vector3().copy(node.position));
         const center=box.getCenter(new THREE.Vector3()),direction=camera.position.clone().sub(controls.target).normalize();
         const right=new THREE.Vector3().crossVectors(camera.up,direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right);
@@ -456,6 +665,13 @@ async function initialize() {
     }
 
     function updateNarration() {
+        if(replayRecord){
+            const index=Math.min(replayRecord.events.length-1,Math.floor(replayPosition*replayRecord.events.length));
+            const event=replayRecord.events[index];
+            const text=uiT('按真实记录顺序回放')+' · '+(event.label||'');
+            el('atlasNarration').textContent=text;el('atlasScrubber').setAttribute('aria-valuetext',text);
+            return;
+        }
         const path = selectedRoute.nodes.map(item => item.label).join(' / ');
         const lines = [uiT('从已记录的官网入口出发。'), uiT('分叉表示观察到的导航路径或已保存的目录归属。'),
             current ? uiT('当前线索：{name}', {name:current.label}) : uiT('选择一个节点，沿已记录的路径深入。'),
@@ -474,7 +690,7 @@ async function initialize() {
     function setChapter(index,animate=true) {
         positionReplay(Number(index)/3);
         if (!current || !explicitSelection) return;
-        const path=discoveryRoute(model,current).nodes, target=Number(index)===1?path[Math.min(1,path.length-1)]:current;
+        const path=selectedNodeRoute().nodes, target=Number(index)===1?(path[Math.min(1,path.length-1)]||current):current;
         if (Number(index)===0) overview(animate);
         else fly(new THREE.Vector3().copy(target.position),Number(index)===1?370:Number(index)===2?235:155,animate);
         el('monitorDetail').classList.toggle('atlas-evidence-focus',Number(index)===3);
@@ -485,23 +701,43 @@ async function initialize() {
     }
     function tour() {
         if (tourTimer) {stopTour();return;}
-        if (!nodes.length) return;
-        replayScope=current ? new Set(discoveryRoute(model,current).nodes.map(item=>item.id)) : null;
-        replayPlan=replayGrowthPlan();
-        if (replayPosition>=1) positionReplay(0);
-        tourTimer={at:performance.now(),from:replayPosition,duration:reduced.matches?1200:7200};
-        el('atlasPlay').setAttribute('aria-pressed','true'); el('atlasPlay').setAttribute('aria-label',uiT('暂停生长动画'));
-        updateFollowInfo();
-        if (!current) overview(false);
-        requestFrame();
+        const history=explorationTrace(root.monitorSnapshot||{},current,model),plan=recordedGrowthPlan(history);
+        if(!plan)return;
+        // Replay only the selected recorded lineage. Unrelated nodes and all
+        // current source states stay intact; no chapter or layout order is used.
+        el('monitorPathMode').value='exploration';
+        el('monitorPathMode').dispatchEvent(new Event('change',{bubbles:true}));
+        replayRecord=history;replayToken=root.monitorSnapshot?.structure_token;
+        replayScope=new Set(history.nodes.map(item=>item.id));replayPlan=plan;
+        positionReplay(0);tourTimer={at:performance.now(),from:0,duration:Math.max(2400,Math.min(12000,history.events.length*650))};
+        el('atlasPlay').setAttribute('aria-pressed','true');el('atlasPlay').setAttribute('aria-label',uiT('暂停生长动画'));
+        updateStatus();requestFrame();
     }
     function clearSelection() {
+        dismissHover();
         explicitSelection=false; current=null; selectedPath=[];
         delete root.dataset.selectedId; root.dispatchEvent(new CustomEvent('monitor-clear-selection')); updateHighlight();
     }
 
+    function positionTooltip(anchor,occupied,sphereObstacles,width,height) {
+        tooltip.hidden=true;
+        if(!hover||hover===current||!anchor)return;
+        tooltip.textContent=hover.label+' · '+uiT(hover.record.kind_label||'官网入口')+'\n'+(hover.record.url||hover.record.reference_url||'');
+        // Measure actual wrapping. Keep both inspected spheres clear while
+        // allowing the transient tooltip over unrelated background nodes.
+        tooltip.style.left='0px';tooltip.style.top='0px';tooltip.style.visibility='hidden';tooltip.hidden=false;
+        const rect=tooltip.getBoundingClientRect();
+        const box=placeLabelBox({...anchor,width:rect.width,height:rect.height,
+            viewportWidth:width,viewportHeight:height,occupied,
+            sphereObstacles:sphereObstacles.filter(sphere=>sphere.id===hover.id||sphere.id===current?.id),focused:true});
+        tooltip.hidden=!box;
+        if(box){tooltip.style.left=box[0]+'px';tooltip.style.top=box[1]+'px';}
+        tooltip.style.visibility='';
+    }
     function labelsAndRings() {
         const width = viewport.clientWidth, height = viewport.clientHeight, occupied = [[0,0,width,8],[0,height-8,width,height]];
+        const query=el('monitorSearch').value.trim();
+        const searchLevel=searchLabelLevel(labelNodes,labelLevels,query);
         const reserved = [el('atlasStatus'),el('atlasHelp'),stage.querySelector('.atlas-live-controls'),
             stage.querySelector('.atlas-scene-tools'),stage.querySelector('.atlas-camera-controls'),
             el('atlasOptions').open && el('atlasOptions').querySelector('.atlas-options-panel'),
@@ -510,7 +746,8 @@ async function initialize() {
             root.classList.contains('atlas-details-open') && el('atlasDetailPanel')].filter(Boolean);
         const rect=viewport.getBoundingClientRect();
         for(const panel of reserved){const box=panel.getBoundingClientRect();occupied.push([box.left-rect.left,box.top-rect.top,box.right-rect.left,box.bottom-rect.top]);}
-        const candidates=[],chosen=new Set(selectedPath.map(item=>item.id));
+        const candidates=[],sphereObstacles=[],chosen=new Set(selectedPath.map(item=>item.id));
+        let hoverAnchor=null;
         const zoom=overviewDistance/Math.max(1,camera.position.distanceTo(controls.target));
         const policy=labelPolicy({width,height,zoom,selected:current});
         for (const item of labelNodes) {
@@ -520,7 +757,10 @@ async function initialize() {
             const distance = camera.position.distanceTo(new THREE.Vector3().copy(item.renderPosition || item.position));
             const offset = item.drawRadius * height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * distance) + 8;
             if(item.growth<.15||projected.z < -1||projected.z>1||x<0||x>width||y<0||y>height)continue;
-            const priority=labelImportance(item,{selected:current,hovered:hover,path:chosen,context:contextIds,detailed:policy.detailed,pixels:offset-8,nodeLabels:el('atlasNodeLabels').checked});
+            sphereObstacles.push({id:item.id,x,y,radius:Math.max(2,offset-8)+2});
+            if(item===hover)hoverAnchor={x,y,offset};
+            const priority=labelImportance(item,{selected:current,hovered:hover,path:chosen,context:contextIds,detailed:policy.detailed,pixels:offset-8,nodeLabels:el('atlasNodeLabels').checked,
+                hierarchyLevel:labelLevels.get(item.id),upstream:upstreamIds,query,searchLevel});
             if(priority>=0)candidates.push({item,x,y,offset,priority});
         }
         candidates.sort((a,b)=>b.priority-a.priority||a.item.id.localeCompare(b.item.id));
@@ -528,23 +768,20 @@ async function initialize() {
         let count=0;
         for(const {item,x,y,offset} of candidates){
             if(count>=limit)break;
-            const w=item.labelWidth,h=item.labelHeight;
-            const positions=[[x+offset,y-h/2],[x-offset-w,y-h/2],[x-w/2,y-offset-h],[x-w/2,y+offset]];
-            let box;
-            for(const [left,top] of positions){
-                const candidate=[left,top,left+w,top+h];
-                if(left<4||top<4||candidate[2]>width-4||candidate[3]>height-4)continue;
-                if(occupied.some(other=>left<other[2]&&candidate[2]>other[0]&&top<other[3]&&candidate[3]>other[1]))continue;
-                box=candidate;break;
-            }
+            const box=placeLabelBox({x,y,offset,width:item.labelWidth,height:item.labelHeight,
+                viewportWidth:width,viewportHeight:height,occupied,sphereObstacles,
+                focused:item===current||item===hover||labelLevels.get(item.id)<=2||labelSearchMatch(item,query),
+                searchResult:labelSearchMatch(item,query)});
             if(!box)continue;
             const button=item.labelElement;button.hidden=false;button.style.transform=`translate(${box[0]}px,${box[1]}px)`;
-            button.dataset.selected=String(item===current);occupied.push([box[0]-6,box[1]-5,box[2]+6,box[3]+5]);count++;
+            button.dataset.selected=String(item===current);button.dataset.hierarchyLevel=String(labelLevels.get(item.id));
+            occupied.push([box[0]-6,box[1]-5,box[2]+6,box[3]+5]);count++;
         }
+        positionTooltip(hoverAnchor,occupied,sphereObstacles,width,height);
         root.dataset.atlasLabelCount=String(count);
         root.dataset.atlasDisplayMode=current?'local':policy.detailed?'detail':'overview';
         ringNodes.forEach((item, index) => {
-            matrix.position.copy(item.renderPosition || item.position); matrix.scale.setScalar(item.drawRadius ? item.drawRadius*1.18 : 0); matrix.quaternion.copy(camera.quaternion);
+            matrix.position.copy(item.renderPosition || item.position); matrix.scale.setScalar(item.drawRadius && stateColors[item.record.state] ? item.drawRadius*1.18 : 0); matrix.quaternion.copy(camera.quaternion);
             matrix.updateMatrix(); rings.setMatrixAt(index, matrix.matrix);
         });
         if (rings) rings.instanceMatrix.needsUpdate = true;
@@ -553,7 +790,7 @@ async function initialize() {
             if(object.userData.faceCamera)object.quaternion.copy(camera.quaternion);
             if(object.userData.edge){
                 const pixel=camera.position.distanceTo(object.position)*pixelFactor;
-                const radius=Math.max(.2,pixel*(object.userData.route==='manual'?1.6:1.05));
+                const radius=pixel*(object.userData.route==='manual'?1.3:.45);
                 object.scale.set(radius,object.userData.length,radius);
             }
             if(object.userData.selection){
@@ -599,7 +836,11 @@ async function initialize() {
         const width = viewport.clientWidth, height = viewport.clientHeight;
         if (!width || !height) return;
         camera.aspect = width / height; updateCameraRange();
-        renderer.setSize(width, height); composer.setSize(width, height); finishTexture(); requestFrame();
+        renderer.setSize(width, height); composer.setSize(width, height);
+        // Fullscreen and narrow windows change the frustum. Refit only an
+        // overview; a user-selected or manually adjusted camera stays intact.
+        if (overviewActive && nodes.length) overview(false);
+        finishTexture(); requestFrame();
     }
     function hit(event) {
         if (!spheres || !nodes.length) return null;
@@ -633,15 +874,9 @@ async function initialize() {
     renderer.domElement.addEventListener('pointermove', event => {
         if (press) {if(Math.hypot(event.clientX-press.x,event.clientY-press.y)>=5)press.dragged=true;return;}
         if (performance.now() - lastPick < 65) return;
-        lastPick = performance.now(); const previousHover=hover;hover = hit(event); tooltip.hidden = !hover;
+        lastPick = performance.now(); const previousHover=hover;hover = hit(event);
         if(hover!==previousHover)updateEmphasis();
         renderer.domElement.style.cursor = hover ? 'pointer' : 'grab';
-        if (hover) {
-            tooltip.textContent = hover.label + ' · ' + uiT(hover.record.kind_label) + '\n' + hover.record.url;
-            const rect = stage.getBoundingClientRect();
-            tooltip.style.left = Math.min(event.clientX - rect.left + 14, stage.clientWidth - 225) + 'px';
-            tooltip.style.top = Math.max(8, event.clientY - rect.top - 40) + 'px';
-        }
         requestFrame();
     });
     renderer.domElement.addEventListener('pointerleave', () => { tooltip.hidden = true;hover=null;updateEmphasis();requestFrame(); });
@@ -672,10 +907,11 @@ async function initialize() {
         updateStatus(); updateFollowInfo(); resize();
     });
     controls.addEventListener('change', requestFrame);
-    controls.addEventListener('start', () => { manualView = true; tween = null; hover=null;tooltip.hidden=true;updateEmphasis();stopTour(); });
+    controls.addEventListener('start', () => { overviewActive=false;geometryFocus=null;manualView = true; tween = null; hover=null;tooltip.hidden=true;updateEmphasis();stopTour(); });
     viewport.addEventListener('keydown', event => {
         if (event.target !== viewport) return;
         if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) {
+            overviewActive = false;
             event.preventDefault(); manualView = true; tween = null; stopTour();
             const offset = camera.position.clone().sub(controls.target), spherical = new THREE.Spherical().setFromVector3(offset);
             if (event.key === 'ArrowLeft') spherical.theta -= .12;
@@ -694,7 +930,7 @@ async function initialize() {
         const distance=tween?tween.to.distanceTo(tween.toTarget):camera.position.distanceTo(controls.target);
         fly(controls.target, THREE.MathUtils.clamp(distance * factor, controls.minDistance, controls.maxDistance));
     }
-    el('atlasOverview').addEventListener('click', () => { manualView=true;stopTour(); replayScope=null; replayPlan=growthPlan(nodes); positionReplay(1); clearSelection(); overview(); });
+    el('atlasOverview').addEventListener('click', () => { manualView=true;completeReplay();clearSelection(); overview(); });
     el('atlasZoomIn').addEventListener('click', () => zoom(.8));
     el('atlasZoomOut').addEventListener('click', () => zoom(1.25));
     el('atlasPlay').addEventListener('click', tour);
@@ -719,13 +955,30 @@ async function initialize() {
         if(root.monitorSnapshot){update(root.monitorSnapshot);overview();}
     });
     document.addEventListener('pointerdown',event=>{if(el('atlasOptions').open&&!el('atlasOptions').contains(event.target))el('atlasOptions').open=false;});
-    el('atlasOptions').addEventListener('toggle',requestFrame);
+    el('atlasOptions').addEventListener('toggle',()=>{
+        if(el('atlasOptions').open)immersivePanel('search',false);
+        requestFrame();
+    });
     root.addEventListener('monitor-data', event => update(event.detail));
     root.addEventListener('monitor-node-selected', receiveSelection);
+    root.addEventListener('monitor-relation-group',event=>{
+        if(!relationView?.groups.has(event.detail.id))return;
+        if(expandedRelationGroups.has(event.detail.id)===event.detail.expanded)return;
+        if(event.detail.expanded)expandedRelationGroups.add(event.detail.id);else expandedRelationGroups.delete(event.detail.id);
+        const refit=overviewActive;paint();if(refit)overview(false);
+    });
+    root.addEventListener('monitor-path-mode', event => {
+        if(['access','membership','exploration'].includes(event.detail?.mode))root.dataset.pathMode=event.detail.mode;
+        if(model){if(tourTimer||replayPosition<1)completeReplay();updateHighlight();updateStatus();}
+    });
     root.addEventListener('monitor-filter', () => { if (model) { paint(); overview(); updateFollowInfo(); } });
     const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(viewport);
     const intersection = new IntersectionObserver(entries => {
-        inView = entries[0].isIntersecting;
+        // Layout/fullscreen changes can queue both exit and re-entry for this
+        // viewport in one callback. The latest observation controls drawing.
+        const latest = entries.filter(entry => entry.target === viewport).at(-1);
+        if (!latest) return;
+        inView = latest.isIntersecting;
         if (inView) requestFrame(); else { stopTour(); if (frame) cancelAnimationFrame(frame); frame = null; }
     }); intersection.observe(viewport);
     const themeObserver = new MutationObserver(applyTheme); themeObserver.observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
@@ -736,7 +989,7 @@ async function initialize() {
     window.addEventListener('pagehide', event => {
         stopTour(); if (frame) cancelAnimationFrame(frame); frame = null;
         if (event.persisted) return;
-        disposed = true; resizeObserver.disconnect(); intersection.disconnect(); themeObserver.disconnect();
+        disposed = true;geometry.dispose(); resizeObserver.disconnect(); intersection.disconnect(); themeObserver.disconnect();
         controls.dispose(); disposeGroup(graph); disposeGroup(highlight); sphereGeometry.dispose(); sphereMaterial.dispose();
         ringGeometry.dispose(); bloom.dispose(); composer.dispose(); renderer.dispose();
         routeGeometry.dispose();selectionRingGeometry.dispose();
@@ -744,6 +997,7 @@ async function initialize() {
     window.addEventListener('pageshow', () => { if (!disposed) requestFrame(); });
     // Small diagnostics also let browser checks verify genuine spatial interaction.
     atlas = {camera, controls, renderer, get model() { return model; }, get current() { return current; }, scene, get progress() {return replayPosition;}, get playing() {return Boolean(tourTimer);}, get nodes() {return nodes;},
+        get layout(){return geometry.state;},
         select:id => { const item = model?.actual.get(id) || model?.entries.get(id); if (item) pick(item); }};
     root.discoveryAtlas = atlas;
     applyTheme(); resize(); stage.dataset.renderer = 'ready';
@@ -821,6 +1075,7 @@ document.addEventListener('fullscreenchange', () => {
 });
 el('atlasSearchToggle').addEventListener('click', () => {
     const open = !root.classList.contains('atlas-search-open');
+    if(open)el('atlasOptions').open=false;
     immersivePanel('details', false); immersivePanel('search', open);
     if (open) el('monitorSearch').focus();
 });

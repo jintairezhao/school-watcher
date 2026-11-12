@@ -10,6 +10,7 @@
     let failedURL;
     let openNoticePopover = '';
     let updatesAvailable = false;
+    let updateCheckPending = false, updateCheckController = null;
     function pendingUpdates(value) {
         updatesAvailable = value;
         const button = find('#inboxNewNotices');
@@ -19,6 +20,40 @@
         const next = new URL(url);
         next.searchParams.delete('selected');
         return readingView.dataKey(next);
+    }
+    async function checkInboxUpdates() {
+        if (readingView.mailbox(appliedURL) !== 'inbox') { updateCheckPending = false; return; }
+        if (!updateCheckPending || updateCheckController || desiredURL.href !== appliedURL.href ||
+            find('.notice-panel')?.getAttribute('aria-busy') === 'true') return;
+        updateCheckPending = false;
+        const check = new AbortController(), number = requestNumber;
+        updateCheckController = check;
+        const url = new URL(appliedURL);
+        // Preview precisely the current filtered page. Removing the reader
+        // selection prevents this background check from marking anything read
+        // or requesting article content.
+        url.searchParams.delete('selected');
+        const timeout = setTimeout(() => check.abort(), 15000);
+        try {
+            const response = await fetch(url.pathname + url.search, {
+                headers: {'X-Inbox-Fragment': '1'}, cache: 'no-store', signal: check.signal
+            });
+            if (!response.ok) return;
+            const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+            if (number !== requestNumber || check.signal.aborted) return;
+            const nextList = doc.querySelector('#noticeList');
+            if (!nextList) return;
+            const shown = new Set([...find('#noticeList').querySelectorAll('[data-notice-link]')]
+                .map(row => row.dataset.announcementId));
+            pendingUpdates([...nextList.querySelectorAll('[data-notice-link]')]
+                .some(row => !shown.has(row.dataset.announcementId)));
+        } catch (_) {
+            // A failed preview leaves the current reader and prompt alone.
+        } finally {
+            clearTimeout(timeout);
+            if (updateCheckController === check) updateCheckController = null;
+            if (updateCheckPending) queueMicrotask(checkInboxUpdates);
+        }
     }
     const noticePopoverTriggers = {noticeFilterPanel: 'toggleNoticeFilters', noticeActionsMenu: 'toggleNoticeActions'};
 
@@ -118,7 +153,10 @@
                 element.hasAttribute('data-source-unit') ? ['unit', element.dataset.sourceUnit,
                     element.querySelector('.source-unit-name').firstChild.textContent] :
                 ['column', element.value, element.disabled,
-                    element.closest('.department-option').querySelector('.department-name').firstChild.textContent])
+                    element.closest('.department-option').querySelector('.department-name').firstChild.textContent,
+                    element.closest('.department-option').dataset.sourceLabel,
+                    element.closest('.department-option').dataset.sourceFixedStatus,
+                    Boolean(element.closest('.department-option').querySelector('[data-historical-source-note]'))])
             .map(item => JSON.stringify(item)).join('|');
     }
     function syncControls(url) {
@@ -136,6 +174,10 @@
         const keepList = options.preserveList && !options.refreshList && listKey(url) === listKey(appliedURL);
         if (url.searchParams.get('school') !== appliedURL.searchParams.get('school') || readingView.mailbox(url) !== readingView.mailbox(appliedURL)) setNoticePopover();
         desiredURL = url;
+        if (updateCheckController) {
+            updateCheckPending = true;
+            updateCheckController.abort();
+        }
         saveSources();
         if (controller) controller.abort();
         controller = new AbortController();
@@ -145,9 +187,17 @@
         if (!keepList) setFeedback(uiT('正在更新通知…'), 'loading');
         find('.notice-panel').setAttribute('aria-busy', 'true');
         try {
-            const response = await fetch(url.pathname + url.search, {
-                headers: {'X-Inbox-Fragment': '1'}, signal: activeController.signal
-            });
+            let response;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                response = await fetch(url.pathname + url.search, {
+                    headers: {'X-Inbox-Fragment': '1'}, signal: activeController.signal
+                });
+                if (response.status !== 503 || response.headers.get('X-Structure-Updating') !== '1' || attempt === 2) break;
+                // Retry the whole request, leaving the displayed results and
+                // applied filters together until one consistent read succeeds.
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                if (activeController.signal.aborted) throw new DOMException('Request aborted', 'AbortError');
+            }
             if (!response.ok) throw new Error(uiT('筛选未更新，请重试。'));
             const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
             if (number !== requestNumber) return;
@@ -167,6 +217,8 @@
             const sameSources = oldPanel.dataset.sourceScope === newPanel.dataset.sourceScope &&
                 sourceStructure(oldPanel) === sourceStructure(newPanel);
             if (sameSources) {
+                for(const key of ['structureEpoch','structureRevision','attentionPolicyVersion'])oldPanel.dataset[key]=newPanel.dataset[key];
+                oldPanel.querySelector('#inboxLegacyScope').hidden=newPanel.querySelector('#inboxLegacyScope').hidden;
                 const rows = new Map([...newPanel.querySelectorAll('[data-department]')].map(input =>
                     [input.value, input.closest('.department-option')]));
                 oldPanel.querySelectorAll('[data-department]').forEach(input => {
@@ -177,10 +229,12 @@
                         current.textContent = nextCount.textContent;
                         current.dataset.savedCount = nextCount.dataset.savedCount;
                         current.setAttribute('aria-label', nextCount.getAttribute('aria-label'));
+                        for(const attribute of ['data-i18n-aria-label','data-i18n-aria-label-vars'])current.setAttribute(attribute,nextCount.getAttribute(attribute));
                     }
                     const status = row.querySelector('[data-source-status]'), nextStatus = nextRow?.querySelector('[data-source-status]');
                     if (status && nextStatus) {
                         status.textContent = nextStatus.textContent;
+                        status.dataset.i18n=nextStatus.dataset.i18n;
                         status.hidden = nextStatus.hidden;
                         row.title = nextRow.title;
                     }
@@ -250,7 +304,10 @@
             if (options.history === 'none') history.replaceState(null, '', appliedURL.pathname + appliedURL.search);
         } finally {
             clearTimeout(timeout);
-            if (number === requestNumber) find('.notice-panel')?.removeAttribute('aria-busy');
+            if (number === requestNumber) {
+                find('.notice-panel')?.removeAttribute('aria-busy');
+                checkInboxUpdates();
+            }
         }
     }
     function navigateWith(update = {}, remove = []) {
@@ -258,6 +315,10 @@
         remove.concat(['selected', 'page']).forEach(key => url.searchParams.delete(key));
         Object.entries(update).forEach(([key, value]) => {
             if (value === '' || value == null) url.searchParams.delete(key);
+            else if (Array.isArray(value)) {
+                url.searchParams.delete(key);
+                value.forEach(item => url.searchParams.append(key, item));
+            }
             else url.searchParams.set(key, value);
         });
         navigate(url);
@@ -330,7 +391,12 @@
         }
         if (!button) return;
         if (button.hasAttribute('data-source-group-filter')) {
-            navigateWith({group: button.dataset.sourceGroupFilter}, ['dept']);
+            if (button.hasAttribute('data-source-display-group')) {
+                const ids = [...new Set([...button.closest('[data-source-group]').querySelectorAll('[data-department]:not(:disabled)')]
+                    .map(input => input.value))];
+                if (!ids.length) return;
+                navigateWith({dept: ids}, ['group']);
+            } else navigateWith({group: button.dataset.sourceGroupFilter}, ['dept']);
         } else if (button.id === 'clearDepartments') {
             document.querySelectorAll('[data-department]').forEach(input => { input.checked = false; });
             selectColumns();
@@ -420,7 +486,7 @@
         if (readingView.dataKey(next) === readingView.dataKey(appliedURL)) switchReadingView(next, {history: 'none'});
         else navigate(next, {history: 'none'});
     });
-    window.notifyInboxUpdates = () => pendingUpdates(true);
+    window.notifyInboxUpdates = () => { updateCheckPending = true; return checkInboxUpdates(); };
     window.refreshInboxView = () => appliedURL.href === desiredURL.href && !inboxSearch.isComposing()
         ? navigate(appliedURL, {history: 'none', preserveList: true, refreshList: true}) : Promise.resolve();
     document.addEventListener('locale-changed', () => window.refreshInboxView());

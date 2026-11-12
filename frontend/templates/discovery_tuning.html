@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ tr('探索阈值调试') }} — {{ tr('学校通知') }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/discovery-tuning.css') }}">{% endblock %}
+{% block content %}
+<div class="tuning-page">
+    <header class="surface-heading">
+        <div><h1 data-i18n="探索阈值调试">{{ tr('探索阈值调试') }}</h1>
+        <p data-i18n="按实际反馈小步调整，保留参数版本，随时回退。">{{ tr('按实际反馈小步调整，保留参数版本，随时回退。') }}</p></div>
+        <a href="/admin#platform" data-i18n="返回设置">{{ tr('返回设置') }}</a>
+    </header>
+    <section class="tuning-switch" aria-labelledby="tuningSwitchLabel">
+        <label for="tuningEnabled"><input type="checkbox" id="tuningEnabled" disabled>
+            <strong id="tuningSwitchLabel" data-i18n="开启阈值调试">{{ tr('开启阈值调试') }}</strong></label>
+        <p data-i18n="默认关闭。关闭后使用原有参数，已保存的反馈和版本继续保留。">{{ tr('默认关闭。关闭后使用原有参数，已保存的反馈和版本继续保留。') }}</p>
+    </section>
+    <p id="tuningStatus" role="status" aria-live="polite"></p>
+    <p id="tuningSummary" class="text-muted"></p>
+    <div id="tuningWorkspace" hidden>
+        <section class="tuning-section" aria-labelledby="parametersTitle">
+            <h2 id="parametersTitle" data-i18n="当前试用参数">{{ tr('当前试用参数') }}</h2>
+            <p data-i18n="参数影响后续判断；不会重置调用额度、清除进度或自动恢复已暂返的任务。">{{ tr('参数影响后续判断；不会重置调用额度、清除进度或自动恢复已暂返的任务。') }}</p>
+            <form id="parametersForm">
+                <div id="parameterFields" class="tuning-fields"></div>
+                <label for="parameterReason" data-i18n="调整依据">{{ tr('调整依据') }}</label>
+                <textarea id="parameterReason" rows="2" maxlength="1200" required></textarea>
+                <button class="btn btn-primary" type="submit" data-i18n="保存为新版本">{{ tr('保存为新版本') }}</button>
+            </form>
+        </section>
+        <section class="tuning-section" aria-labelledby="feedbackTitle">
+            <h2 id="feedbackTitle" data-i18n="记录使用反馈">{{ tr('记录使用反馈') }}</h2>
+            <form id="feedbackForm">
+                <div class="tuning-fields">
+                    <div><label for="feedbackKind" data-i18n="反馈类型">{{ tr('反馈类型') }}</label><select id="feedbackKind" required><option value="" disabled selected data-i18n="请选择反馈类型">{{ tr('请选择反馈类型') }}</option></select></div>
+                    <div><label for="feedbackReference" data-i18n="学校、栏目或运行记录（可选）">{{ tr('学校、栏目或运行记录（可选）') }}</label><input id="feedbackReference" maxlength="1000"></div>
+                </div>
+                <label for="feedbackNote" data-i18n="具体观察">{{ tr('具体观察') }}</label>
+                <textarea id="feedbackNote" rows="3" maxlength="1200" required></textarea>
+                <p class="text-muted" data-i18n="访问失败和不确定的结果单独记录，不计为低收益。">{{ tr('访问失败和不确定的结果单独记录，不计为低收益。') }}</p>
+                <button class="btn btn-outline" type="submit" data-i18n="保存反馈">{{ tr('保存反馈') }}</button>
+            </form>
+            <ul id="feedbackList" class="tuning-records"></ul>
+        </section>
+        <section class="tuning-section" aria-labelledby="aiTitle">
+            <h2 id="aiTitle" data-i18n="借助 AI 调整">{{ tr('借助 AI 调整') }}</h2>
+            <p data-i18n="使用已接入的目录探索 AI 分析最近反馈。仅生成建议，应用前由你确认；调用受现有额度限制，并可能产生服务商费用。">{{ tr('使用已接入的目录探索 AI 分析最近反馈。仅生成建议，应用前由你确认；调用受现有额度限制，并可能产生服务商费用。') }}</p>
+            <button type="button" class="btn btn-outline" id="suggestParameters" data-i18n="调用 AI 生成建议">{{ tr('调用 AI 生成建议') }}</button>
+            <p><a href="/admin/ai-usage" data-i18n="查看 AI 调用记录与用量">{{ tr('查看 AI 调用记录与用量') }}</a></p>
+            <div id="suggestionPanel" hidden>
+                <p id="suggestionStatus" class="text-muted"></p><p id="suggestionReason"></p><dl id="suggestionValues"></dl>
+                <button type="button" class="btn btn-primary" id="applySuggestion" data-i18n="应用这份建议">{{ tr('应用这份建议') }}</button>
+            </div>
+        </section>
+    </div>
+    <details class="tuning-section" id="tuningHistory">
+        <summary data-i18n="参数历史与反馈导出">{{ tr('参数历史与反馈导出') }}</summary>
+        <p class="text-muted" data-i18n="保留最近50个参数版本与200条反馈，可导出留存。">{{ tr('保留最近50个参数版本与200条反馈，可导出留存。') }}</p>
+        <ol id="versionList" class="tuning-records"></ol>
+        <button class="btn btn-outline" type="button" id="exportTuning" data-i18n="导出调试记录">{{ tr('导出调试记录') }}</button>
+    </details>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/discovery-tuning.js') }}"></script>{% endblock %}

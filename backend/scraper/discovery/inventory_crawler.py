@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 from filelock import FileLock
 
 from backend.scraper.http_client import same_school_url, inventory_read_attempt
-from backend.services.source_inventory import Inventory, canonical_url, has_fragment_route
+from backend.services.source_inventory import Inventory, canonical_url, has_fragment_route, now
 from .structure import extract_structure, publication_evidence, health_from_evidence, add_publication_structure
 from .parser_revision import PARSER_REVISION, assert_current_parser, ParserRevisionChanged
 
@@ -34,6 +34,13 @@ def fetch_page(url, *, purpose='directory', source_id='', readiness_selector='')
 
 
 def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_assist=True):
+    from backend.services.exploration_events import inspection
+    from backend.ai.material_capture import capture_inspection
+    with inspection(inventory, site, page) as observed, capture_inspection(page, observed):
+        return _inspect_page(inventory, site, page, fetcher, focus, ai_assist=ai_assist)
+
+
+def _inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_assist=True):
     key, url = site['site_key'], page['url']
     assert_current_parser()
     from .structure import document_reference, directory_document
@@ -65,22 +72,32 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_a
                     or getattr(result, 'error_code', '') == 'dynamic_material_incomplete' else 'unreachable')
             return
         content_hash = hashlib.sha256(html.encode()).hexdigest()
+        observed_at = response.get('checked_at') or now()
         if (has_fragment_route(url) or has_fragment_route(final)) and response.get('transport') != 'browser':
             # HTTP only retrieves the shared application shell, not the route's
             # rendered units or articles. Preserve it for browser adaptation but
             # do not attribute its links, feed or redirect to this route.
-            inventory.record_edges(key, url, [], content_hash)
-            inventory.record_structure(key, url, [], content_hash)
+            inventory.record_edges(key, url, [], content_hash, observed_at=observed_at)
+            inventory.record_structure(key, url, [], content_hash, observed_at=observed_at)
             notes = ['fragment_route_requires_browser', *response.get('network_notes', [])]
             if response.get('network'):
                 notes.append('public_dns_ipv4:' + response['network']['public_ip'])
-            inventory.finish(key, url, html=html, fetched_at=response.get('checked_at'),
+            inventory.finish(key, url, html=html, fetched_at=observed_at,
                              state='fetched', status_code=response.get('status'), final_url=final,
                              title='', error=None, health='dynamic_content', latest_publication=None,
                              feed_json=None, notes_json=json.dumps(notes), parser_revision=PARSER_REVISION)
             return
         parsed = extract_structure(html, final, site['root_url'], page['kind'], page['label'],
                                    json.loads(page['path_json']))
+        from bs4 import BeautifulSoup
+        from backend.services.publisher_identity import observations, PREFIX as PUBLISHER_PREFIX
+        declared = observations(BeautifulSoup(html, 'lxml'), site['name'], final,
+            allow_declaration=page['kind'] == 'unit' and not any(
+                note.startswith('unit_profile_page:') for note in parsed['notes']))
+        parsed['nodes'].extend(declared['nodes'])
+        if any(declared.values()):
+            parsed['notes'].append(PUBLISHER_PREFIX + json.dumps(dict(declared, site_key=key,
+                reference_url=url, final_url=final, content_hash=content_hash), ensure_ascii=False))
         if parsed.get('branding_candidates'):
             from backend.services.source_ownership import BRANDING_PREFIX
             parsed['notes'].append(BRANDING_PREFIX + json.dumps({
@@ -91,6 +108,11 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_a
             parsed['notes'].append(NAVIGATION_PREFIX + json.dumps({
                 'site_key':key, 'reference_url':url, 'final_url':final,
                 'content_hash':content_hash, 'links':parsed['site_navigation']}, ensure_ascii=False))
+        if parsed.get('profile_identity_candidates'):
+            from backend.services.source_ownership import PROFILE_PREFIX
+            parsed['notes'].append(PROFILE_PREFIX + json.dumps({
+                'site_key': key, 'reference_url': url, 'final_url': final,
+                'content_hash': content_hash, 'candidates': parsed['profile_identity_candidates']}, ensure_ascii=False))
         if response.get('network'):
             parsed['notes'].append('public_dns_ipv4:' + response['network']['public_ip'])
         parsed['notes'].extend(response.get('network_notes', []))
@@ -114,26 +136,16 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_a
                 parsed['notes'].append('external_ownership_requires_review')
         feed = publication_evidence(html, final)
         add_publication_structure(parsed, feed)
-        if feed:
-            for column in feed.get('lists', [feed]):
-                if not column.get('name'):
-                    parsed['notes'].append('publication_heading_requires_review:' + column.get('container_locator', ''))
-                target = column.get('column_url')
-                if target and column.get('name'):
-                    decision = 'follow' if same_school_url(target, site['root_url']) else 'official_external_link'
-                    if external and not same_school_url(target, final):
-                        decision = 'external_review'
-                    parsed['links'].append({'url': target, 'label': column['name'], 'kind': 'channel',
-                                            'path': json.loads(page['path_json']) + [page['label']],
-                                            'locator': column['column_link_locator'], 'decision': decision, 'publication_route': True})
+        from .structure import add_publication_routes
+        add_publication_routes(parsed, feed, html, page, site['root_url'], actual_url=final)
         if focus in ('layered', 'valuable'):
             from .layered import route_structure
             route_structure(parsed, page, html, site['root_url'], bool(feed), policy=focus, publication=feed)
         from backend.services.discovery_changes import compare, put
         change = compare(page, parsed, feed, html, final) if focus in ('layered', 'valuable') else None
         assert_current_parser()
-        inventory.record_edges(key, url, parsed['links'], content_hash)
-        inventory.record_structure(key, url, parsed['nodes'], content_hash)
+        inventory.record_edges(key, url, parsed['links'], content_hash, observed_at=observed_at)
+        inventory.record_structure(key, url, parsed['nodes'], content_hash, observed_at=observed_at)
         for link in parsed['links']:
             own_external_link = (external_confirmed and link['decision'] == 'external_review'
                                  and same_school_url(link['url'], final))
@@ -171,8 +183,9 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_a
         if has_app_context():
             from backend.services.source_governance import _snapshot
             snapshot_ref = _snapshot(html, final, role='structure')
+            snapshot_ref['observed_at'] = observed_at
             parsed['notes'].append('full_snapshot:' + json.dumps(snapshot_ref, ensure_ascii=False))
-        inventory.finish(key, url, html=html, fetched_at=response.get('checked_at'),
+        inventory.finish(key, url, html=html, fetched_at=observed_at,
                          state='fetched', status_code=response.get('status'),
                          final_url=final, title=parsed['title'], error=None,
                          health=health, latest_publication=latest, parser_revision=PARSER_REVISION,
@@ -196,7 +209,8 @@ def inspect_page(inventory, site, page, fetcher=fetch_page, focus='all', *, ai_a
         if ai_assist and ((review_routes and not (change and change['navigation_complete'])) or legacy_missing):
             from .ai_navigation import queue_navigation
             queue_navigation(site, dict(page, url=final, snapshot_url=url, snapshot_ref=snapshot_ref,
-                snapshot_hash=content_hash, discovery_policy=focus, navigation_routes=(change or {}).get('routes', [])))
+                snapshot_hash=content_hash, observed_at=observed_at,
+                discovery_policy=focus, navigation_routes=(change or {}).get('routes', [])))
     except ParserRevisionChanged:
         raise
     except ValueError as exc:

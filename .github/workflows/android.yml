@@ -1,0 +1,31 @@
+name: Android build
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['android/**', 'scripts/assets/android_catalog.py', 'config/android-school-supplements.json', 'backend/services/catalog.py', 'backend/scraper/discovery/university_urls.py', '.github/workflows/android.yml']
+  push:
+    branches: ['main']
+    paths: ['android/**', 'scripts/assets/android_catalog.py', 'config/android-school-supplements.json', 'backend/services/catalog.py', 'backend/scraper/discovery/university_urls.py', '.github/workflows/android.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build and verify Android
+        working-directory: android
+        run: |
+          python ../scripts/assets/android_catalog.py --check
+          bash gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: school-watcher-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

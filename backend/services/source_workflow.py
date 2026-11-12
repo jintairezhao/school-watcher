@@ -14,11 +14,13 @@ LABELS = {
     'publisher_conflict': '官网材料中的发布部门存在冲突',
     'column_identity_or_scope_unconfirmed': '尚未确认栏目名称与列表范围一致',
     'column_region_requires_review': '同页栏目范围尚未确定',
+    'configured_joint_scope_requires_review': '现有信源覆盖多个列表，已保留原配置和订阅范围。',
     'invalid_list_item': '提取结果中混入了非通知条目',
     'pagination_sample_missing': '程序尚未完成下一页检查',
     'invalid_publication_date': '日期格式尚未正确解析',
     'article_identity_mismatch': '通知正文与列表标题不一致',
     'source_login_required': '官网要求登录后才能读取',
+    'source_access_restricted': '官网限制访问，具体访问条件尚未确认',
 }
 
 
@@ -36,6 +38,8 @@ def workflow(proposal):
         status = 'program_error'
     elif 'source_login_required' in raw or saved.get('error_code') == 'source_login_required':
         status = 'login_required'
+    elif 'source_access_restricted' in raw or saved.get('error_code') == 'source_access_restricted':
+        status = 'access_limited'
     elif saved.get('outcome') in ('denied', 'needs_manual'):
         status = 'access_limited'
     elif saved.get('outcome') in ('network_error', 'unavailable'):
@@ -55,6 +59,7 @@ def workflow(proposal):
     states = {
         'checking': ('正在自动检查或补充材料', 'program', '程序会继续读取官网、交给 AI 判断并验证栏目。'),
         'recognition_incomplete': ('自动识别未完成', 'ai', '本轮自动尝试已结束，材料与进度已保存，等待程序适配；不影响其他栏目和已有通知。'),
+        'configured_scope_preserved': ('已保留原采集范围', 'developer', '需要分别核实各列表的身份和归属；不会自动拆分或缩小已有订阅。'),
         'login_required': ('官网要求登录', 'website', '仅采集公开内容；此页面暂不接入。可在官网自行查看。'),
         'access_limited': ('官网限制访问', 'website', '访问限制解除后可重新检查；AI 无法解除官网限制。'),
         'site_unavailable': ('官网暂时无法访问', 'program', '程序会进行有限次数的重试；已有通知保留。'),
@@ -66,12 +71,20 @@ def workflow(proposal):
         'rejected': ('已拒绝', 'user', '保留你的选择，自动恢复不会重新接入。'),
     }
     label, owner, next_step = states.get(status, states['recognition_incomplete'])
+    replacement = None
+    if proposal.state == 'superseded':
+        event = SourceReviewEvent.query.filter_by(proposal_id=proposal.id, action='superseded_by_configuration').order_by(SourceReviewEvent.id.desc()).first()
+        if event:
+            replacement = json.loads(event.detail_json)
+            label = '已有后续处理结果'
+            next_step = '相同配置已由后续核实结果保存，原检查记录仍保留。'
     if status == 'site_unavailable' and SourceReviewEvent.query.filter_by(proposal_id=proposal.id, action='access_retry').count() >= 2:
         next_step = '本轮重试已结束；官网恢复后可重新检查，已有通知保留。'
     reason = saved.get('reason') or '；'.join(LABELS.get(x, x) for x in errors)
     if status == 'program_error' and not reason and task:
         reason = f'后台检查任务异常结束，错误已保存在任务 {task.id} 的记录中'
     return {**saved, 'status': status, 'label': label, 'owner': owner,
+            'replacement': replacement,
             'requires_user': status == 'user_choice', 'user_action': '请选择希望订阅的栏目' if status == 'user_choice' else '你现在无需操作',
             'next_step': next_step, 'reason': reason, 'needed_evidence': saved.get('needed_evidence', []),
             'stages': {'ai': saved.get('ai_status', 'not_needed'),
@@ -105,7 +118,7 @@ def supported_question(proposal, question, evidence):
     return {'text': question['text'], 'options': accepted}
 
 
-def select_option(proposal, choice, actor_id):
+def select_option(proposal, choice, actor_id, *, commit=True):
     from backend.services import source_governance as g
     saved = json.loads(proposal.validation_json).get('workflow', {})
     option = next((x for x in saved.get('question', {}).get('options', []) if x['id'] == choice), None)
@@ -119,7 +132,10 @@ def select_option(proposal, choice, actor_id):
     proposal.revision += 1; proposal.validated_hash = None; proposal.state = 'proposed'
     db.session.add(SourceReviewEvent(proposal_id=proposal.id, actor_id=actor_id, action='select_observed_option',
                                    detail_json=g._json(option)))
-    db.session.commit()
+    if commit:
+        db.session.commit()
+    else:
+        db.session.flush()
 
 
 def school_publisher_proven(bundle, config):
@@ -128,28 +144,53 @@ def school_publisher_proven(bundle, config):
     A school is already the supplied trust root, not a department that must
     appear in its own organizational directory. Subdomains do not inherit this.
     """
-    from urllib.parse import urlsplit
-    from backend.services.source_governance import read_snapshot, _normal
+    from backend.services.source_governance import read_snapshot
+    from backend.services.school_publishers import school_publication_nodes
     root, target = bundle.get('root_url', ''), config.get('list_url', '')
     school = bundle.get('school_name', '')
     if not school or config.get('group_name') not in ('', school):
         return False
-    if urlsplit(target).netloc != urlsplit(root).netloc:
-        return False
     refs = list((bundle.get('publisher_material') or {}).values()) + bundle.get('identity_snapshots', [])
     homes = [ref for ref in refs if canonical_url(ref['url']) == canonical_url(root)]
-    linked = any(any(canonical_url(urljoin(root, a['href'])) == canonical_url(target)
-                     for a in BeautifulSoup(read_snapshot(ref), 'lxml').select('a[href]')) for ref in homes)
-    if not linked or not bundle.get('list'):
+    reference = bundle.get('list')
+    if not reference or canonical_url(reference.get('url', '')) != canonical_url(target):
         return False
-    page = BeautifulSoup(read_snapshot(bundle['list']), 'lxml')
-    return any(_normal(school) in _normal(node.get_text(' ', strip=True) or node.get('alt', ''))
-               for node in page.select('title,h1,header,footer,img[alt]'))
+    page = BeautifulSoup(read_snapshot(reference), 'lxml')
+    return any(school_publication_nodes(BeautifulSoup(read_snapshot(ref), 'lxml'), page,
+        name=school, root_url=root, column_url=target) is not None for ref in homes)
+
+
+def _publisher_branding(page, name, school_name='', *, column_name=''):
+    from backend.services.source_ownership import branding_candidates, website_identity_forms, website_identity_names
+    # Use the same explicit site identities as ownership observations. A news
+    # thumbnail, article heading, or navigation link mentioning another unit
+    # does not identify this site's publisher.
+    expected = website_identity_names(name, school_name, column_name=column_name)
+    return any(website_identity_forms(item['identity']) & expected for item in branding_candidates(page))
+
+
+def _publisher_link_targets(page, document_url):
+    """Resolve captured anchors with their document's actual base context."""
+    from backend.services.source_inventory import resolve_page_link
+    base = page.find('base', href=True)
+    base_url = urljoin(document_url, base['href']) if base else document_url
+    result = []
+    for anchor in page.select('a[href]'):
+        try:
+            target = resolve_page_link(base_url, anchor['href'])
+        except (TypeError, ValueError, UnicodeError):
+            # One malformed unrelated link supplies no evidence and must not
+            # prevent checking the remaining retained, valid entrances.
+            continue
+        if target:
+            result.append((anchor, target))
+    return result
 
 
 def publisher_proven(bundle, config):
     """Verify AI-cited official directory → branded home → column, on captured DOMs."""
     from backend.services.source_governance import read_snapshot, _normal, _inside
+    from backend.scraper.discovery.structure import auxiliary_navigation
     from backend.scraper.http_client import same_school_url
     proof, refs = bundle.get('publisher_evidence', {}), bundle.get('publisher_material', {})
     name = config.get('group_name', '')
@@ -162,29 +203,36 @@ def publisher_proven(bundle, config):
     root = bundle.get('root_url', '')
     if not all(same_school_url(ref['url'], root) for ref in (directory, home)):
         return False
+    documents = {}
+    def document(reference):
+        key = (reference['url'], reference.get('hash'))
+        if key not in documents:
+            soup = BeautifulSoup(read_snapshot(reference), 'lxml')
+            documents[key] = (soup, _publisher_link_targets(soup, reference['url']))
+        return documents[key]
     # Directory must be reachable by links from the official root in captured material.
     reachable = {canonical_url(root)}
     for _ in range(4):
         for ref in refs.values():
             if canonical_url(ref['url']) in reachable:
-                soup = BeautifulSoup(read_snapshot(ref), 'lxml')
-                reachable.update(canonical_url(urljoin(ref['url'], a['href'])) for a in soup.select('a[href]'))
+                _, links = document(ref)
+                reachable.update(target for _, target in links)
     if canonical_url(directory['url']) not in reachable:
         return False
-    soup = BeautifulSoup(read_snapshot(directory), 'lxml')
-    official = any(canonical_url(urljoin(directory['url'], a['href'])) == canonical_url(home['url'])
-        and _normal(a.get_text(' ', strip=True)) == _normal(name) for a in soup.select('a[href]'))
-    branding = BeautifulSoup(read_snapshot(home), 'lxml')
-    branded = any(_normal(name) in _normal(n.get_text(' ', strip=True) or n.get('alt', ''))
-                  for n in branding.select('title,h1,header,footer,img[alt]'))
+    _, directory_links = document(directory)
+    official = any(target == canonical_url(home['url'])
+        and _normal(a.get_text(' ', strip=True)) == _normal(name) and not auxiliary_navigation(a)
+        for a, target in directory_links)
+    branding, home_links = document(home)
+    branded = _publisher_branding(branding, name, bundle.get('school_name', ''))
     linked = canonical_url(config['list_url']) == canonical_url(home['url']) or any(
-        canonical_url(urljoin(home['url'], a['href'])) == canonical_url(config['list_url']) for a in branding.select('a[href]'))
+        target == canonical_url(config['list_url']) for _, target in home_links)
     # Related links to another department are not proof that this unit publishes
     # its notices. A separate site also needs the target's own publisher identity.
     target_branded = _inside(config['list_url'], home['url'])
     target = bundle.get('list')
     if not target_branded and target and canonical_url(target['url']) == canonical_url(config['list_url']):
         page = BeautifulSoup(read_snapshot(target), 'lxml')
-        target_branded = any(_normal(name) in _normal(n.get_text(' ', strip=True) or n.get('alt', ''))
-                             for n in page.select('title,h1,header,footer,img[alt]'))
+        target_branded = _publisher_branding(page, name, bundle.get('school_name', ''),
+                                            column_name=config.get('name', ''))
     return official and branded and linked and target_branded and same_school_url(config['list_url'], root)

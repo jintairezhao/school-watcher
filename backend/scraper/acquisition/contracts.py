@@ -53,6 +53,8 @@ class FetchResult:
     timings: dict = field(default_factory=dict)
     retry_after: float | None = None
     headers: dict = field(default_factory=dict)
+    # Local acquisition completion time, never inferred from a cache file mtime.
+    observed_at: str = ''
 
     @property
     def ok(self):

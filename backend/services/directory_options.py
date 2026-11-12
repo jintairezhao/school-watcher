@@ -1,4 +1,5 @@
 """Publish observed roster units as stable options, preserving shared memberships."""
+import hashlib
 from backend.database.db import db
 from backend.database.models import Department, DepartmentDirectoryEntry, School
 from backend.scraper.http_client import validate_public_url
@@ -14,6 +15,8 @@ def directory_entries_for(school_id):
 def expand_directory_ids(school_id, ids, entries=None):
     if ids is None:
         return None
+    if not ids:
+        return []
     expanded = set(ids)
     entries = directory_entries_for(school_id) if entries is None else entries
     rows = Department.query.filter_by(school_id=school_id).all()
@@ -55,6 +58,14 @@ def sync_directory_options(school, catalog):
     existing = school.departments.order_by(Department.id).all()
     directories = catalog.directory_entries(site_key(school.url), [d.list_url for d in existing])
     memberships = {(e.parent_id, e.department_id): e for e in directory_entries_for(school.id)}
+    # An exact persisted material/node binding identifies a roster occurrence;
+    # a shared name and homepage alone never merge unit identities.
+    observed_units = {}
+    for entry in memberships.values():
+        for fact in entry.facts_json or []:
+            if fact.get('node_key'):
+                for proof in fact.get('evidence', []):
+                    observed_units.setdefault((proof.get('reference_url'), fact['node_key']), set()).add(entry.department_id)
     created = linked = 0
     for parent in list(existing):
         for position, node in enumerate(directories.get(canonical_url(parent.list_url or ''), [])):
@@ -66,11 +77,19 @@ def sync_directory_options(school, catalog):
                     validate_public_url(url, resolve=False)
                 except ValueError:
                     continue
-            unit = next((d for d in existing if d.name == name and
-                         canonical_url(d.list_url or '') == canonical_url(url)), None)
+            reference = canonical_url(node.get('reference_url') or '')
+            proof = dict(reference_url=reference, locator=node.get('locator'),
+                content_hash=node.get('content_hash'), observed_at=node.get('observed_at'))
+            if not all(proof.values()):
+                continue
+            bound = observed_units.get((reference, node.get('node_key')), set())
+            unit = next((d for d in existing if d.id in bound), None) if len(bound) == 1 else None
+            stable = hashlib.sha256(f'{school.id}:directory:{reference}:{node.get("node_key")}'.encode()).hexdigest()
+            if unit is None:
+                unit = next((d for d in existing if d.structure_key == stable), None)
             if unit is None:
                 unit = Department(school_id=school.id, name=name, list_url=url,
-                                  group_name=parent.group_name, kind='unit')
+                                  group_name=parent.group_name, kind='unit', structure_key=stable)
                 db.session.add(unit); db.session.flush()
                 existing.append(unit)
                 created += 1
@@ -83,5 +102,10 @@ def sync_directory_options(school, catalog):
                 linked += 1
             else:
                 membership.position = position
+            fact = dict(writer='directory_options', type='directory_listing',
+                observed_relation='directory_entry', node_key=node['node_key'], evidence=[proof])
+            previous = membership.facts_json or []
+            retained = [item for item in previous if item.get('writer') != 'directory_options']
+            membership.facts_json = retained + [fact]
     db.session.commit()
     return {'created_units': created, 'directory_memberships': linked}

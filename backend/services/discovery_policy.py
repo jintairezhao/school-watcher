@@ -49,7 +49,7 @@ DEFAULTS = {
 }
 
 
-def get_policy():
+def get_policy(*, include_tuning=True):
     # The same explicit setting reaches web, worker and isolated browser
     # processes. In particular a 90-second browser experiment must configure
     # the service too; a request alone cannot lift its default 45-second limit.
@@ -72,7 +72,14 @@ def get_policy():
         if isinstance(DEFAULTS[key], int) and not key.endswith('_seconds') and not isinstance(value, int):
             raise ValueError('Discovery policy value must be an integer: ' + key)
     overrides = current_app.config.get('DISCOVERY_POLICY', {}) if has_app_context() else {}
-    return dict(DEFAULTS, **dict(shared, **{key: value for key, value in overrides.items() if key in DEFAULTS}))
+    policy = dict(DEFAULTS, **dict(shared, **{key: value for key, value in overrides.items() if key in DEFAULTS}))
+    if include_tuning and has_app_context():
+        from .discovery_tuning import active_override
+        trial, context = active_override()
+        policy.update(trial)
+        if context:
+            policy['_tuning'] = context
+    return policy
 
 
 def get_attention_policy(school_id=None, *, root_url=None):
@@ -143,6 +150,13 @@ def advance_progress(state, decision_id, progress_ids=()):
     decisions.append(str(decision_id))
     current.update(decision_ids=decisions, decisions=len(decisions))
     policy = get_policy()
+    context = policy.get('_tuning')
+    if current.get('tuning_context') != context and (context or current.get('tuning_context')):
+        # Start a new observation window after an explicit parameter change.
+        # Keep all paid decision IDs, known material and existing stop state.
+        current.update(checked_decisions=current['decisions'] - 1,
+                       last_check_count=len(current['seen']), no_change_checks=0,
+                       tuning_context=context)
     interval = max(1, int(policy['progress_check_decisions']))
     if current['decisions'] - current.get('checked_decisions', 0) >= interval:
         increased = len(current['seen']) > current.get('last_check_count', 0)

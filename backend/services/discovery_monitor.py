@@ -45,6 +45,11 @@ def _url(value):
     try:
         url = canonical_url(value) if isinstance(value, str) else ''
         parts = urlsplit(url)
+        if parts.username or parts.password:
+            return ''
+        if any(key.lower() in ('token', 'access_token', 'api_key', 'apikey', 'key', 'secret', 'password')
+               for key, _ in parse_qsl(urlsplit(parts.fragment).query)):
+            return ''
         # A diagnostic URL must never publish credentials embedded in a query.
         query = [(key, val) for key, val in parse_qsl(parts.query, keep_blank_values=True)
                  if key.lower() not in ('token', 'access_token', 'api_key', 'apikey', 'key', 'secret', 'password')]
@@ -94,12 +99,14 @@ def _task(row, now):
     if not reason:
         reason = {'pending': '等待调度', 'running': '正在处理', 'waiting': '等待继续',
                   'done': '本项处理结束', 'failed': '本项未完成，进度已保存'}.get(state, '已记录')
+    observed_label = _name(page.get('label') or progress.get('current_label'), '')
     return {'id': row.id, 'generation': row.generation, 'kind': row.kind, 'state': state,
             'phase': row.phase, 'reason': reason, 'url': url,
             'page_label': _name(page.get('label'), ''),
             'label': _name(page.get('label') or progress.get('current_label'),
                            {'discover': '官网结构探索', 'navigation_review': '官网入口识别',
                             'onboard': '栏目验证与接入'}.get(row.kind, '探索任务')),
+            'label_source': 'observed' if observed_label else 'application',
             'path': _path(page.get('path_json') or page.get('path')),
             'updated_at': _stamp(row.updated_at), 'available_at': _stamp(row.available_at),
             'error_code': row.error_code if row.error_code in ERRORS else ''}
@@ -196,10 +203,27 @@ def _project_directory_relations(school, pages, departments, *, catalogue_availa
         page.setdefault('navigation_path', _path(page.get('path_json')))
         page.update(path_json=projection['path'], label=projection['label'],
                     kind=projection['kind'], path_basis=projection['basis'])
-        parent_urls = {_url(p['parent_url']) for p in proposals}
-        if len(parent_urls) == 1 and (parent_url := next(iter(parent_urls))) and parent_url != url:
-            relations.append(dict(source_url=parent_url, target_url=url, type='directory',
-                evidence_url=parent_url, locator='', basis=projection['basis']))
+        # Legacy memberships can supply display labels, but lack the material
+        # locator/version needed to create a public structural relationship.
+    return relations
+
+
+def _page_navigation_relations(records, pages):
+    """Project observed hyperlinks in their actual direction, including menus."""
+    relations = []
+    for record in records:
+        source, target = _url(record.get('parent_url')), _url(record.get('target_url'))
+        page = pages.get(source)
+        if (not page or not target or source == target or not record.get('locator')
+                or not record.get('content_hash') or not record.get('observed_at')
+                or page.get('content_hash') != record['content_hash']):
+            continue
+        pages.setdefault(target, dict(url=target, label=_name(record.get('label'), target),
+            kind='navigation', state='observed'))
+        relations.append(dict(source_url=source, target_url=target, type='navigation',
+            evidence_url=source, locator=str(record['locator']),
+            content_hash=record['content_hash'], observed_at=record['observed_at'],
+            access=True, basis='官网页面中记录的导航链接'))
     return relations
 
 
@@ -225,20 +249,26 @@ def _navigation_relations(records, pages):
             target = _url(node.get('url'))
             if node.get('relation') not in allowed or not target or not node.get('parent_key'):
                 continue
+            material = node.get('content_hash')
+            observed_at = node.get('observed_at') or pages.get(reference, {}).get('checked_at')
+            if (not material or material != pages.get(reference, {}).get('content_hash')
+                    or not node.get('locator') or not observed_at):
+                continue
             parents = by_key.get(node['parent_key'], [])
             addresses = {_url(n.get('url')) for n in parents if n.get('url')}
             if len(addresses) != 1:
                 continue
             source = next(iter(addresses))
-            if any(n.get('relation') == 'page_identity' for n in parents):
-                source = reference  # Identity URLs can be the HTTPS final address.
+            directory = node['relation'] in {'directory_entry', 'hidden_directory_entry'} and pages.get(source, {}).get('kind') == 'directory'
+            if not directory or any(n.get('relation') == 'page_identity' for n in parents):
+                source = reference  # A nested menu link is clicked on this document.
             if not source or source == target or source not in pages:
                 continue
             pages.setdefault(target, dict(url=target, label=_name(node.get('name'), target),
                 kind='navigation', state='observed'))
-            directory = node['relation'] in {'directory_entry', 'hidden_directory_entry'} and pages[source].get('kind') == 'directory'
             relations.append(dict(source_url=source, target_url=target, type='directory' if directory else 'navigation',
                 evidence_url=reference, locator=str(node.get('locator') or '')[:500],
+                content_hash=material, observed_at=observed_at, access=source == reference,
                 basis='官网目录中的入口记录' if directory else '官网页面中记录的导航链接'))
     return relations
 
@@ -348,16 +378,16 @@ def _graph_scope(school_url, pages, relations, records, sources, task_urls=()):
         omitted=omitted, omitted_relations=len(relations) - len(links))
 
 
-def snapshot(school):
+def snapshot(school, *, capture=None):
     from backend.services.onboarding_progress import status
     from backend.services.runtime_catalog import runtime_catalog
     from backend.services.discovery_costs import load_discovery_costs
     now = datetime.utcnow()
-    progress = status(school)
+    progress = status(school, capture=capture)
     catalog_error = False
     try:
         catalog = runtime_catalog()
-        report = catalog.monitor_snapshot(site_key(school.url)) or {}
+        report = capture['report'] if capture else catalog.monitor_snapshot(site_key(school.url)) or {}
     except (OSError, sqlite3.Error, RuntimeError):
         logger.exception('Discovery monitor could not read the published catalogue')
         report, catalog_error = {}, True
@@ -388,15 +418,17 @@ def snapshot(school):
             task_pages.setdefault(url, []).append(dict(id=parent.id, state='running',
                 reason='正在探索网站结构', updated_at=_stamp(parent.updated_at)))
     sources = {}
-    departments = Department.query.filter_by(school_id=school.id).order_by(Department.id).all()
+    departments = capture['departments'] if capture else Department.query.filter_by(school_id=school.id).order_by(Department.id).all()
     for row in departments:
         url = _url(row.list_url)
         if url and row.list_selector:
             sources.setdefault(url, []).append({'id': row.id, 'name': _name(row.name, '已接入栏目'),
                                                'group': _name(row.group_name, '')})
             pages.setdefault(url, dict(url=url, label=row.name, kind='channel', state='observed'))
-    relations = _navigation_relations(report.get('structure_nodes', []), pages)
-    relations += _project_directory_relations(school, pages, departments, catalogue_available=not catalog_error)
+    relations = _page_navigation_relations(report.get('navigation_edges', []), pages)
+    relations += _navigation_relations(report.get('structure_nodes', []), pages)
+    if not capture:
+        relations += _project_directory_relations(school, pages, departments, catalogue_available=not catalog_error)
     pages, relations, graph_scope = _graph_scope(school.url, pages, relations,
         report.get('structure_nodes', []), sources, task_pages)
     nodes = []
@@ -431,15 +463,23 @@ def snapshot(school):
     total = len(nodes)
     shown = nodes[:1200]
     by_url = {node['url']: node['id'] for node in shown}
-    links, seen = [], set()
+    links, seen = [], {}
     for relation in relations:
         source, target = by_url.get(relation.pop('source_url')), by_url.get(relation.pop('target_url'))
         identity = (source, target, relation['type'])
-        if not source or not target or identity in seen:
+        if not source or not target:
             continue
-        seen.add(identity)
-        links.append(dict(relation, source=source, target=target))
-    policy = get_attention_policy(school.id)
+        proof = {key: relation.get(key) for key in ('evidence_url', 'locator', 'content_hash', 'observed_at')}
+        if identity in seen:
+            if proof not in seen[identity]['evidence']:
+                seen[identity]['evidence'].append(proof)
+            seen[identity]['access'] |= relation.get('access', False)
+            continue
+        link = dict(relation, source=source, target=target, evidence=[proof])
+        seen[identity] = link
+        links.append(link)
+    policy = capture.get('attention_policy') if capture else None
+    policy = policy or get_attention_policy(school.id)
     directions = [{'id': key, 'label': value['label'],
                    'observed': sum(key in node['categories'] for node in nodes),
                    'connected': sum(len(node['sources']) for node in nodes if key in node['categories'])}
@@ -451,10 +491,13 @@ def snapshot(school):
     for node in nodes:
         node['cost'] = page_costs.get(node['url'])
     timeline = [{'id': f"task:{task['id']}", 'at': task['updated_at'], 'label': task['label'],
+                 'label_source': task['label_source'],
                  'detail': task['reason'], 'state': task['state'], 'url': task['url']} for task in tasks[:16]]
     public_progress = {key: progress.get(key) for key in ('state', 'message', 'stage_message',
         'busy', 'active', 'current_label', 'updated_at', 'checked_pages', 'pending_pages',
-        'verified_source_count', 'column_tasks', 'can_pause', 'can_resume', 'ai_cached_routes', 'ai_message')}
+        'verified_source_count', 'active_source_count', 'inactive_source_count', 'source_count',
+        'structure_counts_version', 'runtime_progress_scope',
+        'column_tasks', 'can_pause', 'can_resume', 'ai_cached_routes', 'ai_message')}
     public_progress['current_label'] = _name(progress.get('current_label'), '')
     from backend.services.localization import school_context
     return {'school': {'id': school.id, 'name': school.name, 'url': _url(school.url),

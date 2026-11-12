@@ -28,6 +28,8 @@ FILES = re.compile(r'\.(pdf|docx?|xlsx?|pptx?|zip|rar|7z|mp4|jpe?g|png|gif|svg|c
 SKIP = {'首页', '返回首页', '网站首页', '联系我们', '联系方式', 'English', 'ENGLISH', 'EN',
         'Русский', '中文', '打印', '关闭', '返回', 'TOP', 'Top'}
 MORE = {'更多', '更多>>', '更多>', '查看更多', 'more', 'MORE', 'More', '>>', '>'}
+LINK_COLLECTION_HEADINGS = {'友情链接', '相关链接', '常用链接', '快速链接', '友好链接',
+                            'related links', 'quick links', 'useful links', 'friend links'}
 
 
 def document_reference(url, label=''):
@@ -137,16 +139,52 @@ def nearby_heading(element):
     return '', None
 
 
+def link_collection(element):
+    """A named local link widget or utility heading is navigation, not a roster."""
+    for parent in [element, *list(element.parents)[:3]]:
+        if isinstance(parent, Tag) and any(re.search(r'(?:^|[-_])links$', token, re.I)
+                                           for token in parent.get('class', [])):
+            return True
+    name, _ = nearby_heading(element)
+    return name.rstrip('：:').casefold() in LINK_COLLECTION_HEADINGS
+
+
 def auxiliary_navigation(element):
     """Page chrome is not an official roster, even on a directory page.
 
     Nested lists alone are not navigation: the directory body may use them to
     express real administrative parent/child relationships.
     """
-    return any(tag.name in ('nav', 'header', 'footer') or re.search(
-        r'nav|menu|header|footer|foot|breadcrumb',
-        ' '.join(tag.get('class', [])) + ' ' + tag.get('id', ''), re.I)
-        for tag in [element, *element.parents] if isinstance(tag, Tag))
+    ancestors = [tag for tag in [element, *element.parents] if isinstance(tag, Tag)]
+    body_at = next((i for i, tag in enumerate(ancestors)
+                    if re.fullmatch(r'vsb_content(?:_\d+_u\d+)?', tag.get('id', ''))), len(ancestors))
+    for i, tag in enumerate(ancestors):
+        names = [*tag.get('class', []), tag.get('id', '')]
+        if i > body_at:
+            # Some CMS templates call the document's right layout panel
+            # "navright". Its retained body is not a menu. Exempt only that
+            # positional token; explicit chrome and inner menus still win.
+            names = [name for name in names if not re.fullmatch(r'nav[-_]?right', name, re.I)]
+        if (tag.name in ('nav', 'header', 'footer')
+                or tag.get('role') in ('navigation', 'banner', 'contentinfo')
+                or re.search(r'nav|menu|header|footer|foot|breadcrumb', ' '.join(names), re.I)):
+            return True
+    # Some school templates put utility shortcuts in a separate div outside
+    # the header. The markup plus multiple explicit utility labels identify
+    # that strip; a similarly named directory card alone is insufficient.
+    for tag in ancestors:
+        if 'title_link' not in tag.get('class', []):
+            continue
+        panels = tag.select(':scope > .title_link_content')
+        if len(panels) != 1:
+            continue
+        parts = panels[0].select(':scope > .title_link_content_part')
+        links = panels[0].select(':scope > .title_link_content_part > a.title_link_content_part_a[href]')
+        labels = {clean(link.get_text(' ', strip=True)).casefold() for link in links}
+        if (len(parts) == len(links) >= 3 and len(panels[0].select('a[href]')) == len(links)
+                and len(labels & {'english', 'русский', '校本部', '融合门户'}) >= 2):
+            return True
+    return link_collection(element)
 
 
 def table_cell_entries(cell, base_url):
@@ -351,6 +389,7 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
                                      profile_directory_relationships, fudan_academic_relationships)
     from .directory_labels import fudan_directory, directory_label
     from .publication_tabs import tab_bindings
+    from .publication_lists import heading_evidence, is_more
     from .unit_profiles import nju_business_profile
     if has_adapter(page_url):
         page_kind = 'directory'
@@ -410,21 +449,30 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
             if label_evidence:
                 notes.append('directory_label_evidence:' + json.dumps(label_evidence, ensure_ascii=False))
         heading = None
-        if label in MORE or not label:
-            from .publication_lists import heading_evidence
+        if is_more(label) or not label:
             heading = heading_evidence(a, base_url, tabs)
+            if not heading.get('name'):
+                from .module_previews import _simple_news_heading
+                archive = _simple_news_heading(a, base_url, archive_only=True)
+                if archive and archive.get('name'):
+                    heading = archive
             label = heading['name'] or label
         if not label or len(label) > 120:
             continue
         position = locator(a)
         kind = 'channel' if position in taxonomy_positions or position in post_positions else classify(label)
+        if (not kind and heading and heading.get('name') and not heading.get('heading_article_reference')
+                and heading.get('column_link_locator') == position
+                and heading.get('column_url') == resolve_page_link(base_url, address)):
+            kind = 'channel'
         if not kind and heading and heading.get('heading_method') in (
                 'explicit_tab_control', 'official_indexed_tab_control') and heading['name']:
             kind = 'navigation'
         trail = menu_path(a)
-        nav_container = bool(trail) or any(p.name == 'nav' or re.search(r'nav|menu', ' '.join(p.get('class', [])) + ' ' + p.get('id', ''), re.I)
+        nav_container = bool(trail) or any(p.name in ('nav', 'header') or re.search(r'nav|menu|header', ' '.join(p.get('class', [])) + ' ' + p.get('id', ''), re.I)
                             for p in a.parents if isinstance(p, Tag))
-        if not kind and nav_container and len(label) <= 30 and label not in SKIP:
+        utility_links = link_collection(a)
+        if not kind and (nav_container or utility_links) and len(label) <= 30 and label not in SKIP:
             kind = 'navigation'
         if label in ('下一页', '下页', 'Next') and page_kind == 'directory':
             kind = 'directory'
@@ -479,15 +527,15 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
             else:
                 relation = 'linked_unit_unverified'
                 parent = ''
-        if kind == 'channel' and page_kind == 'unit':
+        if kind == 'channel' and page_kind == 'unit' and not utility_links:
             relation = 'unit_channel'
         if profile and kind == 'channel':
-            relation = 'shared_site_navigation' if nav_container else 'profile_reference'
+            relation = 'shared_site_navigation' if nav_container or utility_links else 'profile_reference'
         if kind == 'channel' and any(
                 p.name == 'footer' or re.search(r'footer|foot', ' '.join(p.get('class', [])) + ' ' + p.get('id', ''), re.I)
                 for p in a.parents if isinstance(p, Tag)):
             relation = 'footer_link'
-        if kind == 'navigation' and not nav_container and not heading and page_kind != 'directory':
+        if kind == 'navigation' and not nav_container and not utility_links and not heading and page_kind != 'directory':
             relation = 'linked_navigation_unverified'
         if label_evidence and label_evidence['status'] == 'unresolved':
             relation = 'directory_label_pending'
@@ -578,10 +626,23 @@ def extract_structure(html, page_url, root_url, page_kind='root', page_label='',
     variants = directory_variants(soup, page_url)
     if variants:
         notes.append('directory_variant_differences:' + json.dumps(variants, ensure_ascii=False))
-    from backend.services.source_ownership import branding_candidates
+    if page_kind == 'directory':
+        from .directory_labels import incomplete_parentheses
+        # Check after adapters and heading lists too: no alternate parser may
+        # promote the same split link text into a complete roster identity.
+        for node in nodes:
+            if (node['kind'] == 'unit' and node['relation'] not in
+                    ('page_identity', 'navigation_entry', 'menu_group', 'directory_label_pending')
+                    and incomplete_parentheses(node['name'])):
+                node['relation'] = 'directory_label_pending'
+                notes.append('directory_label_evidence:' + json.dumps(dict(
+                    displayed=node['name'], locator=node['locator'], status='unresolved',
+                    reason='incomplete_parenthetical_name'), ensure_ascii=False))
+    from backend.services.source_ownership import branding_candidates, profile_identity_candidates
     from backend.services.source_directory_reconciliation import navigation_evidence
     return {'links': links, 'nodes': reconcile_unlinked_copies(nodes), 'notes': notes,
             'branding_candidates': branding_candidates(soup),
+            'profile_identity_candidates': profile_identity_candidates(soup),
             'site_navigation': navigation_evidence(soup, base_url),
             'title': clean(soup.title.get_text()) if soup.title else ''}
 
@@ -641,6 +702,48 @@ def publication_evidence(html, url):
         return None
     latest = [f['latest_publication'] for f in feeds if f.get('latest_publication')]
     return dict(feeds[0], lists=feeds, latest_publication=max(latest) if latest else None)
+
+
+def add_publication_routes(parsed, evidence, html, page, root_url, *, actual_url=None):
+    """Keep observed widget archive links identical across parsing entry points."""
+    from backend.scraper.http_client import same_school_url
+    actual_url = actual_url or page['url']
+    external = not same_school_url(actual_url, root_url)
+    document = None
+    for column in (evidence or {}).get('lists', [evidence] if evidence else []):
+        if not column.get('name'):
+            note = 'publication_heading_requires_review:' + column.get('container_locator', '')
+            if note not in parsed['notes']:
+                parsed['notes'].append(note)
+        target, label = column.get('column_url'), column.get('name')
+        position = column.get('column_link_locator')
+        unnamed_preview = bool(column.get('module_preview') and not label)
+        if target and unnamed_preview:
+            from .module_previews import visible
+            document = document or BeautifulSoup(html, 'lxml')
+            base = document.find('base', href=True)
+            reference = urljoin(actual_url, base['href']) if base else actual_url
+            anchor = locator_element(document, position or '')
+            if (anchor is None or anchor.name != 'a' or not anchor.get('href') or not visible(anchor)
+                    or resolve_page_link(reference, anchor['href']) != target):
+                continue
+            label = clean(anchor.get_text(' ', strip=True))
+        if not target or not label or not position:
+            continue
+        decision = 'follow' if same_school_url(target, root_url) else 'official_external_link'
+        if external and not same_school_url(target, actual_url):
+            decision = 'external_review'
+        route = dict(url=target, label=label, kind='navigation' if unnamed_preview else 'channel',
+                     path=json.loads(page['path_json']) + [page['label']], locator=position,
+                     decision=decision, publication_route=not unnamed_preview,
+                     **({'probe_only': True} if unnamed_preview else {}))
+        # This is one observed anchor; other placements of the URL stay distinct.
+        existing = next((link for link in parsed['links'] if link.get('url') == target
+                         and link.get('locator') == position), None)
+        if existing is None:
+            parsed['links'].append(route)
+        else:
+            existing.update(route)
 
 
 def health_from_evidence(html, latest=None):

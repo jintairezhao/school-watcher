@@ -1,4 +1,4 @@
-<aside class="source-panel" id="sourcePanel" data-source-scope="{{ current_user.id }}:{{ current_school_id or 0 }}" aria-labelledby="sourcePanelTitle" hidden inert>
+<aside class="source-panel" id="sourcePanel" data-source-scope="{{ current_user.id }}:{{ current_school_id or 0 }}" data-structure-epoch="{{ source_structure_version.epoch or '' }}" data-structure-revision="{{ source_structure_version.revision }}" data-attention-policy-version="{{ source_attention_policy_version }}" aria-labelledby="sourcePanelTitle" hidden inert>
     <div class="source-panel-controls">
         <div class="source-panel-head">
             <h2 id="sourcePanelTitle" data-i18n="通知来源">{{ tr("通知来源") }}</h2>
@@ -18,7 +18,7 @@
             </div>
             <p class="source-school-name">{{ source_school }}</p>
         </div>
-        {% if current_school and departments %}
+        {% if current_school and source_tree %}
         <div class="source-search">
             <label class="sr-only" for="sourceQuery" data-i18n="搜索当前学校的部门或栏目">{{ tr("搜索当前学校的部门或栏目") }}</label>
             <input id="sourceQuery" type="search" data-i18n-placeholder="搜索部门或栏目" placeholder="{{ tr('搜索部门或栏目') }}" autocomplete="off" maxlength="100">
@@ -31,8 +31,9 @@
         </div>
     </div>
     <div class="source-tree-scroll" id="sourceTreeScroll">
+        <p id="inboxLegacyScope" class="filter-helper" data-legacy-source-scope {% if not legacy_source_scope %}hidden{% endif %} data-i18n="历史筛选范围已保留，可继续按部门和栏目查找。">{{ tr('历史筛选范围已保留，可继续按部门和栏目查找。') }}</p>
         {% if current_school %}
-            {% if departments %}
+            {% if source_tree %}
                 {% from '_inbox_sources.html' import source_tree_view %}
                 {{ source_tree_view(source_tree, selected_dept_ids, dept_counts, current_group, source_sync_states) }}
                 <p class="filter-helper" id="sourceSearchEmpty" role="status" hidden data-i18n="没有找到匹配的部门或栏目。试试更短的名称。">{{ tr("没有找到匹配的部门或栏目。试试更短的名称。") }}</p>

@@ -8,6 +8,20 @@ db = SQLAlchemy()
 migrate = Migrate()
 
 
+@event.listens_for(Engine, 'savepoint')
+def _sqlite_savepoint_outer_transaction(connection, name):
+    """Keep released savepoints inside the caller's rollback boundary.
+
+    sqlite3's legacy transaction mode does not BEGIN for SELECT or SAVEPOINT.
+    Without an outer BEGIN, RELEASE can commit facts ahead of the structure
+    journal (and ahead of the caller's final ownership/validation fence).
+    """
+    if connection.dialect.name == 'sqlite':
+        driver = connection.connection.driver_connection
+        if not driver.in_transaction:
+            connection.exec_driver_sql('BEGIN')
+
+
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(dbapi_connection, connection_record):
     """SQLite 并发优化。

@@ -6,62 +6,47 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/storage.css') }}">
 {% endblock %}
 
+{% macro storage_bytes(value) -%}
+{%- if value >= 1073741824 -%}{{ '%.2f'|format(value / 1073741824) }} GB
+{%- elif value >= 1048576 -%}{{ '%.1f'|format(value / 1048576) }} MB
+{%- elif value >= 1024 -%}{{ '%.1f'|format(value / 1024) }} KB
+{%- else -%}{{ value|int }} B{%- endif -%}
+{%- endmacro %}
+
 {% block content %}
 <section class="storage-page">
-<header class="surface-heading"><h1 data-i18n="存储管理">{{ tr("存储管理") }}</h1></header>
-<p><span data-i18n="已用空间">{{ tr("已用空间") }}</span> <strong id="storageTotal">{{ '%.1f'|format(storage.total_bytes / 1048576) }} MB</strong><span data-i18n="，共">{{ tr("，共") }}</span> <strong id="announcementCount">{{ storage.announcement_count }}</strong> <span data-i18n="条通知。">{{ tr("条通知。") }}</span></p>
+    <header class="surface-heading"><h1 data-i18n="存储管理">{{ tr("存储管理") }}</h1></header>
+    <p class="storage-overview"><span data-i18n="已用空间">{{ tr("已用空间") }}</span> <strong id="storageTotal">{{ storage_bytes(storage.total_bytes) }}</strong><span data-i18n="，共">{{ tr("，共") }}</span> <strong id="announcementCount">{{ storage.announcement_count }}</strong> <span data-i18n="条通知。">{{ tr("条通知。") }}</span></p>
+    <div class="storage-actions storage-main-action"><button class="btn btn-primary" type="button" data-cleanup="expired" data-i18n="清理过期文件">{{ tr("清理过期文件") }}</button></div>
+    <p class="storage-help storage-overview-help" data-i18n="按现有保留规则清理，保留通知、收藏和接入进度。">{{ tr("按现有保留规则清理，保留通知、收藏和接入进度。") }}</p>
+    <p id="cleanupStatus" class="storage-status" role="status" aria-live="polite"></p>
+    <div class="storage-groups">
+<details class="storage-group" id="storageDetails">
+    <summary><span class="storage-group-heading"><span data-i18n="空间明细">{{ tr("空间明细") }}</span><small data-i18n="按用途查看占用，单独清理缓存">{{ tr("按用途查看占用，单独清理缓存") }}</small></span><svg class="storage-disclosure-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
+    <div class="storage-group-content">
 <table class="storage-table">
     <thead><tr><th scope="col" data-i18n="用途">{{ tr("用途") }}</th><th scope="col" data-i18n="已用空间">{{ tr("已用空间") }}</th><th scope="col"><span class="sr-only" data-i18n="操作">{{ tr("操作") }}</span></th></tr></thead>
     <tbody>
-    {% set cleanup_modes = {'调查缓存':'discovery', '网页抓取缓存':'fetch', '栏目核实证据':'governance', '备份与回退资料':'backups'} %}
+    {% set group_kinds = {'通知与目录':'data','缓存':'cache','日志':'logs','备份':'backups','应用文件':'application'} %}
+    {% set group_ids = {'data':'storageDataUsage','cache':'storageCacheUsage','logs':'storageLogUsage','backups':'storageBackupUsage','application':'storageApplicationUsage'} %}
     {% for name, size in groups.items() %}
-    <tr><th scope="row" data-i18n="{{ name }}">{{ tr(name) }}</th><td data-storage-group="{{ name }}">{{ '%.1f'|format(size / 1048576) }} MB</td>
-        <td>{% if name in cleanup_modes %}<button class="btn btn-outline btn-sm" type="button" data-cleanup="{{ cleanup_modes[name] }}" data-i18n-aria-label="清理{p0}" data-i18n-aria-label-vars='{{ {'p0':name}|tojson }}' data-i18n-aria-label-ui-vars='["p0"]' aria-label="{{ tr('清理{p0}',p0=tr(name)) }}" data-i18n="清理">{{ tr("清理") }}</button>{% endif %}</td></tr>
+    <tr><th scope="row" data-i18n="{{ name }}">{{ tr(name) }}</th><td id="{{ group_ids[group_kinds[name]] }}" data-storage-group="{{ name }}" data-storage-kind="{{ group_kinds[name] }}">{{ storage_bytes(size) }}</td>
+        <td>{% if name == '通知与目录' %}<a class="btn btn-outline btn-sm" href="#noticeCleanup" data-i18n="管理通知">{{ tr("管理通知") }}</a>{% elif name == '缓存' %}<button class="btn btn-outline btn-sm" type="button" data-cleanup="cache" data-i18n="清理缓存">{{ tr("清理缓存") }}</button>{% endif %}</td></tr>
     {% endfor %}
-    <tr><th scope="row" data-i18n="未收藏正文">{{ tr("未收藏正文") }}</th><td></td><td><button class="btn btn-outline btn-sm" type="button" data-cleanup="body" data-i18n="清理">{{ tr("清理") }}</button></td></tr>
-    <tr><th scope="row" data-i18n="已结束的抓取记录">{{ tr("已结束的抓取记录") }}</th><td></td><td><button class="btn btn-outline btn-sm" type="button" data-cleanup="logs" data-i18n="清理">{{ tr("清理") }}</button></td></tr>
     </tbody>
 </table>
-<p class="storage-help" data-i18n="清理保留接入进度、通知目录、收藏正文与附件，以及回收站 30 天内的副本；正在使用的证据会跳过。">{{ tr("清理保留接入进度、通知目录、收藏正文与附件，以及回收站 30 天内的副本；正在使用的证据会跳过。") }}</p>
-<div class="storage-actions"><button class="btn btn-outline" type="button" data-cleanup="expired" data-i18n="按保留规则清理">{{ tr("按保留规则清理") }}</button><button class="btn btn-outline" type="button" data-cleanup="all_cache" data-i18n="清空可清理缓存">{{ tr("清空可清理缓存") }}</button></div>
-<p id="cleanupStatus" class="storage-status" role="status" aria-live="polite"></p>
-{% if config.DESKTOP_MODE %}
-<section class="storage-section" id="locations" aria-labelledby="locationsTitle">
-    <h2 id="locationsTitle" data-i18n="文件位置">{{ tr("文件位置") }}</h2>
-    <div id="locationRows">
-    {% for key, label in [('program','程序'),('data','个人数据'),('cache','缓存'),('backups','备份'),('downloads','更新包')] %}
-        <div class="storage-location"><label for="location-{{ key }}" data-i18n="{{ label }}">{{ tr(label) }}</label>
-        <input class="form-input" id="location-{{ key }}" data-location="{{ key }}" readonly data-i18n-aria-label="{p0}位置" data-i18n-aria-label-vars='{{ {'p0':label}|tojson }}' data-i18n-aria-label-ui-vars='["p0"]' aria-label="{{ tr('{p0}位置',p0=tr(label)) }}" data-i18n-placeholder="正在读取…" placeholder="{{ tr('正在读取…') }}">
-        <button class="btn btn-outline btn-sm" type="button" data-location-open="{{ key }}" data-i18n="打开">{{ tr("打开") }}</button>
-        <button class="btn btn-outline btn-sm" type="button" data-location-change="{{ key }}" data-i18n="更改">{{ tr("更改") }}</button></div>
-    {% endfor %}
+<p class="storage-help" data-i18n="缓存清理保留接入进度、通知记录、收藏正文与附件，以及回收站 30 天内的副本；正在使用的证据会跳过。">{{ tr("缓存清理保留接入进度、通知记录、收藏正文与附件，以及回收站 30 天内的副本；正在使用的证据会跳过。") }}</p>
+<p class="storage-help" data-i18n="新运行日志按月归档、每天切换，自动保留 30 天；单文件最多 5 MB，总量最多 100 MB。">{{ tr("新运行日志按月归档、每天切换，自动保留 30 天；单文件最多 5 MB，总量最多 100 MB。") }}</p>
+<p class="storage-help" id="applicationFilesHelp" data-i18n="应用文件包括下载的安装包和应用内浏览器资料，不会随缓存清理删除。">{{ tr("应用文件包括下载的安装包和应用内浏览器资料，不会随缓存清理删除。") }}</p>
     </div>
-    <div class="storage-actions"><button class="btn btn-primary" id="saveLocations" type="button" hidden><span data-i18n="迁移并重启">{{ tr("迁移并重启") }}</span></button><button class="btn btn-outline" id="resetLocations" type="button" hidden data-i18n="取消更改">{{ tr("取消更改") }}</button></div>
-    <p id="locationStatus" class="storage-status" role="status" aria-live="polite"></p>
-</section>
-{% endif %}
-
-<section class="storage-section" aria-labelledby="retentionTitle">
-    <h2 id="retentionTitle" data-i18n="保留规则">{{ tr("保留规则") }}</h2>
-    <form id="storagePolicyForm">
-        <p class="storage-help" data-i18n="0 表示不限制。保存后用于定期清理。">{{ tr("0 表示不限制。保存后用于定期清理。") }}</p>
-        <div class="storage-fields">
-        {% for key, label, unit in [('body_cache_days','未收藏正文保留','天'),('body_cache_mb','正文缓存上限','MB'),('discovery_cache_days','网页缓存保留','天'),('discovery_cache_mb','调查网页缓存上限','MB'),('fetch_cache_mb','抓取缓存上限','MB'),('scrape_log_retention_days','抓取记录保留','天'),('backup_keep_count','自动备份保留','份')] %}
-            <div class="storage-field"><label for="policy-{{ key }}" data-i18n="{{ label }}">{{ tr(label) }}</label>
-                <div class="storage-number"><input class="form-input" id="policy-{{ key }}" name="{{ key }}" type="number" min="0" step="1" required value="{{ storage.policy[key] }}"><span data-i18n="{{ unit }}">{{ tr(unit) }}</span></div>
-            </div>
-        {% endfor %}
-        </div>
-        <div class="storage-actions"><button class="btn btn-primary" type="submit" data-i18n="保存保留规则">{{ tr("保存保留规则") }}</button></div>
-
-        <p id="policyStatus" class="storage-status" role="status" aria-live="polite"></p>
-    </form>
-</section>
-
+</details>
+<details class="storage-group" id="storageBackup">
+    <summary><span class="storage-group-heading"><span data-i18n="备份与导入">{{ tr("备份与导入") }}</span><small data-i18n="导出备份或合并已有数据">{{ tr("导出备份或合并已有数据") }}</small></span><svg class="storage-disclosure-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
+    <div class="storage-group-content">
 <section class="storage-section" aria-labelledby="backupTitle">
-    <h2 id="backupTitle" data-i18n="备份与合并导入">{{ tr("备份与合并导入") }}</h2>
+    <h2 class="sr-only" id="backupTitle" data-i18n="备份与合并导入">{{ tr("备份与合并导入") }}</h2>
     <p data-i18n="备份通知、已缓存正文、已保存附件与来源信息，不包含账户和个人阅读状态。">{{ tr("备份通知、已缓存正文、已保存附件与来源信息，不包含账户和个人阅读状态。") }}</p>
-    <div class="storage-actions"><button class="btn btn-primary" type="button" id="exportStorage" data-i18n="导出数据备份">{{ tr("导出数据备份") }}</button></div>
+    <div class="storage-actions"><button class="btn btn-outline" type="button" id="exportStorage" data-i18n="导出数据备份">{{ tr("导出数据备份") }}</button></div>
     <p id="exportStatus" class="storage-status" role="status" aria-live="polite"></p>
     <div id="exportProgress" class="storage-progress" hidden>
         <div class="storage-progress-heading"><span data-phase></span><span data-percent></span></div>
@@ -70,7 +55,11 @@
     </div>
     <form id="storageImportForm" class="storage-import">
         <label for="storageBackupFile" data-i18n="选择之前的备份">{{ tr("选择之前的备份") }}</label>
-        <input class="form-input" id="storageBackupFile" name="file" type="file" accept=".zip,application/zip" required aria-describedby="importHelp">
+        <input id="storageBackupFile" name="file" type="file" accept=".zip,application/zip" required hidden>
+        <div class="storage-file-choice">
+            <button class="btn btn-outline" id="chooseStorageBackup" type="button" aria-controls="storageBackupFile" aria-describedby="storageBackupFilename importHelp" data-i18n="选择文件">{{ tr("选择文件") }}</button>
+            <span id="storageBackupFilename" class="storage-file-name" role="status" aria-live="polite" aria-atomic="true" data-i18n="未选择文件">{{ tr("未选择文件") }}</span>
+        </div>
         <p id="importHelp" class="storage-help" data-i18n="支持导出的 ZIP 和旧版自动备份。">{{ tr("支持导出的 ZIP 和旧版自动备份。") }}</p>
         <details class="storage-import-options"><summary data-i18n="导入选项">{{ tr("导入选项") }}</summary>
             <label for="importExpandedMB" data-i18n="允许的展开大小（MB）">{{ tr("允许的展开大小（MB）") }}</label>
@@ -87,6 +76,115 @@
         </div>
     </form>
 </section>
+    </div>
+</details>
+{% if config.DESKTOP_MODE %}
+<details class="storage-group" id="storageLocations">
+    <summary><span class="storage-group-heading"><span data-i18n="文件位置">{{ tr("文件位置") }}</span><small data-i18n="查看或迁移程序与数据文件夹">{{ tr("查看或迁移程序与数据文件夹") }}</small></span><svg class="storage-disclosure-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
+    <div class="storage-group-content">
+<section class="storage-section" id="locations" aria-labelledby="locationsTitle">
+    <h2 class="sr-only" id="locationsTitle" data-i18n="文件位置">{{ tr("文件位置") }}</h2>
+    <div id="locationRows">
+    {% for key, label in [('program','程序'),('data','个人数据'),('cache','缓存'),('backups','备份'),('downloads','更新包')] %}
+        <div class="storage-location"><label for="location-{{ key }}" data-i18n="{{ label }}">{{ tr(label) }}</label>
+        <input class="form-input" id="location-{{ key }}" data-location="{{ key }}" readonly data-i18n-aria-label="{p0}位置" data-i18n-aria-label-vars='{{ {'p0':label}|tojson }}' data-i18n-aria-label-ui-vars='["p0"]' aria-label="{{ tr('{p0}位置',p0=tr(label)) }}" data-i18n-placeholder="正在读取…" placeholder="{{ tr('正在读取…') }}">
+        <button class="btn btn-outline btn-sm" type="button" data-location-open="{{ key }}" data-i18n="打开">{{ tr("打开") }}</button>
+        <button class="btn btn-outline btn-sm" type="button" data-location-change="{{ key }}" data-i18n="更改">{{ tr("更改") }}</button></div>
+    {% endfor %}
+    </div>
+    <p class="storage-help" data-i18n="收藏正文、已保存附件和阅读时缓存的附件均随个人数据保存和迁移。">{{ tr("收藏正文、已保存附件和阅读时缓存的附件均随个人数据保存和迁移。") }}</p>
+    <div class="storage-actions"><button class="btn btn-outline" id="saveLocations" type="button" hidden><span data-i18n="迁移并重启">{{ tr("迁移并重启") }}</span></button><button class="btn btn-outline" id="resetLocations" type="button" hidden data-i18n="取消更改">{{ tr("取消更改") }}</button></div>
+    <p id="locationStatus" class="storage-status" role="status" aria-live="polite"></p>
+</section>
+    </div>
+</details>
+{% endif %}
+<details class="storage-group" id="storageRetention">
+    <summary><span class="storage-group-heading"><span data-i18n="自动清理设置">{{ tr("自动清理设置") }}</span><small data-i18n="查看和调整现有保留规则">{{ tr("查看和调整现有保留规则") }}</small></span><svg class="storage-disclosure-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
+    <div class="storage-group-content">
+<section class="storage-section" aria-labelledby="retentionTitle">
+    <h2 class="sr-only" id="retentionTitle" data-i18n="保留规则">{{ tr("保留规则") }}</h2>
+    <form id="storagePolicyForm">
+        <p class="storage-help" data-i18n="0 表示不限制。保存后用于定期清理。">{{ tr("0 表示不限制。保存后用于定期清理。") }}</p>
+        <details id="storageCacheRules" class="storage-cache-rules">
+            <summary><span data-i18n="缓存">{{ tr("缓存") }}</span><small id="cacheRetentionSummary">{{ tr("已保存：正文 {body} · 网页 {web}", body=tr("{count} 天",count=storage.policy.body_cache_days) if storage.policy.body_cache_days else tr("不限制"), web=tr("{count} 天",count=storage.policy.discovery_cache_days) if storage.policy.discovery_cache_days else tr("不限制")) }}</small></summary>
+            <div class="storage-fields">
+            {% for key, label, unit in [('body_cache_days','未收藏正文与附件保留','天'),('body_cache_mb','正文与附件缓存上限','MB'),('discovery_cache_days','网页缓存保留','天'),('discovery_cache_mb','调查网页缓存上限','MB'),('fetch_cache_mb','抓取缓存上限','MB')] %}
+                <div class="storage-field"><label for="policy-{{ key }}" data-i18n="{{ label }}">{{ tr(label) }}</label>
+                    <div class="storage-number"><input class="form-input" id="policy-{{ key }}" name="{{ key }}" type="number" min="0" step="1" required value="{{ storage.policy[key] }}"{% if key in ('body_cache_days', 'body_cache_mb') %} aria-describedby="bodyCacheRetentionHelp"{% endif %}><span data-i18n="{{ unit }}">{{ tr(unit) }}</span></div>
+                </div>
+            {% endfor %}
+            </div>
+            <p class="storage-help" id="bodyCacheRetentionHelp" data-i18n="保留天数填 0 表示不按时间过期；仍受缓存容量上限约束。收藏正文与附件不参与缓存清理。">{{ tr("保留天数填 0 表示不按时间过期；仍受缓存容量上限约束。收藏正文与附件不参与缓存清理。") }}</p>
+        </details>
+        <div class="storage-fields storage-simple-policy">
+        {% for key, label, unit in [('scrape_log_retention_days','抓取记录保留','天'),('backup_keep_count','自动备份保留','份')] %}
+            <div class="storage-field"><label for="policy-{{ key }}" data-i18n="{{ label }}">{{ tr(label) }}</label>
+                <div class="storage-number"><input class="form-input" id="policy-{{ key }}" name="{{ key }}" type="number" min="0" step="1" required value="{{ storage.policy[key] }}"><span data-i18n="{{ unit }}">{{ tr(unit) }}</span></div>
+            </div>
+        {% endfor %}
+        </div>
+        <div class="storage-actions"><button class="btn btn-outline" type="submit" data-i18n="保存保留规则">{{ tr("保存保留规则") }}</button></div>
+
+        <p id="policyStatus" class="storage-status" role="status" aria-live="polite"></p>
+    </form>
+</section>
+    </div>
+</details>
+<details class="storage-group" id="storageAdvanced">
+    <summary><span class="storage-group-heading"><span data-i18n="更多清理操作">{{ tr("更多清理操作") }}</span><small data-i18n="回收数据库空间，或永久删除历史通知">{{ tr("回收数据库空间，或永久删除历史通知") }}</small></span><svg class="storage-disclosure-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
+    <div class="storage-group-content">
+<section class="storage-section" aria-labelledby="databaseSpaceTitle">
+    <h2 id="databaseSpaceTitle" data-i18n="回收数据库空间">{{ tr("回收数据库空间") }}</h2>
+    <p class="storage-help" data-i18n="删除内容后，数据库会保留空闲空间供后续使用。压缩可回收其中的空闲页，不会删除通知、目录或账户数据。">{{ tr("删除内容后，数据库会保留空闲空间供后续使用。压缩可回收其中的空闲页，不会删除通知、目录或账户数据。") }}</p>
+    <p><span data-i18n="预计可回收">{{ tr("预计可回收") }}</span> <strong id="databaseReclaimable">{% if storage.database_space.get('available') == false %}—{% else %}{{ '%.1f'|format((storage.database_space.reclaimable_bytes or 0) / 1048576) }} MB{% endif %}</strong></p>
+    <div class="storage-actions"><button class="btn btn-outline" type="button" id="compactDatabase" {% if not storage.database_space.supported or storage.database_space.get('available') == false or not storage.database_space.get('can_compact', storage.database_space.reclaimable_bytes) %}disabled{% endif %} data-i18n="压缩并回收空间">{{ tr("压缩并回收空间") }}</button></div>
+    <p id="databaseSpaceAvailability" class="storage-status" data-error="true" role="status" aria-live="polite" {% if storage.database_space.get('available') != false %}hidden{% endif %}>{% if storage.database_space.get('available') == false %}{{ tr(storage.database_space.get('message') or '暂时无法读取可回收空间，请稍后重试。') }}{% endif %}</p>
+    <p id="databaseSpaceStatus" class="storage-status" role="status" aria-live="polite">{% if not storage.database_space.supported %}{{ tr("当前数据库不支持空间回收。") }}{% elif storage.database_space.get('available') != false and not storage.database_space.get('can_compact', storage.database_space.reclaimable_bytes) %}{{ tr("暂无可回收的空闲页。") }}{% endif %}</p>
+</section>
+<section class="storage-section" id="noticeCleanup" aria-labelledby="noticeCleanupTitle">
+    <h2 id="noticeCleanupTitle" data-i18n="清理历史通知">{{ tr("清理历史通知") }}</h2>
+    <p class="storage-help" id="noticeCleanupHelp" data-i18n="永久删除所选学校在指定日期之前（不含当天）的通知。发布时间未知、收藏、回收站 30 天内及正在读取的通知保留。此操作对本机所有账户生效。">{{ tr("永久删除所选学校在指定日期之前（不含当天）的通知。发布时间未知、收藏、回收站 30 天内及正在读取的通知保留。此操作对本机所有账户生效。") }}</p>
+    <form id="noticeCleanupForm" aria-describedby="noticeCleanupHelp">
+        <div class="storage-fields storage-notice-fields">
+            <div class="storage-field"><label for="noticeCleanupSchool" data-i18n="清理范围">{{ tr("清理范围") }}</label>
+                <select class="form-input" id="noticeCleanupSchool" required>
+                    <option value="" data-i18n="请先选择学校">{{ tr("请先选择学校") }}</option>
+                    <option value="all" data-i18n="全部学校">{{ tr("全部学校") }}</option>
+                    {% for school in storage.notice_schools %}<option value="{{ school.id }}">{{ school.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="storage-field"><label for="noticeCleanupBefore" data-i18n="清理早于此日期的通知">{{ tr("清理早于此日期的通知") }}</label>
+                <input class="form-input" id="noticeCleanupBefore" type="date" required>
+            </div>
+        </div>
+        <div class="storage-actions"><button class="btn btn-outline" type="submit" id="previewNoticeCleanup" data-i18n="预览清理范围">{{ tr("预览清理范围") }}</button></div>
+    </form>
+    <p id="noticeCleanupStatus" class="storage-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div id="noticeCleanupPreview" class="storage-notice-preview" hidden>
+        <dl class="storage-notice-counts">
+            {% for key, label in [('matched_count','日期范围内'),('deletable_count','将永久删除'),('protected_count','受保护保留'),('unknown_date_count','日期未知保留')] %}
+            <div><dt data-i18n="{{ label }}">{{ tr(label) }}</dt><dd data-notice-count="{{ key }}">0</dd></div>
+            {% endfor %}
+        </dl>
+        <h3 data-i18n="将删除的通知示例（最多 5 条）">{{ tr("将删除的通知示例（最多 5 条）") }}</h3>
+        <ul id="noticeCleanupSamples" class="storage-notice-samples"></ul>
+        <button class="btn btn-outline storage-delete-button" type="button" id="deleteNoticeCleanup" disabled data-i18n="永久删除预览中的通知">{{ tr("永久删除预览中的通知") }}</button>
+    </div>
+    <p class="storage-help" data-i18n="清理不会修改收录设置。后续重新扫描或导入可能再次收录；需要备份时，请先在“备份与导入”中导出。">{{ tr("清理不会修改收录设置。后续重新扫描或导入可能再次收录；需要备份时，请先在“备份与导入”中导出。") }}</p>
+</section>
+<details id="storageSelectiveCleanup" class="storage-selective-cleanup">
+    <summary data-i18n="其他单项清理">{{ tr("其他单项清理") }}</summary>
+    <div class="storage-selective-list">
+    {% for mode,label in [('body','未收藏正文'),('discovery','调查缓存'),('fetch','网页抓取缓存'),('governance','栏目核实证据'),('backups','自动备份'),('logs','已结束的抓取记录')] %}
+        <div class="storage-selective-row"><span data-i18n="{{ label }}">{{ tr(label) }}</span><button class="btn btn-outline btn-sm" type="button" data-cleanup="{{ mode }}" data-i18n-aria-label="清理{p0}" data-i18n-aria-label-vars='{{ {'p0':label}|tojson }}' data-i18n-aria-label-ui-vars='["p0"]' aria-label="{{ tr('清理{p0}',p0=tr(label)) }}" data-i18n="清理">{{ tr("清理") }}</button></div>
+    {% endfor %}
+    </div>
+    <p class="storage-help" data-i18n="抓取记录是通知采集记录，不包括按月归档的运行日志。">{{ tr("抓取记录是通知采集记录，不包括按月归档的运行日志。") }}</p>
+</details>
+    </div>
+</details>
+    </div>
 </section>
 {% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='js/storage.js') }}"></script>{% endblock %}

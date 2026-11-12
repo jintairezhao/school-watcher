@@ -59,6 +59,24 @@ class CatalogueTests(unittest.TestCase):
         self.assertEqual(info[root]['title'], '例校')
         self.assertNotIn('feed_json', info[root])
 
+    def test_listing_alias_metadata_is_explicit_and_stays_on_requested_pages(self):
+        self.inspect('<title>例校</title><a href="/news/">通知公告</a>')
+        self.catalog.publish(self.inv,self.key)
+        root='https://example.edu.cn/'
+        with self.catalog.connect(write=True)as connection:
+            ident=connection.execute('SELECT id FROM catalog_sites WHERE site_key=?',(self.key,)).fetchone()[0]
+            connection.execute('INSERT INTO catalog_pages(site_id,url,page_gzip,nodes_gzip,evidence_gzip) VALUES(?,?,?,?,?)',
+                (ident,root+'unrelated/',b'invalid metadata',b'invalid nodes',b'invalid HTML'))
+            connection.execute('UPDATE catalog_pages SET nodes_gzip=?,evidence_gzip=? WHERE url=?',
+                (b'invalid nodes',b'invalid HTML',root))
+        with patch.object(self.catalog,'report',side_effect=AssertionError('No report')),\
+             patch.object(self.catalog,'snapshot',side_effect=AssertionError('No HTML')):
+            info=self.catalog.page_metadata(self.key,[root],include_listing_data=True)
+        self.assertEqual(set(info),{root})
+        self.assertTrue(info[root]['checked_at'])
+        self.assertIn('feed_json',info[root])
+        self.assertEqual(info[root]['label'],'例校')
+
     def test_changed_reference_invalidates_prior_check_on_merge(self):
         self.inspect('<title>例校</title><h2>院系设置</h2><a href="https://cs.example.edu.cn/">计算机学院</a>')
         report = self.inv.report(self.key)
@@ -74,6 +92,34 @@ class CatalogueTests(unittest.TestCase):
         check = self.catalog.report(self.key)['reference_checks'][0]
         self.assertFalse(check['scope_passed'])
         self.assertFalse(check['reference_current'])
+
+    def test_old_cached_parse_cannot_replace_a_published_parse_of_the_same_observation(self):
+        root = 'https://example.edu.cn/'
+        self.inspect('<title>例校</title><a href="/news/">通知公告</a>')
+        self.catalog.publish(self.inv, self.key)
+        expected_page = self.catalog.get_page(self.key, root)
+        expected_nodes = self.catalog.structure(self.key)
+        with self.inv.connect() as c:
+            c.execute('UPDATE pages SET parser_revision=? WHERE site_key=? AND url=?',
+                      ('stale-cached-parser', self.key, root))
+            c.execute('DELETE FROM edges WHERE site_key=? AND parent_url=?', (self.key, root))
+            c.execute('DELETE FROM structure WHERE site_key=? AND reference_url=?', (self.key, root))
+        self.catalog.publish(self.inv, self.key, merge=True)
+        self.assertEqual(self.catalog.get_page(self.key, root), expected_page)
+        self.assertEqual(self.catalog.structure(self.key), expected_nodes)
+        self.assertEqual(self.catalog.snapshot(self.key, root), '<title>例校</title><a href="/news/">通知公告</a>')
+
+    def test_current_reparse_can_replace_an_old_published_parse_of_the_same_observation(self):
+        from backend.services.runtime_catalog import pack
+        root = 'https://example.edu.cn/'
+        self.inspect('<title>例校</title><a href="/news/">通知公告</a>')
+        self.catalog.publish(self.inv, self.key)
+        expected_page = self.catalog.get_page(self.key, root)
+        old_page = dict(expected_page, parser_revision='stale-published-parser', navigation_edges=[])
+        with self.catalog.connect(write=True) as c:
+            c.execute('UPDATE catalog_pages SET page_gzip=? WHERE url=?', (pack(old_page), root))
+        self.catalog.publish(self.inv, self.key, merge=True)
+        self.assertEqual(self.catalog.get_page(self.key, root), expected_page)
 
     def test_scratch_frontier_capacity_is_explicit_and_keeps_pending_work(self):
         inv = DiscoveryCache(self.folder / 'scratch.db')
@@ -118,6 +164,83 @@ class CatalogueTests(unittest.TestCase):
         page = self.catalog.get_page(self.key, 'https://example.edu.cn/')
         self.assertEqual(page['state'], 'fetched')
         self.assertEqual(page['latest_attempt']['state'], 'failed')
+
+    def navigation_fixture(self):
+        root = 'https://example.edu.cn/'
+        directory = root + 'departments/'
+        organization = root + 'organization/'
+        self.inv.finish(self.key, root, state='fetched', title='Example', html='<nav>saved links</nav>')
+        material = self.inv.get_page(self.key, root)['content_hash']
+        self.inv.record_structure(self.key, root, [
+            dict(key='root', name='Example', kind='group', url=root, parent='', locator='document', relation='page_identity'),
+            dict(key='directory', name='Academic departments', kind='group', url=directory,
+                 parent='root', locator='nav > a.departments', relation='navigation_entry'),
+        ], material)
+        self.inv.record_edges(self.key, root, [
+            dict(url=directory, label='Academic departments', kind='directory', path=[],
+                 locator='nav > a.departments', decision='follow'),
+            # Two real entrances to one target are distinct observations.
+            dict(url=directory, label='Academic departments', kind='directory', path=[],
+                 locator='main > a.departments', decision='follow'),
+            dict(url=organization, label='Organization', kind='directory', path=['About'],
+                 locator='nav > ul > li > ul > a.organization', decision='follow'),
+        ], material)
+        return root, directory, organization, material
+
+    def test_navigation_publication_preserves_direct_links_and_material_without_inventing_ownership(self):
+        root, directory, organization, material = self.navigation_fixture()
+        self.catalog.publish(self.inv, self.key)
+        snapshot = self.catalog.monitor_snapshot(self.key)
+        links = snapshot['navigation_edges']
+        self.assertEqual(len(links), 3)
+        self.assertEqual({edge['parent_url'] for edge in links}, {root})
+        self.assertEqual({edge['target_url'] for edge in links}, {directory, organization})
+        self.assertEqual(len([edge for edge in links if edge['target_url'] == directory]), 2)
+        self.assertTrue(all(edge['content_hash'] == material and edge['observed_at'] and edge['locator'] for edge in links))
+        direct = next(node for node in snapshot['structure_nodes'] if node['relation'] == 'navigation_entry')
+        self.assertEqual(direct['content_hash'], material)
+        self.assertTrue(direct['observed_at'])
+        paths = self.catalog.paths(self.key)
+        self.assertNotIn(directory, paths, 'Navigation links alone cannot establish an owner or roster path')
+        self.assertNotIn(organization, paths)
+        self.assertTrue(all(not path['nodes'] for path in paths.get(root, [])))
+        # The monitor must remain independent of mutable investigation data.
+        self.inv.path.unlink()
+        self.assertEqual(self.catalog.monitor_snapshot(self.key)['navigation_edges'], links)
+
+    def test_navigation_material_mismatch_is_excluded_on_publish_and_read(self):
+        root, directory, organization, _ = self.navigation_fixture()
+        with self.inv.connect() as connection:
+            connection.execute('UPDATE edges SET content_hash=? WHERE target_url=?', ('old-material', organization))
+        self.catalog.publish(self.inv, self.key)
+        self.assertEqual({edge['target_url'] for edge in self.catalog.monitor_snapshot(self.key)['navigation_edges']}, {directory})
+        from backend.services.runtime_catalog import pack, unpack
+        with self.catalog.connect(write=True) as connection:
+            row = connection.execute('SELECT page_gzip FROM catalog_pages WHERE url=?', (root,)).fetchone()
+            page = unpack(row[0])
+            page['navigation_edges'].append(dict(page['navigation_edges'][0], parent_url='https://wrong.example/'))
+            page['content_hash'] = 'new-page-material'
+            connection.execute('UPDATE catalog_pages SET page_gzip=? WHERE url=?', (pack(page), root))
+        self.assertEqual(self.catalog.monitor_snapshot(self.key)['navigation_edges'], [])
+        self.assertEqual(self.catalog.monitor_snapshot(self.key)['structure_nodes'], [])
+
+    def test_navigation_failed_merge_preserves_valid_previous_material_and_republication_is_stable(self):
+        root, _, _, _ = self.navigation_fixture()
+        from backend.services.runtime_catalog import _catalogue_digest
+        self.catalog.publish(self.inv, self.key)
+        before = self.catalog.monitor_snapshot(self.key)['navigation_edges']
+        fingerprint = _catalogue_digest(self.catalog, self.key)
+        self.catalog.publish(self.inv, self.key)
+        self.assertEqual(_catalogue_digest(self.catalog, self.key), fingerprint)
+        self.inv.finish(self.key, root, state='failed', error='network failure')
+        self.catalog.publish(self.inv, self.key, merge=True)
+        self.assertEqual(self.catalog.monitor_snapshot(self.key)['navigation_edges'], before)
+        self.assertEqual(self.catalog.get_page(self.key, root)['latest_attempt']['state'], 'failed')
+        # A successful replacement invalidates old edges even if scratch still
+        # carries them; changed material must never inherit old navigation.
+        self.inv.finish(self.key, root, state='fetched', html='<nav>different material</nav>')
+        self.catalog.publish(self.inv, self.key, merge=True)
+        self.assertEqual(self.catalog.monitor_snapshot(self.key)['navigation_edges'], [])
 
 
 if __name__ == '__main__':

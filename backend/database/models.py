@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 from backend.database.db import db
 from backend.core.timestamps import utc_stamp
+from shared.source_limits import MAX_SELECTOR_CHARS
 
 
 class School(db.Model):
@@ -57,12 +58,13 @@ class Department(db.Model):
     name = db.Column(db.String(200), nullable=False, comment='部门名称')
     kind = db.Column(db.String(16), nullable=False, default='column', server_default='column')
     structure_key = db.Column(db.String(64), unique=True, index=True, comment='官网目录节点的稳定标识')
+    identity_json = db.Column(db.JSON, nullable=True, comment='经原文核验的独立组织身份；不表达行政隶属')
     list_url = db.Column(db.String(1000), comment='通知列表页URL')
-    list_selector = db.Column(db.String(500), comment='列表项CSS选择器')
-    title_selector = db.Column(db.String(500), comment='标题CSS选择器')
-    link_selector = db.Column(db.String(500), comment='链接CSS选择器')
-    date_selector = db.Column(db.String(500), comment='日期CSS选择器')
-    content_selector = db.Column(db.String(500), comment='正文内容CSS选择器')
+    list_selector = db.Column(db.String(MAX_SELECTOR_CHARS), comment='列表项CSS选择器')
+    title_selector = db.Column(db.String(MAX_SELECTOR_CHARS), comment='标题CSS选择器')
+    link_selector = db.Column(db.String(MAX_SELECTOR_CHARS), comment='链接CSS选择器')
+    date_selector = db.Column(db.String(MAX_SELECTOR_CHARS), comment='日期CSS选择器')
+    content_selector = db.Column(db.String(MAX_SELECTOR_CHARS), comment='正文内容CSS选择器')
     group_name = db.Column(db.String(200), comment='导航分组名称（如院系设置、科学研究）')
     last_scraped_at = db.Column(db.DateTime, comment='上次完整抓取完成时间（用于增量抓取）')
 
@@ -94,6 +96,9 @@ class DepartmentDirectoryEntry(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='CASCADE'), primary_key=True)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='CASCADE'), primary_key=True)
     position = db.Column(db.Integer, nullable=False, default=0)
+    # Several independently evidenced relation types may share the same pair.
+    # An empty array is an unverified legacy membership, never inferred proof.
+    facts_json = db.Column(db.JSON, nullable=False, default=list, server_default='[]')
     __table_args__ = (db.Index('ix_directory_entry_department', 'department_id'),)
 
 
@@ -294,7 +299,7 @@ class UserAnnouncementState(db.Model):
 
 
 class AnnouncementResource(db.Model):
-    """Observed attachments/images saved with a pinned article, shared once."""
+    """Observed resource bytes in the personal database; favorites pin the copy."""
     __tablename__ = 'announcement_resources'
     announcement_id = db.Column(db.Integer, db.ForeignKey('announcements.id', ondelete='CASCADE'), primary_key=True)
     url_key = db.Column(db.String(64), primary_key=True)

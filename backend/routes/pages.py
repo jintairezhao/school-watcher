@@ -4,7 +4,7 @@ from collections import OrderedDict
 from urllib.parse import urlencode
 
 from flask import (Blueprint, render_template, request, redirect, url_for,
-                   flash, g, make_response)
+                   flash, g, make_response, jsonify)
 from sqlalchemy import extract, false, func
 from sqlalchemy.orm import joinedload, defer
 
@@ -20,12 +20,28 @@ from backend.services.content_cache import request_content
 bp = Blueprint('pages', __name__)
 
 
+from backend.services.structure_snapshot import StructureReadConflict
+
+
+@bp.errorhandler(StructureReadConflict)
+def structure_read_updating(error):
+    """Any structure read in this page can overlap a committed update."""
+    if request.headers.get('X-Inbox-Fragment') == '1':
+        response = make_response(jsonify(error='通知来源正在更新，请稍后重试。',
+            error_code='structure_updating'), 503)
+    else:
+        response = make_response(render_template('error.html', error_code=503), 503)
+    response.headers.update({'X-Structure-Updating': '1', 'Retry-After': '1', 'Cache-Control': 'no-store'})
+    return response
+
+
 @bp.route('/')
 def index():
     """通知收件箱：订阅学校的统一通知流与组合筛选"""
     from backend.services import read_state
-    from backend.services.inbox import (filtered_inbox, source_hierarchy, read_expression,
+    from backend.services.inbox import (filtered_inbox, source_filter_ids, read_expression,
                                         inbox_mailbox, normalize_inbox_args, state_expression)
+    from backend.services.structure_snapshot import read_structure, inbox_choices, department_views, SOURCE_GROUP_LABELS
     from backend.services.directory_options import directory_entries_for, expand_directory_ids
     from backend.services.announcement_sources import (source_expression, source_counts,
                                                       sources_for, schools_for, memberships)
@@ -67,17 +83,18 @@ def index():
     current_school_id = current_school.id if current_school else None
 
     departments = []
-    known_departments = []
     selected_dept_ids = []
+    requested_dept_ids = request.args.getlist('dept', type=int)
+    source_tree = {}
+    legacy_department_scope = False
     directory_entries = []
+    structure = None
+    dept_counts = {}
     if current_school:
-        directory_entries = directory_entries_for(current_school.id)
-        departments = (Department.query
-                       .filter_by(school_id=current_school.id)
-                       .filter(Department.name != 'DAILY NEWS')
-                       .order_by(Department.id)
-                       .all())
-        known_departments = departments
+        structure = read_structure(current_school)
+        directory_entries = structure['directory_entries']
+        departments = [row for row in department_views(structure) if row.name != 'DAILY NEWS']
+        dept_counts = source_counts(current_school.id)
         current_subscription = next((s for s in subscriptions if s.school_id == current_school.id), None)
         if view == 'inbox' and current_subscription and current_subscription.department_ids is not None:
             allowed = set(expand_directory_ids(current_school.id, current_subscription.department_ids, directory_entries))
@@ -85,9 +102,17 @@ def index():
             allowed.update(row[0] for row in db.session.query(retained_sources.c.department_id).distinct())
             departments = [d for d in departments if d.id in allowed]
         valid_dept_ids = {dept.id for dept in departments}
-        selected_dept_ids = [dept_id for dept_id in expand_directory_ids(current_school.id,
-                             request.args.getlist('dept', type=int), directory_entries)
-                             if dept_id in valid_dept_ids]
+        source_tree = inbox_choices(structure, allowed_ids=valid_dept_ids, historical_ids=dept_counts,
+            retained_ids=(current_subscription.department_ids or ()) if current_subscription else ())
+        from backend.services.inbox_tree import display_tree
+        source_tree = display_tree(structure, source_tree, current_school.url)
+        selectable_ids = {column['department'].id for units in source_tree.values() for unit in units
+                          for column in unit['columns'] if not column['unavailable']}
+        legacy_department_scope = bool(set(requested_dept_ids) & valid_dept_ids - selectable_ids)
+        selected_dept_ids = [dept_id for dept_id in source_filter_ids(current_school.id,
+                             requested_dept_ids, directory_entries, capture=structure,
+                             historical_ids=dept_counts)
+                             if dept_id in selectable_ids]
 
     current_group = request.args.get('group', '').strip() if current_school else ''
     q = request.args.get('q', '').strip()[:200]
@@ -109,7 +134,7 @@ def index():
     page = max(1, request.args.get('page', 1, type=int))
     per_page = 40
 
-    query = filtered_inbox(g.user.id, request.args, include_read=False)
+    query = filtered_inbox(g.user.id, request.args, include_read=False, structure_capture=structure)
     requested_ann_id = request.args.get('selected', type=int)
     date_selection = query.filter(Announcement.id == requested_ann_id).first() if requested_ann_id else None
     if requested_ann_id and date_selection is None:
@@ -123,7 +148,8 @@ def index():
             selection_args = MultiDict(request.args)
             for key in ('period','year','month','read'): selection_args.poplist(key)
             selection_args.setlist('period',['all'])
-            date_selection = filtered_inbox(g.user.id,selection_args,include_read=False).filter(Announcement.id==requested_ann_id).first()
+            date_selection = filtered_inbox(g.user.id,selection_args,include_read=False,
+                structure_capture=structure).filter(Announcement.id==requested_ann_id).first()
     if date_selection:
         from backend.services.publication_dates import reconcile_cached_date
         if reconcile_cached_date(date_selection): db.session.commit()
@@ -214,10 +240,6 @@ def index():
                        .group_by('year').order_by(db.text('year DESC')).all()
                        if row[0]]
 
-    dept_counts = {}
-    if current_school_id:
-        dept_counts = source_counts(current_school_id)
-
     def inbox_url(selected=None, page_number=None):
         params = []
         if reading_view == 'focus':
@@ -232,7 +254,9 @@ def index():
             params.append(('q', q))
         if current_school_id:
             params.append(('school', current_school_id))
-        params.extend(('dept', dept_id) for dept_id in selected_dept_ids)
+        # Keep explicit historical directory bookmarks when opening a notice.
+        # The visible selection count contains only actual selectable sources.
+        params.extend(('dept', dept_id) for dept_id in requested_dept_ids)
         # Keep the active time range explicit: favorites have a different
         # default, and fresh browser entries can inherit a user's preference.
         params.append(('period', period))
@@ -258,8 +282,11 @@ def index():
         '_inbox_workspace.html' if request.headers.get('X-Inbox-Fragment') == '1' else 'index.html',
         schools=schools,
         departments=departments,
-        source_tree=source_hierarchy(departments, known_departments, directory_entries, available_only=True,
-            retained_ids=(current_subscription.department_ids or ()) if current_school and current_subscription else ()),
+        source_tree=source_tree,
+        source_structure_version=structure['version'] if structure else dict(epoch=None,revision=0),
+        source_attention_policy_version=structure['attention_policy_version'] if structure else '',
+        legacy_source_scope=legacy_department_scope or bool(current_group and current_group not in SOURCE_GROUP_LABELS),
+        current_group_is_structural=current_group in SOURCE_GROUP_LABELS,
         source_sync_states={s['id']: s for s in refresh_status(departments)['sources']},
         current_group=current_group,
         view=view,
@@ -381,8 +408,8 @@ def explore():
 @bp.route('/school/<int:school_id>')
 def school_detail(school_id):
     """Public source preview; subscribers read through the unified inbox."""
-    from backend.services.inbox import source_groups
-    from backend.services.announcement_sources import source_expression, sources_for, preferred_source
+    from backend.services.structure_snapshot import read_structure, preview_source_choices
+    from backend.services.announcement_sources import source_expression, sources_for, preferred_source, source_counts
     school = db.get_or_404(School, school_id)
     if not school.enabled:
         from flask import abort
@@ -400,6 +427,8 @@ def school_detail(school_id):
         return redirect(url_for('pages.index', school=school.id, dept=dept_id,
             period='week' if daily else ('archive' if year else 'all'),
             year=year, month=month, q=q, page=request.args.get('page', 1, type=int)))
+    structure = read_structure(school)
+    preview_columns = preview_source_choices(structure, school, historical_ids=source_counts(school.id))
     query = Announcement.query.filter(source_expression(school_ids=[school.id],
                                       department_ids=[dept_id] if dept_id else None))
     if year:
@@ -420,7 +449,7 @@ def school_detail(school_id):
     prime_publications([a.id for a in pagination.items])
     display_sources = {a.id: preferred_source(a, sources.get(a.id, []), school.id, dept_id)
                        for a in pagination.items}
-    return render_template('school.html', school=school, groups=source_groups(departments),
+    return render_template('school.html', school=school, preview_columns=preview_columns,
         pagination=pagination, current_dept=dept_id, q=q, year=year, month=month,
         announcement_sources=sources, display_sources=display_sources)
 

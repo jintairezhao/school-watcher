@@ -57,11 +57,25 @@ def install_chromium(data):
     environment = get_driver_env()
     environment.setdefault('PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT', '60000')
     environment['CI'] = '1'
-    with (Path(data) / 'desktop-browser-download.log').open('ab') as output:
-        subprocess.run([node, cli, 'install', 'chromium', '--no-shell'], env=environment,
-                       stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.STDOUT,
-                       creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
-                       check=True, timeout=900)
+    from desktop.runtime_logs import capture_process_output
+    command = [node, cli, 'install', 'chromium', '--no-shell']
+    process = subprocess.Popen(command, env=environment, stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+    collector = None
+    try:
+        collector = capture_process_output(process, data, 'browser-download')
+        code = process.wait(timeout=900)
+        if code:
+            raise subprocess.CalledProcessError(code, command)
+    except BaseException:
+        if process.poll() is None:
+            from desktop.runtime import stop_process
+            stop_process(process)
+        raise
+    finally:
+        if collector:
+            collector.close(timeout=2)
 
 
 def prepare(data, managed=False):

@@ -13,7 +13,7 @@ from backend.auth.desktop import ensure_local_owner
 from backend.services.localization import stage_preferences
 from playwright.sync_api import sync_playwright,expect
 
-def check():
+def check(capture=True):
     out=ROOT/'.local/localization-checks/expanded';out.mkdir(parents=True,exist_ok=True)
     report=[]
     with tempfile.TemporaryDirectory(prefix='english-workflows-') as scratch,patch.dict(os.environ,{'WATCHER_DATA_DIR':scratch,'WATCHER_ENV_FILE':str(Path(scratch)/'.env'),'FIELD_ENC_KEY':'isolated-english-key'}),patch('backend.ai.providers.complete',side_effect=AssertionError('No paid request')),sync_playwright() as pw:
@@ -87,11 +87,13 @@ def check():
                         expect(page.locator('#deleteDialogDescription')).not_to_contain_text('将删除')
                         page.locator('#deleteDialogCancel').click()
                     if name=='storage':
+                        page.locator('#storageRetention>summary').click()
+                        page.locator('#storageCacheRules>summary').click()
                         page.locator('#policy-body_cache_days').fill('77')
                         page.locator('#languageSelect').select_option('zh-CN');expect(page.locator('html')).to_have_attribute('lang','zh-CN')
                         page.locator('#languageSelect').select_option('en');expect(page.locator('html')).to_have_attribute('lang','en')
                         expect(page.locator('#policy-body_cache_days')).to_have_value('77')
-                    page.screenshot(path=str(out/f'{name}-{width}-{theme}.png'),full_page=True)
+                    if capture:page.screenshot(path=str(out/f'{name}-{width}-{theme}.png'),full_page=True)
                 assert not errors,errors
                 page.close()
             finally:fixture.tearDown()

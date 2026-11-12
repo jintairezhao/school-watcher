@@ -87,7 +87,8 @@ def sqlite_to_postgres(source, target_url, destination, *, catalog=None, stopped
                         from backend.services.backups import verify_evidence_file
                         evidence_root = source.parent / 'source-governance-evidence'
                         if evidence_root.is_dir():
-                            for evidence_file in evidence_root.glob('*.html.gz'):
+                            from itertools import chain
+                            for evidence_file in chain(evidence_root.glob('*.html.gz'), evidence_root.glob('*.pdf')):
                                 if evidence_file.is_symlink():
                                     raise ValueError('网页证据路径不能是符号链接')
                                 verify_evidence_file(evidence_file)
@@ -122,7 +123,9 @@ def sqlite_to_postgres(source, target_url, destination, *, catalog=None, stopped
                                     writer.execute(sa.text('SELECT setval(CAST(:seq AS regclass), :value, :called)'),
                                         {'seq': sequence, 'value': maximum or 1, 'called': maximum is not None})
                         from backend.database.provider_backup import fence_restored_ai
+                        from backend.services.structure_versions import reset_restored_structure_epochs
                         fence_restored_ai(writer)
+                        reset_restored_structure_epochs(writer, 'database_provider_transfer')
                         version = ScriptDirectory(str(ROOT_DIR / 'migrations')).get_current_head()
                         writer.execute(sa.text('CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL PRIMARY KEY)'))
                         writer.execute(sa.text('INSERT INTO alembic_version VALUES (:version)'), {'version': version})

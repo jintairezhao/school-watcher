@@ -8,9 +8,37 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from sqlalchemy import text
 from backend.auth import admin_required
 from backend.database.db import db
-from backend.database.models import AppConfig, BackgroundTask, Announcement, UserAnnouncementState
+from backend.database.models import AppConfig, BackgroundTask, Announcement, UserAnnouncementState, School
 
 bp = Blueprint('operations', __name__)
+
+
+def _storage_usage_groups(files, database_bytes=None):
+    """Each physical file belongs to one group; cached DB bodies stay in data."""
+    groups = dict.fromkeys(('data', 'cache', 'logs', 'backups', 'application'), 0)
+    groups['data'] = database_bytes or 0  # PostgreSQL is not in the file inventory.
+    for file in files:
+        name, kind = file['name'].replace('\\', '/'), file.get('kind')
+        if kind in ('main_database', 'source_catalog', 'discovery_progress', 'discovery_history'):
+            group = 'data'
+        elif kind == 'governance_evidence':
+            group = 'cache'
+        elif name.startswith(('updates/', 'webview/')):
+            group = 'application'
+        elif 'backup' in name or '.bak' in name or name.startswith('rollback/'):
+            group = 'backups'
+        elif (name.startswith('logs/') or name == 'worker.log' or
+              ('/' not in name and name.startswith('desktop') and
+               (name.endswith('.log') or '.log.' in name))):
+            group = 'logs'
+        elif name.startswith(('fetch-evidence/', 'fetch_evidence/', 'discovery_cache.')):
+            group = 'cache'
+        elif name.startswith(('school_watcher.db', 'source_catalog.sqlite3', 'catalog-generations/')):
+            group = 'data'
+        else:
+            group = 'application'
+        groups[group] += file['bytes']
+    return groups
 
 
 @bp.before_app_request
@@ -91,32 +119,59 @@ def storage():
     root = Path(current_app.config.get('STORAGE_ROOT', DATA_DIR))
     from backend.services.source_governance import _evidence_root
     governance_root = _evidence_root().resolve()
-    files = [{'name': str(p.relative_to(root)), 'bytes': p.stat().st_size,
+    files = [{'name': str(p.relative_to(root)), 'bytes': p.stat().st_size, '_path': p.resolve(),
               'kind': 'governance_evidence' if p.resolve().is_relative_to(governance_root) else ''}
              for p in root.rglob('*') if p.is_file() and not p.is_symlink()]
     # Relocated files still count toward usage, without counting nested paths twice.
-    known = {p.resolve() for p in root.rglob('*') if p.is_file() and not p.is_symlink()}
+    known = {file['_path'] for file in files}
     discovery = Path(current_app.config['DISCOVERY_CACHE_PATH']).resolve()
+    from backend.services.discovery_history import archive_root, archive_files
+    history_root = archive_root(discovery)
+    catalog = Path(current_app.config['SOURCE_CATALOG_PATH']).resolve()
+    main = (Path(db.engine.url.database).resolve() if db.engine.dialect.name == 'sqlite'
+            and db.engine.url.database not in (None, '', ':memory:') else None)
     fetch_root = Path(current_app.config['FETCH_EVIDENCE_DIR']).resolve()
     backup_root = Path(current_app.config['BACKUP_DIR']).resolve()
     extra = [*discovery.parent.glob(discovery.name + '*')]
+    extra.extend(archive_files(discovery))
+    if main:
+        extra.extend(main.with_name(main.name + suffix) for suffix in ('', '-wal', '-shm'))
+    extra.extend(catalog.with_name(catalog.name + suffix) for suffix in ('', '-wal', '-shm'))
+    generations = catalog.parent / 'catalog-generations'
+    if generations.is_dir():
+        extra.extend(generations.rglob('*'))
     for folder in (fetch_root, backup_root):
         if folder.is_dir(): extra.extend(folder.rglob('*'))
+    if governance_root.is_dir():
+        extra.extend(governance_root.glob('*.html.gz'))
     for path in extra:
         if path.is_file() and not path.is_symlink() and path.resolve() not in known:
             prefix = 'backups/' if path.resolve().is_relative_to(backup_root) else 'fetch-evidence/' if path.resolve().is_relative_to(fetch_root) else ''
-            files.append({'name': prefix + path.name, 'bytes': path.stat().st_size, 'kind': ''})
+            kind = ('main_database' if main and path.resolve() in {
+                main.with_name(main.name + suffix) for suffix in ('', '-wal', '-shm')} else
+                'source_catalog' if path.resolve() in {
+                    catalog.with_name(catalog.name + suffix) for suffix in ('', '-wal', '-shm')}
+                or path.resolve().is_relative_to(generations) else '')
+            files.append({'name': prefix + path.name, 'bytes': path.stat().st_size, 'kind': kind, '_path': path.resolve()})
             known.add(path.resolve())
     for file in files:
-        actual = (root / file['name']).resolve()
+        actual = file.pop('_path')
+        if main and actual in {main.with_name(main.name + suffix) for suffix in ('', '-wal', '-shm')}:
+            file['kind'] = 'main_database'
+        elif actual in {catalog.with_name(catalog.name + suffix) for suffix in ('', '-wal', '-shm')} or actual.is_relative_to(generations):
+            file['kind'] = 'source_catalog'
         if actual.name == discovery.name or actual.name in (discovery.name + '-wal', discovery.name + '-shm'):
             file['kind'] = 'discovery_progress'
+        if actual.is_relative_to(history_root):
+            file['kind'] = 'discovery_history'
+            file['name'] = 'discovery_history/' + actual.relative_to(history_root).as_posix()
+        if not file['kind'] and actual.is_relative_to(governance_root):
+            file['kind'] = 'governance_evidence'
         if actual.is_relative_to(backup_root): file['name'] = 'backups/' + actual.name
         elif actual.is_relative_to(fetch_root): file['name'] = 'fetch-evidence/' + actual.name
         elif actual.parent == discovery.parent and actual.name.startswith(discovery.name): file['name'] = 'discovery_cache.' + actual.name
     governance_bytes = sum(p.stat().st_size for p in governance_root.glob('*.html.gz')
                            if p.is_file() and not p.is_symlink()) if governance_root.exists() else 0
-    outside_governance_bytes = governance_bytes if not governance_root.is_relative_to(root.resolve()) else 0
     pinned = db.session.query(UserAnnouncementState.announcement_id).filter_by(starred=True)
     saved_bytes = db.session.query(db.func.coalesce(db.func.sum(Announcement.content_bytes), 0)).filter(
         Announcement.id.in_(pinned)).scalar()
@@ -130,37 +185,30 @@ def storage():
     database_bytes = None
     if db.engine.dialect.name == 'postgresql':
         database_bytes = db.session.execute(text('SELECT pg_database_size(current_database())')).scalar_one()
-    return jsonify(total_bytes=sum(p['bytes'] for p in files) + (database_bytes or 0) + outside_governance_bytes, saved_body_bytes=saved_bytes,
+    usage_groups = _storage_usage_groups(files, database_bytes)
+    from backend.services.database_space import database_stats, DatabaseSpaceError
+    try:
+        space = database_stats()
+    except DatabaseSpaceError as exc:
+        # A busy statistics connection must not hide the other storage controls.
+        space = {'supported': True, 'available': False, 'can_compact': False,
+                 'reclaimable_bytes': 0, 'message': str(exc)}
+    return jsonify(total_bytes=sum(usage_groups.values()), usage_groups=usage_groups, saved_body_bytes=saved_bytes,
                    policy=policy(), announcement_count=Announcement.query.count(),
                    body_cache_limit=policy()['body_cache_mb'] * 1048576,
                    discovery_cache_limit=policy()['discovery_cache_mb'] * 1048576, files=files,
-                   fetch_evidence_bytes=evidence_bytes, source_governance_evidence_bytes=governance_bytes, database_bytes=database_bytes)
+                   fetch_evidence_bytes=evidence_bytes, source_governance_evidence_bytes=governance_bytes,
+                   database_bytes=database_bytes, database_space=space,
+                   notice_schools=[{'id': row.id, 'name': row.name} for row in School.query.order_by(School.name, School.id)])
 
 
 @bp.get('/admin/storage')
 @admin_required
 def storage_page():
     data = storage().get_json()
-    groups = {'运行目录与通知': data.get('database_bytes') or 0, '调查缓存': 0, '接入进度': 0,
-              '网页抓取缓存': 0, '栏目核实证据': data.get('source_governance_evidence_bytes') or 0,
-              '备份与回退资料': 0, '日志及其他文件': 0}
-    for file in data['files']:
-        if file.get('kind') == 'governance_evidence':
-            continue
-        name = file['name'].replace('\\', '/')
-        if 'backup' in name or '.bak' in name or name.startswith('rollback/'):
-            group = '备份与回退资料'
-        elif name.startswith(('fetch-evidence/', 'fetch_evidence/')):
-            group = '网页抓取缓存'
-        elif file.get('kind') == 'discovery_progress':
-            group = '接入进度'
-        elif name.startswith('discovery_cache.'):
-            group = '调查缓存'
-        elif name.startswith(('school_watcher.db', 'source_catalog.sqlite3', 'catalog-generations/')):
-            group = '运行目录与通知'
-        else:
-            group = '日志及其他文件'
-        groups[group] += file['bytes']
+    groups = {label: data['usage_groups'][key] for label, key in (
+        ('通知与目录', 'data'), ('缓存', 'cache'), ('日志', 'logs'),
+        ('备份', 'backups'), ('应用文件', 'application'))}
     from backend.services.scrape_logs import RETENTION_CHOICES
     return render_template('storage.html', storage=data, groups=groups, log_retention_choices=RETENTION_CHOICES)
 
@@ -180,7 +228,7 @@ def update_storage_policy():
 def cleanup_storage():
     from backend.services.storage_policy import cleanup
     data = request.get_json(silent=True)
-    if not isinstance(data, dict) or data.get('mode') not in ('expired', 'all_cache', 'body', 'discovery', 'fetch', 'governance', 'backups', 'logs'):
+    if not isinstance(data, dict) or data.get('mode') not in ('expired', 'all_cache', 'cache', 'body', 'discovery', 'fetch', 'governance', 'backups', 'logs'):
         return jsonify(error='请选择按已保存规则清理或清空可清理缓存'), 400
     try:
         category = data['mode'] if data['mode'] not in ('expired', 'all_cache') else None
@@ -191,6 +239,60 @@ def cleanup_storage():
         db.session.rollback()
         current_app.logger.exception('Storage cleanup failed')
         return jsonify(error='清理未全部完成，请稍后重试；通知目录和收藏仍保留'), 503
+
+
+@bp.post('/api/storage/notices/preview')
+@admin_required
+def preview_notice_cleanup():
+    from backend.services.notice_cleanup import preview, NoticeCleanupError
+    try:
+        return jsonify(preview(request.get_json(silent=True), g.user.id))
+    except NoticeCleanupError as exc:
+        return jsonify(error=str(exc)), exc.status_code
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.exception('Notice cleanup preview failed')
+        return jsonify(error='清理预览暂时无法读取，请稍后重试'), 503
+
+
+@bp.post('/api/storage/notices/cleanup')
+@admin_required
+def delete_previewed_notices():
+    from backend.services.notice_cleanup import delete_preview, NoticeCleanupError
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or set(data) != {'preview_token'} or not isinstance(data['preview_token'], str):
+        return jsonify(error='请先预览要清理的通知'), 400
+    try:
+        return jsonify(delete_preview(data['preview_token'], g.user.id))
+    except NoticeCleanupError as exc:
+        db.session.rollback()
+        return jsonify(error=str(exc)), exc.status_code
+    except Timeout:
+        db.session.rollback()
+        return jsonify(error='另一项存储操作正在进行，请稍后重试'), 409
+    except (SQLAlchemyError, OSError):
+        db.session.rollback()
+        current_app.logger.exception('Notice cleanup failed')
+        return jsonify(error='通知清理未完成，本次修改已撤回，请重新预览后重试'), 503
+
+
+@bp.post('/api/storage/database/compact')
+@admin_required
+def compact_storage_database():
+    from backend.services.database_space import compact_database, DatabaseSpaceError
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or data:
+        return jsonify(error='空间回收请求不正确'), 400
+    try:
+        return jsonify(compact_database())
+    except DatabaseSpaceError as exc:
+        return jsonify(error=str(exc)), exc.status_code
+    except Timeout:
+        return jsonify(error='另一项存储操作正在进行，请稍后重试'), 409
+    except (SQLAlchemyError, OSError):
+        db.session.rollback()
+        current_app.logger.exception('Database space reclamation failed')
+        return jsonify(error='数据库空间回收未完成，请稍后重试；通知数据保留'), 503
 
 
 @bp.post('/api/storage/export')

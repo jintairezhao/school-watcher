@@ -23,4 +23,9 @@ for(const kind of ['root','unit','directory','channel','major','navigation']) {
 assert.equal(labelPolicy({width:390,height:800,zoom:1}).limit,7);
 assert.ok(labelPolicy({width:1586,height:992,zoom:1}).limit<=42);
 assert.ok(labelPolicy({width:1586,height:992,zoom:2}).limit>labelPolicy({width:1586,height:992,zoom:1}).limit);
-console.log('Atlas display policy: overview, zoom, local context and unchanged evidence pass');
+const {labelIntersectsSphere}=await import('../../frontend/static/js/discovery-atlas-view.js');
+assert.equal(labelIntersectsSphere([10,10,50,30],{x:20,y:20,radius:3}),true,'Text covering a visible sphere steals its click');
+assert.equal(labelIntersectsSphere([10,10,50,30],{x:53,y:33,radius:5}),true,'Circle edges also remain clear of labels');
+assert.equal(labelIntersectsSphere([10,10,50,30],{x:55,y:35,radius:3}),false);
+assert.equal(labelIntersectsSphere([10,10,50,30],{x:53,y:20,radius:3}),false,'Touching bounds do not overlap');
+console.log('Atlas display policy: overview, zoom, local context, sphere click areas and unchanged evidence pass');

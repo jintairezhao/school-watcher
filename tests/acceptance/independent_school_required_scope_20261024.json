@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "school_name": "中国科学院大学",
+  "client_date": "2026-10-24",
+  "source_question_id": "call_c526f355e62a4207980af8b25bbde7d7",
+  "user_reply": "两学院通知栏目＋本科、研究生教育与招生通知",
+  "confirmation_level": "required_scope_only",
+  "requirements": [
+    {
+      "id": "ucas-required-scope:math-notices",
+      "label": "数学科学学院通知栏目",
+      "user_required_scope": true,
+      "exact_target_list_complete": false,
+      "candidate_observation_ids": [
+        "ucas-candidate:36d32a03cc4943ce87ef"
+      ],
+      "candidate_address_human_confirmed": false
+    },
+    {
+      "id": "ucas-required-scope:earth-notices",
+      "label": "地球与行星科学学院通知栏目",
+      "user_required_scope": true,
+      "exact_target_list_complete": false,
+      "candidate_observation_ids": [
+        "ucas-candidate:6bd51342d030742bad76"
+      ],
+      "candidate_address_human_confirmed": false
+    },
+    {
+      "id": "ucas-required-scope:undergraduate-education-notices",
+      "label": "本科教育通知",
+      "user_required_scope": true,
+      "exact_target_list_complete": false,
+      "candidate_observation_ids": [
+        "ucas-candidate:6a0e735fc7d0494a4395",
+        "ucas-candidate:a05bb01070c5127259d7",
+        "ucas-candidate:5461828bfd4602a7fe50"
+      ],
+      "candidate_address_human_confirmed": false
+    },
+    {
+      "id": "ucas-required-scope:graduate-education-notices",
+      "label": "研究生教育通知",
+      "user_required_scope": true,
+      "exact_target_list_complete": false,
+      "candidate_observation_ids": [
+        "ucas-candidate:cbf37e880486394febdd",
+        "ucas-candidate:cb3583c5be8cfd23c088",
+        "ucas-candidate:cecf14a1c2c57cd2aedb"
+      ],
+      "candidate_address_human_confirmed": false
+    },
+    {
+      "id": "ucas-required-scope:undergraduate-admission-notices",
+      "label": "本科招生通知",
+      "user_required_scope": true,
+      "exact_target_list_complete": false,
+      "candidate_observation_ids": [
+        "ucas-candidate:8ff1fefea42a7a2b753e",
+        "ucas-candidate:c38fffc32a478ab6daef",
+        "ucas-candidate:8e4f8875a482386df0aa"
+      ],
+      "candidate_address_human_confirmed": false
+    },
+    {
+      "id": "ucas-required-scope:graduate-admission-notices",
+      "label": "研究生招生通知",
+      "user_required_scope": true,
+      "exact_target_list_complete": false,
+      "candidate_observation_ids": [
+        "ucas-candidate:a2c4956dcb49bc3c09ab"
+      ],
+      "candidate_address_human_confirmed": false
+    }
+  ],
+  "candidate_reference_record": ".local/structure-facts-20261021/ucas-reference-review-20261024/references.json",
+  "candidate_reference_sha256": "29869d33c7a4f2453ef3e291de29a5a4cb1afdeed804a69a7e8e48b96ffa9e62",
+  "candidate_mappings": "Program suggestions from existing labels and entrance evidence; not user confirmation of individual names, URLs or source identity",
+  "certified_exact_sources": 0,
+  "certified_branch_episodes": 0,
+  "holdout_certified": false,
+  "threshold_gate": "insufficient_evidence_no_evaluator",
+  "new_http_requests": 0,
+  "model_calls": 0
+}

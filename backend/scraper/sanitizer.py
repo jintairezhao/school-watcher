@@ -12,7 +12,7 @@ _CLEANER = nh3.Cleaner(
     clean_content_tags={'script', 'style', 'iframe', 'object', 'embed', 'form',
                         'svg', 'math', 'template', 'noscript'},
     attributes={'*': {'title', 'lang', 'dir', 'style'},
-                'a': {'href'}, 'img': {'src', 'alt', 'width', 'height'},
+                'a': {'href'}, 'img': {'src', 'alt', 'width', 'height', 'data-article-image-src'},
                 'td': {'colspan', 'rowspan'}, 'th': {'colspan', 'rowspan', 'scope'},
                 'col': {'span'}, 'colgroup': {'span'}, 'ol': {'start', 'reversed'},
                 'li': {'value'}},

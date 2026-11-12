@@ -1,11 +1,11 @@
-"""Channel presentation uses real source evidence and keeps homonyms distinct."""
+"""Legacy subscription presentation compatibility; current facts are tested separately."""
 import json
 import unittest
 from unittest.mock import patch
 
 from backend.database.db import db
 from backend.database.models import Department, DepartmentDirectoryEntry, School
-from backend.services.source_channels import channels_for
+from backend.services.source_channels import legacy_channels_for as channels_for
 from backend.services.source_inventory import site_key
 from backend.services.source_ownership import BRANDING_PREFIX
 

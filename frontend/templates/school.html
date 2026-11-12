@@ -10,7 +10,7 @@
     {% endcall %}
     <form class="preview-filters" method="get" role="search">
         <div><label for="previewColumn" data-i18n="官网栏目">{{ tr("官网栏目") }}</label><select name="dept" id="previewColumn" class="form-input"><option value="" data-i18n="全部栏目">{{ tr("全部栏目") }}</option>
-        {% for dept in groups.values()|sum(start=[])|unique(attribute='id') %}<option value="{{ dept.id }}" {% if current_dept == dept.id %}selected{% endif %}>{{ dept|source_breadcrumb }}</option>{% endfor %}
+        {% for column in preview_columns %}<option value="{{ column.department.id }}" data-source-scope="{{ 'historical' if column.historical_scope else 'current' }}" {% if current_dept == column.department.id %}selected{% endif %}>{{ column.breadcrumb }}{% if column.historical_scope and column.record_scope != 'historical_department_reference' %} · {{ tr('历史通知范围') }}{% endif %}</option>{% endfor %}
         </select></div>
         <div><label for="previewQuery"><span data-i18n="通知标题">{{ tr("通知标题") }}</span></label><input type="search" class="form-input" id="previewQuery" name="q" value="{{ q }}" data-i18n-placeholder="输入关键词" placeholder="{{ tr('输入关键词') }}"></div>
         <button type="submit" class="btn btn-outline" data-i18n="筛选通知">{{ tr("筛选通知") }}</button>

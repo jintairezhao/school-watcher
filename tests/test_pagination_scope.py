@@ -87,6 +87,83 @@ class PaginationScopeTests(unittest.TestCase):
                 '<a rel="next" href="?b=2">下一页</a></div></section>')
         self.assertIsNone(self.next(html, '#a li'))
 
+    def counted_pager(self):
+        # Literal first/last labels and counter grammar from the retained
+        # safety/psychology pages; no CSS marker supplies pager ownership.
+        return ('<div><table><tr><td><a href="#">第一页</a><a href="#">上一页</a>'
+                '<a href="index_2.shtml"><span>下一页</span></a><a href="index_3.shtml">最末页</a>'
+                '<span>共15条记录，每页6条</span></td></tr></table></div>')
+
+    def test_counted_first_last_controls_do_not_become_foreign_article_links(self):
+        html = '<section id="column"><h2>通知公告</h2><ul id="a">'+POLICY_ITEMS+'</ul>'+self.counted_pager()+'</section>'
+        scope = dict(container_selector='#column',heading_selector='#column h2')
+        self.assertEqual(self.next(html,'#a li',scope), URL+'index_2.shtml')
+
+    def test_counted_pager_can_be_a_sibling_of_the_complete_column_container(self):
+        html = '<main><section id="column"><h2>通知公告</h2><ul id="a">'+POLICY_ITEMS+'</ul></section>'+self.counted_pager()+'</main>'
+        scope = dict(container_selector='#column',heading_selector='#column h2')
+        self.assertEqual(self.next(html,'#a li',scope), URL+'index_2.shtml')
+
+    def test_single_card_named_first_page_is_still_a_foreign_article(self):
+        html = ('<main><ul id="a">'+POLICY_ITEMS+'</ul><section><div><a href="/story.htm">第一页</a></div>'
+                '<a href="?neighbor=2">下一页</a></section></main>')
+        self.assertIsNone(self.next(html,'#a li'))
+
+    def test_sibling_pager_exception_requires_local_controls_and_keeps_other_boundaries(self):
+        scope = dict(container_selector='#column',heading_selector='#column h2')
+        column = '<section id="column"><h2>通知公告</h2><ul id="a">'+POLICY_ITEMS+'</ul></section>'
+        for tail in ('<footer>'+self.counted_pager()+'</footer>',
+                     '<nav>'+self.counted_pager()+'</nav>',
+                     '<section><h2>其他栏目</h2>'+self.counted_pager()+'</section>',
+                     '<section><a href="/neighbor.htm">邻栏真实通知</a>'+self.counted_pager()+'</section>',
+                     '<a href="?unknown=2">下一页</a>'):
+            with self.subTest(tail=tail):
+                self.assertIsNone(self.next('<main>'+column+tail+'</main>','#a li',scope))
+        self.assertIsNone(self.next('<main><div>'+column+'</div>'+self.counted_pager()+'</main>','#a li',scope))
+
+    def test_counted_controls_cannot_hide_an_unrecognized_article_in_their_wrapper(self):
+        html = ('<main><ul id="a">'+POLICY_ITEMS+'</ul><section><div><a href="/neighbor.htm">邻栏真实通知</a></div>'
+                +self.counted_pager()+'</section></main>')
+        self.assertIsNone(self.next(html,'#a li'))
+
+    def single_record_wrappers(self):
+        # Reduced from retained xxglb markup: each real row has its own ul,
+        # while one content wrapper and a sibling pager serve the whole list.
+        return ('<div id="items">' + ''.join(
+            '<ul class="entry"><li><a href="/notice/' + str(i) + '.htm">正式通知事项' + str(i) + '</a></li></ul>'
+            for i in range(3)) + '</div>')
+
+    def test_single_record_wrappers_share_one_sibling_pager(self):
+        html = '<main><h2>通知公告</h2>' + self.single_record_wrappers() + '<div class="pager"><a href="?p=2">下一页</a></div></main>'
+        for selector in ('#items li', '#items > ul'):
+            with self.subTest(selector=selector):
+                self.assertEqual(self.next(html, selector), URL + '?p=2')
+
+    def test_partial_selection_of_single_record_wrappers_is_not_a_complete_group(self):
+        from backend.scraper.engine import PaginationScopeError
+        html = '<main>' + self.single_record_wrappers() + '<a href="?p=2">下一页</a></main>'
+        with self.assertRaises(PaginationScopeError):
+            self.next(html, '#items ul:nth-child(-n+2) li')
+
+    def test_single_record_wrappers_do_not_take_a_neighbor_pager(self):
+        html = ('<main><h2>通知公告</h2>' + self.single_record_wrappers() +
+                '<h2>其他栏目</h2><div id="neighbor"><ul>' + MAIN_ITEMS +
+                '</ul><a href="?neighbor=2">下一页</a></div></main>')
+        self.assertIsNone(self.next(html, '#items li'))
+        self.assertEqual(self.next(html, '#neighbor li'), URL + '?neighbor=2')
+
+    def test_peer_headings_keep_single_record_lists_separate(self):
+        from backend.scraper.engine import PaginationScopeError
+        html = '<div><h2>甲栏目</h2><ul><li><a href="/a">甲通知事项</a></li></ul><h2>乙栏目</h2><ul><li><a href="/b">乙通知事项</a></li></ul><a href="?p=2">下一页</a></div>'
+        with self.assertRaises(PaginationScopeError):
+            self.next(html, 'li')
+
+    def test_multiple_real_lists_with_several_rows_are_not_single_record_wrappers(self):
+        from backend.scraper.engine import PaginationScopeError
+        html = '<div><ul>' + POLICY_ITEMS + '</ul><ul>' + MAIN_ITEMS + '</ul><a href="?p=2">下一页</a></div>'
+        with self.assertRaises(PaginationScopeError):
+            self.next(html, 'li')
+
 
 class SourcePaginationLifecycleTests(unittest.TestCase):
     def setUp(self):
@@ -216,17 +293,35 @@ class SourcePaginationLifecycleTests(unittest.TestCase):
         from backend.services import source_governance as g
         source = self.source()
         candidate = g._json(g.source_config(source))
-        proposal = SourceProposal(school_id=source.school_id, department_id=source.id, identity_key='same-source',
-            proposal_key='old-pager-validation', origin='discovery', state='validated', candidate_json=candidate,
-            expected_config_hash=g._hash(g.source_config(source)), evidence_json='{}', evidence_hash=g._hash({}),
-            validator_version='source-governance-7',
-            validated_hash=g._hash([candidate, g._hash({}), 'source-governance-7']))
-        db.session.add(proposal); db.session.commit()
-        with patch.object(g, 'read_snapshot', side_effect=AssertionError('Old validation must stop before reading or installing')):
-            with self.assertRaisesRegex(ValueError, '统一检查'):
-                g.activate_proposal(proposal.id)
-        self.assertEqual(db.session.get(Department, source.id).list_selector, '#policies li')
-        self.assertEqual(proposal.state, 'validated')
+        for version in ('source-governance-7','source-governance-8'):
+            with self.subTest(version=version):
+                proposal = SourceProposal(school_id=source.school_id, department_id=source.id, identity_key='same-source',
+                    proposal_key='old-pager-validation-'+version, origin='discovery', state='validated', candidate_json=candidate,
+                    expected_config_hash=g._hash(g.source_config(source)), evidence_json='{}', evidence_hash=g._hash({}),
+                    validator_version=version, validated_hash=g._hash([candidate, g._hash({}), version]))
+                db.session.add(proposal); db.session.commit()
+                with patch.object(g, 'read_snapshot', side_effect=AssertionError('Old validation must stop before reading or installing')):
+                    with self.assertRaisesRegex(ValueError, '统一检查'):
+                        g.activate_proposal(proposal.id)
+                self.assertEqual(db.session.get(Department, source.id).list_selector, '#policies li')
+                self.assertEqual(proposal.state, 'validated')
+
+    def test_newly_observed_counted_pager_requires_its_own_validation_material(self):
+        from backend.services import source_governance as g
+        source = self.source()
+        first = MIXED.replace('</ul></section></aside>', '</ul>'+PaginationScopeTests().counted_pager()+'</section></aside>')
+        config = g.source_config(source)
+        scope = dict(container_selector='#policies',heading_selector='#policies h2')
+        def fetch(url,purpose):
+            return first if purpose in ('list','independent_list') else self.body(url)
+        captured = g.capture_source_evidence(self.fixture.school_id,config,department_id=source.id,
+            seed_html=first,scope_evidence=scope,fetcher=fetch)
+        self.assertIn('pagination',captured.bundle)
+        captured.bundle.pop('pagination')
+        proposal = g.propose_source(self.fixture.school_id,config,captured,department_id=source.id)
+        result = g.validate_proposal(proposal.id)
+        self.assertIn('pagination_sample_missing',result['errors'])
+        self.assertFalse(result['passed'])
 
 
 if __name__ == '__main__':

@@ -12,6 +12,19 @@ FUDAN_VIEWS = (
 ELLIPSIS = re.compile(r'(?:\.{3,}|…+)\s*$')
 
 
+def incomplete_parentheses(label):
+    """A linked name fragment cannot establish a complete organization name."""
+    depth = 0
+    for char in label:
+        if char in '(（':
+            depth += 1
+        elif char in ')）':
+            depth -= 1
+            if depth < 0:
+                return True
+    return depth != 0
+
+
 def fudan_directory(page_url):
     page = urlsplit(page_url)
     return (page.hostname, page.path) == ('www.fudan.edu.cn', '/489/list.htm')

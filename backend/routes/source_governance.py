@@ -1,6 +1,8 @@
 """Read coverage and handle evidence-backed source proposals without developer edits."""
 import json
+import logging
 from flask import Blueprint, jsonify, request, g, render_template
+from sqlalchemy.exc import SQLAlchemyError
 from backend.auth import admin_required, login_required
 from backend.database.db import db
 from backend.database.models import School
@@ -8,6 +10,7 @@ from backend.database.source_governance_models import SourceProposal
 from backend.services import source_governance as governance
 
 bp = Blueprint('source_governance', __name__)
+logger = logging.getLogger(__name__)
 
 
 @bp.route('/admin/sources')
@@ -64,7 +67,7 @@ def proposals():
     if school_id:
         query = query.filter_by(school_id=school_id)
     state = request.args.get('state', 'needs_review')
-    workflow_states = {'checking', 'recognition_incomplete', 'site_unavailable', 'login_required', 'access_limited', 'program_error', 'user_choice', 'not_a_column'}
+    workflow_states = {'checking', 'recognition_incomplete', 'configured_scope_preserved', 'site_unavailable', 'login_required', 'access_limited', 'program_error', 'user_choice', 'not_a_column'}
     if state in workflow_states:
         from backend.services.source_workflow import workflow
         ids = [p.id for p in query.all() if workflow(p)['status'] == state]
@@ -117,18 +120,28 @@ def review(proposal_id):
         if action == 'select_option':
             from backend.services.source_workflow import select_option
             proposal = db.get_or_404(SourceProposal, proposal_id)
-            select_option(proposal, payload.get('choice'), g.user.id)
-            result = governance.serialize_proposal(proposal)
+            select_option(proposal, payload.get('choice'), g.user.id, commit=False)
         else:
-            result = governance.review_proposal(proposal_id, action, g.user.id, payload.get('note', ''))
+            governance.review_proposal(proposal_id, action, g.user.id, payload.get('note', ''), commit=False)
+            proposal = db.session.get(SourceProposal, proposal_id)
+        task = None
         if action != 'reject':
             from backend.services.tasks import enqueue
-            task = enqueue('source_review', proposal_id, {'proposal_id': proposal_id}, capability='directory')
+            task = enqueue('source_review', proposal_id, {'proposal_id': proposal_id}, capability='directory', commit=False)
+        # Review state and its continuation must become visible together. A
+        # failed enqueue must not leave a changed proposal with no worker task.
+        db.session.commit()
+        result = governance.serialize_proposal(proposal)
+        if task is not None:
             result['task_id'] = task.id
         return jsonify(result), 200 if action == 'reject' else 202
     except ValueError as exc:
         db.session.rollback()
         return jsonify(error=str(exc)), 400
+    except SQLAlchemyError:
+        db.session.rollback()
+        logger.exception('Source review request failed: %s', proposal_id)
+        return jsonify(error='操作未完成，请稍后重试。'), 500
 
 
 @bp.route('/api/admin/source-proposals/<int:proposal_id>/picker', methods=['GET', 'POST'])

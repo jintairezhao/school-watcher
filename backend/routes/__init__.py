@@ -4,6 +4,10 @@ from backend.routes import (admin, pages, schools, scrape,
 
 
 def register_blueprints(app):
+    from backend.routes import discovery_tuning
+    app.register_blueprint(discovery_tuning.bp)
+    from backend.routes import source_lifecycle
+    app.register_blueprint(source_lifecycle.bp)
     from backend.routes import collection_setup
     app.register_blueprint(collection_setup.bp)
     if app.config.get('DESKTOP_MODE'):

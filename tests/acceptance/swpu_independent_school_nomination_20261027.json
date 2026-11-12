@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "school_name": "西南石油大学",
+  "recorded_at": "2026-10-27T11:59:03.245622+00:00",
+  "user_school_choice_confirmed": true,
+  "user_question_call_id": "call_841a68a397584648842412bec6c45004",
+  "role": "development_used_not_independent_acceptance",
+  "holdout_certified": false,
+  "existing_catalogue_root": "https://www.swpu.edu.cn",
+  "official_root_live_verified": true,
+  "required_targets": [
+    {
+      "id": 1,
+      "name": "石油与天然气工程学院／通知公告",
+      "url": "http://www.swpu.edu.cn/sgy/tzgg.htm"
+    },
+    {
+      "id": 2,
+      "name": "地球科学与技术学院／通知公告",
+      "url": "http://www.swpu.edu.cn/dky/tzgg.htm"
+    },
+    {
+      "id": 3,
+      "name": "教务处／通知公告",
+      "url": "https://www.swpu.edu.cn/dean/tzgg.htm"
+    },
+    {
+      "id": 4,
+      "name": "研究生院／培养管理／通知公告",
+      "url": "https://www.swpu.edu.cn/gs/pygl/tzgg.htm"
+    },
+    {
+      "id": 5,
+      "name": "研究生院／学位管理／通知公告",
+      "url": "https://www.swpu.edu.cn/gs/xwgl/tzgg.htm"
+    },
+    {
+      "id": 6,
+      "name": "研究生院／招生工作／通知公告",
+      "url": "https://www.swpu.edu.cn/gs/zsgz/tzgg.htm"
+    },
+    {
+      "id": 7,
+      "name": "研究生院／招生工作／招生简章",
+      "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm"
+    }
+  ],
+  "target_review_status": "all7_required_name_and_address_confirmed",
+  "prior_use_audit": ".local/structure-facts-20261021/swpu-prior-scope-audit-20261027.json",
+  "previous_school": "中国科学院大学",
+  "previous_school_role": "development_used_not_independent_acceptance",
+  "preserve_previous_seven_target_confirmations": true,
+  "website_requests": 17,
+  "model_calls": 0,
+  "new_paid_scope_approved": false,
+  "additional_paid_allowance": 0,
+  "threshold_gate": "insufficient_evidence_no_evaluator",
+  "next_action": "Use as development evidence for the pager-rule correction;independent acceptance requires an unused school and later-time material.",
+  "official_root_reference": {
+    "url": "https://www.swpu.edu.cn/",
+    "requested_url": "https://www.swpu.edu.cn/",
+    "observed_at": "2026-10-27T12:04:36.856779+00:00",
+    "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+    "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+    "http_status": 200
+  },
+  "candidate_reference": "tests/acceptance/swpu_notification_references_20261027.json",
+  "candidate_targets": 7,
+  "document_attempts": 14,
+  "target_review": "tests/acceptance/swpu_target_review_20261027.json",
+  "development_use_record": "tests/acceptance/swpu_development_use_20261028.json",
+  "native_first_batch_completed": true,
+  "native_first_batch_result": ".local/structure-facts-20261021/completed-swpu-native-20261028/delivery.json"
+}

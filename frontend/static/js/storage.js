@@ -2,13 +2,49 @@
 (() => {
     const root = document.querySelector('.storage-page');
     if (!root) return;
+    function revealAncestors(node) {
+        for (let group = node.closest('details'); group; group = group.parentElement?.closest('details')) group.open = true;
+    }
+    function openStorageAnchor() {
+        let id;
+        try { id = decodeURIComponent(window.location.hash.slice(1)); } catch (_) { return; }
+        const target = id && document.getElementById(id);
+        if (!target || !root.contains(target)) return;
+        revealAncestors(target);
+        requestAnimationFrame(() => {
+            target.scrollIntoView({block:'start'});
+            const focus = target.matches('details') ? target.querySelector('summary') : target;
+            if (!focus.matches('summary,a,button,input,select')) focus.tabIndex = -1;
+            focus.focus({preventScroll:true});
+        });
+    }
+    root.addEventListener('click', event => {
+        const link = event.target.closest('a[href^="#"]');
+        if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        if (window.location.hash !== link.hash) history.pushState(null, '', link.hash);
+        openStorageAnchor();
+    });
+    window.addEventListener('hashchange', openStorageAnchor);
+    window.addEventListener('pageshow', event => {
+        if (event.persisted) root.querySelectorAll('.storage-group,#storageCacheRules,#storageSelectiveCleanup').forEach(group => { group.open = false; });
+        openStorageAnchor();
+    });
     let busy = false;
+    let noticePreview = null;
+    let databaseSpace = null;
+    const noticeForm = document.getElementById('noticeCleanupForm');
+    const noticeSchool = document.getElementById('noticeCleanupSchool');
+    const noticeBefore = document.getElementById('noticeCleanupBefore');
+    const deleteNotices = document.getElementById('deleteNoticeCleanup');
+    const compactButton = document.getElementById('compactDatabase');
     const policyForm = document.getElementById('storagePolicyForm');
     let savedPolicy = new FormData(policyForm);
     const status = (id, message, error = false) => {
         const node = document.getElementById(id);
         node.textContent = message;
         node.dataset.error = String(error);
+        if (message) revealAncestors(node);
     };
     const changed = () => [...new FormData(policyForm)].some(([key, value]) => value !== savedPolicy.get(key));
     async function responseError(response) {
@@ -17,7 +53,11 @@
     }
     async function jsonRequest(url, options) {
         const response = await fetch(url, options);
-        if (!response.ok) throw new Error(await responseError(response));
+        if (!response.ok) {
+            const error = new Error(await responseError(response));
+            error.status = response.status;
+            throw error;
+        }
         return response.json();
     }
     const bytesText = bytes => {
@@ -26,6 +66,17 @@
         if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
         return `${(bytes / 1073741824).toFixed(2)} GB`;
     };
+    function updateCacheSummary() {
+        const duration = key => {
+            const count = Number(savedPolicy.get(key));
+            return count ? uiT('{count} 天',{count}) : uiT('不限制');
+        };
+        window.I18n.setText(document.getElementById('cacheRetentionSummary'), '已保存：正文 {body} · 网页 {web}',
+            {body:duration('body_cache_days'),web:duration('discovery_cache_days')});
+    }
+    document.addEventListener('locale-changed', updateCacheSummary);
+    policyForm.addEventListener('invalid', event => revealAncestors(event.target), true);
+    updateCacheSummary();
     const phases = {preparing:uiT('正在准备'), uploading:uiT('正在传输备份'), staging:uiT('正在读取文件'), reading:uiT('正在解压读取'),
         compressing:uiT('正在生成备份'), writing:uiT('正在写入文件'), flushing:uiT('正在保存到磁盘'), finalizing:uiT('正在完成备份'),
         checking_database:uiT('正在检查旧版数据库'), checking_relations:uiT('正在校验数据关系'), waiting_database:uiT('正在等待数据库'),
@@ -146,31 +197,28 @@
     }
     async function refreshUsage() {
         const data = await jsonRequest('/api/storage');
-        const mb = bytes => `${(bytes / 1048576).toFixed(1)} MB`;
-        document.getElementById('storageTotal').textContent = mb(data.total_bytes);
-        document.getElementById('announcementCount').textContent = data.announcement_count;
-        const groups = {'运行目录与通知': data.database_bytes || 0,
-            '栏目核实证据': data.source_governance_evidence_bytes || 0};
-        for (const file of data.files) {
-            if (file.kind === 'governance_evidence') continue;
-            const name = file.name.replaceAll('\\', '/');
-            let group = uiT('日志及其他文件');
-            if (name.includes('backup') || name.includes('.bak') || name.startsWith('rollback/')) group = uiT('备份与回退资料');
-            else if (name.startsWith('fetch-evidence/') || name.startsWith('fetch_evidence/')) group = uiT('网页抓取缓存');
-            else if (file.kind === 'discovery_progress') group = uiT('接入进度');
-            else if (name.startsWith('discovery_cache.')) group = uiT('调查缓存');
-            else if (name.startsWith('school_watcher.db') || name.startsWith('source_catalog.sqlite3') || name.startsWith('catalog-generations/')) group = uiT('运行目录与通知');
-            groups[group] = (groups[group] || 0) + file.bytes;
-        }
+        document.getElementById('storageTotal').textContent = bytesText(data.total_bytes);
+        document.getElementById('announcementCount').textContent = new Intl.NumberFormat(window.I18n.locale()).format(data.announcement_count);
+        // The initial page and later refreshes share the server's physical file accounting.
         root.querySelectorAll('[data-storage-group]').forEach(node => {
-            node.textContent = mb(groups[node.dataset.storageGroup] || 0);
+            node.textContent = bytesText(data.usage_groups[node.dataset.storageKind] || 0);
         });
+        databaseSpace = data.database_space;
+        if (databaseSpace) {
+            const unavailable = databaseSpace.available === false;
+            document.getElementById('databaseReclaimable').textContent = unavailable ? '—' : bytesText(databaseSpace.reclaimable_bytes || 0);
+            // Availability is separate from the last action result, which remains useful after a refresh.
+            const availability = document.getElementById('databaseSpaceAvailability');
+            availability.textContent = unavailable ? uiT(databaseSpace.message || uiT('暂时无法读取可回收空间，请稍后重试。')) : '';
+            availability.hidden = !unavailable;
+        }
     }
     async function run(id, working, action, refresh = false) {
         if (busy) return;
         busy = true;
-        const controls = [...root.querySelectorAll('button, input, select')];
-        controls.forEach(node => { node.disabled = true; });
+        root.setAttribute('aria-busy', 'true');
+        const controls = [...root.querySelectorAll('button, input, select')].map(node => [node, node.disabled]);
+        controls.forEach(([node]) => { node.disabled = true; });
         status(id, working);
         try {
             const message = await action();
@@ -183,9 +231,85 @@
             status(id, error.message || uiT('网络连接中断，请稍后重试'), true);
         } finally {
             busy = false;
-            controls.forEach(node => { node.disabled = false; });
+            root.setAttribute('aria-busy', 'false');
+            controls.forEach(([node, disabled]) => { node.disabled = disabled; });
+            deleteNotices.disabled = !noticePreview || noticePreview.deletable_count < 1;
+            if (databaseSpace) compactButton.disabled = databaseSpace.available === false || !databaseSpace.supported || !(databaseSpace.can_compact ?? databaseSpace.reclaimable_bytes);
         }
     }
+    function invalidateNoticePreview(message = '') {
+        noticePreview = null;
+        deleteNotices.disabled = true;
+        document.getElementById('noticeCleanupPreview').hidden = true;
+        if (message) status('noticeCleanupStatus', message);
+    }
+    const noticeScope = () => JSON.stringify([noticeSchool.value, noticeBefore.value]);
+    [noticeSchool, noticeBefore].forEach(input => input.addEventListener('input', () => {
+        invalidateNoticePreview(uiT('条件已更改，请重新预览。'));
+    }));
+    noticeForm.addEventListener('submit', event => {
+        event.preventDefault();
+        if (busy || !noticeForm.reportValidity()) return;
+        invalidateNoticePreview();
+        const scope = noticeScope();
+        run('noticeCleanupStatus', uiT('正在检查清理范围…'), async () => {
+            const result = await jsonRequest('/api/storage/notices/preview', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({school_id:noticeSchool.value === 'all' ? null : Number(noticeSchool.value), before:noticeBefore.value})
+            });
+            if (scope !== noticeScope()) return uiT('条件已更改，请重新预览。');
+            noticePreview = {...result, scope};
+            root.querySelectorAll('[data-notice-count]').forEach(node => {
+                node.textContent = new Intl.NumberFormat(window.I18n.locale()).format(result[node.dataset.noticeCount] || 0);
+            });
+            const samples = document.getElementById('noticeCleanupSamples');
+            samples.replaceChildren();
+            for (const sample of (result.sample || []).slice(0, 5)) {
+                const item = document.createElement('li');
+                const title = document.createElement('span'); title.textContent = sample.title;
+                const meta = document.createElement('small');
+                meta.textContent = `${sample.school} · ${String(sample.published_at).slice(0,10)}`;
+                item.append(title, meta); samples.append(item);
+            }
+            document.getElementById('noticeCleanupPreview').hidden = false;
+            return result.deletable_count > 0 ? uiT('预览完成。请核对范围后再永久删除。') : uiT('此范围内没有可删除的通知。');
+        });
+    });
+    deleteNotices.addEventListener('click', () => {
+        if (busy || !noticePreview || noticePreview.scope !== noticeScope() || noticePreview.deletable_count < 1) return;
+        const preview = noticePreview;
+        const school = noticeSchool.selectedOptions[0].textContent;
+        const confirmation = uiT('永久删除“{school}”在 {before} 之前的 {count} 条通知？这些通知的正文、附件及所有账户的阅读状态也将删除，此操作无法撤销。',
+            {school, before:noticeBefore.value, count:preview.deletable_count});
+        if (!window.confirm(confirmation)) return;
+        run('noticeCleanupStatus', uiT('正在永久删除通知…'), async () => {
+            try {
+                const result = await jsonRequest('/api/storage/notices/cleanup', {
+                    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({preview_token:preview.preview_token})
+                });
+                invalidateNoticePreview();
+                return uiT('已永久删除 {count} 条通知；受保护的通知已保留。',{count:result.deleted_count});
+            } catch (error) {
+                // Every failed deletion requires a new preview; never retry a destructive request automatically.
+                invalidateNoticePreview();
+                if (error.status === 409) error.message = uiT('通知已变化或预览已过期，请重新预览后再删除。');
+                throw error;
+            }
+        }, true);
+    });
+    compactButton.addEventListener('click', () => {
+        run('databaseSpaceStatus', uiT('正在压缩数据库，请稍候…'), async () => {
+            try {
+                const result = await jsonRequest('/api/storage/database/compact', {
+                    method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'
+                });
+                return uiT('已回收 {size}，通知与目录均保留。',{size:bytesText(result.reclaimed_bytes || 0)});
+            } catch (error) {
+                if (error.status === 409) error.message = uiT('数据库正在使用中，请稍后重试。');
+                throw error;
+            }
+        }, true);
+    });
     policyForm.addEventListener('submit', event => {
         event.preventDefault();
         const submitted = new FormData(policyForm);
@@ -195,6 +319,7 @@
                 method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(values)
             });
             savedPolicy = submitted;
+            updateCacheSummary();
             return uiT('保留规则已保存');
         });
     });
@@ -202,16 +327,19 @@
         button.addEventListener('click', () => {
             if (changed()) {
                 status('cleanupStatus', uiT('保留规则有未保存的修改，请先保存后再清理。'), true);
+                const link = document.createElement('a');
+                const unsaved = [...new FormData(policyForm)].find(([key,value]) => value !== savedPolicy.get(key));
+                link.href = '#policy-' + unsaved[0];
+                link.textContent = uiT('查看未保存的保留规则');
+                document.getElementById('cleanupStatus').append(' ',link);
                 return;
             }
-            const all = button.dataset.cleanup === 'all_cache';
-            const messages = {body:uiT('清理未收藏的正文缓存？通知和收藏保留。'),
+            const messages = {cache:uiT('清理可移除的缓存？通知、收藏和接入进度保留，部分内容之后需要重新下载。'),
+                body:uiT('清理未收藏的正文缓存？通知和收藏保留。'),
                 discovery:uiT('清理调查网页缓存？待处理进度保留。'), fetch:uiT('清理网页抓取缓存？正在使用的文件保留。'),
                 governance:uiT('清理闲置核实证据？当前栏目和待核实事项的证据保留。'),
                 backups:uiT('删除自动备份？手动导出的备份和回退资料保留。'), logs:uiT('清空已结束的抓取记录？正在运行的记录保留。')};
-            const message = messages[button.dataset.cleanup] || (all
-                ? uiT('清空可清理缓存？通知目录和收藏保留。')
-                : uiT('按已保存规则清理？通知目录和收藏保留。'));
+            const message = messages[button.dataset.cleanup] || uiT('按已保存规则清理？通知目录和收藏保留。');
             if (!window.confirm(message)) return;
             run('cleanupStatus', uiT('正在清理，请稍候…'), async () => {
                 const result = await jsonRequest('/api/storage/cleanup', {
@@ -222,6 +350,8 @@
                     [result.fetch_evidence?.removed,uiT('份抓取缓存')],[result.scrape_logs_deleted,uiT('条抓取记录')],
                     [result.backups_deleted,uiT('份自动备份')],[result.governance_evidence?.removed,uiT('份闲置证据')]]
                     .filter(([count]) => count > 0).map(([count, label]) => `${count} ${label}`);
+                if (button.dataset.cleanup === 'cache') return counts.length
+                    ? uiT('已清理可移除的缓存，受保护的内容已保留。') : uiT('没有可清理的缓存；受保护的内容已保留。');
                 return counts.length ? uiT('已清理 {items}',{items:counts.join(window.I18n.locale()==='en'?', ':'、')}) : uiT('没有可清理的内容');
             }, true);
         });
@@ -298,9 +428,47 @@
         });
     });
     const importForm = document.getElementById('storageImportForm');
+    const backupFile = document.getElementById('storageBackupFile');
+    const chooseBackup = document.getElementById('chooseStorageBackup');
+    const backupFilename = document.getElementById('storageBackupFilename');
+    let missingBackup = false;
+    function updateBackupFilename() {
+        const file = backupFile.files[0];
+        backupFilename.dataset.fileSelected = String(!!file);
+        if (file) {
+            backupFilename.removeAttribute('data-i18n');
+            backupFilename.textContent = file.name;
+            backupFilename.title = file.name;
+            chooseBackup.removeAttribute('aria-invalid');
+            if (missingBackup) status('importStatus', '');
+            missingBackup = false;
+        } else {
+            window.I18n.setText(backupFilename, '未选择文件');
+            backupFilename.removeAttribute('title');
+            if (missingBackup) document.getElementById('importStatus').textContent = uiT('请先选择 ZIP 备份文件');
+        }
+    }
+    chooseBackup.addEventListener('click', () => { if (!busy) backupFile.click(); });
+    backupFile.addEventListener('change', updateBackupFilename);
+    backupFile.addEventListener('cancel', updateBackupFilename);
+    backupFile.addEventListener('invalid', event => {
+        event.preventDefault();
+        missingBackup = true;
+        chooseBackup.setAttribute('aria-invalid', 'true');
+        status('importStatus', uiT('请先选择 ZIP 备份文件'), true);
+        chooseBackup.focus();
+    });
+    importForm.addEventListener('reset', () => queueMicrotask(() => {
+        if (missingBackup) status('importStatus', '');
+        missingBackup = false;
+        chooseBackup.removeAttribute('aria-invalid');
+        updateBackupFilename();
+    }));
+    document.addEventListener('locale-changed', updateBackupFilename);
+    updateBackupFilename();
     importForm.addEventListener('submit', event => {
         event.preventDefault();
-        const file = document.getElementById('storageBackupFile').files[0];
+        const file = backupFile.files[0];
         if (!file) return;
         const expanded = Number(document.getElementById('importExpandedMB').value);
         if (!Number.isSafeInteger(expanded) || expanded < 1) {
@@ -319,7 +487,8 @@
             try {
                 const url = `/api/storage/import?progress=1&upload_mb=${Math.ceil(file.size / 1048576) + 2}&expanded_mb=${expanded}`;
                 const result = await transfer(url, data, view);
-                document.getElementById('storageBackupFile').value = '';
+                backupFile.value = '';
+                updateBackupFilename();
                 success = true;
                 return uiT("合并完成：新增 {p0} 条通知，去重 {p1} 条，补回 {p2} 条正文。", {p0:(result.added), p1:(result.duplicates), p2:(result.bodies_restored)});
             } finally {
@@ -327,4 +496,6 @@
             }
         }, true);
     });
+    openStorageAnchor();
+    root.dataset.storageReady = 'true';
 })();

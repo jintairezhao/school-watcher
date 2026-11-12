@@ -15,11 +15,29 @@ from backend.services.runtime_leases import insert_if_missing, acquire_in_transa
 
 _execution = ContextVar('task_execution', default=None)
 _control = ContextVar('task_control', default=False)
+_preserved_tasks = ContextVar('preserved_existing_tasks', default=frozenset())
 ACTIVE_STATES = ('pending', 'running', 'waiting')
 CAPABILITIES = ('http', 'browser', 'directory')
 DISCOVERY_CACHE_WRITERS = ('directory', 'discover', 'source_baseline', 'navigation_review',
                            'source_grouping', 'maintenance')
 SOURCE_QUEUE_KINDS = ('collect', 'onboard', 'directory', 'discover', 'navigation_review')
+
+
+@contextmanager
+def preserve_existing_tasks(task_ids):
+    """Keep explicitly excluded existing jobs out of automatic rescheduling."""
+    ids = frozenset(task_ids)
+    if any(type(ident) is not int or ident <= 0 for ident in ids):
+        raise ValueError('Expected positive existing task IDs')
+    token = _preserved_tasks.set(_preserved_tasks.get() | ids)
+    try:
+        yield
+    finally:
+        _preserved_tasks.reset(token)
+
+
+def task_is_preserved(task_id):
+    return task_id in _preserved_tasks.get()
 
 
 class LeaseLost(BaseException):
@@ -99,6 +117,11 @@ def _fence(session):
     handle = current_execution()
     if not handle or _control.get() or session.info.get('runtime_control'):
         return
+    from backend.services.source_lifecycle import ensure_task_sources_active, SourceInactiveError
+    try:
+        ensure_task_sources_active(handle.get('kind'), handle.get('payload'), lock=True, session=session)
+    except SourceInactiveError as exc:
+        raise LeaseLost('Source is disabled or removed') from exc
     if handle.get('policy_validator') and not handle['policy_validator']():
         raise PolicyChanged('Source profiles changed during execution')
     if handle.get('cancelled') and handle['cancelled'].is_set():
@@ -139,6 +162,12 @@ def _freshness_column():
 
 def enqueue(kind, key, payload=None, *, delay=0, replace_finished=True, min_interval=0,
             expedite=False, capability=None, policy_version='1', commit=True):
+    if _preserved_tasks.get():
+        existing = BackgroundTask.query.filter_by(identity=f'{kind}:{key}').first()
+        if existing is not None and task_is_preserved(existing.id):
+            return existing
+    from backend.services.source_lifecycle import ensure_task_sources_active
+    ensure_task_sources_active(kind, payload, lock=True)
     identity, now = f'{kind}:{key}', datetime.utcnow()
     lane = capability or default_capability(kind)
     if lane not in CAPABILITIES:
@@ -335,6 +364,10 @@ def claim(lease_seconds=120, *, capabilities=None, worker_id='local', exclude_ki
             eligible &= ~BackgroundTask.kind.in_(exclude_kinds)
         try:
             for row in db.session.execute(_claim_statement(eligible, now)).scalars().all():
+                from backend.services.source_lifecycle import task_sources_active, park_task
+                if not task_sources_active(row.kind, row.payload):
+                    park_task(row)
+                    continue
                 from backend.services.discovery_control import should_pause, park_requested_claim
                 if should_pause(row.kind, row.payload or {}):
                     park_requested_claim(row, now)

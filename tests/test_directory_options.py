@@ -60,16 +60,18 @@ class DirectoryOptionTests(unittest.TestCase):
         self.sync()
         rows = Department.query.all()
         tree = source_hierarchy(rows, directory_entries=directory_entries_for(self.school.id))
-        unit = tree['学院部门'][0]
-        names = [child['name'] for child in unit['children']]
+        # Publication now persists the directory's actual group type atomically;
+        # the reader no longer wraps the roster as an unconfigured column.
+        units = tree['学院部门']
+        names = [child['name'] for child in units]
         self.assertEqual(len(names), 43)
         self.assertEqual(names[:2], ['信息与通信工程学院', '电子科学与工程学院'])
         self.assertIn('计算机科学与工程学院（网络空间安全学院）', names)
         self.assertNotIn('本部门通知', names)
-        self.assertTrue(unit['directory'])
-        unavailable = next(child for child in unit['children'] if child['name'] == '电子信息智能研究院')
+        self.assertEqual(self.parent.kind, 'group')
+        unavailable = next(child for child in units if child['name'] == '电子信息智能研究院')
         self.assertFalse(unavailable['url'])
-        self.assertEqual(unit['columns'], [])
+        self.assertTrue(all(unit['columns'] == [] for unit in units))
 
     def test_sync_is_idempotent_preserves_records_and_supports_multiple_memberships(self):
         self.sync()
@@ -130,10 +132,24 @@ class DirectoryOptionTests(unittest.TestCase):
         response = client.get(f'/?school={self.school.id}&dept={self.parent.id}&period=all')
         self.assertEqual(response.status_code, 200)
         self.assertIn('信通学院测试通知', response.text)
-        self.assertIn('信息与通信工程学院', response.text)
-        self.assertIn('1 个栏目', response.text)
-        self.assertIn('栏目待接入', response.text)
-        self.assertNotIn('43 个栏目', response.text)
+        # The old directory link preserves subscription/filter scope. It does
+        # not prove the configured column's current publishing organization.
+        from backend.services.structure_snapshot import read_structure
+        capture = read_structure(self.school)
+        self.assertFalse(any(edge['type'] == 'source_ownership' and edge['target'] == f'source:{column.id}'
+                             for edge in capture['facts']['relations']))
+        from bs4 import BeautifulSoup
+        soup=BeautifulSoup(response.text,'html.parser')
+        source_caption = soup.select_one('.notice-source-label').get_text(' ', strip=True)
+        self.assertIn('归属待核实', source_caption)
+        self.assertNotIn(child.name, source_caption)
+        self.assertEqual(soup.select_one('.source-scope-selection').get_text(strip=True),'已选 1 个栏目')
+        self.assertIsNotNone(soup.select_one(f'[data-department][value="{column.id}"]:checked'))
+        self.assertIsNone(soup.select_one('#sourcePanel [data-source-unit]'))
+        self.assertFalse(soup.select_one('#inboxLegacyScope').has_attr('hidden'))
+        notice=soup.select_one('[data-notice-link]')
+        self.assertIn(f'dept={self.parent.id}',notice['href'])
+        self.assertEqual(self.sub.department_ids,[self.parent.id])
         self.assertNotIn('信通学院测试通知', self.app.test_client().get('/?period=all').text)
 
 

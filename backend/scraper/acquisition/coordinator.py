@@ -2,12 +2,14 @@
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import replace
+from datetime import datetime, timezone
 import re
 import time
 from urllib.parse import urljoin, urlsplit, urlunsplit
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
+from backend.ai.material_capture import capture_acquisition
 
 from backend.scraper.fetch_errors import SourceAccessError, describe_fetch_error
 from backend.scraper.http_client import validate_public_url
@@ -20,6 +22,7 @@ _browser_dispatch = ContextVar('acquisition_browser_dispatch', default=None)
 _cache_lookup = ContextVar('acquisition_cache_lookup', default=None)
 _cache_store = ContextVar('acquisition_cache_store', default=None)
 _before_fetch = ContextVar('acquisition_before_fetch', default=None)
+_observation_store = ContextVar('acquisition_observation_store', default=None)
 _SOURCE_NEGOTIATION_STATUSES = frozenset((406, 415, 421, 422))
 
 
@@ -89,10 +92,12 @@ class FetchDeferred(FetchFailure):
 
 
 @contextmanager
-def execution_context(*, browser_dispatch=None, cache_lookup=None, cache_store=None, before_fetch=None):
+def execution_context(*, browser_dispatch=None, cache_lookup=None, cache_store=None, before_fetch=None,
+                      observation_store=None):
     tokens = [(variable, variable.set(value)) for variable, value in
               ((_browser_dispatch, browser_dispatch), (_cache_lookup, cache_lookup),
-               (_cache_store, cache_store), (_before_fetch, before_fetch))]
+               (_cache_store, cache_store), (_before_fetch, before_fetch),
+               (_observation_store, observation_store))]
     try:
         yield
     finally:
@@ -104,6 +109,26 @@ def _assert_execution():
     callback = _before_fetch.get()
     if callback is not None:
         callback()
+
+
+def complete_observation(request, result):
+    """Stamp a newly completed read; cache replay must not call this function."""
+    if result.error_code in ('invalid_source_profile', 'invalid_api_profile'):
+        return result
+    # The managed browser may have completed before its queue result is polled.
+    # Preserve that completion time instead of dating the response at resume.
+    try:
+        stamp = datetime.fromisoformat(result.observed_at.replace('Z', '+00:00'))
+        if stamp.tzinfo is None:
+            raise ValueError('Missing time zone')
+    except (ValueError, AttributeError):
+        stamp = datetime.now(timezone.utc)
+    result = replace(result, observed_at=stamp.astimezone(timezone.utc).isoformat())
+    callback = _observation_store.get()
+    if callback is not None:
+        _assert_execution()
+        callback(request, result)
+    return result
 
 
 def _final_url(requested, returned):
@@ -146,7 +171,9 @@ def _document_redirect(raw):
     return None
 
 
+@capture_acquisition
 def fetch(request: FetchRequest, *, http_transport=None, browser_transport=None) -> FetchResult:
+    deadline = time.monotonic() + request.timeout_seconds
     _assert_execution()
     validate_public_url(request.url, resolve=False)
     try:
@@ -158,12 +185,23 @@ def fetch(request: FetchRequest, *, http_transport=None, browser_transport=None)
         cached = lookup(request)
         if cached is not None:
             observed = FetchResult.from_dict(cached) if isinstance(cached, dict) else cached
+            if observed.attachment.get('embedding'):
+                from .embedded_pdf import valid_binding
+                if not valid_binding(observed.attachment, observed.html, observed.final_url):
+                    observed = replace(observed, attachment={})
             # Replay the complete observation under the current program's
             # classification. A fixed CMS recognizer must not inherit an old
             # "unrecognized" verdict and pay to read or identify it again.
             # Explicit network/access failures retain their typed error codes.
             result = _source_transport_verdict(request, observed, classify_result(request, observed))
+            result = _embedded_pdf(request, result, deadline=deadline,
+                http_transport=http_transport, browser_transport=browser_transport)
             if result.outcome != 'requires_render' or not request.browser_allowed:
+                if result.attachment.get('embedding') and result.attachment != observed.attachment:
+                    store = _cache_store.get()
+                    if store is not None:
+                        _assert_execution()
+                        store(request, result)
                 return result
             # The retained HTTP observation may have been called complete by an
             # older classifier. Reuse it and read the missing rendered material,
@@ -174,6 +212,7 @@ def fetch(request: FetchRequest, *, http_transport=None, browser_transport=None)
             result = _fetch(request, http_transport=http_transport, browser_transport=browser_transport)
     else:
         result = _fetch(request, http_transport=http_transport, browser_transport=browser_transport)
+    result = complete_observation(request, result)
     store = _cache_store.get()
     if result.replayable and store is not None:
         _assert_execution()
@@ -228,7 +267,48 @@ def _fetch(request: FetchRequest, *, http_transport=None, browser_transport=None
         raw = http(replace(request, url=target, timeout_seconds=remaining))
     effective = replace(request, url=raw.final_url or request.url)
     result = _source_transport_verdict(effective, raw, classify_result(effective, raw))
+    result = _embedded_pdf(request, result, deadline=started + request.timeout_seconds,
+        http_transport=http_transport, browser_transport=browser_transport)
     return _render(request, effective, result, browser_transport=browser_transport)
+
+
+def _embedded_pdf(request, result, *, deadline, http_transport=None, browser_transport=None):
+    """Keep the HTML response and the separately read resource distinct."""
+    if (request.purpose != 'article' or request.policy.get('embedded_pdf_child')
+            or result.status != 200 or not result.html
+            or result.outcome not in ('usable', 'needs_adapter', 'requires_render')):
+        return result
+    from .embedded_pdf import reference, valid_binding
+    binding = reference(result.html, result.final_url)
+    if binding is None:
+        return result
+    # A PDF player is a resource reference, not the PDF's actual body bytes.
+    # Preserve the existing early completion for readable script-loader pages.
+    if result.ok and binding.get('reference_kind') != 'pdfsrc_attribute':
+        return result
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        return replace(result, outcome='network_error', error_code='http_budget_exhausted',
+                       message='读取正文文件的时间预算已用完，网页原文已保留')
+    resource_request = FetchRequest(binding['requested_url'], purpose='article', source_id=request.source_id,
+        timeout_seconds=min(90, remaining), browser_allowed=False,
+        policy=dict(exploration=bool(request.policy.get('exploration')), embedded_pdf_child=True,
+                    follow_document_redirects=False))
+    resource = fetch(resource_request, http_transport=http_transport, browser_transport=browser_transport)
+    if not resource.ok:
+        if resource.outcome in ('denied', 'needs_manual', 'network_error', 'unavailable'):
+            return replace(result, outcome=resource.outcome, error_code=resource.error_code,
+                message=resource.message, retry_after=resource.retry_after,
+                evidence=tuple(result.evidence) + ('embedded_pdf_read_incomplete',))
+        return replace(result, outcome='needs_adapter', error_code='dynamic_material_incomplete',
+            message='正文引用的PDF尚未读取完整，网页原文已保留')
+    attachment = dict(resource.attachment, resource_url=resource.final_url, embedding=binding)
+    if (attachment.get('format') != 'pdf' or attachment.get('verified') is not True
+            or not valid_binding(attachment, result.html, result.final_url)):
+        return replace(result, outcome='needs_adapter', error_code='dynamic_material_incomplete',
+            message='正文引用尚未返回同站的完整PDF，网页原文已保留')
+    return replace(result, outcome='usable', error_code='', message='', attachment=attachment,
+        evidence=tuple(result.evidence) + ('observed_embedded_pdf',))
 
 
 def _render(request, effective, result, *, browser_transport=None):

@@ -56,10 +56,11 @@ class SourcePresentationConsistencyTests(unittest.TestCase):
         unit=department(10,'环境学院',ROOT+'environment/','unit')
         column=department(11,'教学通知',ROOT+'environment/teaching/',group='错误的旧分组')
         publisher={'publisher_key':'site-observed','publisher_label':'示例大学环境学院',
+            'basis':'source_ownership','publishers':[{'key':'site-observed','label':'示例大学环境学院','url':ROOT+'environment/'}],
             'column_label':'教学通知','units':[{'key':'site-observed','name':'示例大学环境学院',
                                               'url':ROOT+'environment/'}]}
         with patch('backend.services.source_placements.official_source_placements',return_value={}), \
-             patch('backend.services.source_channels.channels_for',return_value={11:publisher}):
+             patch('backend.services.source_channels.legacy_channels_for',return_value={11:publisher}):
             tree=source_hierarchy([unit,column])
         self.assertEqual(set(tree),{'院系设置'})
         self.assertEqual(tree['院系设置'][0]['name'],'环境学院')

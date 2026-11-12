@@ -33,11 +33,16 @@ def queue_navigation(site, page):
     discover = BackgroundTask.query.filter_by(identity=f'discover:{school_id}').first()
     school_generation = discover.generation if discover else handle.get('generation', 1)
     material_hash = page.get('snapshot_hash') or (page.get('snapshot_ref') or {}).get('hash') or page.get('content_hash') or ''
+    from backend.services.exploration_events import current_inspection_origin
+    origin = current_inspection_origin(site.get('site_key'), page.get('snapshot_url') or page['url'], material_hash)
     page_key = hashlib.sha256((page['url'] + '\0' + material_hash).encode()).hexdigest()[:20]
     job = tasks.enqueue('navigation_review', f'{parent}:{handle.get("generation", 1)}:{page_key}',
         {'parent_task_id': parent, 'parent_generation': handle.get('generation', 1),
          'school_id': school_id, 'school_generation': school_generation,
-         'ai_assist': handle.get('payload', {}).get('ai_assist', True), 'site': dict(site), 'page': dict(page)},
+         'ai_assist': handle.get('payload', {}).get('ai_assist', True), 'site': dict(site), 'page': dict(page),
+         'inspection_origin': origin},
+        # The actual inspection that enqueued the review remains explicit even
+        # if later inspections of identical material happen before application.
         capability='directory', replace_finished=False)
     return {'status': 'queued', 'task_id': job.id}
 
@@ -136,9 +141,10 @@ def process_navigation(payload):
             parsed = extract_structure(html, page['url'], site['root_url'], page['kind'], page['label'], json.loads(page['path_json']))
             if page.get('discovery_policy') in ('layered', 'valuable'):
                 from .layered import route_structure, apply_route
-                from .structure import publication_evidence, add_publication_structure
+                from .structure import publication_evidence, add_publication_structure, add_publication_routes
                 feed = publication_evidence(html, page['url'])
                 add_publication_structure(parsed, feed)
+                add_publication_routes(parsed, feed, html, page, site['root_url'])
                 route_structure(parsed, page, html, site['root_url'], bool(feed), policy=page['discovery_policy'], publication=feed)
                 if page['discovery_policy'] == 'valuable':
                     # Resume undecided links from the saved batch cursor. Keep
@@ -167,11 +173,15 @@ def process_navigation(payload):
                                       navigation_branch_url=branch.url, navigation_unrecorded_decisions=[]))
         # Model latency must not hold the shared cache writer lock and stall
         # other schools or the next crawl slice.
-        if page.get('discovery_policy') in ('layered', 'valuable'):
-            from .layered import assist
-            result = assist(site, page, html, parsed, decision_allowed=branch.allows) or {}
-        else:
-            result = assist_navigation(site, page, html, parsed) or {}
+        from backend.services.exploration_events import navigation_model_observation
+        with navigation_model_observation(inventory,site,page,observed_hash,payload.get('inspection_origin')) as review:
+            if page.get('discovery_policy') in ('layered', 'valuable'):
+                from .layered import assist
+                result = assist(site, page, html, parsed, decision_allowed=branch.allows,
+                                apply_saved_first=True) or {}
+            else:
+                result = assist_navigation(site, page, html, parsed) or {}
+            review['result']=result
         with FileLock(str(path) + '.worker.lock', timeout=0):
             db.session.refresh(parent)
             if parent.generation != payload['parent_generation']:
@@ -197,48 +207,68 @@ def process_navigation(payload):
                     from .layered import apply_route
                     kind = observed_page['kind'] if observed_page and observed_page['kind'] in ('unit', 'channel') else 'channel'
                     apply_route(parsed, link, dict(link, kind=kind))
-            inventory.record_edges(site['site_key'], page.get('snapshot_url', page['url']),
-                                   parsed['links'], hashlib.sha256(html.encode()).hexdigest())
-            inventory.record_structure(site['site_key'], page.get('snapshot_url', page['url']),
-                                       parsed['nodes'], hashlib.sha256(html.encode()).hexdigest())
-            added, corrections = 0, 0
-            for link in parsed['links']:
-                changed = (link['url'], link['kind'], link['decision']) not in before
-                if link['decision'] in ('follow', 'official_external_link') and (changed or link.get('ai_reviewed')):
-                    from .structure import document_reference
-                    if document_reference(link['url'], link['label']):
-                        continue
-                    from backend.scraper.http_client import same_school_url
-                    if not same_school_url(page['url'], site['root_url']):
-                        from backend.services.source_ownership import saved_domain_evidence
-                        if not saved_domain_evidence(inventory, site['site_key'], page['url']):
+            from .parser_revision import assert_current_parser
+            from backend.services.exploration_events import navigation_application
+            tasks.assert_owned()
+            assert_current_parser()
+            with navigation_application(inventory, site, page, observed_hash, result, payload.get('inspection_origin'),
+                    review_event_id=review['event_id']):
+                # A successful reread of identical bytes is a real newer
+                # observation. A failed revisit or this model application is not.
+                observed_at = (current.get('checked_at') if current.get('state') == 'fetched'
+                    and current.get('content_hash') == observed_hash else None)
+                observed_at = observed_at or page.get('observed_at') or (page.get('snapshot_ref') or {}).get('observed_at') or ''
+                inventory.record_edges(site['site_key'], page.get('snapshot_url', page['url']),
+                                       parsed['links'], observed_hash, observed_at=observed_at)
+                inventory.record_structure(site['site_key'], page.get('snapshot_url', page['url']),
+                                           parsed['nodes'], observed_hash, observed_at=observed_at)
+                added, corrections = 0, 0
+                for link in parsed['links']:
+                    changed = (link['url'], link['kind'], link['decision']) not in before
+                    if link['decision'] in ('follow', 'official_external_link') and (changed or link.get('ai_reviewed')):
+                        from .structure import document_reference
+                        if document_reference(link['url'], link['label']):
                             continue
-                    previous_page = inventory.get_page(site['site_key'], link['url'])
-                    inventory.enqueue(site['site_key'], link['url'], link['label'], link['kind'], page['depth'] + 1,
-                                      link['path'] + ([page['label']] if page['kind'] == 'unit' else []),
-                                      'school_domain' if same_school_url(link['url'], site['root_url']) else 'official_backlink')
-                    if link.get('ai_reviewed') and link.get('ai_role') != 'unknown' and link['url'] != site['root_url']:
-                        from .layered import route_priority
-                        priority = route_priority(link)
-                        corrected = bool(previous_page and previous_page['kind'] != link['kind'])
-                        with inventory.connect() as connection:
-                            connection.execute("UPDATE pages SET kind=?,priority=?,state=CASE "
-                                "WHEN ? AND state='fetched' THEN 'pending' ELSE state END "
-                                "WHERE site_key=? AND url=? AND kind<>'root'",
-                                (link['kind'], priority, corrected, site['site_key'], link['url']))
-                        corrections += int(corrected)
-                    if changed or not previous_page:
-                        added += 1
-            handle = tasks.current_execution() or {}
-            if handle:
-                checkpoint = dict(handle.get('checkpoint') or {})
-                state = branch.state(decision_id=result.get('decision_id'))
-                tasks.checkpoint(dict(checkpoint, navigation_progress=state, navigation_unrecorded_decisions=[]))
-            from backend.services.discovery_changes import remember_navigation
-            remember_navigation(inventory, site['site_key'], page.get('snapshot_url', page['url']), parsed,
-                                result.get('status') in ('processed', 'succeeded'))
+                        from backend.scraper.http_client import same_school_url
+                        if not same_school_url(page['url'], site['root_url']):
+                            from backend.services.source_ownership import saved_domain_evidence
+                            if not saved_domain_evidence(inventory, site['site_key'], page['url']):
+                                continue
+                        previous_page = inventory.get_page(site['site_key'], link['url'])
+                        inventory.enqueue(site['site_key'], link['url'], link['label'], link['kind'], page['depth'] + 1,
+                                          link['path'] + ([page['label']] if page['kind'] == 'unit' else []),
+                                          'school_domain' if same_school_url(link['url'], site['root_url']) else 'official_backlink')
+                        if link.get('ai_reviewed') and link.get('ai_role') != 'unknown' and link['url'] != site['root_url']:
+                            from .layered import route_priority
+                            priority = route_priority(link)
+                            corrected = bool(previous_page and previous_page['kind'] != link['kind'])
+                            with inventory.connect() as connection:
+                                connection.execute("UPDATE pages SET kind=?,priority=?,state=CASE "
+                                    "WHEN ? AND state='fetched' THEN 'pending' ELSE state END "
+                                    "WHERE site_key=? AND url=? AND kind<>'root'",
+                                    (link['kind'], priority, corrected, site['site_key'], link['url']))
+                            corrections += int(corrected)
+                        if changed or not previous_page:
+                            added += 1
+                handle = tasks.current_execution() or {}
+                if handle:
+                    checkpoint = dict(handle.get('checkpoint') or {})
+                    state = branch.state(decision_id=result.get('decision_id'))
+                    tasks.checkpoint(dict(checkpoint, navigation_progress=state, navigation_unrecorded_decisions=[]))
+                from backend.services.discovery_changes import remember_navigation
+                remember_navigation(inventory, site['site_key'], page.get('snapshot_url', page['url']), parsed,
+                                    result.get('status') in ('processed', 'succeeded'))
             from backend.services.runtime_catalog import RuntimeCatalog
             RuntimeCatalog(current_app.config['SOURCE_CATALOG_PATH']).publish(inventory, site['site_key'], merge=True)
+            if not result.get('error_code'):
+                from .layered import navigation_application_key
+                handle = tasks.current_execution() or {}
+                checkpoint = dict(handle.get('checkpoint') or {})
+                applied_key = navigation_application_key(checkpoint)
+                if handle and applied_key:
+                    # Queue writes and public catalogue publication must finish
+                    # before a resumed slice may buy its next decision.
+                    tasks.checkpoint(dict(checkpoint, route_application_key=applied_key))
             if added:
                 from datetime import datetime
                 # Continue the same generation and shared billing round. Page

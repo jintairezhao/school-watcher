@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 import json
 import re
 from urllib.parse import urlsplit
+from backend.ai.material_capture import capture_frontier
 
 PUBLISHING = re.compile(r'通知|公告|公示|招生|学术活动|办事指南|工作安排|政策|规章|制度|下载')
 
@@ -125,6 +126,7 @@ def route_rank(page, incoming=(), parents=None):
             page.get('depth', 0), page.get('url', ''))
 
 
+@capture_frontier
 def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
                  branches=None, history=None, slice_size=3, attention=None,
                  receipts=(), foraging_policy=None, explain=None, costs=None, structure=()):
@@ -206,6 +208,7 @@ def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
                         feedback.features(page) if feedback is not None else None)
     if demand:
         from .attention import candidate_attention, complete_material
+        from .notification_entrances import saved_notification_hint, saved_publication_hint
         from backend.services.source_relationships import ROSTER_RELATIONS
         from backend.scraper.http_client import same_school_url
         members = defaultdict(list)
@@ -227,6 +230,24 @@ def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
                         or edge.get('content_hash') != parent.get('content_hash')
                         or page['url'] in article_addresses(parent.get('feed_json'))):
                     continue
+                notification = saved_notification_hint(parent, page['url'], edge.get('locator'))
+                if notification:
+                    proof.append(notification)
+                else:
+                    publication = saved_publication_hint(parent, page['url'], edge.get('locator'))
+                    if publication:
+                        # Only the matched preview's literal heading/items may
+                        # justify its first material turn. Broad menu paths and
+                        # the parent's name cannot lend another list interest.
+                        local_needs = {item['category'] for item in demand[page['url']]['evidence']
+                            if item.get('field') in ('column_name', 'sample_title')
+                            and item.get('url') == edge.get('parent_url')
+                            and item.get('content_hash') == parent['content_hash']
+                            and item.get('locator') == publication['container_locator']}
+                        active_needs = [category for category in demand[page['url']]['gains']
+                                        if category in local_needs]
+                        if active_needs:
+                            proof.append(dict(publication, audience_categories=active_needs))
                 if (parent.get('kind') == 'root' and page.get('depth') == 1 and own['gains']
                         and page.get('kind') in ('directory', 'unit', 'gateway', 'channel')
                         and same_school_url(page['url'], parent['url'])):
@@ -245,12 +266,27 @@ def choose_route(pages, *, edges=(), parents=None, claim_count=0, interval=5,
                 demand[page['url']] = dict(demand[page['url']], trunk_evidence=proof)
                 primary.append((page, own['score']))
         if primary:
+            from backend.services.student_sources import college_priority
+            def primary_rank(pair):
+                page, own_score = pair
+                bases = {item.get('basis') for item in demand[page['url']]['trunk_evidence']}
+                college = college_priority(page['kind'], page.get('label', ''), page.get('path_json', '[]'))
+                return ('observed_unit_home_notification' not in bases,
+                        'observed_publication_preview' not in bases,
+                        -own_score, college if college is not None else 3,
+                        page.get('depth', 0), page.get('frontier_rowid', 0), page['url'])
             # This finite pass ends after real material is observed. Broad
             # inherited menu vocabulary cannot keep one branch ahead of the
             # remaining actual college/department and direct school entrances.
-            page, _ = min(primary, key=lambda pair: (-pair[1], pair[0].get('depth', 0),
-                pair[0].get('frontier_rowid', 0), pair[0]['url']))
-            return explain_selected(page, 'unread_school_trunk')
+            # The explicit faculty main-notice preference stays first. Other
+            # observed publication previews precede more unknown unit entrances.
+            # The existing college preference still resolves other need ties.
+            page, _ = min(primary, key=primary_rank)
+            bases = {item.get('basis') for item in demand[page['url']]['trunk_evidence']}
+            reason = ('unread_unit_main_notifications' if 'observed_unit_home_notification' in bases
+                      else 'unread_observed_publication' if 'observed_publication_preview' in bases
+                      else 'unread_school_trunk')
+            return explain_selected(page, reason)
     if branches and history and (claim_count + 1) % max(1, int(slice_size)) == 0:
         effort = defaultdict(int)
         for url, page in history.items():

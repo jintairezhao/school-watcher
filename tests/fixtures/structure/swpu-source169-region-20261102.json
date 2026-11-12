@@ -1,0 +1,210 @@
+{
+  "provenance": {
+    "database": "isolated-native-instance",
+    "publication": {
+      "site_key": "01545393f9af1d84928c",
+      "generation": "c03ab4b94edf48a6b78099f985ead566",
+      "path": "catalog-generations/01545393f9af1d84928c-c03ab4b94edf48a6b78099f985ead566.sqlite3",
+      "activated_at": "2026-11-02 01:51:28.454881",
+      "policy_version": "1"
+    },
+    "validation_id": 15,
+    "configuration_id": 3,
+    "structure_version": {
+      "school_id": 3,
+      "epoch": "19d79fca17fd4bd19f6acdc136088557",
+      "revision": 62,
+      "updated_at": "2026-11-02 01:51:32.625873"
+    },
+    "original_validation_json_sha256": "623cc89c562cb03dfd7e82a4e90e55b73c4100ff40b4c1cf213d499041a49786",
+    "validation_subset": true
+  },
+  "inputs": {
+    "site": {
+      "id": 3,
+      "name": "西南石油大学",
+      "root_url": "https://www.swpu.edu.cn/",
+      "site_key": "01545393f9af1d84928c"
+    },
+    "pages": [
+      {
+        "url": "https://www.swpu.edu.cn/",
+        "label": "西南石油大学",
+        "title": "西南石油大学门户网站",
+        "kind": "root",
+        "path_json": "[]",
+        "state": "fetched",
+        "health": "date_unknown",
+        "status_code": 200,
+        "checked_at": "2026-10-27T15:14:53+00:00",
+        "content_hash": "481fcd9900db005c672b0cfee80dc3b51b790f1da736a6fb58476eff6d805c57",
+        "material_available": true
+      },
+      {
+        "url": "https://www.swpu.edu.cn/oice/",
+        "label": "留学生教育",
+        "title": "国际合作与交流处",
+        "kind": "unit",
+        "path_json": "[\"招生就业\"]",
+        "state": "fetched",
+        "health": "date_unknown",
+        "status_code": 200,
+        "checked_at": "2026-11-01T10:38:28+00:00",
+        "content_hash": "3d2dba628cd59441fa7f2c8a0291f51c77d583c0713a98cc666f5ff1b9e9afcb",
+        "material_available": true
+      },
+      {
+        "url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+        "label": "通知公告",
+        "title": "通知公告-国际合作与交流处",
+        "kind": "channel",
+        "path_json": "[\"招生就业\", \"留学生教育\"]",
+        "state": "fetched",
+        "health": "recent_publication",
+        "status_code": 200,
+        "checked_at": "2026-11-02T01:50:29+00:00",
+        "content_hash": "b737ded1a1b2ceecd93a3e0221db0ccaee864ec248976139d82c503f57676ad9",
+        "material_available": true
+      }
+    ],
+    "structure_nodes": [],
+    "navigation_edges": [
+      {
+        "parent_url": "https://www.swpu.edu.cn/",
+        "target_url": "https://www.swpu.edu.cn/",
+        "label": "本站首页",
+        "kind": "navigation",
+        "path_json": "[]",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(2) > a:nth-of-type(1)",
+        "decision": "navigation_pending",
+        "content_hash": "481fcd9900db005c672b0cfee80dc3b51b790f1da736a6fb58476eff6d805c57",
+        "observed_at": "2026-10-27T15:14:53+00:00"
+      },
+      {
+        "parent_url": "https://www.swpu.edu.cn/",
+        "target_url": "https://www.swpu.edu.cn/oice/",
+        "label": "合作交流",
+        "kind": "unit",
+        "path_json": "[]",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(7) > a:nth-of-type(1)",
+        "decision": "follow",
+        "content_hash": "481fcd9900db005c672b0cfee80dc3b51b790f1da736a6fb58476eff6d805c57",
+        "observed_at": "2026-10-27T15:14:53+00:00"
+      },
+      {
+        "parent_url": "https://www.swpu.edu.cn/",
+        "target_url": "https://www.swpu.edu.cn/oice/",
+        "label": "国际合作交流",
+        "kind": "unit",
+        "path_json": "[\"合作交流\"]",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(7) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+        "decision": "follow",
+        "content_hash": "481fcd9900db005c672b0cfee80dc3b51b790f1da736a6fb58476eff6d805c57",
+        "observed_at": "2026-10-27T15:14:53+00:00"
+      },
+      {
+        "parent_url": "https://www.swpu.edu.cn/",
+        "target_url": "https://www.swpu.edu.cn/oice/",
+        "label": "留学生招生",
+        "kind": "unit",
+        "path_json": "[\"招生就业\"]",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(4) > a:nth-of-type(1)",
+        "decision": "follow",
+        "content_hash": "481fcd9900db005c672b0cfee80dc3b51b790f1da736a6fb58476eff6d805c57",
+        "observed_at": "2026-10-27T15:14:53+00:00"
+      },
+      {
+        "parent_url": "https://www.swpu.edu.cn/",
+        "target_url": "https://www.swpu.edu.cn/oice/",
+        "label": "留学生教育",
+        "kind": "unit",
+        "path_json": "[\"教育教学\"]",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)",
+        "decision": "follow",
+        "content_hash": "481fcd9900db005c672b0cfee80dc3b51b790f1da736a6fb58476eff6d805c57",
+        "observed_at": "2026-10-27T15:14:53+00:00"
+      },
+      {
+        "parent_url": "https://www.swpu.edu.cn/oice/",
+        "target_url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+        "label": "通知公告",
+        "kind": "channel",
+        "path_json": "[\"招生就业\"]",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > a:nth-of-type(1)",
+        "decision": "follow",
+        "content_hash": "3d2dba628cd59441fa7f2c8a0291f51c77d583c0713a98cc666f5ff1b9e9afcb",
+        "observed_at": "2026-11-01T10:38:28+00:00"
+      },
+      {
+        "parent_url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+        "target_url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+        "label": "通知公告",
+        "kind": "channel",
+        "path_json": "[\"招生就业\", \"留学生教育\", \"通知公告\"]",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > a:nth-of-type(2)",
+        "decision": "follow",
+        "content_hash": "b737ded1a1b2ceecd93a3e0221db0ccaee864ec248976139d82c503f57676ad9",
+        "observed_at": "2026-11-02T01:50:29+00:00"
+      },
+      {
+        "parent_url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+        "target_url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+        "label": "通知公告",
+        "kind": "channel",
+        "path_json": "[\"招生就业\", \"留学生教育\"]",
+        "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > a:nth-of-type(2)",
+        "decision": "route_reference",
+        "content_hash": "b737ded1a1b2ceecd93a3e0221db0ccaee864ec248976139d82c503f57676ad9",
+        "observed_at": "2026-11-02T01:50:29+00:00"
+      }
+    ],
+    "departments": [
+      {
+        "id": 169,
+        "school_id": 3,
+        "kind": "column",
+        "structure_key": null,
+        "name": "通知公告",
+        "list_url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+        "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > ul:nth-of-type(1) > :is(div.container > div.sub-right.fr > div.sub-right-con > ul.list > li)",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "p.news-time",
+        "content_selector": "",
+        "group_name": "",
+        "lifecycle": "active"
+      }
+    ],
+    "directory_entries": [],
+    "validations": [
+      {
+        "id": 15,
+        "school_id": 3,
+        "department_id": 169,
+        "config_hash": "3c29219698bb9a93595c9ca300fad6aff8bbd31909e216c3acd8bf4c9aa4d76a",
+        "validation_json": "{\"articles\": {\"matched_count\": 3, \"passed\": true, \"sample_count\": 3}, \"config_hash\": \"3c29219698bb9a93595c9ca300fad6aff8bbd31909e216c3acd8bf4c9aa4d76a\", \"department_id\": 169, \"list_snapshot\": {\"captured_at\": \"2026-11-02T01:50:29+00:00\", \"hash\": \"b737ded1a1b2ceecd93a3e0221db0ccaee864ec248976139d82c503f57676ad9\", \"outcome\": \"usable\", \"role\": \"list\", \"url\": \"https://www.swpu.edu.cn/oice/tzgg.htm\"}, \"list_url\": \"https://www.swpu.edu.cn/oice/tzgg.htm\", \"name\": \"通知公告\", \"region\": {\"container\": \"html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2)\", \"heading\": \"html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > a:nth-of-type(2)\", \"name\": \"通知公告\"}, \"school_id\": 3, \"status\": \"full\", \"validation_version\": 13}",
+        "created_at": "2026-11-02 01:50:44.121203"
+      }
+    ],
+    "receipts": [
+      {
+        "source_id": 169,
+        "url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+        "content_hash": "b737ded1a1b2ceecd93a3e0221db0ccaee864ec248976139d82c503f57676ad9",
+        "receipt_id": "native:15",
+        "config_hash": "3c29219698bb9a93595c9ca300fad6aff8bbd31909e216c3acd8bf4c9aa4d76a",
+        "region": {
+          "container": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2)",
+          "heading": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > table:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1) > a:nth-of-type(2)",
+          "name": "通知公告"
+        },
+        "list_observation": {
+          "hash": "b737ded1a1b2ceecd93a3e0221db0ccaee864ec248976139d82c503f57676ad9",
+          "url": "https://www.swpu.edu.cn/oice/tzgg.htm",
+          "outcome": "usable",
+          "observed_at": "2026-11-02T01:50:29+00:00"
+        }
+      }
+    ]
+  }
+}

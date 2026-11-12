@@ -22,6 +22,12 @@
             if (unit && input.hasAttribute('data-source-unit')) {
                 unit.querySelectorAll('[name="department"]').forEach(child => { child.checked = input.checked; });
             }
+            const changed = unit && input.hasAttribute('data-source-unit')
+                ? [...unit.querySelectorAll('[name="department"]')] : [input];
+            const values = new Map(changed.map(child => [child.value, child.checked]));
+            document.querySelectorAll('[name="department"]').forEach(other => {
+                if (values.has(other.value)) other.checked = values.get(other.value);
+            });
             if (!input.checked) {
                 let parent = unit;
                 while (parent) {
@@ -35,6 +41,7 @@
     });
     function render(data) {
         lastData = data;
+        if (field('legacySourceScope')) field('legacySourceScope').hidden = !data.legacy_scope;
         state = data.state;
         field('discoveryMessage').textContent = uiT(data.message);
         field('discoveryProgress').hidden = !data.busy;
@@ -46,7 +53,11 @@
             pause.dataset.action = data.can_resume ? 'resume' : 'pause';
             pause.textContent = data.can_resume ? uiT('继续') : data.state === 'pausing' ? uiT('正在暂停…') : uiT('暂停');
         }
-        field('discoveryCounts').textContent = uiT(`已收录 ${data.article_count ?? 0} 条通知 · 已接入 ${data.verified_source_count ?? 0} 个信息来源`);
+        field('discoveryCounts').textContent = uiT('已收录{articles}条通知 · 已启用{sources}个信息来源',
+            {articles:data.article_count ?? 0,sources:data.active_source_count ?? 0});
+        if (field('discoveryValidationCounts')) field('discoveryValidationCounts').textContent =
+            uiT('共记录{columns}个栏目 · 其中{verified}个有完整验证记录',
+                {columns:data.source_count ?? 0,verified:data.verified_source_count ?? 0});
         if (field('discoveryValue')) field('discoveryValue').textContent = uiT(data.value_summary || '优先寻找升学、奖助、实习就业、竞赛和校园办事信息。');
         if (field('discoveryStages')) field('discoveryStages').textContent = uiT(data.stage_message || '');
         if (field('discoveryChanges')) field('discoveryChanges').textContent = data.changes && Object.keys(data.changes).length
@@ -81,6 +92,13 @@
             choices = data.choices_html;
             updateChoices();
         }
+        if (!dirty) {
+            // A preference can change while producing the same visible order.
+            // Keep the rendered view's provenance current; drafts keep their base.
+            const page = document.querySelector('.sources-page');
+            if (page && data.structure_version) page.dataset.structureVersion = JSON.stringify(data.structure_version);
+            if (page && data.attention_policy_version) page.dataset.attentionPolicyVersion = data.attention_policy_version;
+        }
         // A queued task's stored timestamp is from whenever it last did work, so
         // "still working, last update N seconds ago" would be untrue of it.
         if (data.updated_at && data.busy) {
@@ -106,7 +124,7 @@
             again = render(data);
         } catch (error) {
             field('discoveryError').textContent = error.name === 'TimeoutError' ? uiT('连接超时，正在重新确认状态…')
-                : (action === 'pause' ? uiT('暂停未成功：') : action === 'resume' ? uiT('继续未成功：') : uiT('进度连接中断：')) + error.message;
+                : (action === 'pause' ? uiT('暂停未成功：') : action === 'resume' ? uiT('继续未成功：') : uiT('进度连接中断：')) + uiT(error.message);
             field('discoveryError').hidden = false;
             field('discoveryActivity').textContent = uiT('连接中断');
             field('discoveryProgress').hidden = true;

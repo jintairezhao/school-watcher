@@ -19,8 +19,8 @@ class SourceGovernanceTests(unittest.TestCase):
         from backend.services.source_workflow import school_publisher_proven
         root = self.school.url
         target = root + 'notices/'
-        home = governance._snapshot('<a href="/notices/">通知公告</a>', root)
-        body = governance._snapshot('<title>示例大学通知公告</title>' + self.html(), target)
+        home = governance._snapshot('<title>示例大学</title><a href="/notices/">通知公告</a>', root)
+        body = governance._snapshot('<title>示例大学</title>' + self.html(), target)
         bundle = {'root_url': root, 'school_name': self.school.name, 'list': body,
                   'publisher_material': {'home': home}}
         config = dict(governance.source_config(self.dept), list_url=target, group_name=self.school.name)
@@ -219,6 +219,37 @@ class SourceGovernanceTests(unittest.TestCase):
         self.assertEqual(governance.activate_proposal(proposal.id).id, self.dept.id)
         self.assertEqual(SourceConfigVersion.query.count(), 1)
 
+    def test_scoped_attachment_notice_does_not_require_fifteen_body_characters(self):
+        config = dict(governance.source_config(self.dept), content_selector='div.article')
+        def fetch(url, purpose):
+            if purpose == 'body':
+                index = url.rsplit('/', 1)[-1].split('.')[0]
+                return (f'<main><h1>关于研究生报名事项的通知{index}</h1>'
+                        '<div class="article"><a href="/files/guide.pdf">附件</a></div></main>')
+            return self.html()
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+            seed_html=self.html(), inventory=self.identity, fetcher=fetch)
+        proposal = governance.propose_source(self.school.id, config, evidence, department_id=self.dept.id)
+        self.assertTrue(governance.validate_proposal(proposal.id)['passed'])
+
+    def test_short_notice_cannot_borrow_navigation_hidden_or_private_resources(self):
+        for body, selector in (
+            ('<div class="article"></div><nav><a href="/guide.pdf">附件</a></nav>', 'div.article'),
+            ('<div class="article" hidden><a href="/guide.pdf">附件</a></div>', 'div.article'),
+            ('<div class="article"><a href="http://127.0.0.1/guide.pdf">附件</a></div>', 'div.article'),
+            ('<nav><a href="/guide.pdf">附件</a></nav>', 'body'),
+        ):
+            with self.subTest(body=body, selector=selector):
+                config = dict(governance.source_config(self.dept), content_selector=selector)
+                def fetch(url, purpose):
+                    if purpose == 'body':
+                        index = url.rsplit('/', 1)[-1].split('.')[0]
+                        return f'<h1>关于研究生报名事项的通知{index}</h1>' + body
+                    return self.html()
+                evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+                    seed_html=self.html(), inventory=self.identity, fetcher=fetch)
+                proposal = governance.propose_source(self.school.id, config, evidence, department_id=self.dept.id)
+                self.assertIn('article_body_missing', governance.validate_proposal(proposal.id)['errors'])
     def test_unconfirmed_column_still_yields_body_and_independent_evidence(self):
         """An ambiguous region must gather more evidence, not stop gathering it.
 
@@ -303,8 +334,10 @@ class SourceGovernanceTests(unittest.TestCase):
         proposal = governance.propose_source(self.school.id,
             {field: config[field] for field in governance.FIELDS}, origin='submitted_entry')
         self.assertEqual(json.loads(proposal.candidate_json)['name'], '栏目名称待核实')
-        with patch('backend.services.runtime_catalog.RuntimeCatalog', return_value=self.identity), \
-                patch.object(governance, '_fetch', side_effect=self.fetcher(self.html())), \
+        from backend.services.runtime_catalog import RuntimeCatalog
+        from backend.services.source_inventory import site_key
+        RuntimeCatalog(self.app.config['SOURCE_CATALOG_PATH']).publish(self.identity, site_key(self.school.url))
+        with patch.object(governance, '_fetch', side_effect=self.fetcher(self.html())), \
                 patch.object(governance, 'run_source_skill_for_proposal') as ai:
             result = governance.process_source_review({'proposal_id': proposal.id})
         self.assertEqual(result['state'], 'activated', result['validation'])
@@ -359,8 +392,10 @@ class SourceGovernanceTests(unittest.TestCase):
         db.session.delete(self.dept); db.session.commit()
         proposal = governance.propose_source(self.school.id,
             {'name': config['name'], 'list_url': config['list_url']}, origin='submitted_entry')
-        with patch('backend.services.runtime_catalog.RuntimeCatalog', return_value=self.identity), \
-                patch.object(governance, '_fetch', side_effect=self.fetcher(self.html())), \
+        from backend.services.runtime_catalog import RuntimeCatalog
+        from backend.services.source_inventory import site_key
+        RuntimeCatalog(self.app.config['SOURCE_CATALOG_PATH']).publish(self.identity, site_key(self.school.url))
+        with patch.object(governance, '_fetch', side_effect=self.fetcher(self.html())), \
                 patch.object(governance, 'run_source_skill_for_proposal') as ai:
             result = governance.process_source_review({'proposal_id': proposal.id})
         self.assertEqual(result['state'], 'activated', result)
@@ -761,6 +796,116 @@ class SourceGovernanceTests(unittest.TestCase):
         self.assertNotIn('article_sample_missing', result['errors'])
         self.assertEqual(len(result['limitations']), 3)
         self.assertEqual(governance.activate_proposal(proposal.id).id, self.dept.id)
+
+    def test_missing_article_is_not_an_access_limited_validation_exception(self):
+        from backend.scraper.acquisition import FetchFailure, FetchResult
+        html = self.html(5)
+        config = governance.source_config(self.dept)
+        missing = 'https://college.example.edu.cn/notices/article/1.htm'
+        base = self.fetcher(html)
+        def fetch(url, purpose):
+            if url == missing and purpose == 'body':
+                raise FetchFailure(FetchResult(url, status=404, outcome='denied', error_code='http_404'))
+            return base(url, purpose)
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+            seed_html=html, fetcher=fetch, inventory=self.identity)
+        proposal = governance.propose_source(self.school.id, config, evidence, department_id=self.dept.id)
+        bundle = json.loads(proposal.evidence_json)
+        self.assertNotIn(missing, bundle['access_limited'])
+        # Already saved evidence from the old classifier must not bypass the
+        # corrected check just because its digest is internally consistent.
+        bundle['samples']['article:' + missing] = 'access_limited:http_404'
+        proposal.evidence_json = governance._json(bundle)
+        proposal.evidence_hash = governance._hash(bundle)
+        result = governance.validate_proposal(proposal.id)
+        self.assertFalse(result['passed'])
+        self.assertIn('article_sample_missing', result['errors'])
+        self.assertFalse(any('access_limited:http_404' in item for item in result['limitations']))
+
+    def test_legacy_validated_failure_cannot_activate_with_consistent_hashes(self):
+        proposal = self.proposal()
+        self.assertTrue(governance.validate_proposal(proposal.id)['passed'])
+        bundle = json.loads(proposal.evidence_json)
+        bundle['samples']['article:missing'] = 'access_limited:http_404'
+        proposal.evidence_json = governance._json(bundle)
+        proposal.evidence_hash = governance._hash(bundle)
+        proposal.validated_hash = governance._hash([
+            proposal.candidate_json, proposal.evidence_hash, governance.VERSION])
+        db.session.commit()
+        with self.assertRaisesRegex(ValueError, '来源尚未通过统一检查'):
+            governance.activate_proposal(proposal.id)
+
+    def restricted_column(self, *, mixed_login=False):
+        import gzip
+        response = gzip.decompress((Path(__file__).parent / 'fixtures' / 'structure' /
+            'swpu-gs-access-restricted-01a48329-20261103.html.gz').read_bytes()).decode('utf-8-sig')
+        html = self.html()
+        config = governance.source_config(self.dept)
+        base = self.fetcher(html)
+        def fetch(url, purpose):
+            if purpose != 'body':
+                return base(url, purpose)
+            if mixed_login and url.endswith('/0.htm'):
+                raise self.refusal(url, purpose)
+            raise self.refusal(url, purpose, html=response, landed=url)
+        evidence = governance.capture_source_evidence(self.school.id, config, department_id=self.dept.id,
+            seed_html=html, fetcher=fetch, inventory=self.identity)
+        return governance.propose_source(self.school.id, config, evidence, department_id=self.dept.id)
+
+    def test_permission_denial_is_not_login_requirement(self):
+        proposal = self.restricted_column()
+        result = governance.validate_proposal(proposal.id)
+        self.assertFalse(result['passed'])
+        self.assertEqual(result['errors'], ['source_access_restricted'])
+        self.assertEqual((result['articles']['matched_count'], result['articles']['failure_kind']),
+                         (0, 'access_restricted'))
+        self.assertEqual({s['error_code'] for s in result['articles']['samples']}, {'source_access_restricted'})
+        self.assertEqual(len(result['limitations']), 3)
+        self.assertEqual(proposal.state, 'needs_review')
+        self.assertIsNone(proposal.validated_hash)
+        self.assertEqual(SourceConfigVersion.query.count(), 0)
+
+    def test_mixed_denials_do_not_imply_login(self):
+        proposal = self.restricted_column(mixed_login=True)
+        result = governance.validate_proposal(proposal.id)
+        self.assertFalse(result['passed'])
+        self.assertEqual(result['errors'], ['source_access_restricted'])
+        self.assertEqual({s['error_code'] for s in result['articles']['samples']},
+                         {'source_login_required', 'source_access_restricted'})
+        self.assertEqual(len(result['limitations']), 3)
+
+    def test_permission_denial_workflow_uses_website_access_limit(self):
+        from backend.services.source_workflow import workflow
+        from backend.services.inbox_refresh import source_status_kind, source_status_label
+        proposal = self.proposal()
+        for code, status in (('source_access_restricted', 'access_limited'),
+                             ('source_login_required', 'login_required')):
+            with self.subTest(code=code):
+                proposal.state = 'needs_review'
+                proposal.validation_json = governance._json({'passed': False, 'errors': [code]})
+                result = workflow(proposal)
+                self.assertEqual((result['status'], result['owner'], result['requires_user']),
+                                 (status, 'website', False))
+                self.assertEqual(result['stages']['validation'], 'not_passed')
+                self.assertEqual(result['stages']['activation'], 'not_activated')
+                self.assertNotIn(code, result['reason'])
+                if code == 'source_access_restricted':
+                    self.assertNotIn('登录', result['reason'] + result['label'] + result['next_step'])
+                self.assertEqual((source_status_kind('failed', '', code),
+                                  source_status_label('failed', '', code)), ('access_limited', '访问受限'))
+
+    def test_access_restricted_body_does_not_spend_another_model_attempt(self):
+        from backend.services.source_exploration import run
+        proposal = self.proposal()
+        proposal.state = 'needs_review'
+        proposal.validation_json = governance._json({'passed': False, 'errors': ['source_access_restricted'],
+            'articles': {'passed': False, 'failure_kind': 'access_restricted'}})
+        db.session.commit()
+        with patch('backend.ai.configuration.get_model_binding',
+                   side_effect=AssertionError('An access restriction cannot buy model repair')) as model:
+            self.assertEqual(run(proposal.id), {'status': 'access_limited', 'changed': False})
+        model.assert_not_called()
+        self.assertEqual(SourceConfigVersion.query.count(), 0)
 
     def test_a_column_whose_entries_are_all_gated_is_still_refused(self):
         """Nothing could be confirmed as an article, so the gate still holds.

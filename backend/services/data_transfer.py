@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import io
 import hashlib
 import json
+import math
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -27,13 +28,13 @@ MAX_ROWS = 200000
 FORMAT = 'school-watcher-collected-data'
 TABLES = {
     'schools': (School, ('id', 'name', 'url', 'enabled', 'created_at')),
-    'departments': (Department, ('id', 'school_id', 'name', 'list_url', 'group_name', 'kind',
+    'departments': (Department, ('id', 'school_id', 'name', 'list_url', 'group_name', 'kind', 'structure_key', 'identity_json',
         'list_selector', 'title_selector', 'link_selector', 'date_selector', 'content_selector')),
     'announcements': (Announcement, ('id', 'school_id', 'department_id', 'title', 'url',
         'content_html', 'content_text', 'content_hash', 'summary', 'published_at', 'created_at', 'is_updated')),
     'announcement_sources': (AnnouncementSource, ('announcement_id', 'department_id',
         'list_url', 'article_url', 'first_seen_at', 'last_seen_at')),
-    'department_directory_entries': (DepartmentDirectoryEntry, ('parent_id', 'department_id', 'position')),
+    'department_directory_entries': (DepartmentDirectoryEntry, ('parent_id', 'department_id', 'position', 'facts_json')),
     'announcement_resources': (AnnouncementResource, ('announcement_id','url_key','url','filename','kind',
         'state','mime_type','byte_size','sha256','payload','saved_at','error')),
 }
@@ -61,6 +62,8 @@ def export_data(progress=None):
             db.session.execute(text('BEGIN'))
         elif db.engine.dialect.name == 'postgresql':
             db.session.execute(text('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'))
+        from backend.services.source_transfer import export_source_keys
+        source_keys = export_source_keys()
         total = sum(db.session.query(model).count() for model, _ in TABLES.values())
         done = processed = 0
         _report(progress, 'compressing', done, total, processed)
@@ -77,6 +80,8 @@ def export_data(progress=None):
                             writer.write(',')
                         values = {c: v.isoformat() if isinstance(v, datetime) else base64.b64encode(v).decode('ascii')
                                   if isinstance(v, bytes) else v for c, v in zip(columns, row)}
+                        if name == 'departments' and values.get('kind') == 'column':
+                            values['transfer_key'] = source_keys[values['id']]
                         if name == 'announcements':
                             from backend.services.summaries import export_summary
                             ann = db.session.get(Announcement, values['id'])
@@ -173,6 +178,13 @@ def _legacy_rows(archive, infos, candidates, progress, disk_backed, max_rows):
                 _report(progress, 'checking_database')
                 data = BackupData(format=FORMAT, version=1) if disk_backed else {'format': FORMAT, 'version': 1}
                 candidates.append(data)
+                transfer_keys = {}
+                if 'source_transfer_identities' in tables:
+                    for ident, key in connection.execute(
+                            "SELECT source_id,transfer_key FROM source_transfer_identities WHERE kind='record' LIMIT ?", (max_rows + 1,)):
+                        if ident in transfer_keys or len(transfer_keys) >= max_rows:
+                            raise ValueError('备份信源身份记录无效或过多')
+                        transfer_keys[ident] = key
                 for table, (_, allowed) in TABLES.items():
                     data[table] = DiskRows() if disk_backed else []
                     if table not in tables:
@@ -185,6 +197,8 @@ def _legacy_rows(archive, infos, candidates, progress, disk_backed, max_rows):
                     rows = connection.execute(f'SELECT {column_sql} FROM "{table}" LIMIT ?', (max_rows + 1,))
                     for index, row in enumerate(rows, 1):
                         values = {c:base64.b64encode(v).decode('ascii') if isinstance(v,bytes) else v for c,v in zip(columns,row)}
+                        if table == 'departments' and values.get('kind', 'column') == 'column' and values['id'] in transfer_keys:
+                            values['transfer_key'] = transfer_keys[values['id']]
                         data[table].append(values)
                         _report(progress, 'checking_database', index)
     if len(candidates) != 1:
@@ -212,8 +226,10 @@ def read_backup(stream, progress=None, expanded_limit=None, disk_backed=False):
                 nested_catalog = (versioned and info.filename.startswith('catalog-generations/') and
                     info.filename.count('/') == 1 and info.filename.endswith('.sqlite3'))
                 nested_evidence = bool(versioned and __import__('re').fullmatch(
-                    r'source-governance-evidence/[0-9a-f]{64}\.html\.gz', info.filename))
-                if (info.filename in infos or info.is_dir() or ('/' in info.filename and not (nested_catalog or nested_evidence)) or '\\' in info.filename
+                    r'source-governance-evidence/[0-9a-f]{64}\.(?:html\.gz|pdf)', info.filename))
+                nested_history = bool(versioned and __import__('re').fullmatch(
+                    r'[^/\\:]+\.history/\d{4}-\d{2}/\d{4}-\d{2}-\d{2}/[0-9a-f]{64}\.json\.gz', info.filename))
+                if (info.filename in infos or info.is_dir() or ('/' in info.filename and not (nested_catalog or nested_evidence or nested_history)) or '\\' in info.filename
                         or ':' in info.filename or info.filename in ('.', '..') or info.flag_bits & 1):
                     raise ValueError('备份包含重复、加密或不安全的文件名')
                 infos[info.filename] = info
@@ -256,6 +272,79 @@ def _ident(value):
     return value
 
 
+def _directory_assertion(value):
+    """Preserve bounded nested witnesses without treating them as verified."""
+    if not isinstance(value, dict):
+        raise ValueError('备份中的目录声明无效')
+    pending = [(value, 0)]
+    visited = 0
+    while pending:
+        item, depth = pending.pop()
+        visited += 1
+        if depth > 8 or visited > 1024:
+            raise ValueError('备份中的目录声明无效')
+        if isinstance(item, dict):
+            if not all(isinstance(key, str) and len(key) <= 256 for key in item):
+                raise ValueError('备份中的目录声明无效')
+            pending.extend((child, depth + 1) for child in item.values())
+        elif isinstance(item, list):
+            pending.extend((child, depth + 1) for child in item)
+        elif isinstance(item, str):
+            if len(item) > 8192:
+                raise ValueError('备份中的目录声明无效')
+        elif item is None or isinstance(item, bool):
+            continue
+        elif isinstance(item, int):
+            if not -(2**63) <= item < 2**63:
+                raise ValueError('备份中的目录声明无效')
+        elif not isinstance(item, float) or not math.isfinite(item):
+            raise ValueError('备份中的目录声明无效')
+
+
+def _directory_facts(value):
+    """Keep bounded evidence, never import endpoint overrides or activation flags."""
+    if value is None:
+        return []  # Pre-evidence packages remain explicitly unverified.
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)  # SQLite full-backup JSON storage.
+        except ValueError as exc:
+            raise ValueError('备份中的目录证据无效') from exc
+    if not isinstance(value, list) or len(value) > 256 or len(json.dumps(value)) > 512000:
+        raise ValueError('备份中的目录证据无效或过大')
+    allowed = {'writer', 'type', 'relation_type', 'observed_relation', 'node_key', 'page_url',
+               'config_hash', 'receipt_id', 'evidence', 'assertion'}
+    types = {'directory_listing', 'organization_membership', 'source_ownership', 'cross_entity_reference', 'entity_page'}
+    for fact in value:
+        if (not isinstance(fact, dict) or not set(fact) <= allowed or
+                (fact.get('type') or fact.get('relation_type')) not in types):
+            raise ValueError('备份中的目录关系类型无效')
+        for field, content in fact.items():
+            if field not in ('evidence', 'assertion') and (not isinstance(content, str) or len(content) > 1024):
+                raise ValueError('备份中的目录证据字段无效')
+        if 'assertion' in fact:
+            _directory_assertion(fact['assertion'])
+        if 'page_url' in fact and not canonical_url(fact['page_url']):
+            raise ValueError('备份中的目录证据地址无效')
+        proofs = fact.get('evidence')
+        if not isinstance(proofs, list):
+            raise ValueError('备份中的目录关系缺少依据')
+        # Explicitly absent proof is historical data, not a confirmed relation.
+        # The shared fact reader retains its gap instead of inventing evidence.
+        # Real long-lived relations can have more than 128 retained witnesses;
+        # the enclosing 512000-byte limit already bounds this material.
+        for proof in proofs:
+            if not isinstance(proof, dict):
+                raise ValueError('备份中的目录证据无效')
+            for field in ('reference_url', 'locator', 'content_hash', 'observed_at'):
+                if not isinstance(proof.get(field), str) or not proof[field] or len(proof[field]) > 8192:
+                    raise ValueError('备份中的目录证据不完整')
+            if not canonical_url(proof['reference_url']):
+                raise ValueError('备份中的目录证据地址无效')
+            _stamp(proof['observed_at'])
+    return value
+
+
 def validate_data(data, progress=None, max_rows=MAX_ROWS):
     from backend.services.backup_stream import DiskRows
     if not isinstance(data, dict) or data.get('format') != FORMAT or type(data.get('version')) is not int or data['version'] != 1:
@@ -266,6 +355,7 @@ def validate_data(data, progress=None, max_rows=MAX_ROWS):
             raise ValueError('备份缺少数据表或记录数超过限制')
         data[table] = rows
         ids = set()
+        transfer_keys = set()
         for row in _rows_progress(rows, progress, 'validating_' + table):
             if not isinstance(row, dict):
                 raise ValueError('备份记录格式无效')
@@ -274,6 +364,12 @@ def validate_data(data, progress=None, max_rows=MAX_ROWS):
                 if ident in ids:
                     raise ValueError('备份中存在重复的记录编号')
                 ids.add(ident)
+            if table == 'departments' and row.get('transfer_key') is not None:
+                from backend.services.source_transfer import valid_transfer_key
+                key = row['transfer_key']
+                if (row.get('kind', 'column') != 'column' or not valid_transfer_key(key) or key in transfer_keys):
+                    raise ValueError('备份中的信源身份无效或重复')
+                transfer_keys.add(key)
             for field in columns:
                 value = row.get(field)
                 if field.endswith('_id'):
@@ -286,6 +382,17 @@ def validate_data(data, progress=None, max_rows=MAX_ROWS):
                 elif field == 'position':
                     if type(value) is not int or not 0 <= value < 2**31:
                         raise ValueError('备份中的目录顺序无效')
+                elif field == 'facts_json':
+                    row[field] = _directory_facts(value)
+                elif field == 'identity_json':
+                    if isinstance(value, str):
+                        try:
+                            value = json.loads(value)
+                        except ValueError:
+                            raise ValueError('备份记录格式无效')
+                    if value is not None and (not isinstance(value, dict) or len(json.dumps(value, ensure_ascii=False)) > 2 * 1024 * 1024):
+                        raise ValueError('备份记录格式无效')
+                    row[field] = value
                 elif field == 'byte_size':
                     from backend.services.saved_materials import MAX_ATTACHMENT_BYTES
                     if type(value) is not int or not 0 <= value <= max(MAX_ATTACHMENT_BYTES,int(current_app.config.get('SAVED_ATTACHMENT_MAX_BYTES',MAX_ATTACHMENT_BYTES))):
@@ -434,7 +541,14 @@ def merge_data(data, progress=None):
             elif entry.school_id is None:
                 entry.school_id = school.id
             school_map[row['id']] = school
-        dept_index = {(d.school_id, _url(d.list_url), d.name.strip(), d.kind): d for d in Department.query.order_by(Department.id.desc()).all()}
+        from collections import defaultdict
+        from backend.services.source_transfer import ImportSourceIdentities
+        source_identities = ImportSourceIdentities()
+        school_rows = {row['id']: dict(name=row['name'], url=row.get('url') or '') for row in data['schools']}
+        dept_index = defaultdict(list)
+        for d in Department.query.order_by(Department.id).all():
+            dept_index[(d.school_id, _url(d.list_url), d.name.strip(), d.kind)].append(d)
+        structure_index = {d.structure_key: d for d in Department.query.filter(Department.structure_key.isnot(None))}
         dept_map = {}
         source_reviews = []
         for row in _rows_progress(data['departments'], progress, 'merging_departments'):
@@ -442,18 +556,35 @@ def merge_data(data, progress=None):
             if kind not in ('column', 'unit', 'group'):
                 raise ValueError('备份中的部门类型无效')
             key = (school_map[row['school_id']].id, _url(row.get('list_url')), row['name'].strip(), kind)
-            dept = dept_index.get(key)
+            structure_key = row.get('structure_key')
+            transfer_key = None
+            if kind == 'column':
+                dept, transfer_key = source_identities.resolve(row, school_rows[row['school_id']], key[0], dept_index[key],
+                    structured=structure_index.get(structure_key) if structure_key else None)
+            else:
+                matches = dept_index[key]
+                dept = structure_index.get(structure_key) if structure_key else matches[0] if len(matches) == 1 else None
+            if dept is not None and structure_key and (dept.school_id != key[0] or dept.kind != kind):
+                raise ValueError('备份中的目录身份与现有学校或类型冲突')
             if dept is None:
                 values = {c: row.get(c) for c in TABLES['departments'][1] if c not in ('id', 'school_id')}
                 values['kind'] = kind
+                if isinstance(values.get('identity_json'), dict):
+                    values['identity_json'] = dict(values['identity_json'], writer='imported_history')
                 # Ordinary data packages are evidence of history, not authority to
                 # install scraping rules. Complete DB restores use a separate path.
                 for field in ('list_selector', 'title_selector', 'link_selector', 'date_selector', 'content_selector'):
                     values[field] = ''
                 dept = Department(school_id=key[0], **values)
+                if kind == 'column' and row.get('transfer_key'):
+                    dept._import_transfer_key = row['transfer_key']
                 db.session.add(dept); db.session.flush()
-                dept_index[key] = dept
+                dept_index[key].append(dept)
+                if structure_key:
+                    structure_index[structure_key] = dept
                 result['departments_added'] += 1
+            if kind == 'column':
+                source_identities.bind(dept, transfer_key, portable=bool(row.get('transfer_key')))
             dept_map[row['id']] = dept
             if row.get('list_selector'):
                 from backend.services.source_governance import source_config, FIELDS
@@ -527,8 +658,17 @@ def merge_data(data, progress=None):
                           row.get('list_url'), row.get('article_url'), row.get('first_seen_at'), row.get('last_seen_at'))
         for row in _rows_progress(data['department_directory_entries'], progress, 'merging_directories'):
             key = (dept_map[row['parent_id']].id, dept_map[row['department_id']].id)
-            if key[0] != key[1] and db.session.get(DepartmentDirectoryEntry, key) is None:
-                db.session.add(DepartmentDirectoryEntry(parent_id=key[0], department_id=key[1], position=row['position']))
+            if key[0] == key[1]:
+                continue
+            membership = db.session.get(DepartmentDirectoryEntry, key)
+            if membership is None:
+                membership = DepartmentDirectoryEntry(parent_id=key[0], department_id=key[1], position=row['position'])
+                db.session.add(membership)
+            facts = list(membership.facts_json or [])
+            for fact in _directory_facts(row.get('facts_json')):
+                if fact not in facts:
+                    facts.append(fact)
+            membership.facts_json = facts
         for row in _rows_progress(data['announcement_resources'],progress,'merging_attachments'):
             ident = ann_map[row['announcement_id']]
             existing = db.session.get(AnnouncementResource,(ident,row['url_key']))

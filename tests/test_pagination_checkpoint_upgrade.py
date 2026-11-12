@@ -220,7 +220,7 @@ class PaginationCheckpointUpgradeTests(unittest.TestCase):
         job = self.retained_task(key)
         original = copy.deepcopy(job.checkpoint)
         inventory = SimpleNamespace(
-            report=lambda _: {'site': {'root_url': 'https://example.edu.cn/'},
+            report=lambda _: {'site': {'root_url': 'https://example.edu.cn/', 'site_key': 'site'},
                               'pages': [{'url': URL, 'kind': 'channel', 'state': 'fetched', 'label': '通知公告'}]},
             structure=lambda _: {}, snapshot=lambda *_: HTML)
         job.result = dict(job.result, website_not_before=(datetime.utcnow() + timedelta(hours=1)).isoformat())

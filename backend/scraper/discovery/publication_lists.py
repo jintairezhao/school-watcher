@@ -19,12 +19,22 @@ from backend.scraper.date_elements import publication_date_text, infer_publicati
 
 
 def is_more(text):
-    return text in MORE or bool(re.fullmatch(r'(?:read(?:\s+more)?|learn\s+more|more|更多|查看更多|了解(?:更多)?)\s*[+>»]*', text.strip(), re.I))
+    return text in MORE or bool(re.fullmatch(r'(?:read(?:\s+more)?|learn\s+more|more|更多(?:消息|资源)?|查看更多|了解(?:更多)?)\s*[+>»]*', text.strip(), re.I))
 
 
 def title_text(element):
     # Icon-font private-use characters do not belong to a column name.
     return clean(re.sub(r'[\ue000-\uf8ff]', '', element.get_text(' ', strip=True)))
+
+
+def image_more_link(link):
+    """Recognize an explicit image action inside an already identified heading."""
+    images = link.select('img')
+    if title_text(link) or len(images) != 1:
+        return False
+    labels = (link.get('aria-label', ''), link.get('title', ''), images[0].get('alt', ''))
+    return (any(is_more(clean(label)) for label in labels) or
+            any('more' in node.get('class', []) for node in (link, *link.find_all(True))))
 
 
 def listing_alias(block, current, url, target):
@@ -147,6 +157,10 @@ def wrapped_heading(first_item):
 
 
 def heading_evidence(first_item, url, tabs=None):
+    from .module_previews import module_heading
+    reviewed_module = module_heading(first_item, url)
+    if reviewed_module:
+        return reviewed_module
     from .wordpress_publications import archive_heading
     wordpress = archive_heading(first_item, url)
     if wordpress:
@@ -155,8 +169,12 @@ def heading_evidence(first_item, url, tabs=None):
     metinfo = metinfo_heading(first_item, url)
     if metinfo:
         return metinfo
-    from .listing_headings import rightnew_heading
-    listing = rightnew_heading(first_item, url)
+    from .listing_headings import (rightnew_heading, right_news_breadcrumb_heading, zcms_notice_heading, zonghe_module_heading,
+                                  zcms_active_column_heading, zcms_local_navigation_heading, zcms_right_local_heading)
+    listing = (right_news_breadcrumb_heading(first_item, url)
+               or zcms_right_local_heading(first_item, url) or zcms_local_navigation_heading(first_item, url) or zcms_active_column_heading(first_item, url)
+               or zcms_notice_heading(first_item, url) or rightnew_heading(first_item, url)
+               or zonghe_module_heading(first_item, url))
     if listing:
         return listing
     from .cup_news_headings import cup_news_heading
@@ -200,6 +218,8 @@ def heading_evidence(first_item, url, tabs=None):
             if not 2 <= len(name) <= 40 or len(anchors) > 1:
                 return dict(result, heading_ambiguous=True)
             result.update(name=name, heading_locator=locator(title), tab_control_locator=locator(control))
+            if binding.evidence:
+                result['tab_binding_evidence'] = binding.evidence
             if binding.group_control is not None:
                 result.update(column_group_name=clean(binding.group_control.get_text(' ', strip=True)),
                               column_group_locator=locator(binding.group_control))
@@ -304,6 +324,16 @@ def heading_evidence(first_item, url, tabs=None):
         if target and not ARTICLE.search(target) and (text == label or is_more(text)):
             column_url, column_locator = target, locator(link)
             break
+    if not column_url and label and not heading_article_reference:
+        # Some headings expose their archive only through a labelled image
+        # action. Require one distinct target in this exact title block; an
+        # ordinary image or a neighboring module cannot supply the entrance.
+        choices = {target: locator(link) for link in links
+                   if image_more_link(link) and
+                   (target := resolve_page_link(url, link.get('href', '').strip()))
+                   and not ARTICLE.search(target)}
+        if len(choices) == 1:
+            column_url, column_locator = next(iter(choices.items()))
     if not column_url:
         # A "more" button can sit beside the title instead of inside it. Stop at their
         # nearest shared container so adjacent widgets cannot lend one another a URL.
@@ -373,6 +403,25 @@ def samples_for(items, config, url):
     return list(samples.values()), max(dates) if dates else None, list(article_links.values())
 
 
+def _pagination_only_item(item, config, url):
+    """Recognize a whole pager, preserving any observed publication content."""
+    text = item.get_text(' ', strip=True)
+    controls = re.compile(r'首页|尾页|第一页|最后一页|最末页|末页|上一页|下一页|上页|下页|'
+                          r'\b(?:first|last|previous|prev|next)\b', re.I)
+    if len({m.group().lower() for m in controls.finditer(text)}) < 2:
+        return False
+    remainder, positions = re.subn(r'\bpage\s+\d+\s*(?:of|/)\s*\d+\b|'
+        r'(?<![\d/])\d+\s*/\s*\d+(?![\d/])', ' ', text, flags=re.I)
+    if not positions:
+        return False
+    remainder = re.sub(r'共\s*\d+\s*(?:条|项|页)', ' ', remainder)
+    remainder = controls.sub(' ', remainder)
+    # Extra words are unknown content, not proof of a pagination-only row.
+    if re.sub(r'[\s\d:：/|\[\]()（）,，.·<>«»‹›…-]+', '', remainder):
+        return False
+    return not samples_for([item], config, url)[0]
+
+
 def publication_lists(html, url):
     soup = BeautifulSoup(html, 'lxml')
     from .wordpress_publications import POST_LIST, page_kind
@@ -382,14 +431,18 @@ def publication_lists(html, url):
     reviewed_majors = major_scopes(soup, url)
     major_regions = {id(scope) for scope in reviewed_majors}
     spanning_majors = {id(parent) for scope in reviewed_majors for parent in scope.parents}
-    tabs = tab_bindings(soup, url)
+    tabs = tab_bindings(soup, url, html)
     spanning_panels = {id(ancestor) for binding in tabs.values() for ancestor in [binding.panel, *binding.panel.parents]}
-    configs = [dict(p, method='profile_match', confidence=0.95) for p in load_selector_profiles()
+    # Matching a list template proves nothing about another page's body CSS.
+    # Retain its suggestion as provenance; article trials establish body evidence.
+    configs = [dict(p, suggested_content_selector=p.get('content_selector', ''),
+                    content_selector='', method='profile_match', confidence=0.95) for p in load_selector_profiles()
                if p.get('list_selector', '').strip() not in ('a', 'a[href]')]
     from .medical_publications import medical_configs
     reviewed_configs, reviewed_widgets = medical_configs(soup, url)
     from .metinfo_publications import METINFO_CONFIG
-    configs = reviewed_configs + [POST_LIST, METINFO_CONFIG] + configs
+    from .module_previews import GQT_CONFIG, CAIWU_CONFIG
+    configs = reviewed_configs + [GQT_CONFIG, CAIWU_CONFIG, POST_LIST, METINFO_CONFIG] + configs
     # The analyzer removes script nodes; retain an untouched tree for evidence locators.
     for candidate in find_repeating_blocks(BeautifulSoup(html, 'lxml'), min_repeat=2, min_text_len=8):
         # Small or undated official lists remain eligible; article evidence is checked below.
@@ -434,15 +487,49 @@ def publication_lists(html, url):
                 for parent in item.parents if parent.name not in ('body', 'html', '[document]'))
             if navigation or id(item) in spanning_panels:
                 continue
-            groups[id(item.parent)].append(item)
+            group = item.parent
+            if config.get('group_container_selector'):
+                group = next((parent for parent in item.parents if soupsieve.match(config['group_container_selector'],parent)),None)
+            if group is not None:
+                groups[id(group)].append(item)
         for items in groups.values():
             if len(items) < config.get('minimum_items', 2):
                 continue
             parent = items[0].parent
+            nested_group = config.get('group_container_selector')
+            if nested_group:
+                parent = next(parent for parent in items[0].parents if soupsieve.match(nested_group,parent))
             # Keep the original selector as a filter, scoped to this concrete list parent.
             parent_selector = scope_selector(parent)
-            selector = parent_selector + ' > :is(' + config['list_selector'] + ')'
+            selector = parent_selector + (' :is(' if nested_group else ' > :is(') + config['list_selector'] + ')'
             selected = soup.select(selector)
+            pager_items = [item for item in selected if _pagination_only_item(item, config, url)]
+            excluded_controls, unresolved_controls = [], []
+            if pager_items:
+                witnesses = [dict(kind='pagination_controls', locator=locator(item),
+                    text=item.get_text(' ', strip=True)[:180]) for item in pager_items]
+                scopes = set()
+                for item in pager_items:
+                    for node in [item, *item.find_all(True)]:
+                        for value in node.get('class', []):
+                            if re.fullmatch(r'pages?|paging|pagination|pager|pagebar|page[-_]nav|pagelist|fenye', value, re.I):
+                                scopes.add('.' + soupsieve.escape(value) + ' a')
+                anchor = 'a[href]'
+                if scopes:
+                    anchor += ':not(:is(' + ','.join(sorted(scopes)) + '))'
+                narrowed = selector + ':has(' + anchor + ')'
+                filtered = soup.select(narrowed)
+                wanted = {id(item) for item in selected} - {id(item) for item in pager_items}
+                # A row number changes when new articles arrive. Use observable
+                # link roles and require exact agreement on this material.
+                if {id(item) for item in filtered} == wanted:
+                    selector, selected, items = narrowed, filtered, filtered
+                    excluded_controls = witnesses
+                    if len(selected) < config.get('minimum_items', 2):
+                        continue
+                else:
+                    # Keep uncertain content and the strict validator's result.
+                    unresolved_controls = witnesses
             effective = config
             if config['method'] == 'dom_analysis':
                 effective = dict(config, date_selector=infer_publication_date_selector(selected))
@@ -456,6 +543,13 @@ def publication_lists(html, url):
             if len(samples) < config.get('minimum_items', 2) or len(samples) / max(1, len(selected)) < 0.6:
                 continue
             heading = heading_evidence(items[0], url, tabs)
+            if heading.get('module_preview'):
+                module = soup.select_one(heading.pop('module_container_locator'))
+                heading['module_preview'] = module is parent
+            if (config.get('required_heading_method') and heading.get('heading_method')!=config['required_heading_method']
+                    or config.get('require_named_heading') and (not heading.get('name') or heading.get('heading_ambiguous'))
+                    or config.get('require_module_preview') and not heading.get('module_preview')):
+                continue
             # Card headings can themselves be article links, with dates or
             # other prefixes. Membership in this observed list is stronger
             # evidence than a CMS URL pattern or exact title-string equality.
@@ -483,6 +577,10 @@ def publication_lists(html, url):
                           publication_dates_complete=all(s['date'] for s in samples),
                           latest_publication=latest, verified=False,
                           identity=hashlib.sha256((url + '\0' + name + '\0' + parent_selector).encode()).hexdigest()[:24])
+            if excluded_controls:
+                result['excluded_list_controls'] = excluded_controls
+            if unresolved_controls:
+                result['unresolved_list_controls'] = unresolved_controls
             found.append(result)
 
     # Multiple profiles commonly describe the same items; retain distinct named official scopes.
@@ -532,6 +630,14 @@ def publication_lists(html, url):
     for feed in result:
         scope = scopes[feed['container_locator']]
         occurrences = {(link['url'], link['locator']) for link in feed['article_links']}
+        if not feed['name'] and not feed.get('module_preview') and scope is not None and any(
+                parent.get('module_preview') and (parent_scope:=scopes[parent['container_locator']]) is not None
+                and any(ancestor is parent_scope for ancestor in scope.parents)
+                and occurrences <= {(link['url'],link['locator']) for link in parent['article_links']}
+                for parent in result):
+            # This is the lower half of a reviewed lead-plus-list module,
+            # not an independently named column that may drop the lead item.
+            continue
         covered = set()
         if not feed['name'] and scope is not None:
             for child in result:

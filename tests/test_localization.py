@@ -75,7 +75,8 @@ class LocaleFrameworkTests(unittest.TestCase):
         after=BeautifulSoup(self.client.get('/admin/storage').data,'html.parser')
         self.assertEqual(modes,[node['data-cleanup'] for node in after.select('[data-cleanup]')])
         self.assertTrue(after.select('[data-cleanup="discovery"]'))
-        self.assertEqual(after.select_one('[data-storage-group="调查缓存"]').find_previous_sibling('th').get_text(strip=True),'Discovery cache')
+        self.assertTrue(after.select('[data-cleanup="cache"]'))
+        self.assertEqual(after.select_one('[data-storage-group="缓存"]').find_previous_sibling('th').get_text(strip=True),'Cache')
         response=self.client.post('/api/collection/setup',json={'ai_mode':'rules','profiles':[]},headers=self.headers)
         self.assertEqual(response.status_code,400)
         self.assertTrue(response.json['error'].startswith('Select at least one'))
@@ -115,6 +116,25 @@ class InternationalDiscoveryTermsTests(unittest.TestCase):
     def test_registered_ui_messages_have_complete_catalog_entries(self):
         from scripts.checks.check_localization_catalog import audit
         self.assertEqual(audit()['problems'],[])
+
+    def test_dynamic_translation_markers_require_catalog_keys(self):
+        from scripts.checks.check_localization_catalog import unregistered_script_copy
+        source="count.dataset.i18nAriaLabel=known?'已保存':'数量未知'; count.textContent='未登记正文';"
+        self.assertEqual(unregistered_script_copy(source,{'已保存':'Saved','数量未知':'Unknown'}),
+            ['Unregistered script UI text: 未登记正文'])
+        self.assertIn('Missing script UI translation: 数量未知',unregistered_script_copy(source,{'已保存':'Saved'}))
+
+    def test_every_inbox_progress_label_has_an_english_translation(self):
+        from backend.services.inbox_refresh import source_status_label
+        cases=[('waiting',''),('unloaded',''),('pending',''),('running',''),('unavailable','')]
+        cases += [('failed',code) for code in ('source_login_required','http_429','needs_adapter',
+            'http_404','fragment_route','unknown_failure')]
+        catalog=english_catalog()
+        for state,code in cases:
+            message=source_status_label(state,'',code)
+            self.assertTrue(message,(state,code))
+            self.assertIn(message,catalog)
+            self.assertNotEqual(catalog[message],message)
 
     def test_english_terms_use_the_existing_need_identifiers(self):
         samples={'academic_units':'Schools and Departments','teaching':'Academic Calendar',

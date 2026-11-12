@@ -22,6 +22,7 @@ from backend.services.announcement_identity import upsert_listing
 from backend.services.announcement_sources import record_source
 from backend.services.backups import create_backup, restore_backup
 from backend.services.database_transfer import sqlite_to_postgres
+from backend.services.structure_versions import current_version, changes_since
 
 
 @contextmanager
@@ -40,6 +41,14 @@ def postgres_database():
 
 
 class DatabasePortabilityTests(unittest.TestCase):
+    def test_migrations_keep_existing_application_error_logger_enabled(self):
+        import logging
+        application_logger = logging.getLogger('school_watcher.migration_application')
+        application_logger.disabled = False
+        self.app()
+        with self.assertLogs(application_logger, 'ERROR'):
+            application_logger.error('Post-migration failure must remain observable')
+
     def setUp(self):
         self.scratch = tempfile.TemporaryDirectory(prefix='watcher-portability-')
         self.root = Path(self.scratch.name)
@@ -161,6 +170,7 @@ class DatabasePortabilityTests(unittest.TestCase):
         source_app = self.app()
         with source_app.app_context():
             ids = self.seed()
+            source_version = current_version(ids[0])
         self.dispose(source_app)
         before = hashlib.sha256((self.root / 'source.db').read_bytes()).digest()
         with postgres_database() as uri:
@@ -170,6 +180,11 @@ class DatabasePortabilityTests(unittest.TestCase):
             app = self.app(uri)
             with app.app_context():
                 self.verify_business(ids)
+                moved_version = current_version(ids[0])
+                self.assertNotEqual(moved_version['epoch'], source_version['epoch'])
+                self.assertEqual(moved_version['revision'], 1)
+                self.assertTrue(changes_since(ids[0], source_version['epoch'],
+                    source_version['revision'])['reset_required'])
                 self.assertEqual(AppConfig.get('check_interval'), '30')
                 review = AppConfig.query.filter_by(key='ai_restore_review_required').one()
                 self.assertEqual(review.value, '1')
@@ -186,6 +201,7 @@ class DatabasePortabilityTests(unittest.TestCase):
                 extra, _ = upsert_listing(department, '新库独有通知', 'https://fixture.example.edu/newer-only')
                 record_source(extra, department); db.session.commit()
                 merge_data(recovered)
+                self.assertEqual(current_version(ids[0])['epoch'], moved_version['epoch'])
                 self.assertEqual(Announcement.query.count(), 2)
                 self.verify_business(ids)
                 task = BackgroundTask.query.one()
@@ -197,11 +213,17 @@ class DatabasePortabilityTests(unittest.TestCase):
                 db.session.add(school); db.session.commit()
                 self.assertGreater(school.id, ids[0])
                 backup = create_backup()
+                backup_version = current_version(ids[0])
             with postgres_database() as restore_uri:
                 restore_backup(self.root / 'backups' / backup['backup'], self.root / 'restored-pg', postgres_url=restore_uri)
                 restored = self.app(restore_uri)
                 with restored.app_context():
                     self.verify_business(ids)
+                    restored_version = current_version(ids[0])
+                    self.assertNotEqual(restored_version['epoch'], backup_version['epoch'])
+                    self.assertEqual(restored_version['revision'], 1)
+                    self.assertTrue(changes_since(ids[0], backup_version['epoch'],
+                        backup_version['revision'])['reset_required'])
                 self.dispose(restored)
             self.dispose(app)
 

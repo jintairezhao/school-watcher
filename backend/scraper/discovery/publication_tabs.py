@@ -1,5 +1,6 @@
 """Bind a publication panel to its explicit control; never infer tab order."""
 import re
+import hashlib
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
@@ -14,6 +15,7 @@ class TabBinding:
     column_script: object = None
     tab_index: int = -1
     group_control: object = None
+    evidence: object = None
 
 
 def script_tokens(script):
@@ -111,7 +113,57 @@ def language_indexed_tabs(soup, url):
     return result
 
 
-def tab_bindings(soup, url):
+def student_indexed_tabs(soup, url, html):
+    """Use the retained literal handler, with its local DOM traversals checked."""
+    parsed = urlsplit(url)
+    if parsed.hostname != 'www.cupk.edu.cn' or parsed.path != '/xszz/':
+        return {}
+    from .script_materials import verified_scripts
+    handler = script_tokens('''$(".c-zizhu-notice-module-detail__tab-ul li").click(function() {
+        var curIndex = $(this).index();
+        $(this).parents().siblings(".c-zizhu-module__head-more").children(".c-zizhu-module__body-a").hide().eq(curIndex).show();
+        $(this).parents().children("li").eq(curIndex).addClass("cur").siblings().removeClass('cur');
+        $(this).parents().parents().siblings(".c-zizhu-notice-module-detail__tab-div").hide().eq(curIndex).show();
+    });''')
+    header = script_tokens('$(".c-zizhu-notice-module-detail__tab-ul li").click(')
+    scripts = [(script_tokens(text), proof) for _, text, proof in verified_scripts(html, url, soup)]
+    scripts += [(script_tokens(s.get_text()), None) for s in soup.find_all('script', src=False)]
+    matched = [proof for tokens, proof in scripts if occurrences(tokens, handler) == 1]
+    valid_script = (len(matched) == 1 and matched[0] is not None
+                    and sum(occurrences(tokens, header) for tokens, _ in scripts) == 1)
+    result = {id(panel): TabBinding(panel, None) for panel in
+              soup.select('.c-zizhu-notice-module-detail__tab-div')}
+    for group in soup.select('.c-zizhu-notice-module-detail__tab-ul'):
+        head, module = group.parent, group.parent.parent
+        controls = group.find_all('li', recursive=False)
+        panels = module.select(':scope > .c-zizhu-notice-module-detail__tab-div')
+        more = head.select(':scope > .c-zizhu-module__head-more > .c-zizhu-module__body-a')
+        # The exact handler traverses these sibling collections. Extra nested
+        # controls, heads or panels would change its index domain.
+        valid = (valid_script and 'c-zizhu-module__head' in head.get('class', [])
+                 and len(module.select(':scope > .c-zizhu-module__head')) == 1
+                 and len(head.select('.c-zizhu-notice-module-detail__tab-ul')) == 1
+                 and len(module.select('.c-zizhu-notice-module-detail__tab-div')) == len(panels)
+                 and len(controls) == len(panels) == len(more) > 1
+                 and group.find_all('li') == controls
+                 and group.find_all(recursive=False) == controls
+                 and len(head.select('.c-zizhu-module__head-more')) == 1
+                 and head.select('.c-zizhu-module__body-a') == more)
+        for index, panel in enumerate(panels):
+            proof = dict(matched[0], method='retained_external_indexed_handler', tab_index=index,
+                         handler_hash=hashlib.sha256(' '.join(handler).encode()).hexdigest()) if valid else None
+            binding = TabBinding(panel, controls[index] if valid else None, more[index] if valid else None,
+                method='official_indexed_tab_control', tab_index=index if valid else -1, evidence=proof)
+            result[id(panel)] = binding
+            if valid:
+                result[id(more[index])] = binding
+        if not valid:
+            for link in more:
+                result[id(link)] = TabBinding(module, None)
+    return result
+
+
+def tab_bindings(soup, url, html=''):
     candidates = []
     for control in soup.select('[role="tab"][aria-controls]'):
         targets = control['aria-controls'].split()
@@ -147,7 +199,8 @@ def tab_bindings(soup, url):
             bindings[key] = TabBinding(panel, None)
         else:
             bindings[key] = TabBinding(panel, control)
-    adapted = {**office_indexed_tabs(soup, url), **language_indexed_tabs(soup, url)}
+    adapted = {**office_indexed_tabs(soup, url), **language_indexed_tabs(soup, url),
+               **student_indexed_tabs(soup, url, html)}
     for key, binding in adapted.items():
         if key in bindings and bindings[key].control is not binding.control:
             bindings[key] = TabBinding(binding.panel, None)

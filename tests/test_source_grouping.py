@@ -66,7 +66,9 @@ class GroupingRecoveryTests(unittest.TestCase):
         self.assertEqual(self.source.list_url, CMS)
         self.assertEqual(self.source.list_selector, 'li.middleArticle--articleList')
         self.assertEqual(self.subscription.department_ids, [self.source.id])
-        self.assertEqual(Department.query.count(), 1)
+        self.assertEqual(Department.query.filter_by(kind='column').count(), 1)
+        self.assertEqual(Department.query.filter_by(kind='unit').count(), 1)
+        self.assertEqual(Department.query.filter_by(kind='group').count(), 1)
         self.assertEqual(result['gaps'], [])
 
     def test_failed_official_directory_leaves_an_explicit_gap_and_no_guessed_group(self):

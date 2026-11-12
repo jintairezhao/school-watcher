@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "school_name": "东北大学",
+  "observed_at": "2026-11-04T06:33:18.760919+00:00",
+  "use_kind": "program_retry_checkpoint_fix_informed_by_retained_native_failure_records",
+  "sampling_changed_in_this_stage": false,
+  "new_site_or_model_requests": 0,
+  "report": "deploy/STRUCTURE_ONBOARDING_NETWORK_CHECKPOINT_FIX_20261104.md",
+  "program_change_record": ".local/structure-facts-20261021/onboarding-network-checkpoint-fix-20261104/stage-delivery.json",
+  "old_window_fixed_policy_comparison_eligible": false,
+  "independent_for_new_retry_controller": false,
+  "threshold_acceptance_sample": false,
+  "original_materials_and_failure_records_preserved": true,
+  "additional_program_use": {
+    "kind": "ordinary_column_verdict_persistence_before_acquisition_handoff",
+    "record": ".local/structure-facts-20261021/column-trial-checkpoint-fix-20261104/stage-delivery.json",
+    "new_site_requests": 0,
+    "model_calls": 0,
+    "independent_for_new_controller": false
+  },
+  "additional_headline_field_program_use": {
+    "kind": "literal_abbreviated_headline_field_identification_from_retained_homepage_dom",
+    "record": ".local/structure-facts-20261021/abbreviated-headline-fix-20261104/stage-delivery.json",
+    "new_site_requests": 0,
+    "model_calls": 0,
+    "independent_for_modified_title_extraction": false,
+    "original_records_preserved": true
+  },
+  "additional_combined_replay_use": {
+    "record": ".local/structure-facts-20261021/combined-title-checkpoint-20261104/stage-delivery.json",
+    "independent_acceptance": false,
+    "new_requests": 0
+  },
+  "additional_profile_body_program_use": {
+    "record": ".local/structure-facts-20261021/unverified-profile-body-fix-20261104/stage-delivery.json",
+    "new_site_requests": 0,
+    "model_calls": 0,
+    "independent_acceptance": false,
+    "retained_response_use": "two readable article bodies used to correct default rule semantics"
+  },
+  "additional_saved_navigation_program_use": {
+    "record": ".local/structure-facts-20261021/navigation-saved-application-fix-20261104/stage-delivery.json",
+    "new_site_requests": 0,
+    "model_calls": 0,
+    "independent_acceptance": false
+  }
+}

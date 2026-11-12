@@ -1,0 +1,670 @@
+{
+  "schema_version": 1,
+  "school_name": "西南石油大学",
+  "official_root": "https://www.swpu.edu.cn/",
+  "official_root_reference": {
+    "url": "https://www.swpu.edu.cn/",
+    "requested_url": "https://www.swpu.edu.cn/",
+    "observed_at": "2026-10-27T12:04:36.856779+00:00",
+    "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+    "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+    "http_status": 200
+  },
+  "recorded_at": "2026-10-27T12:18:53.122792+00:00",
+  "purpose": "Independent candidate target review only;not production exploration,policy tuning,or a certified experiment episode",
+  "candidate_targets": [
+    {
+      "id": 1,
+      "name": "石油与天然气工程学院／通知公告",
+      "url": "http://www.swpu.edu.cn/sgy/tzgg.htm",
+      "actual_page_title": "通知公告-石油与天然气工程学院",
+      "list_reference": {
+        "url": "http://www.swpu.edu.cn/sgy/tzgg.htm",
+        "requested_url": "http://www.swpu.edu.cn/sgy/tzgg.htm",
+        "observed_at": "2026-10-27T12:12:14.593525+00:00",
+        "raw_sha256": "743cabeb21fde6194a7b78bedd09f7dd5fffcc9c64953585bdc08d889d5167a4",
+        "raw_reference": ".local/structure-facts-20261021/swpu-curation-columns-online-20261027/743cabeb21fde6194a7b78bedd09f7dd5fffcc9c64953585bdc08d889d5167a4.html.gz",
+        "http_status": 200
+      },
+      "sample_article_links": [
+        {
+          "title": "石工院关于2026年硕士研究生学位论文开题论证的通知",
+          "url": "http://www.swpu.edu.cn/sgy/info/1086/69157.htm"
+        },
+        {
+          "title": "石工院关于2026年硕士研究生学位论文中期检查的通知",
+          "url": "http://www.swpu.edu.cn/sgy/info/1086/69147.htm"
+        },
+        {
+          "title": "石工院关于2026年专业学位研究生专业实践集中考核的通知",
+          "url": "http://www.swpu.edu.cn/sgy/info/1086/69137.htm"
+        }
+      ],
+      "visible_article_link_count": 10,
+      "access_path": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(10) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "石油与天然气工程学院",
+          "href": "http://www.swpu.edu.cn/sgy",
+          "target_url": "http://www.swpu.edu.cn/sgy"
+        },
+        {
+          "url": "http://www.swpu.edu.cn/sgy/",
+          "requested_url": "http://www.swpu.edu.cn/sgy",
+          "observed_at": "2026-10-27T12:06:52.210648+00:00",
+          "raw_sha256": "82df458bb978eaf300ef759941317dd2c2897b87b67381d9f43975e77078e501",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/82df458bb978eaf300ef759941317dd2c2897b87b67381d9f43975e77078e501.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "更多",
+          "href": "tzgg.htm",
+          "target_url": "http://www.swpu.edu.cn/sgy/tzgg.htm"
+        }
+      ],
+      "publisher_context_links": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(10) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "石油与天然气工程学院",
+          "href": "http://www.swpu.edu.cn/sgy",
+          "target_url": "http://www.swpu.edu.cn/sgy"
+        },
+        {
+          "url": "http://www.swpu.edu.cn/sgy/",
+          "requested_url": "http://www.swpu.edu.cn/sgy",
+          "observed_at": "2026-10-27T12:06:52.210648+00:00",
+          "raw_sha256": "82df458bb978eaf300ef759941317dd2c2897b87b67381d9f43975e77078e501",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/82df458bb978eaf300ef759941317dd2c2897b87b67381d9f43975e77078e501.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "更多",
+          "href": "tzgg.htm",
+          "target_url": "http://www.swpu.edu.cn/sgy/tzgg.htm"
+        }
+      ],
+      "observed_unit_redirect": {
+        "requested_url": "http://www.swpu.edu.cn/sgy",
+        "final_url": "http://www.swpu.edu.cn/sgy/"
+      },
+      "reference_name_basis": "Original page title and observed unit navigation context; raw parser hints are not authority",
+      "human_confirmed_required": true,
+      "human_name_and_address_confirmed": true,
+      "body_and_pagination_validated": false,
+      "source_connected": false,
+      "assessment_only": true,
+      "human_review": "tests/acceptance/swpu_target_review_20261027.json"
+    },
+    {
+      "id": 2,
+      "name": "地球科学与技术学院／通知公告",
+      "url": "http://www.swpu.edu.cn/dky/tzgg.htm",
+      "actual_page_title": "通知公告-地球科学与技术学院",
+      "list_reference": {
+        "url": "http://www.swpu.edu.cn/dky/tzgg.htm",
+        "requested_url": "http://www.swpu.edu.cn/dky/tzgg.htm",
+        "observed_at": "2026-10-27T12:12:15.373080+00:00",
+        "raw_sha256": "162f4e19910427b589d0469d09ccda469b487be37c77d1021d11f2d3da7b2e6a",
+        "raw_reference": ".local/structure-facts-20261021/swpu-curation-columns-online-20261027/162f4e19910427b589d0469d09ccda469b487be37c77d1021d11f2d3da7b2e6a.html.gz",
+        "http_status": 200
+      },
+      "sample_article_links": [
+        {
+          "title": "“我的地科好老师” 育人故事征集通知",
+          "url": "http://www.swpu.edu.cn/dky/info/1012/43921.htm"
+        },
+        {
+          "title": "关于开展地科院2026年“实践归来话成长”社会实践成果展示汇报评比活动的通知",
+          "url": "http://www.swpu.edu.cn/dky/info/1012/43511.htm"
+        },
+        {
+          "title": "地科院关于开展“岩途”考研朋辈领航团助力深造答疑辅导活动的通知",
+          "url": "http://www.swpu.edu.cn/dky/info/1012/43451.htm"
+        }
+      ],
+      "visible_article_link_count": 19,
+      "access_path": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(10) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "地球科学与技术学院",
+          "href": "http://www.swpu.edu.cn/dky",
+          "target_url": "http://www.swpu.edu.cn/dky"
+        },
+        {
+          "url": "http://www.swpu.edu.cn/dky/",
+          "requested_url": "http://www.swpu.edu.cn/dky",
+          "observed_at": "2026-10-27T12:06:53.728106+00:00",
+          "raw_sha256": "516e75036579736fb58122c3d15417008943f856203ffc65269aa376f65756b6",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/516e75036579736fb58122c3d15417008943f856203ffc65269aa376f65756b6.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "全部",
+          "href": "tzgg.htm",
+          "target_url": "http://www.swpu.edu.cn/dky/tzgg.htm"
+        }
+      ],
+      "publisher_context_links": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(10) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "地球科学与技术学院",
+          "href": "http://www.swpu.edu.cn/dky",
+          "target_url": "http://www.swpu.edu.cn/dky"
+        },
+        {
+          "url": "http://www.swpu.edu.cn/dky/",
+          "requested_url": "http://www.swpu.edu.cn/dky",
+          "observed_at": "2026-10-27T12:06:53.728106+00:00",
+          "raw_sha256": "516e75036579736fb58122c3d15417008943f856203ffc65269aa376f65756b6",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/516e75036579736fb58122c3d15417008943f856203ffc65269aa376f65756b6.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "全部",
+          "href": "tzgg.htm",
+          "target_url": "http://www.swpu.edu.cn/dky/tzgg.htm"
+        }
+      ],
+      "observed_unit_redirect": {
+        "requested_url": "http://www.swpu.edu.cn/dky",
+        "final_url": "http://www.swpu.edu.cn/dky/"
+      },
+      "reference_name_basis": "Original page title and observed unit navigation context; raw parser hints are not authority",
+      "human_confirmed_required": true,
+      "human_name_and_address_confirmed": true,
+      "body_and_pagination_validated": false,
+      "source_connected": false,
+      "assessment_only": true,
+      "human_review": "tests/acceptance/swpu_target_review_20261027.json"
+    },
+    {
+      "id": 3,
+      "name": "教务处／通知公告",
+      "url": "https://www.swpu.edu.cn/dean/tzgg.htm",
+      "actual_page_title": "通知公告-西南石油大学教务处 - Dean's Office of Southwest Petroleum University",
+      "list_reference": {
+        "url": "https://www.swpu.edu.cn/dean/tzgg.htm",
+        "requested_url": "https://www.swpu.edu.cn/dean/tzgg.htm",
+        "observed_at": "2026-10-27T12:12:16.516524+00:00",
+        "raw_sha256": "086adbd2f31ed2b3d6431bfd9bdcdd3296eb1b0c611368823f76e8feed81c51d",
+        "raw_reference": ".local/structure-facts-20261021/swpu-curation-columns-online-20261027/086adbd2f31ed2b3d6431bfd9bdcdd3296eb1b0c611368823f76e8feed81c51d.html.gz",
+        "http_status": 200
+      },
+      "sample_article_links": [
+        {
+          "title": "关于征集优质课程资源上线国家高等教育智慧教育平台的通知",
+          "url": "https://www.swpu.edu.cn/dean/info/1050/16441.htm"
+        },
+        {
+          "title": "关于公布2026年优秀教研室主任和优秀教学管理人员入围会评名单的通知",
+          "url": "https://www.swpu.edu.cn/dean/info/1050/16431.htm"
+        },
+        {
+          "title": "关于2027届本科毕业生图像信息采集工作安排的通知",
+          "url": "https://www.swpu.edu.cn/dean/info/1051/16401.htm"
+        }
+      ],
+      "visible_article_link_count": 10,
+      "access_path": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "本科生教育",
+          "href": "https://www.swpu.edu.cn/dean/",
+          "target_url": "https://www.swpu.edu.cn/dean/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/dean/",
+          "requested_url": "https://www.swpu.edu.cn/dean/",
+          "observed_at": "2026-10-27T12:06:54.855076+00:00",
+          "raw_sha256": "37310157991c323ecfb99cd0a5688a5df43983219e24071e1f4cce2d37d75387",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/37310157991c323ecfb99cd0a5688a5df43983219e24071e1f4cce2d37d75387.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "更多>>",
+          "href": "tzgg.htm",
+          "target_url": "https://www.swpu.edu.cn/dean/tzgg.htm"
+        }
+      ],
+      "publisher_context_links": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "本科生教育",
+          "href": "https://www.swpu.edu.cn/dean/",
+          "target_url": "https://www.swpu.edu.cn/dean/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/dean/",
+          "requested_url": "https://www.swpu.edu.cn/dean/",
+          "observed_at": "2026-10-27T12:06:54.855076+00:00",
+          "raw_sha256": "37310157991c323ecfb99cd0a5688a5df43983219e24071e1f4cce2d37d75387",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/37310157991c323ecfb99cd0a5688a5df43983219e24071e1f4cce2d37d75387.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "更多>>",
+          "href": "tzgg.htm",
+          "target_url": "https://www.swpu.edu.cn/dean/tzgg.htm"
+        }
+      ],
+      "observed_unit_redirect": null,
+      "reference_name_basis": "Original page title and observed unit navigation context; raw parser hints are not authority",
+      "human_confirmed_required": true,
+      "human_name_and_address_confirmed": true,
+      "body_and_pagination_validated": false,
+      "source_connected": false,
+      "assessment_only": true,
+      "human_review": "tests/acceptance/swpu_target_review_20261027.json"
+    },
+    {
+      "id": 4,
+      "name": "研究生院／培养管理／通知公告",
+      "url": "https://www.swpu.edu.cn/gs/pygl/tzgg.htm",
+      "actual_page_title": "通知公告-西南石油大学研究生院",
+      "list_reference": {
+        "url": "https://www.swpu.edu.cn/gs/pygl/tzgg.htm",
+        "requested_url": "https://www.swpu.edu.cn/gs/pygl/tzgg.htm",
+        "observed_at": "2026-10-27T12:12:17.379957+00:00",
+        "raw_sha256": "a79a1e8d04b4e468d551fa3973587e3890ad94a44a0805fb4d162b889b5f8a59",
+        "raw_reference": ".local/structure-facts-20261021/swpu-curation-columns-online-20261027/a79a1e8d04b4e468d551fa3973587e3890ad94a44a0805fb4d162b889b5f8a59.html.gz",
+        "http_status": 200
+      },
+      "sample_article_links": [
+        {
+          "title": "2026年秋季学期《新时代中国特色社会主义理论与实践》考试通知",
+          "url": "https://www.swpu.edu.cn/gs/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1078&wbnewsid=8830"
+        },
+        {
+          "title": "关于开展2026年度专业学位研究生案例库项目申报工作的通知",
+          "url": "https://www.swpu.edu.cn/gs/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1078&wbnewsid=8810"
+        },
+        {
+          "title": "关于开展2026年研究生AI+课程建设项目申报工作的通知",
+          "url": "https://www.swpu.edu.cn/gs/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1078&wbnewsid=8790"
+        }
+      ],
+      "visible_article_link_count": 20,
+      "access_path": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "研究生教育",
+          "href": "https://www.swpu.edu.cn/gs/",
+          "target_url": "https://www.swpu.edu.cn/gs/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/gs/",
+          "requested_url": "https://www.swpu.edu.cn/gs/",
+          "observed_at": "2026-10-27T12:06:55.757487+00:00",
+          "raw_sha256": "fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "通知公告",
+          "href": "pygl/tzgg.htm",
+          "target_url": "https://www.swpu.edu.cn/gs/pygl/tzgg.htm"
+        }
+      ],
+      "publisher_context_links": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "研究生教育",
+          "href": "https://www.swpu.edu.cn/gs/",
+          "target_url": "https://www.swpu.edu.cn/gs/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/gs/",
+          "requested_url": "https://www.swpu.edu.cn/gs/",
+          "observed_at": "2026-10-27T12:06:55.757487+00:00",
+          "raw_sha256": "fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "通知公告",
+          "href": "pygl/tzgg.htm",
+          "target_url": "https://www.swpu.edu.cn/gs/pygl/tzgg.htm"
+        }
+      ],
+      "observed_unit_redirect": null,
+      "reference_name_basis": "Original page title and observed unit navigation context; raw parser hints are not authority",
+      "human_confirmed_required": true,
+      "human_name_and_address_confirmed": true,
+      "body_and_pagination_validated": false,
+      "source_connected": false,
+      "assessment_only": true,
+      "human_review": "tests/acceptance/swpu_target_review_20261027.json"
+    },
+    {
+      "id": 5,
+      "name": "研究生院／学位管理／通知公告",
+      "url": "https://www.swpu.edu.cn/gs/xwgl/tzgg.htm",
+      "actual_page_title": "通知公告-西南石油大学研究生院",
+      "list_reference": {
+        "url": "https://www.swpu.edu.cn/gs/xwgl/tzgg.htm",
+        "requested_url": "https://www.swpu.edu.cn/gs/xwgl/tzgg.htm",
+        "observed_at": "2026-10-27T12:12:18.266971+00:00",
+        "raw_sha256": "8ddae89fd634cc7568803b4b2a97400344e2adf0f31aca52e4f06b67937787c0",
+        "raw_reference": ".local/structure-facts-20261021/swpu-curation-columns-online-20261027/8ddae89fd634cc7568803b4b2a97400344e2adf0f31aca52e4f06b67937787c0.html.gz",
+        "http_status": 200
+      },
+      "sample_article_links": [
+        {
+          "title": "关于进一步提高研究生学位论文质量工作的通知",
+          "url": "https://www.swpu.edu.cn/gs/info/1084/7590.htm"
+        },
+        {
+          "title": "关于编制交叉学科、专业学位研究生学位论文与申请学位实践成果基本要求的指导意见",
+          "url": "https://www.swpu.edu.cn/gs/info/1084/7040.htm"
+        },
+        {
+          "title": "西南石油大学关于修（制）定博士、硕士学位授予质量标准的通知",
+          "url": "https://www.swpu.edu.cn/gs/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1084&wbnewsid=7020"
+        }
+      ],
+      "visible_article_link_count": 20,
+      "access_path": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "研究生教育",
+          "href": "https://www.swpu.edu.cn/gs/",
+          "target_url": "https://www.swpu.edu.cn/gs/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/gs/",
+          "requested_url": "https://www.swpu.edu.cn/gs/",
+          "observed_at": "2026-10-27T12:06:55.757487+00:00",
+          "raw_sha256": "fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(7) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "通知公告",
+          "href": "xwgl/tzgg.htm",
+          "target_url": "https://www.swpu.edu.cn/gs/xwgl/tzgg.htm"
+        }
+      ],
+      "publisher_context_links": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "研究生教育",
+          "href": "https://www.swpu.edu.cn/gs/",
+          "target_url": "https://www.swpu.edu.cn/gs/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/gs/",
+          "requested_url": "https://www.swpu.edu.cn/gs/",
+          "observed_at": "2026-10-27T12:06:55.757487+00:00",
+          "raw_sha256": "fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(7) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "通知公告",
+          "href": "xwgl/tzgg.htm",
+          "target_url": "https://www.swpu.edu.cn/gs/xwgl/tzgg.htm"
+        }
+      ],
+      "observed_unit_redirect": null,
+      "reference_name_basis": "Original page title and observed unit navigation context; raw parser hints are not authority",
+      "human_confirmed_required": true,
+      "human_name_and_address_confirmed": true,
+      "body_and_pagination_validated": false,
+      "source_connected": false,
+      "assessment_only": true,
+      "human_review": "tests/acceptance/swpu_target_review_20261027.json"
+    },
+    {
+      "id": 6,
+      "name": "研究生院／招生工作／通知公告",
+      "url": "https://www.swpu.edu.cn/gs/zsgz/tzgg.htm",
+      "actual_page_title": "通知公告-西南石油大学研究生院",
+      "list_reference": {
+        "url": "https://www.swpu.edu.cn/gs/zsgz/tzgg.htm",
+        "requested_url": "https://www.swpu.edu.cn/gs/zsgz/tzgg.htm",
+        "observed_at": "2026-10-27T12:12:19.157321+00:00",
+        "raw_sha256": "d8ef06ce24983a3b821d7c97f68d0e4ee2094447b75fdcfc005594e6046b3742",
+        "raw_reference": ".local/structure-facts-20261021/swpu-curation-columns-online-20261027/d8ef06ce24983a3b821d7c97f68d0e4ee2094447b75fdcfc005594e6046b3742.html.gz",
+        "http_status": 200
+      },
+      "sample_article_links": [
+        {
+          "title": "转发《硕士研究生招生考试网上报名温馨提示》",
+          "url": "https://www.swpu.edu.cn/gs/info/1074/8760.htm"
+        },
+        {
+          "title": "西南石油大学关于开展2026年博士生导师信息采集工作的通知",
+          "url": "https://www.swpu.edu.cn/gs/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1074&wbnewsid=8720"
+        },
+        {
+          "title": "转发《四川省2027年全国硕士研究生招生考试网上报名相关问题解读25问》",
+          "url": "https://www.swpu.edu.cn/gs/info/1074/8710.htm"
+        }
+      ],
+      "visible_article_link_count": 20,
+      "access_path": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "研究生教育",
+          "href": "https://www.swpu.edu.cn/gs/",
+          "target_url": "https://www.swpu.edu.cn/gs/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/gs/",
+          "requested_url": "https://www.swpu.edu.cn/gs/",
+          "observed_at": "2026-10-27T12:06:55.757487+00:00",
+          "raw_sha256": "fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(5) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "通知公告",
+          "href": "zsgz/tzgg.htm",
+          "target_url": "https://www.swpu.edu.cn/gs/zsgz/tzgg.htm"
+        }
+      ],
+      "publisher_context_links": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "研究生教育",
+          "href": "https://www.swpu.edu.cn/gs/",
+          "target_url": "https://www.swpu.edu.cn/gs/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/gs/",
+          "requested_url": "https://www.swpu.edu.cn/gs/",
+          "observed_at": "2026-10-27T12:06:55.757487+00:00",
+          "raw_sha256": "fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(5) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "通知公告",
+          "href": "zsgz/tzgg.htm",
+          "target_url": "https://www.swpu.edu.cn/gs/zsgz/tzgg.htm"
+        }
+      ],
+      "observed_unit_redirect": null,
+      "reference_name_basis": "Original page title and observed unit navigation context; raw parser hints are not authority",
+      "human_confirmed_required": true,
+      "human_name_and_address_confirmed": true,
+      "body_and_pagination_validated": false,
+      "source_connected": false,
+      "assessment_only": true,
+      "human_review": "tests/acceptance/swpu_target_review_20261027.json"
+    },
+    {
+      "id": 7,
+      "name": "研究生院／招生工作／招生简章",
+      "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+      "actual_page_title": "招生简章-西南石油大学研究生院",
+      "list_reference": {
+        "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+        "requested_url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+        "observed_at": "2026-10-27T12:06:58.900025+00:00",
+        "raw_sha256": "2ac1b5c91f4a058d017cf713fb3af3831351b4151c2efceef8cb6d684cd4e632",
+        "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/2ac1b5c91f4a058d017cf713fb3af3831351b4151c2efceef8cb6d684cd4e632.html.gz",
+        "http_status": 200
+      },
+      "sample_article_links": [
+        {
+          "title": "西南石油大学2027年硕士研究生招生章程",
+          "url": "https://www.swpu.edu.cn/gs/info/1073/8520.htm"
+        },
+        {
+          "title": "西南石油大学2027年优秀应届本科毕业生免试攻读研究生（含直博生）招生办法",
+          "url": "https://www.swpu.edu.cn/gs/info/1073/8370.htm"
+        },
+        {
+          "title": "西南石油大学2026年博士研究生招生章程",
+          "url": "https://www.swpu.edu.cn/gs/info/1073/7050.htm"
+        }
+      ],
+      "visible_article_link_count": 3,
+      "access_path": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "研究生招生",
+          "href": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+          "target_url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm"
+        }
+      ],
+      "publisher_context_links": [
+        {
+          "url": "https://www.swpu.edu.cn/",
+          "requested_url": "https://www.swpu.edu.cn/",
+          "observed_at": "2026-10-27T12:04:36.856779+00:00",
+          "raw_sha256": "d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-root-online-20261027/d3717fb0eba56fc634a3307c3baafba078ae4a3bb612d835088f4f65760b0f2c.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(4) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+          "link_text": "研究生教育",
+          "href": "https://www.swpu.edu.cn/gs/",
+          "target_url": "https://www.swpu.edu.cn/gs/"
+        },
+        {
+          "url": "https://www.swpu.edu.cn/gs/",
+          "requested_url": "https://www.swpu.edu.cn/gs/",
+          "observed_at": "2026-10-27T12:06:55.757487+00:00",
+          "raw_sha256": "fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2",
+          "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/fe410b13ab028658109ce243e682a9f31d5cc033d7b05f6861640d9b6d8cb6f2.html.gz",
+          "http_status": 200,
+          "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(5) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)",
+          "link_text": "招生简章",
+          "href": "zsgz/zsjz.htm",
+          "target_url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm"
+        }
+      ],
+      "observed_unit_redirect": null,
+      "reference_name_basis": "Original page title and observed unit navigation context; raw parser hints are not authority",
+      "human_confirmed_required": true,
+      "human_name_and_address_confirmed": true,
+      "body_and_pagination_validated": false,
+      "source_connected": false,
+      "assessment_only": true,
+      "human_review": "tests/acceptance/swpu_target_review_20261027.json"
+    }
+  ],
+  "pending_scope": [
+    {
+      "name": "本科招生通知",
+      "official_entry_requested_url": "http://zsb.swpu.edu.cn/",
+      "observed_final_url": "https://zsb.swpu.edu.cn/",
+      "http_status": 412,
+      "reference": {
+        "url": "https://zsb.swpu.edu.cn/",
+        "requested_url": "http://zsb.swpu.edu.cn/",
+        "observed_at": "2026-10-27T12:06:58.251020+00:00",
+        "raw_sha256": "aaea4ffa0c30a4608cc94daa9fa35277a5420cd8a7f341dbcaafa4a18f0e062c",
+        "raw_reference": ".local/structure-facts-20261021/swpu-curation-entrances-online-20261027/aaea4ffa0c30a4608cc94daa9fa35277a5420cd8a7f341dbcaafa4a18f0e062c.html.gz",
+        "http_status": 412
+      },
+      "specific_notice_column_url": null,
+      "semantic_value": "unknown",
+      "cause": "unknown_http_412_no_page_material",
+      "human_scope_required": null,
+      "not_counted_as_verified_column": true
+    }
+  ],
+  "human_review_status": "all7_required_name_and_address_confirmed",
+  "independent_holdout_certified": false,
+  "policy_files_unchanged": true,
+  "policy_fingerprints": ".local/structure-facts-20261021/swpu-curation-frozen-policy-20261027.json",
+  "raw_material_is_assessment_only": true,
+  "feed_target_annotations_to_decision_policy": false,
+  "model_calls": 0,
+  "new_model_cost_cny": 0,
+  "http_attempts": 17,
+  "document_attempts": 14,
+  "http200_documents": 13,
+  "http412_documents": 1,
+  "certified_branch_episodes": 0,
+  "threshold_gate": "insufficient_evidence_no_evaluator",
+  "human_review": "tests/acceptance/swpu_target_review_20261027.json"
+}

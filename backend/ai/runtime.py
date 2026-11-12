@@ -13,6 +13,8 @@ from backend.ai.configuration import AIConfigError, get_model_binding, credentia
 from backend.ai import providers
 from backend.ai.skill_loader import (load_skill, validate_input, validate_output, canonical,
                                      digest, SkillValidationError, VALIDATOR_VERSION)
+from backend.services.execution_observations import observe_runtime, execution_identity
+from backend.ai.material_capture import capture_runtime, capture_identity
 
 
 class AIBudgetError(AIConfigError):
@@ -288,6 +290,8 @@ def _execution_heartbeat(execution_id):
         thread.join(timeout=2)
 
 
+@observe_runtime
+@capture_runtime
 def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
              skill_digest, input_digest, mode, messages, validator, allow_untested=False,
              output_tokens=None, partial_validator=None, school_id=None):
@@ -295,6 +299,8 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
         raise AIConfigError('无效的执行标识')
     from backend.ai.connection_recovery import resumed_execution_id
     execution_id = resumed_execution_id(execution_id)
+    execution_identity(execution_id)
+    capture_identity(execution_id)
     existing = db.session.get(AIExecution, execution_id)
     if existing:
         if (existing.input_digest != input_digest or existing.skill_digest != skill_digest
@@ -302,6 +308,7 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
                 or existing.config_version != str(binding['version'])
                 or existing.profile_id != (binding['id'] or None)):
             raise AIConfigError('执行标识已用于不同输入或配置', 'execution_conflict')
+        execution_identity(execution_id,reused=True)
         result = _result(existing)
         db.session.commit()
         return result
@@ -319,6 +326,7 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
                 or row.profile_id != (binding['id'] or None)):
             db.session.rollback()
             raise AIConfigError('执行标识已用于不同输入或配置', 'execution_conflict')
+        execution_identity(execution_id,reused=True)
         result = _result(row)
         db.session.commit()
         return result
@@ -355,6 +363,7 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
             .execution_options(synchronize_session=False))
         if claimed.rowcount != 1:
             db.session.rollback()
+            execution_identity(execution_id,reused=True)
             return _result(db.session.get(AIExecution, execution_id, populate_existing=True))
         # Keep settlement's execution-then-budget lock order. A failure after
         # reserve must fence dispatch; rollback also undoes this unsent claim.
@@ -369,6 +378,8 @@ def _execute(*, execution_id, purpose, binding, skill_id, skill_version,
         with _execution_heartbeat(execution_id):
             extra = dict(streaming=True, on_content=receive, on_progress=progress) if (
                 purpose == 'directory' and binding['provider'] == 'deepseek') else {}
+            execution_identity(execution_id,dispatched=True)
+            capture_identity(execution_id, dispatched=True)
             response = providers.complete(binding, key, messages, max_tokens=output_tokens, **extra)
     except AIConfigError as exc:
         db.session.rollback()

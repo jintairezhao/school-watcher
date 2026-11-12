@@ -12,7 +12,7 @@ from backend.database.source_governance_models import SourceValidation
 from backend.scraper.http_client import same_school_url, validate_public_url
 from backend.services.source_inventory import canonical_url
 
-VALIDATION_VERSION = 8
+VALIDATION_VERSION = 14
 
 
 def sample_failure_kind(samples):
@@ -26,8 +26,12 @@ def sample_failure_kind(samples):
         reason, code = sample.get('reason', ''), sample.get('error_code', '')
         if code in restricted or reason in restricted or reason == 'needs_manual':
             kinds.append('access_restricted')
-        elif reason == 'article_title_abbreviated' or code in ('http_404', 'http_410', 'response_too_large', 'non_html_resource',
-                      'invalid_pdf', 'unsupported_content_encoding', 'dynamic_material_pending', 'dynamic_material_incomplete'):
+        # A pending browser read is missing material, not proof of a broken
+        # selector. Keep needs_adapter/readiness_missing repairable: the same
+        # code also describes a completed static read with a wrong rule.
+        elif reason in ('article_title_abbreviated', 'requires_render', 'network_error', 'unavailable') or code in ('http_404', 'http_410', 'response_too_large', 'non_html_resource',
+                      'invalid_pdf', 'unsupported_content_encoding', 'dynamic_material_pending', 'dynamic_material_incomplete',
+                      'article_body_missing_after_render'):
             kinds.append('material_incomplete')
         else:
             kinds.append('rule_error')
@@ -36,6 +40,38 @@ def sample_failure_kind(samples):
     return ('rule_error' if 'rule_error' in kinds else
             'material_incomplete' if 'material_incomplete' in kinds else
             'access_restricted' if kinds else '')
+
+
+def article_sample_summary(samples, available_count, *, retry_after=0):
+    """One acceptance contract for executed articles, regardless of source writer.
+
+    Matching bodies establish a column; they cannot erase another observed bad
+    identity or missing material. Actual access restrictions remain a separately
+    reported exception, including the existing one-public-body gated column.
+    """
+    from backend.services.discovery_policy import get_policy
+    policy = get_policy()
+    required = 1 if available_count == 1 else max(2, int(policy['article_sample_matches']))
+    target = min(available_count, max(1, int(policy['article_sample_size'])))
+    matched = sum(bool(row.get('matched')) for row in samples)
+    failed = [row for row in samples if not row.get('matched')]
+    blockers = [row for row in failed if row.get('reason') != 'article_title_abbreviated'
+                and sample_failure_kind([row]) != 'access_restricted']
+    gated_only = bool(failed and all(sample_failure_kind([row]) == 'access_restricted' for row in failed))
+    limited_public = matched > 0 and gated_only and len(samples) >= target
+    conflicts = [row['url'] for row in samples if row.get('reason') in (
+        'article_identity_conflict', 'attachment_identity_unconfirmed', 'article_is_listing',
+        'article_redirects_to_listing', 'article_redirect_outside_site')]
+    passed = bool(not blockers and not conflicts and (matched >= required or limited_public))
+    limited = bool(matched and (available_count == 1 or failed
+                   or any(row.get('limited_identity') for row in samples if row.get('matched'))))
+    return {'passed': passed, 'status': 'limited' if limited else 'full',
+            'failure_kind': '' if passed else sample_failure_kind(samples),
+            'identity_conflicts': conflicts, 'retry_after': retry_after,
+            'matched_count': matched, 'required_matches': required, 'available_count': available_count,
+            'sample_count': len(samples), 'samples': samples,
+            'known_failure_blocks': bool(blockers), 'access_limited_exception': bool(passed and limited_public),
+            'validation_version': VALIDATION_VERSION}
 
 
 def _article_layout_ancestors(soup, config, title, page_url):
@@ -96,13 +132,47 @@ def _remove_article_noise(soup, config=None, *, title='', page_url=''):
     # An article's own headline can live in .article__header. Preserve that
     # branch only after the title, local publication line and body agree.
     from backend.scraper.article_observation import article_heading, title_bound_body, prune_unready_article_nodes
-    heading = article_heading(soup, title) if title and title_bound_body(soup, page_url, title) is not None else None
+    heading = article_heading(soup, title) if title else None
+    header_proven = heading is not None and title_bound_body(soup, page_url, title) is not None
+    regions = soup.select(config['content_selector']) if config and config.get('content_selector') else []
+    if heading is not None and not header_proven:
+        # A visible standalone title can share an article container with its
+        # executed body even when this CMS publishes no date. Require adjacent
+        # local siblings; a site header cannot borrow text elsewhere on a page.
+        from backend.scraper.article_observation import article_material
+        from backend.scraper.article_resources import has_public_body_resource
+        for header in heading.parents:
+            if header.name in ('body', 'html', '[document]'):
+                break
+            if header.name != 'header' and not header_marker.search(
+                    ' '.join(header.get('class', [])) + ' ' + header.get('id', '')):
+                continue
+            if re.search(r'(?:^|[\s_-])(?:site|logo|brand|banner)(?:$|[\s_-])',
+                         ' '.join(header.get('class', [])) + ' ' + header.get('id', ''), re.I):
+                continue
+            owner = header.parent
+            if owner.name in ('body', 'html', '[document]'):
+                continue
+            for region in regions:
+                if region.name in ('body', 'html', 'head', 'nav', 'aside', 'header', 'footer') or region.parent is not owner:
+                    continue
+                if not any(node is region for node in header.find_next_siblings()):
+                    continue
+                material, state = article_material(region, page_url)
+                if material is None or state != 'ready':
+                    continue
+                resources = has_public_body_resource([material], page_url)
+                for node in list(material.select('a,button,nav,aside,header,footer,script,style')):
+                    node.decompose()
+                if resources or len(material.get_text(' ', strip=True)) >= 15:
+                    header_proven = True
+                    break
+    heading = heading if header_proven else None
     headline_branch = {id(node) for node in [heading, *heading.parents]} if heading is not None else set()
     prune_unready_article_nodes(soup)
     # Some public CMS templates use aside for their main article column. Keep
     # ancestors of an executed, bounded body selector; explicit navigation and
     # sidebar markers still take precedence over any model-proposed selector.
-    regions = soup.select(config['content_selector']) if config and config.get('content_selector') else []
     body_ancestors = {id(parent) for region in regions
                       if region.name not in ('html', 'body', 'head', 'aside', 'nav', 'header', 'footer')
                       for parent in region.parents}
@@ -199,6 +269,47 @@ def _observed_article_headlines(soup, config):
     return titles
 
 
+def _literal_bilingual_heading_identity(soup, config, title):
+    """Match a whole multilingual title across leading styled heading lines.
+
+    The complete original title must equal the entire block, allowing only a
+    change in which language comes first. Prose, sidebars, links and partial
+    prefixes cannot provide this identity. Locators address the original DOM.
+    """
+    from backend.scraper.article_observation import title_key, article_node_state
+    from backend.scraper.discovery.structure import locator
+    if not re.search(r'[\u3400-\u9fff]', title) or len(re.findall(r'[A-Za-z]', title)) < 32:
+        return None
+    regions = soup.select(config['content_selector']) if config.get('content_selector') else []
+    if len(regions) != 1 or regions[0].name in ('body', 'html'):
+        return None
+    region = regions[0]
+    if region.find_parent(['nav', 'aside', 'footer', 'blockquote', 'a']):
+        return None
+    expected = title_key(title)
+    fragments, nodes = [], []
+    for paragraph in region.select('p')[:8]:
+        text = paragraph.get_text(' ', strip=True)
+        if not text:
+            continue
+        style = re.sub(r'\s+', '', paragraph.get('style', '')).lower()
+        centered = paragraph.get('align', '').lower() == 'center' or 'text-align:center' in style
+        if (not centered or not paragraph.select('strong,b') or paragraph.select('a[href]')
+                or paragraph.find_parent(['blockquote', 'nav', 'aside', 'footer'])
+                or any(article_node_state(node) != 'ready' for node in [paragraph, *paragraph.find_all(True)])):
+            break
+        fragments.append(title_key(text))
+        nodes.append(paragraph)
+        if len(nodes) < 2:
+            continue
+        for offset in range(len(fragments)):
+            if ''.join(fragments[offset:] + fragments[:offset]) == expected:
+                return dict(basis='literal_bilingual_heading_block',
+                    fragments=[node.get_text(' ', strip=True) for node in nodes],
+                    locators=[locator(node) for node in nodes], language_order_start=offset)
+    return None
+
+
 def article_samples(config, records, fetcher):
     from backend.services.discovery_policy import get_policy
     from backend.services.source_governance import _normal
@@ -208,10 +319,13 @@ def article_samples(config, records, fetcher):
     unique = list({canonical_url(row['url']): row for row in records}.values())
     target = min(len(unique), max(1, int(policy['article_sample_size'])))
     attempts = min(len(unique), max(target, int(policy['article_sample_attempts'])))
-    required = 1 if len(unique) == 1 else max(2, int(policy['article_sample_matches']))
-    samples, last_network_error = [], None
+    samples = []
     retry_after = 0
     for record in unique[:attempts]:
+        if len(samples) >= target:
+            current = article_sample_summary(samples, len(unique), retry_after=retry_after)
+            if current['passed'] or (current['known_failure_blocks'] and current['failure_kind'] == 'material_incomplete'):
+                break  # A later success cannot replace a pinned failed sample.
         address = canonical_url(record['url'])
         sample = {'url': address, 'title': record['title'], 'matched': False}
         validate_public_url(address, resolve=False)
@@ -223,8 +337,6 @@ def article_samples(config, records, fetcher):
         try:
             html = fetcher(address, 'article')
         except FetchFailure as exc:
-            if exc.outcome in ('network_error', 'unavailable'):
-                last_network_error = exc
             retry_after = max(retry_after, exc.result.retry_after or 0)
             sample['reason'] = exc.outcome
             sample['error_code'] = exc.result.error_code
@@ -233,6 +345,13 @@ def article_samples(config, records, fetcher):
                 from backend.services.source_governance import _snapshot
                 sample['snapshot'] = _snapshot(exc.result.html, sample['final_url'], role='article', outcome=exc.outcome)
             samples.append(sample)
+            if exc.outcome in ('network_error', 'unavailable'):
+                # Let the durable queue record this failure before another
+                # sample can yield for origin admission and restart this trial.
+                # Keep already observed bodies with the failed sample.
+                exc.article_sample_summary = article_sample_summary(
+                    samples, len(unique), retry_after=retry_after)
+                raise
             continue
         final = canonical_url(getattr(html, 'final_url', address))
         sample.update(final_url=final, content_hash=hashlib.sha256(html.encode()).hexdigest())
@@ -241,18 +360,13 @@ def article_samples(config, records, fetcher):
         elif final == canonical_url(config.get('list_url', '')):
             sample['reason'] = 'article_redirects_to_listing'
         elif (attachment := getattr(getattr(html, 'result', None), 'attachment', {})):
-            filename = attachment.get('filename', '')
-            stem = re.sub(r'\.pdf$', '', filename, flags=re.I)
-            # Opaque CMS file IDs carry no textual title. The scoped list's
-            # observed literal URL plus a complete read supplies limited file
-            # identity; a different descriptive filename cannot supply it.
-            opaque = bool(re.fullmatch(r'[a-fA-F0-9_-]{6,}', stem))
-            sample['matched'] = bool(attachment.get('verified') and
-                (_normal(stem) == _normal(record['title']) or opaque and final == address))
-            sample.update(attachment=True, attachment_urls=[final], attachment_evidence=attachment,
-                content_hash=attachment.get('sha256'), reason='matched' if sample['matched'] else 'attachment_identity_unconfirmed',
-                body_basis='verified_pdf_and_observed_opaque_url' if opaque else 'verified_pdf_and_matching_filename',
-                limited_identity=bool(opaque))
+            from backend.scraper.acquisition.attachments import pdf_sample_identity
+            sample.update(pdf_sample_identity(attachment, record['title'], address, final, page_html=str(html)))
+            if attachment.get('embedding'):
+                # Retain the page that actually referenced this file as well as
+                # the file bytes; the task's fetch cache may later be pruned.
+                from backend.services.source_governance import _snapshot
+                sample['snapshot'] = _snapshot(html, final, role='article')
         elif (problem := page_problem(html)) not in ('', 'article_instead_of_column', 'attachment_instead_of_column'):
             # The recovery classifier describes why a document is not a LIST.
             # An actual article/attachment is precisely the expected document
@@ -274,6 +388,11 @@ def article_samples(config, records, fetcher):
                             and not node.find_parent(['a', 'aside', 'nav', 'header', 'footer'])
                             and not node.select('a[href]')
                             for node in soup.select('div,p,span,strong'))
+            if not named:
+                identity = _literal_bilingual_heading_identity(BeautifulSoup(html, 'lxml'), config, record['title'])
+                if identity:
+                    named = True
+                    sample['title_identity'] = identity
             sample['title_matched'] = named
             sample['content_selector_count'] = len(soup.select(config['content_selector'])) if config.get('content_selector') else 0
             evidence = _article_body_evidence(soup, config, title, final)
@@ -315,23 +434,8 @@ def article_samples(config, records, fetcher):
                 from backend.services.source_governance import _snapshot
                 sample['snapshot'] = _snapshot(html, final, role='article')
         samples.append(sample)
-        matched = sum(row['matched'] for row in samples)
-        if len(samples) >= target and matched >= required:
-            break
-    matched = sum(row['matched'] for row in samples)
-    if matched < required and last_network_error:
-        raise last_network_error
-    limited = bool(matched and (len(unique) == 1 or any(row.get('limited_identity') for row in samples if row['matched'])
-                               or any(row.get('reason') == 'article_title_abbreviated' for row in samples)))
-    identity_conflicts = [row['url'] for row in samples if row.get('reason') in (
-        'article_identity_conflict', 'attachment_identity_unconfirmed', 'article_is_listing',
-        'article_redirects_to_listing', 'article_redirect_outside_site')]
-    passed = matched >= required and not identity_conflicts
-    return {'passed': passed, 'status': 'limited' if limited else 'full',
-            'failure_kind': '' if passed else sample_failure_kind(samples),
-            'identity_conflicts': identity_conflicts, 'retry_after': retry_after,
-            'matched_count': matched, 'required_matches': required, 'available_count': len(unique),
-            'sample_count': len(samples), 'samples': samples}
+    result = article_sample_summary(samples, len(unique), retry_after=retry_after)
+    return result
 
 
 def pagination_sample(config, records, html, reference, scope, fetcher):
@@ -391,6 +495,8 @@ def record_validation(school_id, config, validation, department_id=None):
     event = SourceValidation(school_id=school_id, department_id=department_id,
         config_hash=_hash(config), validation_json=_json(detail))
     db.session.add(event)
+    from backend.ai.material_capture import record_native
+    record_native(event, 'native_validation', detail)
     return detail
 
 

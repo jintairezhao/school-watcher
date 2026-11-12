@@ -76,6 +76,13 @@ selector_profiles:
     date_selector: 'span.middleNotice--dates'
     content_selector: 'div.c-main__right'
 
+  - name: 'ZCMS 新版文章区块 (middleArticleNew art)'
+    list_selector: 'div.middleArticleNew__art--art'
+    title_selector: 'a.middleArticleNew__art--link'
+    link_selector: 'a.middleArticleNew__art--link'
+    date_selector: 'div.middleArticleNew__art--year'
+    content_selector: ''
+
   - name: 'ZCMS 文章区块 (middleArticle art)'
     list_selector: 'div.middleArticle__art--art'
     title_selector: 'h3.middleArticle__art--titles'

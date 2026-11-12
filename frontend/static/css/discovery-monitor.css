@@ -141,7 +141,7 @@
 .atlas-camera-controls svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 1.5; fill: none; }
 .atlas-help { position: absolute; z-index: 3; bottom: 27px; left: 24px; color: var(--color-text-muted); font-size: 11px; pointer-events: none; }
 .atlas-tooltip { position: absolute; z-index: 6; max-width: 225px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-text); font-size: 12px; pointer-events: none; box-shadow: var(--shadow-sm); overflow-wrap: anywhere; }
-.atlas-tooltip { white-space: pre-line; }
+.atlas-tooltip { white-space: pre-line; width: max-content; max-width: min(225px, calc(100% - 16px)); }
 .atlas-path-evidence { border-top: 1px solid var(--color-border); margin-top: 24px; padding-top: 8px; }
 .atlas-path-evidence ol { padding-inline-start: 22px; }
 .atlas-path-evidence li { padding-block: 7px; }
@@ -304,4 +304,25 @@ body.atlas-is-fullscreen > :is(.navbar, .desktop-resize, .flash-container) { vis
 .atlas-heading h2 { font-size:18px; }
 .atlas-node-label[data-kind="root"] { max-width: min(340px, 70vw); font-weight: 600; }
 .monitor-detail .atlas-path-evidence h3 { font-size: 13px; letter-spacing: 0; }
+.atlas-route-proof { margin: 6px 0 12px; }
+.atlas-route-proof > summary { color: var(--color-primary); font-size: 12px; cursor: pointer; }
+.atlas-route-proof ol { margin: 8px 0; padding-left: 18px; }
+.atlas-route-proof li { margin-bottom: 12px; }
+.atlas-route-proof :is(p, time) { display: block; margin: 4px 0; color: var(--color-text-secondary); font-size: 11px; overflow-wrap: anywhere; }
+.atlas-node-label[data-summary-label]:not([data-summary-label=""])::after { content: attr(data-summary-label); display: block; color: var(--color-text-secondary); font-size: 10px; font-weight: 400; }
+.monitor-relation-groups > details { margin: 12px 0; }
+.monitor-relation-groups summary { cursor: pointer; color: var(--color-primary); overflow-wrap: anywhere; }
+.monitor-relation-groups ul { padding-left: 16px; }
+.monitor-related-node { border: 0; padding: 4px 0; background: transparent; color: var(--color-text); text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.monitor-relation-material { margin: 6px 0 14px; }
+.monitor-relation-material > summary { font-size: 12px; }
+.atlas-readout { position: absolute; z-index: 3; left: 24px; bottom: 27px; max-width: min(480px, 85%); display: grid; gap: 4px; pointer-events: none; }
+.atlas-readout :is(.atlas-status, .atlas-help) { position: static; max-width: none; margin: 0; }
+@media (max-width: 800px) { .atlas-readout { bottom: 73px; left: 15px; max-width: calc(100% - 30px); } }
 @media (max-width:800px) { .atlas-heading { padding:12px 16px; width:auto; } .atlas-heading h2 { font-size:16px; } }
+
+/* View and path choices have comparable text lengths in both languages. */
+.monitor-map-controls.monitor-view-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 600px) {
+    .monitor-map-controls.monitor-view-controls { grid-template-columns: minmax(0, 1fr); }
+}

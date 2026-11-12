@@ -13,7 +13,7 @@ async function api(path, method = 'GET') {
     const response = await fetch('/api/admin/browser-sessions' + path, {method,
         headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content}});
     const value = await response.json();
-    if (!response.ok) throw new Error(value.error || uiT('操作未完成，请重试'));
+    if (!response.ok) throw new Error(uiT(value.error || uiT('操作未完成，请重试')));
     return value;
 }
 
@@ -39,7 +39,7 @@ async function refresh() {
         const name = document.createElement('strong');
         name.textContent = row.url;
         const status = document.createElement('p');
-        status.textContent = row.error || labels()[row.status] || uiT('等待处理');
+        status.textContent = uiT(row.error || labels()[row.status] || '等待处理');
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'btn btn-outline';
         button.textContent = row.status === 'active' ? uiT('继续验证') : uiT('处理访问验证');
@@ -71,7 +71,7 @@ async function open(row, button) {
         message.textContent = uiT('验证窗口已打开。');
         workspace.scrollIntoView({block: 'start', behavior: 'auto'});
         timer = setTimeout(poll, 5000);
-    } catch (error) { message.textContent = error.message; }
+    } catch (error) { message.textContent = uiT(error.message); }
     finally { button.disabled = false; }
 }
 
@@ -80,7 +80,7 @@ async function poll() {
     try {
         const value = await api('/' + active);
         if (value.status !== 'active') { disconnect(); await refresh(); return; }
-    } catch (error) { message.textContent = error.message; }
+    } catch (error) { message.textContent = uiT(error.message); }
     timer = setTimeout(poll, 5000);
 }
 
@@ -91,11 +91,11 @@ async function act(action) {
         await api('/' + active + '/' + action, 'POST');
         disconnect(); await refresh();
         message.textContent = action === 'verify' ? uiT('验证已通过，系统将继续更新该来源。') : uiT('本次验证已结束，已有通知已保留。');
-    } catch (error) { message.textContent = error.message; }
+    } catch (error) { message.textContent = uiT(error.message); }
     finally { complete.disabled = cancel.disabled = false; }
 }
 complete.addEventListener('click', () => act('verify'));
 cancel.addEventListener('click', () => act('cancel'));
 window.addEventListener('pagehide', disconnect);
-document.addEventListener('locale-changed', () => refresh().catch(error => { message.textContent=error.message; }));
-refresh().catch(error => { message.textContent = error.message; });
+document.addEventListener('locale-changed', () => refresh().catch(error => { message.textContent=uiT(error.message); }));
+refresh().catch(error => { message.textContent = uiT(error.message); });

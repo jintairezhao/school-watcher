@@ -134,7 +134,7 @@ class DirectOnboardingTests(unittest.TestCase):
         self.assertEqual(result['state'], 'connected')
         self.assertEqual(Announcement.query.count(), 3)
 
-    def test_unreadable_pinned_items_do_not_block_valid_later_sample(self):
+    def test_unconfirmed_pinned_failures_are_not_replaced_by_later_success(self):
         from backend.services.source_onboarding import onboard_page
         title = '关于开展大学生创新创业项目申报的通知'
         html = HTML.replace('</ul>', f'<li><a href="/info/3.htm">{title}</a><span>2026-10-01</span></li></ul>')
@@ -146,10 +146,13 @@ class DirectOnboardingTests(unittest.TestCase):
             if url.endswith('/info/3.htm'):
                 return f'<article><h1>{title}</h1><p>请各学院组织学生参加创新创业项目申报，具体申报办法和时间见通知。</p></article>'
             return self.fetch(url, purpose)
-        with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('Later public sample is sufficient')):
+        # This message supplies no actual login/access evidence. The shared
+        # contract cannot turn its missing pinned body into a gated exception.
+        with patch('backend.ai.runtime.run_skill', side_effect=AssertionError('No paid decision can manufacture missing pinned evidence')):
             result = onboard_page({'school_id': self.school_id, 'url': URL}, fetcher=fetch)
-        self.assertEqual(result['state'], 'connected')
-        self.assertEqual(Announcement.query.count(), 4)
+        self.assertEqual(result['state'], 'unsupported')
+        self.assertEqual(Department.query.count(), 0)
+        self.assertEqual(Announcement.query.count(), 0)
 
     def test_navigation_images_and_private_attachment_urls_cannot_validate_empty_body(self):
         from backend.services.source_onboarding import _sample_matches

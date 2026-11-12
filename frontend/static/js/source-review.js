@@ -3,6 +3,13 @@
     let page = 1, selected = null;
     let selectedDepartment = null;
     const field = id => document.getElementById(id);
+    // Workflow metadata is application copy. Captured page text, names and
+    // observed subscription choices below remain verbatim official content.
+    function uiMessage(value) {
+        const text = value || '', translated = uiT(text);
+        if (translated !== text || window.I18n.locale() !== 'en') return translated;
+        return text.split(/(；|\r?\n)/).map(part => part === '；' ? '; ' : uiT(part)).join('');
+    }
     const errorLabels = () => ({
         article_instead_of_column: uiT('这是一篇通知，已按官网提供的链接查找所属栏目，无需逐篇确认。'),
         search_instead_of_column: uiT('这是搜索结果页，已按官网提供的链接整理所属栏目。'),
@@ -31,7 +38,7 @@
     async function api(url, payload) {
         const response = await fetch(url, payload ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)} : {});
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || uiT('读取失败，请重试'));
+        if (!response.ok) throw new Error(uiMessage(data.error || uiT('读取失败，请重试')));
         return data;
     }
     async function inspect(id, scroll = true) {
@@ -41,28 +48,33 @@
             field('proposalTitle').textContent = data.candidate.name + uiT(' · 官网证据');
             const flow = data.workflow || {};
             const owners = {program: uiT('程序处理'), ai: uiT('AI 识别与程序适配'), developer: uiT('开发者处理'), website: uiT('受官网访问条件限制'), user: uiT('由你选择')};
-            field('proposalWorkflow').textContent = (flow.label || data.state) + ' · ' + (owners[flow.owner] || '');
-            field('proposalNext').textContent = (flow.user_action || '') + '。' + (flow.next_step || '');
+            field('proposalWorkflow').textContent = uiMessage(flow.label || data.state) + ' · ' + (owners[flow.owner] || '');
+            field('proposalNext').textContent = [uiMessage(flow.user_action), uiMessage(flow.next_step)].filter(Boolean).join(' · ');
             const aiLabels = {succeeded: uiT('调用成功'), running: uiT('正在调用'), waiting: uiT('正在排队'), not_needed: uiT('本次无需调用'), not_configured: uiT('尚未配置'), uncertain: uiT('结果未知，未重复调用'), failed: uiT('调用失败'), limit_reached: uiT('已达尝试上限'), budget_exhausted: uiT('已达用量上限')};
             field('proposalStages').textContent = 'AI: ' + (aiLabels[flow.stages?.ai] || uiT('尚未完成')) + uiT(' · 栏目验证：') +
                 (flow.stages?.validation === 'passed' ? uiT('通过') : uiT('尚未通过')) + uiT(' · 正式接入：') +
                 (flow.stages?.activation === 'activated' ? uiT('完成') : uiT('未完成'));
-            field('proposalErrors').textContent = uiT(flow.reason || '') || (data.validation.errors || []).map(code => errorLabels()[code] || code).join('; ');
-            if (flow.ai_reason && flow.ai_reason !== flow.reason) field('proposalErrors').textContent += uiT('。AI 判断：') + flow.ai_reason;
+            field('proposalErrors').textContent = uiMessage(flow.reason) || (data.validation.errors || []).map(code => errorLabels()[code] || code).join('; ');
+            if (flow.replacement) {
+                field('proposalStages').textContent = uiT('原检查记录：') + field('proposalStages').textContent;
+                field('proposalErrors').textContent = uiT('原检查记录：') + field('proposalErrors').textContent;
+            }
+            if (flow.ai_reason && flow.ai_reason !== flow.reason) field('proposalErrors').textContent += uiT('。AI 判断：') + uiMessage(flow.ai_reason);
             const historyLabels = {exploration_step_v2: uiT('AI 判断与执行'), exploration_read: uiT('读取补充材料'), automatic_review_v5: uiT('修复后自动重检'), automatic_review_v6: uiT('通用接入流程更新后重检'),
                 validate: uiT('栏目验证'), activate: uiT('正式接入'), reject: uiT('用户拒绝'), resolved_to_columns: uiT('整理到所属栏目'),
+                superseded_by_configuration: uiT('已有后续处理结果'),
                 fetch_failed: uiT('官网读取未完成'), program_failed: uiT('程序故障'), access_retry: uiT('官网访问重试'), select_observed_option: uiT('用户选择')};
             field('proposalHistory').replaceChildren(...(data.history || []).map(item => {
                 const li = document.createElement('li');
                 li.textContent = item.created_at.replace('T', ' ').slice(0, 19) + ' · ' + (historyLabels[item.action] || uiT('已保存处理记录')) +
-                    (item.detail?.reason ? ' · ' + item.detail.reason : ''); return li;
+                    (item.detail?.reason ? ' · ' + uiMessage(item.detail.reason) : ''); return li;
             }));
             field('proposalMissing').replaceChildren(...(flow.needed_evidence || []).map(text => {
-                const li = document.createElement('li'); li.textContent = uiT('待补材料：') + text; return li;
+                const li = document.createElement('li'); li.textContent = uiT('待补材料：') + uiMessage(text); return li;
             }));
             field('proposalQuestion').replaceChildren();
             if (flow.requires_user && flow.question) {
-                const question = document.createElement('p'); question.textContent = flow.question.text;
+                const question = document.createElement('p'); question.textContent = uiMessage(flow.question.text);
                 field('proposalQuestion').append(question);
                 flow.question.options.forEach(option => {
                     const row = document.createElement('p');
@@ -71,7 +83,7 @@
                     button.addEventListener('click', async () => {
                         button.disabled = true;
                         try { await api('/api/admin/source-proposals/' + id + '/review', {action: 'select_option', choice: option.id}); await inspect(id); await load(); }
-                        catch (error) { field('reviewStatus').textContent = error.message; }
+                        catch (error) { field('reviewStatus').textContent = uiMessage(error.message); }
                         finally { button.disabled = false; }
                     });
                     row.append(button);
@@ -84,6 +96,13 @@
             }
             field('proposalEvidence').replaceChildren();
             field('proposalRelated').replaceChildren();
+            if (flow.replacement?.replacement_proposal_id) {
+                const button = document.createElement('button');
+                button.className = 'btn btn-sm btn-outline';
+                button.textContent = uiT('查看后续处理结果');
+                button.addEventListener('click', () => inspect(flow.replacement.replacement_proposal_id));
+                field('proposalRelated').append(button);
+            }
             (data.validation.related_columns || []).forEach(column => {
                 const button = document.createElement('button');
                 button.className = 'btn btn-sm btn-outline';
@@ -94,7 +113,7 @@
             data.evidence.forEach(item => {
                 const details = document.createElement('details');
                 const heading = document.createElement('summary'); heading.textContent = item.url || uiT('网页样本');
-                const text = document.createElement('p'); text.textContent = item.text || item.error;
+                const text = document.createElement('p'); text.textContent = item.text || uiMessage(item.error);
                 text.style.overflowWrap = 'anywhere'; details.append(heading, text); field('proposalEvidence').append(details);
             });
             if (!data.evidence.length) field('proposalEvidence').textContent = uiT('程序尚未保存网页材料。');
@@ -103,7 +122,7 @@
             field('sourceVersions').hidden = !selectedDepartment;
             if (selectedDepartment) await loadVersions(selectedDepartment);
             if (scroll) field('proposalDetail').scrollIntoView({block: 'start'});
-        } catch (error) { field('reviewStatus').textContent = error.message; }
+        } catch (error) { field('reviewStatus').textContent = uiMessage(error.message); }
     }
     async function loadVersions(departmentId) {
         const versions = await api('/api/admin/departments/' + departmentId + '/versions');
@@ -118,7 +137,7 @@
                 try {
                     await api('/api/admin/departments/' + departmentId + '/rollback', {version: version.version});
                     field('sourceVersionStatus').textContent = uiT('已安排复核，通过后恢复该版本。');
-                } catch (error) { field('sourceVersionStatus').textContent = error.message; }
+                } catch (error) { field('sourceVersionStatus').textContent = uiMessage(error.message); }
                 finally { button.disabled = false; }
             });
             row.append(label, button); list.append(row);
@@ -134,11 +153,11 @@
                 const row = document.createElement('div'); row.className = 'admin-user-row';
                 const label = document.createElement('span'); label.textContent = item.school_name + ' · ' + item.candidate.name;
                 const status = document.createElement('span'); status.className = 'text-muted';
-                status.textContent = (item.workflow?.label || item.state) + ' · ' + (item.workflow?.user_action || '');
+                status.textContent = uiMessage(item.workflow?.label || item.state) + ' · ' + uiMessage(item.workflow?.user_action);
                 const button = document.createElement('button'); button.className = 'btn btn-sm btn-outline'; button.textContent = uiT('查看详情');
                 button.addEventListener('click', () => inspect(item.id)); row.append(label, status, button); field('proposalList').append(row);
             });
-        } catch (error) { field('reviewStatus').textContent = error.message; }
+        } catch (error) { field('reviewStatus').textContent = uiMessage(error.message); }
     }
     field('proposalState').addEventListener('change', () => { page = 1; load(); });
     field('reviewPrev').addEventListener('click', () => { page--; load(); });
@@ -150,7 +169,7 @@
             await api('/api/admin/source-proposals/' + selected + '/review', {action: button.dataset.review});
             field('proposalDetail').hidden = true; await load();
             field('reviewStatus').textContent = button.dataset.review === 'reject' ? uiT('建议已拒绝，已有通知保留。') : uiT('已加入检查队列，通过后自动启用。');
-        } catch (error) { field('reviewStatus').textContent = error.message; }
+        } catch (error) { field('reviewStatus').textContent = uiMessage(error.message); }
         finally { buttons.forEach(b => { b.disabled = false; }); }
     });
     document.addEventListener('locale-changed', () => {load(); if(selected) inspect(selected,false);});

@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   workflow_call:
   pull_request:
-    paths: ['app.py', 'backend/**', 'frontend/**', 'desktop/ui/**', 'shared/**', 'scripts/**', 'tests/**', 'migrations/**', 'requirements.txt', 'requirements/**', 'config/**', 'deploy/**', '.dockerignore', '.github/workflows/runtime.yml']
+    paths: ['app.py', 'backend/**', 'frontend/**', 'desktop/**', 'shared/**', 'scripts/**', 'tests/**', 'migrations/**', 'requirements.txt', 'requirements/**', 'config/**', 'deploy/**', '.dockerignore', '.github/workflows/runtime.yml']
 permissions:
   contents: read
 concurrency:
@@ -59,6 +59,26 @@ jobs:
         run: python tests/browser/check_desktop_storage_browser.py
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify notice cleanup preview and database space controls
+        run: python tests/browser/check_storage_cleanup_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify storage disclosure groups and keyboard navigation
+        run: python tests/browser/check_storage_layout_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify combined cache usage and isolated cache cleanup
+        run: python tests/browser/check_storage_cache_group_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify storage actions remain readable at narrow widths and zoom
+        run: python tests/browser/check_storage_table_actions_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
+      - name: Verify localized backup file selection
+        run: python tests/browser/check_storage_file_picker_browser.py
+        env:
+          WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify import and export progress, speed and large-file recovery
         run: python tests/browser/check_transfer_browser.py
         env:
@@ -80,7 +100,11 @@ jobs:
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify English inbox, discovery and administration workflows
-        run: python tests/browser/check_english_workflows_browser.py
+        run: |
+          python tests/browser/check_english_workflows_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/browser/check_task_status_i18n_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify localized native update and component dialogs
@@ -104,7 +128,13 @@ jobs:
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify queued article reads and automatic recovery
-        run: python tests/browser/check_content_queue_browser.py
+        run: |
+          python tests/browser/check_content_queue_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/browser/check_content_failure_message_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/browser/check_content_localization_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         env:
           WATCHER_TEST_BROWSER_CHANNEL: chromium
       - name: Verify wide tables and intact values in all reader views
@@ -134,6 +164,12 @@ jobs:
           node tests/js/test_discovery_atlas_view.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node tests/js/test_discovery_atlas_picking.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tests/js/test_atlas_search_labels.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tests/js/test_atlas_parent_label_priority.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tests/js/test_atlas_label_placement.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/browser/check_discovery_atlas_browser.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -188,6 +224,8 @@ jobs:
           python tests/browser/check_share_notice_browser.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/browser/check_saved_materials_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/browser/check_saved_materials_observer_browser.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - run: python -m unittest discover -s tests -p "test_*.py"
         env:

@@ -61,8 +61,9 @@ class PublicationHeadingTests(unittest.TestCase):
 
     def test_unnamed_candidate_does_not_inherit_the_college_name(self):
         from backend.services.source_catalog import publication_candidates
+        from backend.services.source_inventory import site_key
         evidence = {'lists': publication_lists('<section><ul>' + items(10000) + '</ul></section>', URL)}
-        report = {'site': {'root_url': URL}, 'pages': [{'feed_json': json.dumps(evidence),
+        report = {'site': {'root_url': URL, 'site_key': site_key(URL)}, 'pages': [{'feed_json': json.dumps(evidence),
                   'state': 'fetched', 'path_json': '[]', 'kind': 'unit', 'label': '工程学院',
                   'url': URL, 'final_url': URL, 'health': 'date_unknown'}]}
         candidates = publication_candidates(report)

@@ -71,6 +71,7 @@ class ForagingFeedback:
 
         accepted = {}
         conflicted = set()
+        from backend.services.source_identity import receipt_count_identity
         for receipt in receipts:
             if not self._receipt_matches(receipt):
                 continue
@@ -80,12 +81,20 @@ class ForagingFeedback:
                 conflicted.add(source_id)
             else:
                 accepted[source_id] = (identity, receipt)
+        from collections import Counter
+        by_address = Counter(receipt['url'] for source_id, (_, receipt) in accepted.items()
+                             if source_id not in conflicted)
+        columns, identity_gaps = defaultdict(set), defaultdict(set)
         for source_id, (_, receipt) in accepted.items():
             if source_id in conflicted:
                 continue
             url = receipt['url']
             scope = self.scopes[url]
             self.sources[scope].add(source_id)
+            identity = receipt_count_identity(receipt)
+            columns[scope].add(identity)
+            if by_address[url] > 1 and not identity.startswith('column:'):
+                identity_gaps[scope].add(source_id)
             # Walk only the unique real trail. Stop credit at scope boundaries:
             # one college cannot make every child of the school directory win.
             while self.scopes.get(url) == scope and url not in self.credit:
@@ -97,7 +106,9 @@ class ForagingFeedback:
         # Aggregate once for this immutable observed graph. The hot rank path
         # must not rebuild trails or rescan a large branch for each candidate.
         self.material_counts = {scope: len(urls) for scope, urls in self.material.items()}
-        self.source_counts = {scope: len(ids) for scope, ids in self.sources.items()}
+        self.source_counts = {scope: len(ids) for scope, ids in columns.items()}
+        self.configuration_counts = {scope:len(ids) for scope,ids in self.sources.items()}
+        self.identity_gaps = identity_gaps
         self.entry_counts = {}
         for scope, materials in self.material.items():
             self.entry_counts[scope] = len({target for material in materials
@@ -153,6 +164,8 @@ class ForagingFeedback:
         path, reason = self.observed_path(page)
         return {'scope_url': scope, 'path_credit': url in self.credited,
                 'verified_source_count': self.source_counts.get(scope, 0),
+                'verified_configuration_count': self.configuration_counts.get(scope, 0),
+                'same_page_identity_status': 'incomplete' if self.identity_gaps.get(scope) else 'complete',
                 'complete_material_count': self.material_counts.get(scope, 0),
                 'observed_forward_entry_count': self.entry_counts.get(scope, 0),
                 'observed_path': path, 'path_reason': reason,

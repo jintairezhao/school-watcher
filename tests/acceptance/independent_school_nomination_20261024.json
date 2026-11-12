@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "school_name_as_supplied": "中国科学院大学",
+  "source": "User reply to the independent holdout school question",
+  "nominated_on_client_date": "2026-10-24",
+  "required_targets": [],
+  "holdout_certified": false,
+  "project_contact_check": {
+    "scope": "Bounded text query of current backend, tests, scripts, deploy and .local/structure-facts-20261021; no production data or website access",
+    "matches_before_recording_nomination": [
+      "backend/services/catalog.py: school seed membership",
+      "backend/scraper/discovery/university_urls.py: seed URL and alias"
+    ],
+    "sampling_or_rule_adjustment_record_found_in_this_scope": false,
+    "exhaustive_project_history_audit": false
+  },
+  "next_action": "Prepare a bounded sampling scope, reuse inventory and cost estimate before online acquisition; preserve unseen material as holdout data",
+  "new_website_requests": 0,
+  "model_calls": 0,
+  "threshold_gate": "insufficient_evidence_no_evaluator"
+}

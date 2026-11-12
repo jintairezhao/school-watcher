@@ -294,6 +294,18 @@ def run(proposal_id, *, inventory=None):
     saved_only = bool(handle and handle.get('payload', {}).get('saved_results_only'))
     if not proposal or proposal.state in ('activated', 'rejected', 'superseded'):
         return {'status': 'skipped', 'changed': False}
+    validation = json.loads(proposal.validation_json)
+    articles = validation.get('articles') or {}
+    material_errors = set(validation.get('errors') or ())
+    if (articles.get('passed') is False and articles.get('failure_kind') in ('material_incomplete', 'access_restricted')
+            and material_errors and material_errors <= {
+                'article_sample_missing', 'source_login_required', 'source_access_restricted'}):
+        # Missing original material cannot buy another selector/model decision.
+        return {'status': 'access_limited' if articles['failure_kind'] == 'access_restricted' else 'material_limited',
+                'changed': False}
+    from backend.services.source_scope import hold_configured_joint_scope
+    if hold_configured_joint_scope(proposal):
+        return {'status': 'configured_scope_preserved', 'changed': False}
     if not json.loads(proposal.evidence_json).get('list'):
         return {'status': 'missing_evidence', 'changed': False}
     # Rechecks made by older versions could replace the primary evidence bundle.

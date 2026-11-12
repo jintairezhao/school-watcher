@@ -20,6 +20,8 @@ Playwright 的 seccomp 配置基于 Docker 默认配置，并增加允许创建�
 
 ## 安装依赖与容器
 
+Android 客户端采用 AndroidX AppCompat 1.7.0、WorkManager 2.10.1、RecyclerView 1.3.2 和 Material Components 1.12.0（Apache-2.0），以及 jsoup 1.21.2（MIT）。固定版本见 `android/app/build.gradle`；项目许可、Apache-2.0 原文及 jsoup 的原始版权声明均打入 `android/app/src/main/assets/`，可从应用设置查看。Android 使用系统字体和本项目绘制的向量图标。Gradle Wrapper 8.11.1 遵循 Apache-2.0，入口脚本保留上游声明，许可原文见 `licenses/Apache-2.0.txt`。
+
 桌面安装包包括 Python 运行时、pywebview、Playwright 客户端及实际采集依赖（包括 aiohttp）。完整浏览器不随安装包分发：程序优先使用已安装的 Edge／Chrome，需要时另行下载采集浏览器。打包时按实际收录的 Python 模块保留依赖发行包中的许可证和版权文件，放在程序资源目录 `third-party-licenses/`；Python 的声明见 `licenses/Python-3.14.3.txt`。另行下载的 Chromium 保留原始文件、声明和内置 credits。这些第三方组件继续遵循各自原有许可证。
 
 Python 依赖及固定版本见根目录 `requirements.txt` 和 [requirements/](requirements/README.md)。Playwright 的浏览器二进制由安装步骤另行下载；Docker 构建还会安装 PostgreSQL 客户端、Nginx、noVNC、TigerVNC、Xvfb、Squid 和字体等系统包。它们不统一改授项目主许可证。

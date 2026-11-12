@@ -1,0 +1,38 @@
+.tuning-page { max-width: 860px; margin: 0 auto; padding-block: 16px 64px; }
+.tuning-page .surface-heading { display: flex; align-items: start; justify-content: space-between; gap: 24px; }
+.tuning-switch { padding-block: 24px; border-bottom: 1px solid var(--color-border); }
+.tuning-switch label { display: flex; gap: 12px; align-items: center; cursor: pointer; }
+.tuning-switch input { width: 20px; height: 20px; accent-color: var(--color-primary); }
+.tuning-switch p, .tuning-section > p { max-width: 70ch; margin-block: 12px 20px; }
+.tuning-section { border-top: 1px solid var(--color-border); padding-block: 32px; margin-top: 20px; }
+.tuning-section h2 { font-size: 1.25rem; margin-bottom: 12px; }
+.tuning-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-bottom: 24px; }
+.tuning-page label { font-weight: 500; }
+.tuning-section form label { display: block; margin-bottom: 8px; }
+.tuning-page input:not([type=checkbox]), .tuning-page select, .tuning-page textarea {
+    width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px;
+    font: inherit; color: var(--color-text); background: var(--color-surface);
+    border: 1px solid var(--color-border-strong); border-radius: var(--radius-input, 8px);
+}
+.tuning-page .btn { min-height: 44px; }
+.tuning-page textarea { resize: vertical; min-height: 76px; margin-bottom: 16px; }
+.tuning-page :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+.tuning-page [hidden] { display: none !important; }
+.tuning-page summary { cursor: pointer; font-weight: 600; padding-block: 8px; }
+.tuning-page #tuningStatus { min-height: 1.6em; margin-top: 20px; color: var(--color-text); }
+.tuning-page #tuningStatus[data-error=true] { color: var(--color-danger); }
+.tuning-records { list-style: none; padding: 0; margin: 24px 0; }
+.tuning-records li { padding-block: 16px; border-bottom: 1px solid var(--color-border); overflow-wrap: anywhere; }
+.tuning-records li p { margin-block: 8px; white-space: pre-wrap; }
+.tuning-records li button { margin-top: 8px; }
+.tuning-page dl { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 24px; margin-block: 20px; }
+.tuning-page dd { font-variant-numeric: tabular-nums; }
+.tuning-page small { color: var(--color-text-secondary); }
+.tuning-advanced-entry { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--color-border); }
+.tuning-advanced-entry summary { cursor: pointer; }
+@media (max-width: 600px) {
+    .tuning-fields { grid-template-columns: minmax(0,1fr); gap: 20px; }
+    .tuning-page .surface-heading { display: block; }
+    .tuning-page .surface-heading > a { display: inline-block; margin-top: 16px; }
+    .tuning-page .btn { white-space: normal; }
+}

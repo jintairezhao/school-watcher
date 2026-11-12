@@ -1,4 +1,5 @@
-# Resolved runtime dependency versions verified on Python 3.14.3 (2026-09-24).
+# Runtime pins; original profile verified on Python 3.14.3 (2026-09-24).
+# PDF text dependency added and verified on Python 3.14.3 (2026-10-30).
 aiohappyeyeballs==2.7.1
 aiohttp==3.14.3
 aiosignal==1.4.0
@@ -33,6 +34,7 @@ psycopg==3.3.6
 psycopg-binary==3.3.6
 pycparser==3.0
 pyee==13.0.1
+pypdf==6.21.4
 python-dotenv==1.2.2
 pyyaml==6.0.3
 requests==2.34.2

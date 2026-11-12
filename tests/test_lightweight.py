@@ -21,7 +21,8 @@ class LightweightTests(unittest.TestCase):
         self.source_temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.source_temp.cleanup)
         self.app = create_app({'TESTING': True, 'SECRET_KEY': 'lightweight-tests', 'SQLALCHEMY_DATABASE_URI': 'sqlite://',
-                               'SOURCE_INVENTORY_PATH': Path(self.source_temp.name) / 'inventory.sqlite3'})
+                               'SOURCE_INVENTORY_PATH': Path(self.source_temp.name) / 'inventory.sqlite3',
+                               'SOURCE_CATALOG_PATH': Path(self.source_temp.name) / 'catalog.sqlite3'})
         self.ctx = self.app.app_context()
         self.ctx.push()
         db.create_all()
@@ -77,7 +78,10 @@ class LightweightTests(unittest.TestCase):
         db.session.commit()
         response = self.client.get(f'/?school={self.school.id}&group=人才培养&period=all')
         self.assertIn('选课子栏目的通知', response.text)
-        self.assertIn('data-source-unit=', response.text)
+        from bs4 import BeautifulSoup
+        panel=BeautifulSoup(response.text,'html.parser').select_one('#sourcePanel')
+        self.assertIsNone(panel.select_one('[data-source-unit]'),'A legacy member without proof is not a publisher')
+        self.assertFalse(panel.select_one('[data-legacy-source-scope]').has_attr('hidden'))
         self.assertIsNone(child.group_name)
         self.assertEqual(child.name, '本科教育-选课安排')
 
@@ -170,6 +174,8 @@ class LightweightTests(unittest.TestCase):
             for i, url in enumerate(sorted(expected)):
                 store.enqueue(key, url, '待复查单位' + str(i), 'unit', 1, [], 'school_domain')
                 store.finish(key, url, state='failed', health='unreachable', error='HTTP 503')
+            from backend.services.runtime_catalog import RuntimeCatalog
+            RuntimeCatalog(self.app.config['SOURCE_CATALOG_PATH']).publish(store,key)
             found = set()
             route = '/schools/' + str(self.school.id) + '/structure'
             while route:
@@ -373,7 +379,7 @@ class LightweightTests(unittest.TestCase):
         preview = self.app.test_client().get(f'/school/{self.school.id}')
         self.assertEqual(preview.status_code, 200)
         self.assertIn('选课通知', preview.text)
-        self.assertIn('人才培养', preview.text)
+        self.assertIn('归属待核实', preview.text)
         response = self.client.get(f'/school/{self.school.id}?dept={self.teaching.id}&year=2025')
         self.assertEqual(response.status_code, 302)
         self.assertIn(f'school={self.school.id}', response.location)

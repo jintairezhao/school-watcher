@@ -77,6 +77,8 @@ def create_app(test_config=None):
     from backend.database import student_information_models  # noqa: F401
     from backend.ai import models as ai_models, summary_models  # noqa: F401
     from backend.services import announcement_identity  # noqa: F401
+    from backend.database import structure_version_models  # noqa: F401
+    from backend.services import structure_versions  # noqa: F401
 
     # ---- 蓝图 ----
     from backend.routes import register_blueprints

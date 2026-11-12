@@ -1,0 +1,19 @@
+<resources>
+    <style name="Theme.SchoolWatcher" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#A5CAFF</item>
+        <item name="colorOnPrimary">#003161</item>
+        <item name="colorPrimaryContainer">#174777</item>
+        <item name="colorOnPrimaryContainer">#DCEBFF</item>
+        <item name="colorSecondaryContainer">#253E56</item>
+        <item name="colorOnSecondaryContainer">#DBE8F7</item>
+        <item name="colorSurface">#101012</item>
+        <item name="colorOnSurface">#F5F5F7</item>
+        <item name="colorOnSurfaceVariant">#C5C5CA</item>
+        <item name="colorSurfaceContainer">#1C1C1E</item>
+        <item name="colorSurfaceContainerLow">#171719</item>
+        <item name="colorSurfaceContainerHigh">#28282B</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#A5CAFF</item>
+    </style>
+</resources>

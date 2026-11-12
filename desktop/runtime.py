@@ -105,6 +105,7 @@ class DesktopRuntime:
         self.data_dir = configure(data_dir)
         self._job = ServiceJob()
         self.processes = {}
+        self._log_collectors = []
         self.stopped = threading.Event()
         self.guard = threading.RLock()
         self.address = None
@@ -115,13 +116,20 @@ class DesktopRuntime:
         with self.guard:
             if self.stopped.is_set():
                 raise RuntimeError('应用正在退出。')
-            with (self.data_dir / f'desktop-{role}.log').open('ab') as output:
-                environment = os.environ.copy()
-                environment['WATCHER_SERVICE_GUARD'] = '1'
-                process = subprocess.Popen(service_command(role, self.data_dir), cwd=self.data_dir,
-                    stdin=subprocess.PIPE, stdout=output, stderr=subprocess.STDOUT, env=environment,
-                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+            from desktop.runtime_logs import capture_process_output
+            environment = os.environ.copy()
+            environment.update(WATCHER_SERVICE_GUARD='1', WATCHER_CAPTURED_LOGS='1',
+                               PYTHONIOENCODING='utf-8', PYTHONUNBUFFERED='1')
+            process = subprocess.Popen(service_command(role, self.data_dir), cwd=self.data_dir,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0,
+                env=environment, creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+            collector = None
             try:
+                # Drain before the startup handshake so even boot errors cannot
+                # fill the pipe. This owns output only, never the stdin guard.
+                collector = capture_process_output(process, self.data_dir, role)
+                self._log_collectors = [old for old in self._log_collectors if not old.close(timeout=0)]
+                self._log_collectors.append(collector)
                 # The child cannot start services or spawn grandchildren until
                 # it belongs to our Windows job. Keep the pipe open for macOS.
                 self._job.add(process)
@@ -131,6 +139,8 @@ class DesktopRuntime:
                 process.stdin.close()
                 process.kill()
                 process.wait(timeout=5)
+                if collector:
+                    collector.close(timeout=1)
                 raise
             self.processes[role] = process
             return process
@@ -171,9 +181,9 @@ class DesktopRuntime:
         try:
             code = process.wait(timeout=180)
         except subprocess.TimeoutExpired as exc:
-            raise RuntimeError('数据库准备超时，请查看 desktop-migrate.log。') from exc
+            raise RuntimeError('数据库准备超时，请查看数据目录 logs 文件夹中当日的 migrate 日志。') from exc
         if code:
-            raise RuntimeError('数据库准备失败，已有数据未被清空。请查看 desktop-migrate.log。')
+            raise RuntimeError('数据库准备失败，已有数据未被清空。请查看数据目录 logs 文件夹中当日的 migrate 日志。')
         self.spawn('web')
         self.wait_ready('web', self.address + '/_desktop/health', os.environ['WATCHER_DESKTOP_TOKEN'])
         self.spawn('browser')
@@ -262,7 +272,14 @@ class DesktopRuntime:
                     if process and process.stdin:
                         process.stdin.close()
             finally:
-                self._job.close()
+                try:
+                    self._job.close()
+                finally:
+                    # Child termination/Job ownership remains authoritative.
+                    # Never close a live pipe merely because a join timed out.
+                    deadline = time.monotonic() + 2
+                    for collector in self._log_collectors:
+                        collector.close(timeout=max(0, deadline - time.monotonic()))
 
 
 def run_service(role):

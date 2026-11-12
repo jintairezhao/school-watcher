@@ -57,6 +57,26 @@ class SourceArticleLayoutTests(unittest.TestCase):
         html=self.page().replace('作者：　　时间：2025-12-09　　浏览：','活动时间：2025-12-09')
         self.assertFalse(self.observe(html)['matched'])
 
+    def test_plain_article_title_header_beside_configured_body_needs_no_invented_date(self):
+        html = ('<html><title>示例学院</title><body><div class="article-detail">'
+                f'<div class="detail__header"><div class="detail__title">{self.title}</div></div>'
+                '<div class="article-copy"><p>本课程组织学生开展实验实践，具体课程安排与成果展示请查阅通知。</p></div>'
+                '</div></body></html>')
+        sample = self.observe(html, '.article-copy')
+        self.assertTrue(sample['matched'])
+        self.assertNotEqual(sample['publication_date']['state'], 'verified')
+
+    def test_unrelated_header_title_cannot_borrow_a_configured_body(self):
+        for marker, extra, content in (
+                ('site-header', '</section><section>', '<p>通知正文内容用于检查标题与正文必须属于同一个局部区域。</p>'),
+                ('sidebar detail__header', '', '<p>通知正文内容用于检查标题与正文必须属于同一个局部区域。</p>'),
+                ('detail__header', '', '<p aria-busy="true">正文正在加载，请稍候</p>')):
+            with self.subTest(marker=marker, extra=extra, content=content):
+                html = ('<html><title>示例学院</title><body><section>'
+                        f'<div class="{marker}"><div>{self.title}</div></div>{extra}'
+                        f'<div class="article-copy">{content}</div></section></body></html>')
+                self.assertFalse(self.observe(html, '.article-copy')['matched'])
+
 
 if __name__ == '__main__':
     unittest.main()

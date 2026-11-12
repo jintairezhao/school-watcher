@@ -24,7 +24,7 @@ class ArticleImageTests(unittest.TestCase):
     def displayed_image(self):
         response = self.fixture.client.get(f'/api/announcements/{self.ann.id}/content')
         self.assertEqual(response.status_code, 200)
-        return BeautifulSoup(response.json['content_html'], 'html.parser').img['src']
+        return BeautifulSoup(response.json['content_html'], 'html.parser').img['data-article-image-src']
 
     def test_cached_api_and_template_use_same_local_image_endpoint(self):
         source = self.displayed_image()
@@ -34,9 +34,11 @@ class ArticleImageTests(unittest.TestCase):
                 "{% from '_content_loader.html' import content_loader %}{{ content_loader(ann) }}",
                 ann=self.ann)
         body = BeautifulSoup(rendered, 'html.parser').select_one('.body-loader-content')
-        self.assertEqual(body.img['src'], source)
+        self.assertEqual(body.img['data-article-image-src'], source)
+        self.assertNotIn('src', body.img.attrs)
         self.assertEqual(body.img['alt'], '报名二维码')
-        self.assertEqual(body.a['href'], 'https://example.edu.cn/uploads/full.png')
+        self.assertTrue(body.a['href'].startswith(f'/api/announcements/{self.ann.id}/attachments/'))
+        self.assertEqual(self.fixture.client.get(body.a['href']).location, 'https://example.edu.cn/uploads/full.png')
         self.assertIn(self.original, self.ann.content_html)
 
     def test_image_bytes_use_public_transport_without_forwarding_remote_headers(self):
@@ -66,6 +68,16 @@ class ArticleImageTests(unittest.TestCase):
             self.assertEqual(self.fixture.client.get(source).status_code, 404)
             fetch.assert_not_called()
 
+    def test_waiting_for_origin_is_retryable_instead_of_an_internal_error(self):
+        from backend.scraper.http_client import FetchAdmissionBusy
+        source = self.displayed_image()
+        with patch('backend.scraper.http_client.requests.get', side_effect=FetchAdmissionBusy(1.2)):
+            response = self.fixture.client.get(source)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json['error_code'], 'origin_busy')
+        self.assertEqual(response.headers['Retry-After'], '2')
+        self.assertIn('no-store', response.headers['Cache-Control'])
+
     def test_relative_sources_resolve_to_original_page_and_unsafe_sources_are_removed(self):
         from backend.services.article_images import image_sources, render_article_html
         html = ('<img src="../qr.png"><img src="//cdn.example.edu.cn/qr.png">'
@@ -76,9 +88,17 @@ class ArticleImageTests(unittest.TestCase):
         self.assertEqual(set(sources.values()), {
             'https://example.edu.cn/qr.png', 'https://cdn.example.edu.cn/qr.png'})
         rendered = BeautifulSoup(render_article_html(html, self.ann.id, base), 'html.parser')
-        self.assertEqual(len(rendered.select('img[src]')), 2)
-        self.assertTrue(all(img['src'].startswith('/api/announcements/')
-                            for img in rendered.select('img[src]')))
+        self.assertEqual(len(rendered.select('img[data-article-image-src]')), 2)
+        self.assertFalse(rendered.select('img[src]'))
+        self.assertTrue(all(img['data-article-image-src'].startswith('/api/announcements/')
+                            for img in rendered.select('img[data-article-image-src]')))
+
+    def test_imported_deferred_markers_cannot_be_used_as_a_different_proxy(self):
+        from backend.services.article_images import render_article_html
+        rendered = BeautifulSoup(render_article_html(
+            '<img data-article-image-src="/api/settings"><img src="http://127.0.0.1/private" '
+            'data-article-image-src="/api/settings">', self.ann.id, self.ann.url), 'html.parser')
+        self.assertFalse(rendered.select('img[src],img[data-article-image-src]'))
 
     def test_non_images_oversized_streams_and_network_failures_do_not_return_active_content(self):
         from requests import Timeout

@@ -41,18 +41,24 @@ def render_article_html(html, ann_id=None, base_url=''):
         return sanitize_html(html)
     soup = BeautifulSoup(html, 'lxml')
     from backend.database.models import AnnouncementResource
-    from backend.services.saved_materials import resource_url, resource_key
+    from backend.services.saved_materials import resource_url, resource_key, resources_in_html
     saved = {row.url_key for row in AnnouncementResource.query.filter_by(announcement_id=ann_id, state='ready', kind='attachment').all()} if has_app_context() else set()
+    attachments = {key for key, row in resources_in_html(html, base_url).items() if row['kind'] == 'attachment'}
     for anchor in soup.find_all('a', href=True):
         url = resource_url(anchor['href'], base_url)
-        if url and resource_key(url) in saved:
-            anchor['href'] = f'/api/announcements/{int(ann_id)}/resources/{resource_key(url)}'
-    for img in soup.find_all('img', src=True):
-        url = _source(img['src'], base_url)
+        key = resource_key(url) if url else ''
+        if key in saved:
+            anchor['href'] = f'/api/announcements/{int(ann_id)}/resources/{key}'
+        elif key in attachments:
+            anchor['href'] = f'/api/announcements/{int(ann_id)}/attachments/{key}'
+    for img in soup.find_all('img'):
+        # Only the display copy carries a trusted local deferred entrance. Do
+        # not accept a supplied marker from cached/imported page attributes.
+        img.attrs.pop('data-article-image-src', None)
+        url = _source(img.get('src'), base_url)
         if url:
-            img['src'] = f'/api/announcements/{int(ann_id)}/images/{_key(url)}'
-        else:
-            del img['src']
+            img['data-article-image-src'] = f'/api/announcements/{int(ann_id)}/images/{_key(url)}'
+        img.attrs.pop('src', None)
     # Keep the security parser as the last serialization boundary.
     return sanitize_html(str(soup))
 

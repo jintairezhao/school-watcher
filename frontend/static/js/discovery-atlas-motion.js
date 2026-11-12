@@ -32,3 +32,13 @@ export function growthAt(plan,item,progress) {
     const phase=plan.entries.get(item.id);
     return phase ? smooth((clamp(progress)*plan.duration-phase.start)/(phase.end-phase.start)) : 1;
 }
+
+export function recordedGrowthPlan(trace) {
+    if(!trace?.complete||!trace.renderComplete||trace.nodes.length<2)return null;
+    const shown=new Set(trace.nodes.map(node=>node.id)),entries=new Map();
+    trace.events.forEach((event,index)=>{
+        if(shown.has(event.node_id)&&!entries.has(event.node_id))entries.set(event.node_id,{start:index,end:index+.8});
+    });
+    if(entries.size!==shown.size)return null;
+    return {entries,duration:Math.max(1,trace.events.length),basis:'recorded_event_order'};
+}

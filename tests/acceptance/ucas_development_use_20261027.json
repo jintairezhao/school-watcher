@@ -1,0 +1,31 @@
+{
+  "as_of": "2026-10-27T10:05:32.759500+00:00",
+  "reason": "UCAS retained HTML directly informed a generic date-first editorial publication-header fix.",
+  "school_name": "中国科学院大学",
+  "original_nomination": "tests/acceptance/independent_school_nomination_20261024.json",
+  "original_target_review": "tests/acceptance/independent_school_target_review_20261024.json",
+  "required_target_confirmations_preserved": true,
+  "role": "development_used_not_independent_acceptance",
+  "first_development_use": "date_first_editorial_publication_header_20261027",
+  "affected_product_fingerprints": {
+    "backend/scraper/article_observation.py": "833ad633bddcd1c5817205712d4b439bb56edd85a9ab09e8c5c65f62f39b48e6",
+    "backend/scraper/publication_metadata.py": "b15bafa69ffdef2ec0082793dfe362d85a91cbaab38c3cbc45c120c6668c9cbc",
+    "backend/services/publication_dates.py": "9057070b7c025f79dea2d0542e984bf9e85d457726b1e28ecf0cf094aa75fb26"
+  },
+  "independent_acceptance_for_this_change": false,
+  "holdout_certified": false,
+  "previous_frozen_run_retained_as_historical_untuned_observation": true,
+  "replacement_independent_school_needed": true,
+  "certified_branch_episodes": 0,
+  "threshold_gate": "insufficient_evidence_no_evaluator",
+  "subsequent_development_uses": [
+    {
+      "kind": "shared_academic_collection_kind_fix",
+      "at": "2026-10-27T10:19:41.837930+00:00",
+      "report": "deploy/STRUCTURE_COLLECTION_KIND_20261027.md",
+      "product_fingerprints": {
+        "backend/scraper/discovery/directory_terms.py": "fcc264a29070b1f96d886d344ad5d7f5c4f10d7c894f709695090d7c5c05ff15"
+      }
+    }
+  ]
+}

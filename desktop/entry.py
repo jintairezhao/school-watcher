@@ -56,13 +56,8 @@ def main(argv=None):
         trace = (data / 'desktop-gui-trace.log').open('w')
         faulthandler.enable(file=trace)
         faulthandler.dump_traceback_later(60, file=trace)
-    # Windowed executables have no stdout/stderr. Services still need real streams.
-    if sys.stdout is None:
-        sys.stdout = (data / f'desktop-{args.service or "app"}.log').open('a', encoding='utf-8')
-    if sys.stderr is None:
-        sys.stderr = sys.stdout
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s',
-                        handlers=[logging.FileHandler(data / 'desktop.log', encoding='utf-8')])
+    from desktop.runtime_logs import configure_runtime_logging
+    configure_runtime_logging(data, args.service or 'app')
     if args.service:
         run_service(args.service)
         return 0

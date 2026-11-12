@@ -235,6 +235,8 @@ def run_grouping(payload, *, checkpoint=None, fetcher=None, page_budget=None):
                 db.func.coalesce(db.func.trim(Department.group_name), '') == '')
                 .values(group_name=groups.pop()).execution_options(synchronize_session=False))
             if updated.rowcount:
+                from backend.services.structure_versions import mark_structure_changed
+                mark_structure_changed(school.id, 'department', department.id, fields=('group_name',))
                 restored.add(department.id)
     tasks.assert_owned()
     db.session.commit()

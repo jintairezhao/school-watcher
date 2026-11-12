@@ -62,12 +62,12 @@ def inbox_sync():
     if not check_rate_limit(f'inbox-sync:{g.user.id}', 30, 60)[0]:
         return jsonify(error='检查较频繁，请稍后重试；已有通知仍可查看。'), 429
     baseline = refresh_tracking_baseline(g.user.id)
-    jobs = queue_sources(departments)
-    if jobs:
-        tracked_ids = {t.payload.get('department_id') for t in
-                       BackgroundTask.query.filter(BackgroundTask.id.in_(jobs))}
-        remember_refresh_scope(g.user.id, [d for d in departments if d.id in tracked_ids],
-                               payload['scope'], baseline=baseline)
+    decisions = []
+    jobs = queue_sources(departments, decisions=decisions)
+    tracked_ids = {t.payload.get('department_id') for t in
+                   BackgroundTask.query.filter(BackgroundTask.id.in_(jobs))} if jobs else set()
+    remember_refresh_scope(g.user.id, [d for d in departments if d.id in tracked_ids],
+                           payload['scope'], baseline=baseline, requested=departments, decisions=decisions)
     data = restore_refresh_status(g.user.id)
     data['scheduled'] = len(jobs)
     response = jsonify(data)

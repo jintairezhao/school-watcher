@@ -44,6 +44,10 @@ def route_structure(parsed, page, html='', root_url='', has_publications=False, 
     actual_url = next((node.get('url') for node in parsed['nodes']
                        if node.get('relation') == 'page_identity' and node.get('url')),
                       page.get('final_url') or page['url'])
+    if policy == 'valuable' and html:
+        from .notification_entrances import notification_blocks
+        parsed['primary_notification_routes'] = notification_blocks(
+            page.get('kind'), actual_url, hashlib.sha256(html.encode()).hexdigest(), publication)
     soup = BeautifulSoup(html, 'lxml') if html else None
     base = soup.find('base', href=True) if soup else None
     base_url = urljoin(actual_url, base['href']) if base else actual_url
@@ -219,6 +223,7 @@ def navigation_candidates(html, parsed, page):
 def apply_route(parsed, link, saved):
     """Persist only role decisions; names and relationships come from the DOM."""
     from .structure import node_key
+    from backend.services.source_relationships import ROSTER_RELATIONS
     link.update({key: saved[key] for key in ('kind', 'decision', 'ai_reviewed', 'ai_value', 'ai_role', 'probe_only') if key in saved})
     if not saved.get('ai_reviewed') or link['decision'] not in ('follow', 'official_external_link'):
         return
@@ -230,8 +235,9 @@ def apply_route(parsed, link, saved):
     nodes = [node for node in parsed['nodes'] if node.get('url') == link['url']
              and node.get('locator') == link.get('locator') and node['relation'] != 'page_identity']
     for node in nodes:
-        # A parsed publication block is stronger evidence than a route hint.
-        if node['relation'] == 'publication_column':
+        # Observed directory entities and publication blocks keep their own
+        # identities; a model role describes how to explore this link.
+        if node['relation'] == 'publication_column' or node['relation'] in ROSTER_RELATIONS:
             continue
         old_key = node['key']
         node.update(kind=kind, key=node_key(kind, node['name'], node['url']))
@@ -425,7 +431,8 @@ def ordered_navigation(candidates, page, parsed, checkpoint, policy, school_id):
     from .navigation_order import explain_candidates
     attention = get_attention_policy(school_id)
     explanations = explain_candidates(candidates,
-        dict(page, observed_structure=parsed.get('nodes', [])), attention)
+        dict(page, observed_structure=parsed.get('nodes', []),
+             primary_notification_routes=parsed.get('primary_notification_routes', [])), attention)
     ordered = [candidates[row['original_index']] for row in explanations]
     checkpoint['route_candidate_order'] = [[link['url'], link['label']] for link, _ in ordered]
     checkpoint['route_attention'] = dict(attention,
@@ -434,7 +441,17 @@ def ordered_navigation(candidates, page, parsed, checkpoint, policy, school_id):
     return ordered
 
 
-def assist(site, page, html, parsed, *, decision_allowed=None):
+def navigation_application_key(checkpoint):
+    """Identify the saved slice whose queue/catalogue application completed."""
+    if not checkpoint.get('route_material_hash') or not checkpoint.get('admitted_routes'):
+        return ''
+    from backend.ai.skill_loader import digest
+    return digest({'material_hash': checkpoint['route_material_hash'],
+                   'cursor': checkpoint.get('route_cursor', 0),
+                   'routes': checkpoint['admitted_routes']})
+
+
+def assist(site, page, html, parsed, *, decision_allowed=None, apply_saved_first=False):
     from backend.ai.configuration import get_model_binding, AIConfigError
     from backend.ai.runtime import run_skill
     from backend.ai.skill_loader import digest, load_skill, canonical
@@ -462,9 +479,9 @@ def assist(site, page, html, parsed, *, decision_allowed=None):
     material_hash = digest([(l['url'], l['label'], context) for l, context in candidates])
     pending_decision = checkpoint.get('route_pending_decision')
     if checkpoint.get('route_material_hash') != material_hash:
-        if pending_decision:
-            # An unresolved paid attempt remains identifiable even if current
-            # evidence changes. Never replace it with a newly billed subset.
+        if pending_decision or apply_saved_first and checkpoint.get('admitted_routes'):
+            # Pending requests and saved results retain their original input
+            # identity. Never replace them with a newly billed subset.
             return {'status': 'needs_recovery', 'error_code': 'execution_conflict',
                     'reviewed_routes': checkpoint.get('route_cursor', 0), 'cached_routes': cached_count}
         checkpoint.update(route_material_hash=material_hash, route_cursor=0, admitted_routes=[], unresolved_routes=[],
@@ -474,10 +491,23 @@ def assist(site, page, html, parsed, *, decision_allowed=None):
                              or pending_decision.get('cursor') != cursor):
         return {'status': 'needs_recovery', 'error_code': 'execution_conflict',
                 'reviewed_routes': cursor, 'cached_routes': cached_count}
-    for saved in checkpoint.get('admitted_routes', []):
+    saved_routes = checkpoint.get('admitted_routes', [])
+    if apply_saved_first and any(saved.get('url') not in {link['url'] for link in parsed['links']}
+                                for saved in saved_routes):
+        return {'status': 'needs_recovery', 'error_code': 'execution_conflict',
+                'reviewed_routes': cursor, 'cached_routes': cached_count}
+    for saved in saved_routes:
         for link in parsed['links']:
             if link['url'] == saved['url']:
                 apply_route(parsed, link, dict(saved, decision=saved.get('decision', 'follow')))
+    if (apply_saved_first and saved_routes
+            and checkpoint.get('route_application_key') != navigation_application_key(checkpoint)):
+        # A previous slice may have saved its paid result before its caller
+        # could acquire the writer lock. Apply that result without requesting
+        # another binding/decision. Only the caller can mark publication done.
+        return {'status': 'pending', 'saved_routes_only': True,
+                'reviewed_routes': cursor, 'cached_routes': cached_count,
+                'remaining_routes': max(0, len(candidates) - cursor)}
     if checkpoint.get('unresolved_routes') and not pending_decision:
         # Older layered jobs recorded a known unknown decision but no read
         # action. Advance only the already-reviewed, still-observed URLs. This
@@ -574,6 +604,8 @@ def assist(site, page, html, parsed, *, decision_allowed=None):
                      'decision': 'follow' if same_school_url(link['url'], site['root_url']) else 'official_external_link'}
         saved.update(ai_reviewed=True, ai_value=row['value'], ai_role=row['role'])
         apply_route(parsed, link, saved)
+        from backend.services.execution_observations import record_cache_use
+        record_cache_use(cache_keys[id(link)],row)
         if not any(value['url'] == link['url'] for value in admitted):
             admitted.append(saved)
             cached_new += 1
@@ -647,6 +679,8 @@ def assist(site, page, html, parsed, *, decision_allowed=None):
         admitted.append(saved)
         cache_row = navigation_roles.cacheable_result(row, link.get('_navigation_material'))
         if cache_row:
+            from backend.services.execution_observations import execution_reference
+            cache_row['execution_reference']=execution_reference(response)
             to_cache.append((cache_keys[id(link)], cache_row))
     navigation_roles.save(to_cache)
     checkpoint.pop('route_pending_decision', None)

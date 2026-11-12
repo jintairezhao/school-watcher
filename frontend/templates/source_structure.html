@@ -1,26 +1,39 @@
 {% extends "base.html" %}
 {% from '_ui_text.html' import ui_text %}
 {% block title %}{{ school.name }} · {{ tr('官网来源结构') }}{% endblock %}
+{% macro evidence_details(proofs) %}
+{% if proofs %}<details class="directory-note"><summary>{{ ui_text('查看依据与材料版本') }}</summary>
+    <ul>{% for proof in proofs %}<li>
+        {% if proof.reference_url %}<a href="{{ proof.reference_url }}" target="_blank" rel="noopener noreferrer">{{ ui_text('来源页面') }}</a>{% else %}{{ ui_text('来源页面未记录') }}{% endif %}
+        <br>{{ ui_text('网页定位') }}：<code>{{ proof.locator or ui_text('未记录') }}</code>
+        <br>{{ ui_text('材料版本') }}：<code>{{ proof.content_hash or ui_text('未记录') }}</code>
+        <br>{{ ui_text('观察时间') }}：{{ proof.observed_at or ui_text('未记录') }}
+        {% if proof.current_material is defined and not proof.current_material %}<br>{{ ui_text('材料不完整或已变化，仅保留原始目录记录。') }}{% endif %}
+        {% if proof.material_available is not defined or proof.material_available is none %}<br>{{ ui_text('原始材料可用性未确认') }}{% elif proof.material_available is sameas false %}<br>{{ ui_text('原始材料未保留') }}{% endif %}
+    </li>{% endfor %}</ul>
+</details>{% endif %}
+{% endmacro %}
 {% macro branch(node, depth=0) %}
 <li class="structure-node">
-    {% if node.children %}<details {% if depth == 0 %}open{% endif %}><summary><span>{{ node.name }}</span><small>{{ node.relation_label }} · {{ node.children|length }} <span data-i18n="个条目">{{ tr("个条目") }}</span></small></summary>
-    {% else %}<div class="structure-leaf"><span>{{ node.name }}</span><small>{{ node.relation_label }}</small></div>{% endif %}
+    {% if node.children %}<details {% if depth == 0 %}open{% endif %}><summary><span>{{ node.name }}</span><small>{{ ui_text(node.relation_label) }} · {{ node.children|length }} <span data-i18n="个条目">{{ tr("个条目") }}</span></small></summary>
+    {% else %}<div class="structure-leaf"><span>{{ node.name }}</span><small>{{ ui_text(node.relation_label) }}</small></div>{% endif %}
     <div class="structure-node-meta">
-        {% if node.urls %}{% for source_url in node.urls %}<a href="{{ source_url }}" target="_blank" rel="noopener noreferrer">{{ tr('官网入口') if loop.first else '官网入口 ' ~ loop.index }}</a>{% endfor %}<span>{{ node.health_label }}</span>{% else %}<span>{{ '分组' if node.kind == 'group' else tr('官网未提供独立入口') }}</span>{% endif %}
+        {% if node.urls %}{% for source_url in node.urls %}<a href="{{ source_url }}" target="_blank" rel="noopener noreferrer">{{ ui_text('官网入口') }}{% if not loop.first %} {{ loop.index }}{% endif %}</a>{% endfor %}<span>{{ ui_text(node.health_label) }}</span>{% else %}<span>{{ ui_text('分组') if node.kind == 'group' else ui_text('官网未提供独立入口') }}</span>{% endif %}
         {% if node.cycle %}<span data-i18n="官网目录存在重复引用，已停止展开">{{ tr("官网目录存在重复引用，已停止展开") }}</span>{% endif %}
         {% if node.node_key in programme_attributes %}<span>{% for label, value in programme_attributes[node.node_key].items() %}{{ label }}：{{ value }}{% if not loop.last %} · {% endif %}{% endfor %}</span>{% endif %}
     </div>
+    {{ evidence_details(node.evidence) }}
     {% if node.children %}<ul>{% for child in node.children %}{{ branch(child, depth+1) }}{% endfor %}</ul></details>{% endif %}
 </li>
 {% endmacro %}
 {% block content %}
-<div class="sources-page structure-page">
+<div class="sources-page structure-page" data-structure-epoch="{{ structure_version.epoch }}" data-structure-revision="{{ structure_version.revision }}">
     {% from '_school_header.html' import school_header with context %}
     {{ school_header(school, 'structure', tr('查看院系、专业与通知来源的官网依据。')) }}
     {% if report %}
     <div class="source-sync">
         <strong data-i18n="官网来源依据">{{ tr("官网来源依据") }}</strong>
-        <p data-i18n="这里保留原始官网目录，通知来源已整理到左侧部门与栏目。尚未接通的入口由系统继续处理，无需逐项核实。">{{ tr("这里保留原始官网目录，通知来源已整理到左侧部门与栏目。尚未接通的入口由系统继续处理，无需逐项核实。") }}</p>
+        <p>{{ ui_text('这里保留官网目录原始记录。有依据的组织关系单独列示；目录嵌套不代表行政隶属。') }}</p>
         <p><span data-i18n="已读取">{{ tr("已读取") }}</span> {{ report.states.get('fetched', 0) }} <span data-i18n="个页面 · 已保存">{{ tr("个页面 · 已保存") }}</span> {{ ui_text('{count}个待处理入口。',{'count':report.states.get('pending',0)+report.states.get('running',0)}) }}<a href="{{ request.full_path }}" data-i18n="刷新进度">{{ tr("刷新进度") }}</a></p>
         {% if report.reference_checks %}
         <details><summary><span data-i18n="已核对的目录范围">{{ tr("已核对的目录范围") }}</span></summary>
@@ -36,27 +49,34 @@
     </div>
     {% if references %}
     <form class="structure-reference" method="get">
-        <label for="structureReference"><span data-i18n="按官网页面查看原始层级">{{ tr("按官网页面查看原始层级") }}</span></label>
+        <label for="structureReference">{{ ui_text('按官网页面查看目录记录') }}</label>
         <div><select class="form-input" name="reference" id="structureReference">{% for ref in references %}<option value="{{ ref.url }}" {% if selected and selected.url == ref.url %}selected{% endif %}>{{ ref.label }}</option>{% endfor %}</select><button class="btn btn-outline" data-i18n="查看结构">{{ tr("查看结构") }}</button></div>
     </form>
     {% if selected %}<p class="structure-origin"><span data-i18n="出处：">{{ tr("出处：") }}</span><a href="{{ selected.url }}" target="_blank" rel="noopener noreferrer">{{ selected.title or selected.label }}</a> <span data-i18n="· 检查于">{{ tr("· 检查于") }}</span> {{ selected.checked_at }}</p>{% endif %}
-    {% if major_owners %}
-    <div class="structure-origin"><p><span data-i18n="该专业目录的学院官网入口路径：">{{ tr("该专业目录的学院官网入口路径：") }}</span></p>
-        {% for owner in major_owners %}<p>{% for part in owner.nodes %}{{ part.name }} → {% endfor %}{% for part in owner.entry_nodes %}{{ part.name }} → {% endfor %}{{ selected.label }}<br>
-            <span data-i18n="依据：">{{ tr("依据：") }}</span>{% for ref in owner.references %}<a href="{{ ref.url }}" target="_blank" rel="noopener noreferrer">{{ ref.title }}</a>{% if not loop.last %}、{% endif %}{% endfor %}</p>{% endfor %}
-        <p data-i18n="保留官网列示路径；专业介绍不等于独立的通知发布单位。">{{ tr("保留官网列示路径；专业介绍不等于独立的通知发布单位。") }}</p>
-    </div>
+    {% if page_entrances %}
+    <details class="directory-note" id="recordedPageEntrances"><summary>{{ ui_text('指向本页的已记录官网入口') }}</summary>
+        <p>{{ ui_text('以下链接只证明页面可达，不代表发布单位或行政隶属。') }}</p>
+        <ul>{% for entry in page_entrances %}<li>{{ entry.source_node.label }} → {{ entry.target_node.label }}{{ evidence_details(entry.evidence) }}</li>{% endfor %}</ul>
+    </details>
     {% endif %}
-    <p class="structure-explanation" data-i18n="缩进保留官网中的分组与嵌套。“挂靠单位”“下属单位”只在官网有明确依据时标出；导航位置不直接代表行政隶属。">{{ tr("缩进保留官网中的分组与嵌套。“挂靠单位”“下属单位”只在官网有明确依据时标出；导航位置不直接代表行政隶属。") }}</p>
+    {% if proven_relations %}
+    <details class="directory-note" id="provenStructureRelations" open><summary>{{ ui_text('有依据的结构关系') }}</summary>
+        <ul>{% for relation in proven_relations %}<li><strong>{{ relation.source_node.label }} → {{ relation.target_node.label }}</strong> · {{ ui_text(relation.relation_label) }}
+            {% for assertion in relation.assertions %}<p>{{ ui_text('官网原文') }}：{{ assertion.text or assertion.identity_text }}</p>{% endfor %}
+            {{ evidence_details(relation.evidence) }}
+        </li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+    <p class="structure-explanation">{{ ui_text('下方缩进仅保留官网目录中的分组与嵌套；组织隶属与栏目归属以有依据的结构关系为准。') }}</p>
     {% if directory_link_issues %}<details class="directory-note" id="directoryLinkIssues">
         <summary>{{ ui_text('官网目录中的异常入口（{count}项）',{'count':directory_link_issues|length}) }}</summary>
         <ul>{% for entry in directory_link_issues %}<li><strong>{{ entry.name }}</strong>：{{ tr('链接回到当前目录，尚未提供独立网站入口。') if entry.reason == 'self_link' else tr('原链接缺少网址协议，尚未取得可用的独立入口。') }}</li>{% endfor %}</ul>
     </details>{% endif %}
     {% if directory_variants %}<details class="directory-note" id="directoryDifferences">
         <summary>{{ ui_text('官网不同目录的差异（{count}项）',{'count':directory_variants|length}) }}</summary>
-        <p data-i18n="以下版本来自同一官网页面。保留各自列示的单位、上下级和网址；目录差异不影响已收录信息的阅读。">{{ tr("以下版本来自同一官网页面。保留各自列示的单位、上下级和网址；目录差异不影响已收录信息的阅读。") }}</p>
+        <p>{{ ui_text('以下版本保留官网的目录列示与网址差异，不能据此认定组织隶属关系。') }}</p>
         <ul>{% for entry in directory_variants %}<li><strong>{% if entry.parent %}{{ entry.parent }} → {% endif %}{{ entry.name }}</strong>
-                <ul>{% for version in entry.versions %}<li>{{ version.name }}：{% if not version.present %}<span data-i18n="此目录未列出">{{ tr("此目录未列出") }}</span>{% else %}{% for target in version.urls %}{% if target %}<a href="{{ target }}" target="_blank" rel="noopener noreferrer">{{ target }}</a>{% else %}<span data-i18n="官网未提供链接">{{ tr("官网未提供链接") }}</span>{% endif %}{% if not loop.last %}；{% endif %}{% endfor %}{% if version.relationship %}；{{ version.relationship }}{% endif %}{% endif %}</li>{% endfor %}</ul>
+                <ul>{% for version in entry.versions %}<li>{{ version.name }}：{% if not version.present %}<span data-i18n="此目录未列出">{{ tr("此目录未列出") }}</span>{% else %}{% for target in version.urls %}{% if target %}<a href="{{ target }}" target="_blank" rel="noopener noreferrer">{{ target }}</a>{% else %}<span data-i18n="官网未提供链接">{{ tr("官网未提供链接") }}</span>{% endif %}{% if not loop.last %}；{% endif %}{% endfor %}{% if version.relationship %}；{{ ui_text('原始解析标记') }}：<code>{{ version.relationship }}</code>{% endif %}{% endif %}</li>{% endfor %}</ul>
         </li>{% endfor %}</ul>
     </details>{% endif %}
     {% if major_tree %}
@@ -71,7 +91,7 @@
     {% else %}<p data-i18n="尚未取得可解析的组织目录，已知入口仍保留，等待继续核对。">{{ tr("尚未取得可解析的组织目录，已知入口仍保留，等待继续核对。") }}</p>{% endif %}
     {% if issues %}<details class="directory-note" id="sourceIssues" {% if request.args.get('issues_page') %}open{% endif %}><summary>{{ ui_text('自动适配记录（{count}项）',{'count':issue_total}) }}</summary>
         <p data-i18n="记录暂时无法读取或材料不足的入口。进度会保留，已接通的栏目继续更新；这些记录无需你逐项确认。">{{ tr("记录暂时无法读取或材料不足的入口。进度会保留，已接通的栏目继续更新；这些记录无需你逐项确认。") }}</p>
-        <ul class="structure-issues">{% for source in issues %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.label }}</a><span>{{ source.health_label }}</span></li>{% endfor %}</ul>
+        <ul class="structure-issues">{% for source in issues %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.label }}</a><span>{{ ui_text(source.health_label) }}</span></li>{% endfor %}</ul>
         {% if issue_pages > 1 %}<nav class="pagination-bar" data-i18n-aria-label="自动适配记录翻页" aria-label="{{ tr('自动适配记录翻页') }}">
             {% if issue_page > 1 %}<a rel="prev" href="{{ url_for('source_structure.school_structure', school_id=school.id, reference=selected.url if selected else None, issues_page=issue_page-1) }}#sourceIssues" data-i18n="上一页">{{ tr("上一页") }}</a>{% else %}<span data-i18n="上一页">{{ tr("上一页") }}</span>{% endif %}
             <span>{{ ui_text('第{page} / {pages}页',{'page':issue_page,'pages':issue_pages}) }}</span>

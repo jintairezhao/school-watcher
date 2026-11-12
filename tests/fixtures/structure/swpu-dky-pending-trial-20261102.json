@@ -1,0 +1,202 @@
+{
+  "source_task_id": 67,
+  "url": "http://www.swpu.edu.cn/dky/tzgg.htm",
+  "page_material_sha256": "9143f897745554166828b27e2f7a0ece2724149d9f44cc7db724b0d85b308936",
+  "column_validation": {
+    "page_hash": "a2a54b6a8383334ed07ad0fdb36bf321796e85f8d7cc10573b996562a086e891",
+    "stage": "trial",
+    "department_ids": [],
+    "new_count": 0,
+    "completed": [],
+    "failures": [],
+    "progress": {
+      "seen": [],
+      "decision_ids": [],
+      "decisions": 0,
+      "checked_decisions": 0,
+      "last_check_count": 0,
+      "no_change_checks": 0,
+      "stopped": false
+    },
+    "progress_ids": [],
+    "empty_columns": [],
+    "empty_rules": [],
+    "unresolved_region_plan": {
+      "version": 1,
+      "pending": false,
+      "active": false,
+      "selectors": []
+    },
+    "validation_version": 13,
+    "trial_columns": [
+      {
+        "name": "201801058-地球科学与技术学院",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "span, i, em",
+        "content_selector": "div.article-content, div.content, div.main, article",
+        "method": "profile_match",
+        "confidence": 0.95,
+        "heading_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > h3:nth-of-type(1)",
+        "column_url": "",
+        "column_link_locator": "",
+        "list_selector": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > :is(div.main li:has(a), div.content li:has(a), ul.list-tz li)",
+        "container_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1)",
+        "samples": [
+          {
+            "title": "“我的地科好老师” 育人故事征集通知",
+            "url": "http://www.swpu.edu.cn/dky/info/1012/43921.htm",
+            "date": "2026-10-13"
+          },
+          {
+            "title": "关于开展地科院2026年“实践归来话成长”社会实践成果展示汇报评比活动的通知",
+            "url": "http://www.swpu.edu.cn/dky/info/1012/43511.htm",
+            "date": "2026-10-04"
+          },
+          {
+            "title": "地科院关于开展“岩途”考研朋辈领航团助力深造答疑辅导活动的通知",
+            "url": "http://www.swpu.edu.cn/dky/info/1012/43451.htm",
+            "date": "2026-09-30"
+          },
+          {
+            "title": "西南石油大学地球科学与技术学院2026-2027学年兼职辅导员（研究生）拟聘人员公示",
+            "url": "http://www.swpu.edu.cn/dky/info/1012/43091.htm",
+            "date": "2026-09-18"
+          },
+          {
+            "title": "地科院关于公开招聘兼职辅导员的通知",
+            "url": "http://www.swpu.edu.cn/dky/info/1012/42771.htm",
+            "date": "2026-09-11"
+          },
+          {
+            "title": "地科院“贺卡+玫瑰”教师节特别活动邀您共赴",
+            "url": "http://www.swpu.edu.cn/dky/info/1012/42721.htm",
+            "date": "2026-09-09"
+          },
+          {
+            "title": "地科院关于举办“梦溪青春心向党”学生演讲比赛的通知",
+            "url": "http://www.swpu.edu.cn/dky/info/1012/42481.htm",
+            "date": "2026-09-08"
+          },
+          {
+            "title": "西南石油大学地球科学与技术学院2026-2027学年兼职辅导员（研究生）拟聘人员公示",
+            "url": "http://www.swpu.edu.cn/dky/info/1012/42301.htm",
+            "date": "2026-09-03"
+          }
+        ],
+        "article_urls": [
+          "http://www.swpu.edu.cn/dky/info/1012/43921.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/43511.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/43451.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/43091.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/42771.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/42721.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/42481.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/42301.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/41941.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/41801.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/40591.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/40501.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/40161.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/40121.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/40051.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/39891.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/39231.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/39011.htm",
+          "http://www.swpu.edu.cn/dky/info/1012/38731.htm"
+        ],
+        "item_count": 19,
+        "article_links": [
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/43921.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/43511.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/43451.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/43091.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(4) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/42771.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(5) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/42721.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(6) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/42481.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(7) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/42301.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(8) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/41941.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(9) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/41801.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(10) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/40591.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(11) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/40501.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(12) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/40161.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(13) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/40121.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(14) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/40051.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(15) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/39891.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(16) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/39231.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(18) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/39011.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(19) > a:nth-of-type(1)"
+          },
+          {
+            "url": "http://www.swpu.edu.cn/dky/info/1012/38731.htm",
+            "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(20) > a:nth-of-type(1)"
+          }
+        ],
+        "dated_item_count": 19,
+        "publication_dates_complete": true,
+        "latest_publication": "2026-10-13",
+        "verified": false,
+        "identity": "c65c59159bfc510aaca1c994",
+        "alternative_selectors": [
+          "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > ul:nth-of-type(1) > :is(div.right > div.news-text > div > ul.list-ul > li)"
+        ]
+      }
+    ],
+    "trial_origin_stage": "rules",
+    "trial_decision_ids": [],
+    "trial_request_key": "",
+    "trial_recognition_issues": []
+  }
+}

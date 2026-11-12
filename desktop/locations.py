@@ -320,6 +320,16 @@ def remove_personal_data():
                          'desktop-browser.log', 'desktop-migrate.log', 'desktop-web.log', 'desktop-worker.log',
                          'desktop-gui-trace.log', 'worker.lock', 'source_catalog.sqlite3.publish.lock'):
                 erase(data / name, data)
+            from desktop.runtime_logs import managed_log_files
+            for path in managed_log_files(data):
+                erase(path, data)
+            log_root = data / 'logs'
+            if log_root.is_dir() and not log_root.is_symlink() and not log_root.is_junction():
+                for month in log_root.iterdir():
+                    if (re.fullmatch(r'\d{4}-\d{2}', month.name) and month.is_dir()
+                            and not month.is_symlink() and not month.is_junction() and not any(month.iterdir())):
+                        month.rmdir()
+                if not any(log_root.iterdir()): log_root.rmdir()
             for file in data.glob('school_watcher.db.backup-*'):
                 if re.fullmatch(r'school_watcher\.db\.backup-\d{8}-\d{6}-\d+', file.name):
                     erase(file, data)

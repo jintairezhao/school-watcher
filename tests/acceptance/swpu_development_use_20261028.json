@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "school_name": "西南石油大学",
+  "recorded_at": "2026-10-28T10:26:16.462883+00:00",
+  "previous_role": "human_target_confirmed_candidate_pending_native_sampling",
+  "role": "development_used_not_independent_acceptance",
+  "reason": "Retained SWPU target7 drove the generic publication-list pager exclusion change",
+  "affected_product_file": "backend/scraper/discovery/publication_lists.py",
+  "affected_product_sha256": "5028b3df89314ec871e6f015482df35836727d513545e3335290bb0d5c420a61",
+  "parser_revision": "c5d03e86474a0c2cfbce0f06e69fa4ce984c8de52743bfc31122ad84297fef3b",
+  "prior_nomination_record": "tests/acceptance/swpu_independent_school_nomination_20261027.json",
+  "prior_nomination_sha256": "9036d8f73bc572dfb4c5a4b81dc4f3d11f3203fe39966b8ea9e2d6db961044a3",
+  "evidence": ".local/structure-facts-20261021/completed-publication-pager-20261028/retained-page-check.json",
+  "report": "deploy/STRUCTURE_PUBLICATION_PAGER_20261028.md",
+  "human_seven_target_confirmations_preserved": true,
+  "old_native_run_not_relabelled_as_new_policy_acceptance": true,
+  "original_scope_and_model_ledger_unchanged": true,
+  "independent_acceptance_for_affected_change": false,
+  "broader_changes_tuned_using_swpu_also_require_development_classification": true
+}

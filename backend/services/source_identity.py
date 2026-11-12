@@ -80,9 +80,7 @@ def same_observed_column(source, config, validation):
     comparison grants no publisher identity and does not prove a relocation.
     A separately observed identical self-home document can supply a page alias.
     """
-    from backend.services.source_governance import (_column_scope, _column_label,
-        _normal, read_snapshot, source_config)
-    from backend.scraper.discovery.publication_lists import select_node
+    from backend.services.source_governance import _column_label, _normal, source_config
     if not same_publisher(source, config):
         return False
     alias = canonical_url(source.list_url) != canonical_url(config['list_url'])
@@ -98,10 +96,26 @@ def same_observed_column(source, config, validation):
     if (not accepted or not region.get('container')
             or not region.get('heading') or canonical_url(reference.get('url', '')) != canonical_url(config['list_url'])):
         return False
-    scope = {'container_selector': region['container'], 'heading_selector': region['heading']}
     previous = source_config(source)
     if alias:
         previous = dict(previous, list_url=config['list_url'])
+    return same_column_selection(previous, config, reference, region)
+
+
+def same_column_selection(previous, config, reference, region):
+    """Compare exact current DOM selections; this alone grants no identity.
+
+    Also usable while a proposal is being validated. A caller may constrain an
+    existing verified publisher with this result, but must still validate the
+    new proposal and cannot treat matching page content as a publisher claim.
+    """
+    from backend.services.source_governance import _column_scope, read_snapshot
+    from backend.scraper.discovery.publication_lists import select_node
+    if (not region.get('container') or not region.get('heading')
+            or canonical_url(reference.get('url', '')) != canonical_url(config['list_url'])
+            or canonical_url(previous.get('list_url', '')) != canonical_url(config['list_url'])):
+        return False
+    scope = {'container_selector': region['container'], 'heading_selector': region['heading']}
     try:
         html = read_snapshot(reference)
         records, errors, current_region = _column_scope(config, reference, scope, html=html)
@@ -124,3 +138,63 @@ def same_observed_column(source, config, validation):
     except (KeyError, ValueError, TypeError, OSError, SelectorSyntaxError):
         return False
     return True
+
+
+def column_observation(config, receipt, html):
+    """Fingerprint an executed selection for counting, never a persistent source ID.
+
+    The caller supplies a current gated receipt and its exact retained full DOM.
+    Equivalent CSS selects the same nodes; neighbouring widgets or child links
+    keep separate observations even when names and article URLs happen to match.
+    Publisher labels constrain this comparison but grant no ownership claim.
+    """
+    from backend.services.source_governance import _hash, _normal, _column_label, _column_scope
+    from backend.scraper.discovery.publication_lists import select_node
+    from backend.scraper.discovery.structure import locator
+    if (not isinstance(html, str) or not html or _hash(html) != receipt.get('content_hash')
+            or _hash(config) != receipt.get('config_hash')
+            or canonical_url(config['list_url']) != receipt.get('url')):
+        return None
+    region = receipt.get('region') or {}
+    if not all(isinstance(region.get(k), str) and region[k].strip() for k in ('container','heading')):
+        return None
+    reference = {'url':receipt['url'], 'hash':receipt['content_hash'], 'outcome':'usable'}
+    scope = dict(container_selector=region['container'], heading_selector=region['heading'])
+    try:
+        records, errors, observed = _column_scope(config, reference, scope, html=html)
+        if errors:
+            return None
+        soup = BeautifulSoup(html, 'lxml')
+        containers, headings = soup.select(observed.get('container','')), soup.select(observed.get('heading',''))
+        items = soup.select(config['list_selector'])
+        if len(containers) != 1 or len(headings) != 1 or not items:
+            return None
+        selected = []
+        for item in items:
+            title = select_node(item, config['title_selector']) if config.get('title_selector') else item
+            link = select_node(item, config.get('link_selector') or 'a[href]')
+            if title is None or link is None:
+                return None
+            selected.append([locator(item), locator(title), locator(link)])
+        fingerprint = _hash(dict(url=reference['url'], content_hash=reference['hash'],
+            publisher=_normal(config.get('group_name','')),
+            name=_normal(_column_label(config['name'], config.get('group_name',''))),
+            container=locator(containers[0]), heading=locator(headings[0]), selected=selected, records=records))
+    except (ValueError, TypeError, KeyError, SelectorSyntaxError):
+        return None
+    return dict(schema=1, basis='executed_full_dom_selection', fingerprint=fingerprint,
+        source_id=receipt['source_id'], url=reference['url'], content_hash=reference['hash'],
+        config_hash=receipt['config_hash'])
+
+
+def receipt_count_identity(receipt):
+    """Use only an annotation bound to this exact source/config/material receipt."""
+    import re
+    observed = receipt.get('column_observation')
+    if (isinstance(observed, dict) and observed.get('schema') == 1
+            and observed.get('basis') == 'executed_full_dom_selection'
+            and isinstance(observed.get('fingerprint'), str)
+            and re.fullmatch('[0-9a-f]{64}', observed['fingerprint'])
+            and all(observed.get(k) == receipt.get(k) for k in ('source_id','url','content_hash','config_hash'))):
+        return 'column:' + observed['fingerprint']
+    return str(receipt['source_id'])

@@ -1,0 +1,595 @@
+{
+  "schema_version": 1,
+  "purpose": "Portable minimal public task27 scheduling reproduction; not a production task backup",
+  "body_file": "swpu-graduate-admissions-20261027.html.gz",
+  "decoded_body_sha256": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+  "school": {
+    "id": 3,
+    "name": "西南石油大学",
+    "url": "https://www.swpu.edu.cn/",
+    "enabled": 1,
+    "subscriber_count": 1
+  },
+  "task": {
+    "id": 27,
+    "kind": "onboard",
+    "identity": "onboard:3:c7f7518b45323847553a61e2",
+    "payload": {
+      "school_id": 3,
+      "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+      "root_url": "https://www.swpu.edu.cn/",
+      "label": "研究生招生",
+      "source_shape": "cbd67a5b494a614f0dde190e9b44bd5d6de6759a0bef6096f7747ccb4ce98b36",
+      "parent_task_id": 23,
+      "parent_generation": 1,
+      "ai_assist": true
+    },
+    "checkpoint": {
+      "onboarding_page": {
+        "hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+        "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+        "role": "list",
+        "outcome": "usable",
+        "captured_at": "2026-10-27T15:15:02+00:00"
+      },
+      "column_validation": {
+        "page_hash": "c573aa33a8fa2f13c18dc9aa87da9cb1ebc8c4bdb63ff17d1aa302c905e71d03",
+        "stage": "done",
+        "department_ids": [],
+        "new_count": 0,
+        "completed": [],
+        "failures": [
+          {
+            "issue": {
+              "name": "招生简章",
+              "reason": "提取规则未能正确读取该栏目",
+              "codes": [
+                "list_missing"
+              ]
+            },
+            "repairable": true,
+            "failure_kind": "rule_error",
+            "trial_key": "",
+            "retry_after": 0,
+            "config": {
+              "name": "招生简章",
+              "list_url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+              "list_selector": "table.winstyle200922 > tbody > tr:has(> td > a.c200922)",
+              "title_selector": "a.c200922",
+              "link_selector": "a.c200922",
+              "date_selector": "td:nth-of-type(3) span.timestyle200922",
+              "content_selector": "",
+              "group_name": "西南石油大学",
+              "container_selector": "div.rightcolmn > div.body",
+              "heading_selector": "div.rightcolmn > div.head > p"
+            },
+            "observation": {
+              "name": "招生简章",
+              "codes": [
+                "list_missing"
+              ],
+              "container_selector": "div.rightcolmn > div.body",
+              "heading_selector": "div.rightcolmn > div.head > p",
+              "list_selector": "table.winstyle200922 > tbody > tr:has(> td > a.c200922)",
+              "title_selector": "a.c200922",
+              "link_selector": "a.c200922",
+              "date_selector": "td:nth-of-type(3) span.timestyle200922",
+              "content_selector": "",
+              "sample_records": [],
+              "execution": {
+                "container_count": 1,
+                "heading_count": 1,
+                "list_item_count": 0,
+                "heading_texts": [
+                  "招生简章"
+                ],
+                "selector_errors": [],
+                "heading_matches": [
+                  {
+                    "text": "招生简章",
+                    "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > p:nth-of-type(1)",
+                    "within_declared_container": false,
+                    "common_group_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2)"
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "progress": {
+          "seen": [],
+          "decision_ids": [
+            "column-region:4bf1ee03d49c1c92f56fa26056e550d52b7cb980334112a8963aae911eca8c8d",
+            "column-region:dbefc8eaa0c7e8cebd36e23bac70685f947800f93ed2b2ab0c23a41fabab2ccb",
+            "column-region:d8239a274a55bcdcfc4369f22aba39c1c42cb1ea2036e343af3dfc04d253e163"
+          ],
+          "decisions": 3,
+          "checked_decisions": 0,
+          "last_check_count": 0,
+          "no_change_checks": 0,
+          "stopped": false
+        },
+        "progress_ids": [],
+        "empty_columns": [],
+        "empty_rules": [],
+        "unresolved_region_plan": {
+          "version": 1,
+          "pending": false,
+          "active": false,
+          "selectors": []
+        },
+        "validation_version": 8,
+        "trial_columns": [
+          {
+            "name": "招生简章",
+            "list_selector": "table.winstyle200922 > tbody > tr:has(> td > a.c200922)",
+            "title_selector": "a.c200922",
+            "link_selector": "a.c200922",
+            "date_selector": "td:nth-of-type(3) span.timestyle200922",
+            "content_selector": "",
+            "container_selector": "div.rightcolmn > div.body",
+            "heading_selector": "div.rightcolmn > div.head > p"
+          }
+        ],
+        "trial_origin_stage": "repair",
+        "trial_decision_ids": [
+          "column-region:d8239a274a55bcdcfc4369f22aba39c1c42cb1ea2036e343af3dfc04d253e163"
+        ],
+        "trial_request_key": "11c16e78f6b44f2cdaf26bf1b17dbde413066a0821c8b7a0bbbd909679abbd36",
+        "trial_recognition_issues": [],
+        "material_pending": false,
+        "material_feedback": [
+          {
+            "name": "招生简章",
+            "codes": [
+              "list_missing"
+            ],
+            "container_selector": "div.rightcolmn > div.body",
+            "heading_selector": "div.rightcolmn > div.head > p",
+            "list_selector": "table.winstyle200922 > tbody > tr:has(> td > a.c200922)",
+            "title_selector": "a.c200922",
+            "link_selector": "a.c200922",
+            "date_selector": "td:nth-of-type(3) span.timestyle200922",
+            "content_selector": "",
+            "sample_records": [],
+            "execution": {
+              "container_count": 1,
+              "heading_count": 1,
+              "list_item_count": 0,
+              "heading_texts": [
+                "招生简章"
+              ],
+              "selector_errors": [],
+              "heading_matches": [
+                {
+                  "text": "招生简章",
+                  "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > p:nth-of-type(1)",
+                  "within_declared_container": false,
+                  "common_group_locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2)"
+                }
+              ]
+            }
+          }
+        ],
+        "last_request_key": "11c16e78f6b44f2cdaf26bf1b17dbde413066a0821c8b7a0bbbd909679abbd36",
+        "result": {
+          "state": "unsupported",
+          "department_ids": [],
+          "new_count": 0,
+          "issues": [
+            {
+              "name": "招生简章",
+              "reason": "提取规则未能正确读取该栏目",
+              "codes": [
+                "list_missing"
+              ]
+            }
+          ],
+          "reason": "提取规则未能正确读取该栏目",
+          "discovery_attention": {
+            "schema_version": 1,
+            "scope": "page_onboarding_order",
+            "policy": {
+              "profiles": [
+                "undergraduate",
+                "graduate",
+                "teacher"
+              ],
+              "weights": {
+                "academic_units": 1.0,
+                "teaching": 1.0,
+                "admissions": 1.0,
+                "funding": 1.0,
+                "career": 1.0,
+                "competition_exchange": 1.0,
+                "research": 1.0,
+                "personnel": 1.0,
+                "student_services": 1.0
+              },
+              "rules_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4",
+              "version": "attention-1:c7341aed0f99368dc60fab36225ce45d88630dd8f387a141acbd77ebcb890326"
+            },
+            "score": 3.0,
+            "needs": [
+              "admissions",
+              "research",
+              "teaching"
+            ],
+            "gains": {
+              "teaching": 1.0,
+              "admissions": 1.0,
+              "research": 1.0
+            },
+            "evidence": [
+              {
+                "field": "label",
+                "text": "研究生招生",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "admissions",
+                "match": "招生"
+              },
+              {
+                "field": "label",
+                "text": "研究生招生",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "research",
+                "match": "研究生"
+              },
+              {
+                "field": "title",
+                "text": "招生简章-西南石油大学研究生院",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "teaching",
+                "match": "研究生院"
+              },
+              {
+                "field": "title",
+                "text": "招生简章-西南石油大学研究生院",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "admissions",
+                "match": "招生"
+              },
+              {
+                "field": "title",
+                "text": "招生简章-西南石油大学研究生院",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "research",
+                "match": "研究生"
+              },
+              {
+                "field": "column_name",
+                "text": "招生简章",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > table:nth-of-type(1)",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "admissions",
+                "match": "招生"
+              },
+              {
+                "field": "sample_title",
+                "text": "西南石油大学2027年硕士研究生招生章程",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > table:nth-of-type(1)",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "admissions",
+                "match": "招生"
+              },
+              {
+                "field": "sample_title",
+                "text": "西南石油大学2027年硕士研究生招生章程",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > table:nth-of-type(1)",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "research",
+                "match": "研究生"
+              },
+              {
+                "field": "sample_title",
+                "text": "西南石油大学2027年优秀应届本科毕业生免试攻读研究生（含直博生）招生办法",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > table:nth-of-type(1)",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "teaching",
+                "match": "毕业"
+              },
+              {
+                "field": "sample_title",
+                "text": "西南石油大学2027年优秀应届本科毕业生免试攻读研究生（含直博生）招生办法",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > table:nth-of-type(1)",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "admissions",
+                "match": "招生"
+              },
+              {
+                "field": "sample_title",
+                "text": "西南石油大学2027年优秀应届本科毕业生免试攻读研究生（含直博生）招生办法",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > table:nth-of-type(1)",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "research",
+                "match": "研究生"
+              },
+              {
+                "field": "sample_title",
+                "text": "西南石油大学2026年博士研究生招生章程",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > table:nth-of-type(1)",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "admissions",
+                "match": "招生"
+              },
+              {
+                "field": "sample_title",
+                "text": "西南石油大学2026年博士研究生招生章程",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > table:nth-of-type(1)",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "research",
+                "match": "研究生"
+              },
+              {
+                "field": "label",
+                "text": "招生简章",
+                "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                "locator": "",
+                "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                "category": "admissions",
+                "match": "招生"
+              }
+            ],
+            "reason": "observed_demand",
+            "material": {
+              "reference_url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+              "final_url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+              "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+              "checked_at": "2026-10-27T15:15:02+00:00",
+              "parser_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4"
+            },
+            "inspection_event_id": "event:f7031dfd7fe04b5690ea515dc15e58d3",
+            "selection_event_id": "event:e26bcb846f7049cdb0eeafafe88ce47d",
+            "inspection_receipt": {
+              "schema_version": 1,
+              "site_key": "01545393f9af1d84928c",
+              "target_event_id": "event:f7031dfd7fe04b5690ea515dc15e58d3",
+              "events": [
+                {
+                  "id": "event:19917450261f402296298906785ac8c3",
+                  "sequence": 355,
+                  "event_type": "exploration_started",
+                  "parent_event_id": null,
+                  "observed_at": "2026-10-27T15:14:50.129424+00:00",
+                  "label": "西南石油大学",
+                  "upstream_status": "root_inspection",
+                  "task_id": 23,
+                  "task_generation": 1,
+                  "scope": "page_inspection_not_transport_attempt",
+                  "cost": null,
+                  "cost_source": "not_measured",
+                  "recorder_version": 1,
+                  "parser_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4",
+                  "selection_context": {
+                    "claim_number": 1,
+                    "needs": [],
+                    "policy": {
+                      "profiles": [
+                        "undergraduate",
+                        "graduate",
+                        "teacher"
+                      ],
+                      "rules_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4",
+                      "version": "attention-1:c7341aed0f99368dc60fab36225ce45d88630dd8f387a141acbd77ebcb890326",
+                      "weights": {
+                        "academic_units": 1.0,
+                        "admissions": 1.0,
+                        "career": 1.0,
+                        "competition_exchange": 1.0,
+                        "funding": 1.0,
+                        "personnel": 1.0,
+                        "research": 1.0,
+                        "student_services": 1.0,
+                        "teaching": 1.0
+                      }
+                    },
+                    "reason": "school_root",
+                    "score": null,
+                    "version": "attention-1"
+                  },
+                  "url": "https://www.swpu.edu.cn/"
+                },
+                {
+                  "id": "event:ea3f7fcd27d54d4b9552b6c239448135",
+                  "sequence": 364,
+                  "event_type": "page_discovered",
+                  "parent_event_id": "event:19917450261f402296298906785ac8c3",
+                  "observed_at": "2026-10-27T15:14:54.739383+00:00",
+                  "label": "研究生招生",
+                  "recorder_version": 1,
+                  "parser_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4",
+                  "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                  "evidence": [
+                    {
+                      "reference_url": "https://www.swpu.edu.cn/",
+                      "locator": "html:nth-of-type(1) > body:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > ul:nth-of-type(1) > li:nth-of-type(6) > ul:nth-of-type(1) > li:nth-of-type(2) > a:nth-of-type(1)",
+                      "content_hash": "481fcd9900db005c672b0cfee80dc3b51b790f1da736a6fb58476eff6d805c57"
+                    }
+                  ]
+                },
+                {
+                  "id": "event:e26bcb846f7049cdb0eeafafe88ce47d",
+                  "sequence": 443,
+                  "event_type": "page_inspection_started",
+                  "parent_event_id": "event:ea3f7fcd27d54d4b9552b6c239448135",
+                  "observed_at": "2026-10-27T15:15:00.819355+00:00",
+                  "label": "研究生招生",
+                  "upstream_status": "recorded_first_enqueue",
+                  "task_id": 23,
+                  "task_generation": 1,
+                  "scope": "page_inspection_not_transport_attempt",
+                  "cost": null,
+                  "cost_source": "not_measured",
+                  "recorder_version": 1,
+                  "parser_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4",
+                  "selection_context": {
+                    "claim_number": 3,
+                    "needs": [
+                      "admissions",
+                      "career",
+                      "research"
+                    ],
+                    "policy": {
+                      "profiles": [
+                        "undergraduate",
+                        "graduate",
+                        "teacher"
+                      ],
+                      "rules_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4",
+                      "version": "attention-1:c7341aed0f99368dc60fab36225ce45d88630dd8f387a141acbd77ebcb890326",
+                      "weights": {
+                        "academic_units": 1.0,
+                        "admissions": 1.0,
+                        "career": 1.0,
+                        "competition_exchange": 1.0,
+                        "funding": 1.0,
+                        "personnel": 1.0,
+                        "research": 1.0,
+                        "student_services": 1.0,
+                        "teaching": 1.0
+                      }
+                    },
+                    "reason": "unread_school_trunk",
+                    "score": 3.0,
+                    "version": "attention-1"
+                  },
+                  "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm"
+                },
+                {
+                  "id": "event:f7031dfd7fe04b5690ea515dc15e58d3",
+                  "sequence": 444,
+                  "event_type": "page_inspection_finished",
+                  "parent_event_id": "event:e26bcb846f7049cdb0eeafafe88ce47d",
+                  "observed_at": "2026-10-27T15:15:03.162534+00:00",
+                  "label": "研究生招生",
+                  "state": "fetched",
+                  "outcome": "material_observed",
+                  "content_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+                  "status_code": 200,
+                  "cost": null,
+                  "cost_source": "not_measured",
+                  "recorder_version": 1,
+                  "parser_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4",
+                  "url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm",
+                  "final_url": "https://www.swpu.edu.cn/gs/zsgz/zsjz.htm"
+                }
+              ],
+              "missing_parent_id": null,
+              "truncated": false,
+              "checksum": "161305c794bd71b9dfb93d76ec5d0c765b9199f6168c005d0f5603cd2aedf9f6"
+            },
+            "selection_context": {
+              "claim_number": 3,
+              "needs": [
+                "admissions",
+                "career",
+                "research"
+              ],
+              "policy": {
+                "profiles": [
+                  "undergraduate",
+                  "graduate",
+                  "teacher"
+                ],
+                "rules_revision": "aa74fd829556deb6926ed1c64799e85e08b3c1f1661fe60baab766eca41b13b4",
+                "version": "attention-1:c7341aed0f99368dc60fab36225ce45d88630dd8f387a141acbd77ebcb890326",
+                "weights": {
+                  "academic_units": 1.0,
+                  "admissions": 1.0,
+                  "career": 1.0,
+                  "competition_exchange": 1.0,
+                  "funding": 1.0,
+                  "personnel": 1.0,
+                  "research": 1.0,
+                  "student_services": 1.0,
+                  "teaching": 1.0
+                }
+              },
+              "reason": "unread_school_trunk",
+              "score": 3.0,
+              "version": "attention-1"
+            },
+            "history_status": "recorded",
+            "establishes_ownership": false,
+            "validation_material_hash": "90ca898ff47eb8e271b2a802a366a431c1f08ab6146c8deb92298c97153132db",
+            "scheduling_material_matches_validation": true
+          },
+          "empty_columns": [],
+          "empty_rules": [],
+          "error_code": "no_new_validation_evidence"
+        }
+      },
+      "column_evidence_layout": "focused-repair-2",
+      "column_regions": {
+        "hash": "dbfbba159c78fff1c017bf7aeaaee80dc4c82179154c51a4740b1858f03dcd89",
+        "observation_hash": "c89b18eeba2e36f0acf8b1ed88ee9cd2af8f445c1bb9e6f967c16f9506d78a90",
+        "cursor": 1,
+        "columns": [
+          {
+            "name": "招生简章",
+            "list_selector": "table.winstyle200922 > tbody > tr:has(> td > a.c200922)",
+            "title_selector": "a.c200922",
+            "link_selector": "a.c200922",
+            "date_selector": "td:nth-of-type(3) span.timestyle200922",
+            "content_selector": "",
+            "container_selector": "div.rightcolmn > div.body",
+            "heading_selector": "div.rightcolmn > div.head > p"
+          }
+        ],
+        "unresolved": [],
+        "decision_ids": [
+          "column-region:d8239a274a55bcdcfc4369f22aba39c1c42cb1ea2036e343af3dfc04d253e163"
+        ],
+        "completed_materials": {
+          "724887772700e1f57a89b951fb1ec31a50e1e2c380e38ded14905e54ef08d4ca": "column-region:d8239a274a55bcdcfc4369f22aba39c1c42cb1ea2036e343af3dfc04d253e163"
+        }
+      }
+    },
+    "result": {
+      "state": "unsupported",
+      "department_ids": [],
+      "issues": [
+        {
+          "name": "招生简章",
+          "reason": "提取规则未能正确读取该栏目",
+          "codes": [
+            "list_missing"
+          ]
+        }
+      ],
+      "empty_rules": [],
+      "error_code": "no_new_validation_evidence"
+    },
+    "generation": 1,
+    "attempts": 0,
+    "claim_count": 1,
+    "capability": "http",
+    "error_code": ""
+  },
+  "omitted_context": [
+    "discovery_attention",
+    "structure_material",
+    "non-scheduling result fields",
+    "user/profile/credential tables"
+  ],
+  "original_task_id": 27,
+  "material_observed_at": "2026-10-27T15:15:02+00:00"
+}

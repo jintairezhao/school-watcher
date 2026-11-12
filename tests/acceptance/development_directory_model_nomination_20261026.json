@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "role": "independent_development_directory_sampling_model_nomination",
+  "user_confirmed": true,
+  "provider_input": "deep seek",
+  "provider_name": "DeepSeek",
+  "model_input": "deepseek-flash",
+  "api_model_identifier_verified": false,
+  "current_official_pricing_verified": false,
+  "runtime_binding_verified_after_nomination": false,
+  "credentials_requested_in_chat": false,
+  "installed_profile_access_authorized": false,
+  "new_sampling_scope_and_cost_declared": false,
+  "sampling_executed": false,
+  "next_step": "Verify official API identifier and prices, then declare bounded material-reuse, website/model scope and costs; configure the credential in an independent test instance."
+}
