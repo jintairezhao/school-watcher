@@ -84,7 +84,7 @@ try:
                               'ai_navigation': {'one': 'succeeded', 'two': 'failed', 'three': 'failed'}}
             db.session.commit()
             page.locator('#discoveryRefresh').click()
-            page.wait_for_function("() => document.getElementById('discoveryCounts').textContent.includes('已接入')")
+            page.wait_for_function("() => document.getElementById('discoveryCounts').textContent.includes('已启用')")
             page.wait_for_function("() => document.getElementById('discoveryAI').textContent.includes('模型输出不完整')")
             assert '1 次成功、2 次未完成' in page.locator('#discoveryAI').inner_text()
             assert page.locator('#discoveryReview').count() == 0

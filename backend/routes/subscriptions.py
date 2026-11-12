@@ -140,10 +140,14 @@ def manage_sources(school_id):
     from backend.services.source_governance import school_governance_status
     from backend.services.onboarding_progress import status
     selected_ids = expand_directory_ids(school.id, sub.department_ids)
+    from backend.services.inbox_tree import display_tree
+    from backend.services.announcement_sources import source_counts
+    retained = set(sub.department_ids or ()) | set(source_counts(school.id))
+    groups = display_tree(structure,source_choices(structure,retained_ids=retained),school.url)
     return render_template('sources.html', school=school, subscription=sub,
                            discovery=status(school, capture=structure),
                            onboarding=school_governance_status(school.id),
-                           groups=source_choices(structure, retained_ids=sub.department_ids or ()), latest=latest,
+                           groups=groups, latest=latest,
                            selected_ids=selected_ids,
                            legacy_scope=_legacy_scope(structure['departments'], sub.department_ids, selected_ids),
                            source_paths=source_paths(structure), structure_version=structure['version'],
@@ -194,8 +198,12 @@ def subscription_discovery(school_id):
     sub = Subscription.query.filter_by(user_id=g.user.id, school_id=school.id).first()
     selected_ids = expand_directory_ids(school.id, sub.department_ids)
     legacy_scope = _legacy_scope(structure['departments'], sub.department_ids, selected_ids)
+    from backend.services.inbox_tree import display_tree
+    from backend.services.announcement_sources import source_counts
+    retained = set(sub.department_ids or ()) | set(source_counts(school.id))
+    groups = display_tree(structure,source_choices(structure,retained_ids=retained),school.url)
     choices = render_template('_source_tree_choices.html', school=school,
-                              groups=source_choices(structure, retained_ids=sub.department_ids or ()), subscription=sub,
+                              groups=groups, subscription=sub,
                               selected_ids=selected_ids,
                               source_paths=source_paths(structure), structure_version=structure['version'])
     return jsonify(**status(school, capture=structure), choices_html=choices, structure_version=structure['version'],

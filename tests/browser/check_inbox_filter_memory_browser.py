@@ -73,9 +73,13 @@ def check():
                     params(period='all', read='unread')
                     page.locator('#schoolFilter').select_option('1'); settled()
                     page.locator('[data-source-group="院系设置"] .source-group-toggle').click()
-                    page.locator('[data-source-group="院系设置"] [data-source-group-filter]').click(); settled()
-                    params(period='all', read='unread', group='院系设置')
-                    page.locator('[data-source-unit="205"] [data-unit-select]').check(); settled()
+                    group = page.locator('[data-source-group="院系设置"]')
+                    group_ids = set(group.locator('[data-department]:not(:disabled)').evaluate_all('items=>items.map(i=>i.value)'))
+                    group.locator('[data-source-group-filter]').click(); settled()
+                    params(period='all', read='unread')
+                    assert set(parse_qs(urlsplit(page.url).query)['dept']) == group_ids
+                    page.locator('#clearDepartments').click(); settled()
+                    page.locator('[data-source-unit-name="化学工程与环境学院"] [data-unit-select]').check(); settled()
                     assert set(parse_qs(urlsplit(page.url).query)['dept']) == {'200', '201', '202'}
                     params(period='all', read='unread')
                     page.locator('#schoolFilter').select_option('2'); settled()

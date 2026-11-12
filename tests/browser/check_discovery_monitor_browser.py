@@ -20,10 +20,12 @@ def check():
     output = ROOT / '.local/discovery-monitor'
     output.mkdir(parents=True, exist_ok=True)
     report = []
+    receipts = []
     with tempfile.TemporaryDirectory(prefix='monitor-browser-') as scratch, \
          patch.dict(os.environ, {'WATCHER_DATA_DIR':scratch, 'WATCHER_ENV_FILE':str(Path(scratch) / '.env'),
                                  'FIELD_ENC_KEY':'isolated-monitor-field-key'}), \
-         patch('backend.ai.providers.complete', side_effect=AssertionError('No paid request')), sync_playwright() as pw:
+         patch('backend.ai.providers.complete', side_effect=AssertionError('No paid request')), \
+         patch('backend.services.source_path_receipts.load_source_receipts', return_value=receipts), sync_playwright() as pw:
         browser = pw.chromium.launch(channel=os.environ.get('WATCHER_TEST_BROWSER_CHANNEL', 'msedge'), headless=True)
         fixture = DiscoveryMonitorTests(); fixture.setUp()
         try:
@@ -54,6 +56,11 @@ def check():
                     'label':'研究生培养','path_json':['学校官网','院系设置','哲学院']}})
             db.session.add(queued)
             db.session.commit()
+            from backend.services.source_governance import _hash, source_config
+            from backend.services.source_inventory import canonical_url
+            receipts.extend(dict(source_id=d.id,url=canonical_url(d.list_url),
+                receipt_id='browser-fixture:'+str(d.id),config_hash=_hash(source_config(d)))
+                for d in Department.query.filter(Department.list_selector.isnot(None)) if d.list_selector)
             before = BackgroundTask.query.count()
             for width, theme in ((1440,'dark'), (390,'light')):
                 page = browser.new_page(viewport={'width':width,'height':1100}, reduced_motion='reduce')
@@ -66,7 +73,7 @@ def check():
                     assert parsed.hostname == 'localhost', 'No external requests'
                     if parsed.path == '/_desktop/components':
                         return route.fulfill(json={'phase':'ready','message':'可用'})
-                    if parsed.path.endswith('/discovery-monitor') and parsed.path.startswith('/api/'):
+                    if parsed.path.endswith('/structure-snapshot') and parsed.path.startswith('/api/'):
                         gets.append(parsed.path)
                         if broken['value']:
                             return route.fulfill(status=503, json={'error':'isolated outage'})
@@ -79,6 +86,7 @@ def check():
                 page.route('**/*', serve)
                 page.add_init_script('localStorage.setItem("theme", ' + json.dumps(theme) + ')')
                 page.goto('http://localhost' + fixture.page)
+                page.locator('#monitorScope').select_option('exploration')
                 expect(page.locator('#monitorChecked')).to_have_text('28')
                 expect(page.locator('#monitorConnected')).to_have_text('4')
                 expect(page.locator('#monitorCandidates')).to_have_text('1')
@@ -88,8 +96,9 @@ def check():
                 # Labels describe the isolated fixture rather than claiming real school results.
                 page.locator('.school-heading p').evaluate("node => node.textContent = '隔离演示数据 · 展示实际界面布局，不代表该校实测结果'")
                 page.locator('#monitorSearch').fill('资助')
-                expect(page.locator('.monitor-node')).to_have_count(1)
-                page.locator('.monitor-node').click()
+                # A page and the column published on it retain distinct IDs.
+                expect(page.locator('.monitor-node[data-node-id^="source:"]')).to_have_count(1)
+                page.locator('.monitor-node[data-node-id^="source:"]').click()
                 expect(page.locator('#monitorDetail')).to_contain_text('学生工作处')
                 expect(page.locator('#monitorDetail')).to_contain_text('已接入栏目')
                 page.locator('#monitorSearch').fill('')
@@ -98,7 +107,7 @@ def check():
                 expect(page.locator('.monitor-node')).to_contain_text('选课通知')
                 page.locator('#monitorFilter').select_option('all')
                 page.locator('#monitorFilter').select_option('pending')
-                expect(page.locator('.monitor-node').filter(has_text='研究生培养')).to_contain_text('等待探索')
+                expect(page.locator('.monitor-node').filter(has_text='研究生培养')).to_contain_text('待验证')
                 page.locator('#monitorFilter').select_option('all')
                 # Automatic refresh can be resumed and manual refresh sees new saved work.
                 row.checkpoint = {'discovery_progress':dict(row.checkpoint['discovery_progress'], checked_pages=29,

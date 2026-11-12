@@ -118,7 +118,7 @@ try:
         escape_html = re.search(r'^function escHtml\([^\n]*\) \{.*?^\}', template, re.M | re.S).group()
         page.set_content('<div id="deptList"></div><script>function uiT(message){return message;}</script><script>'+escape_html+load_depts+
             ';function editDept(id,name){window.__received_name=name;}function deleteDept(){}function showToast(){throw Error("load failed")}</script>')
-        awaitable = '(s)=>{window.fetch=async()=>({json:async()=>[{id:1,name:s}]});return loadDepts(1)}'
+        awaitable = '(s)=>{window.fetch=async()=>({ok:true,json:async()=>[{id:1,name:s}]});return loadDepts(1)}'
         page.evaluate(awaitable, attack_name)
         page.locator('[data-dept-action="edit"]').click()
         assert page.evaluate('window.__received_name') == attack_name

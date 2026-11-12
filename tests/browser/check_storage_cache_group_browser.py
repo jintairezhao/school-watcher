@@ -13,6 +13,7 @@ from backend.database.db import db
 from backend.database.models import ScrapeLog,UserAnnouncementState
 from backend.services.localization import stage_preferences
 from backend.services.storage_policy import policy,save_policy
+from backend.services.runtime_catalog import RuntimeCatalog
 from playwright.sync_api import expect,sync_playwright
 
 
@@ -48,7 +49,12 @@ def check():
                     retained={}
                     for name in ('backups/watcher-one.zip','backups/watcher-two.zip','logs/old.log',
                             'updates/downloaded-installer.exe','catalog-generations/site-'+'a'*32+'.sqlite3'):
-                        path=fixture.root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'keep fixture '+name.encode())
+                        path=fixture.root/name;path.parent.mkdir(parents=True,exist_ok=True)
+                        if path.suffix == '.sqlite3':
+                            with RuntimeCatalog(path, versioned=False).connect(write=True):
+                                pass
+                        else:
+                            path.write_bytes(b'keep fixture '+name.encode())
                         retained[path]=path.read_bytes()
                     cache=fixture.root/'fetch-evidence/old.json';cache.parent.mkdir();cache.write_bytes(b'cache fixture')
                     page=browser.new_page(viewport={'width':width,'height':900})

@@ -44,6 +44,9 @@ def check():
             page = context.new_page(); errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.goto(base + '/admin/storage')
+            for disclosure in page.locator('.storage-page details').all():
+                if disclosure.locator('#exportStorage').count() and not disclosure.evaluate('node=>node.open'):
+                    disclosure.locator(':scope > summary').click()
             with page.expect_download() as downloaded:
                 page.locator('#exportStorage').click()
                 page.wait_for_function("() => document.querySelector('#exportProgress progress').value > 0 && document.querySelector('#exportProgress progress').value < 100")

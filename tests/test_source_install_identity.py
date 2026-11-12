@@ -65,13 +65,16 @@ class SourceInstallIdentityTests(unittest.TestCase):
         original = json.loads((root / 'retained-cupk-zhb-columns.json').read_text('utf-8'))
         school = db.session.get(School, self.school_id)
         school.url = 'https://www.cupk.edu.cn/'
+        school.name = '中国石油大学（北京）克拉玛依校区'
         db.session.commit()
         identifiers = []
         for key in ('54', '85'):
             row = original[key]
             identifiers.append(self.install(row['config'], html,
                 scope={'container_selector': row['region']['container'],
-                       'heading_selector': row['region']['heading']}))
+                       # The outer header also contains a More action. Execute
+                       # the retained precise heading for either CSS spelling.
+                       'heading_selector': original['85']['region']['heading']}))
         self.assertEqual(identifiers[0], identifiers[1])
         self.assertEqual(Department.query.count(), 1)
         self.assertEqual(Announcement.query.count(), 4)

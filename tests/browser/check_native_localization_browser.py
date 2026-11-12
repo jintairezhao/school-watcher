@@ -48,6 +48,7 @@ def main():
                     {'phase':'error','step':2,'message':'迁移未完成','detail':'原数据仍保留，重新打开后继续。','done':True,'restart':True},
                 ]),
             ):
+                page.goto('about:blank')
                 page.set_content(native_page(name, language))
                 first = language.state(dict({'current':'2.24', 'detail':'', 'can_cancel':True}, **states[0]))
                 page.evaluate('''s => {
@@ -77,6 +78,7 @@ def main():
                     page.evaluate("() => {window.pywebview.api.check=async()=>{throw new Error('fixture');};}")
                     page.locator('#action').click()
                     expect(page.locator('#message')).to_have_text('Operation incomplete. Try again.')
+            page.goto('about:blank')
             page.set_content(native_page('loading', language))
             expect(page.locator('html')).to_have_attribute('lang', 'en')
             assert not re.search(r'[\u4e00-\u9fff]', page.locator('body').inner_text())

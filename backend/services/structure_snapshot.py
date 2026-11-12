@@ -17,7 +17,7 @@ from backend.services.source_inventory import canonical_url, site_key
 from backend.services.structure_facts import build_structure_facts, _url as public_url
 
 MEMBERSHIP = {'directory_listing', 'organization_membership', 'source_ownership', 'column_membership'}
-STRUCTURE_PROJECTION_VERSION = 16
+STRUCTURE_PROJECTION_VERSION = 17
 SOURCE_GROUP_LABELS = frozenset({'有依据的栏目归属', '栏目（归属待核实）', '历史通知范围'})
 _transport = OrderedDict()
 _transport_lock = threading.Lock()
@@ -111,11 +111,16 @@ def read_structure(school, *, include_catalog_report=False):
             directory_entries=[_row(row) for row in entries], validations=[_row(row) for row in validations],
             receipts=receipts, school_publishers=school_publishers, source_scopes=source_scopes,
             source_page_aliases=source_page_aliases, entry_observations=entry_observations)
+        presentation_paths = deepcopy(reader.paths(key))
+        presentation_pages = deepcopy(reader.page_metadata(key,
+            [page['url'] for page in report.get('pages', [])]))
         after = current_version(school.id)
         if before == after:
             facts.update(structure_revision=after['revision'], structure_epoch=after['epoch'],
                          sync_contract='transaction_version', projection_version=STRUCTURE_PROJECTION_VERSION)
             return dict(facts=facts, report=report, departments=departments, version=after,
+                        presentation_paths=presentation_paths, presentation_pages=presentation_pages,
+                        school_record=dict(id=school.id,name=school.name,url=school.url),
                         school_id=school.id,
                         department_records=records,
                         directory_entries=[SimpleNamespace(**deepcopy(_row(row))) for row in entries],
@@ -317,6 +322,47 @@ def transport_update(graph, *, school_id, since=None):
             result.update(update_mode='delta', base_token=since, delta=delta)
             result.pop('nodes'); result.pop('relations')
     return result
+
+
+def recorded_source_choices(capture, columns):
+    """Retain directory browsing context without promoting it to ownership facts.
+
+    All inputs are from the pinned capture. The legacy adapter receives explicit
+    placements/descriptors so it cannot read a later catalogue or infer facts.
+    """
+    from backend.services.inbox import source_hierarchy
+    from backend.services.source_channels import recorded_descriptors
+    from backend.services.source_placements import (placements_from_paths,
+        placements_from_unit_identity, _unit_path_index, _address)
+    school = SimpleNamespace(**capture.get('school_record', dict(id=capture.get('school_id'), name='', url='')))
+    rows = [SimpleNamespace(**dict(dict(group_name='',kind='column',list_url='',school_id=school.id),
+        **deepcopy(row)), school=school) for row in department_records(capture)]
+    paths = capture.get('presentation_paths', {})
+    groups = {row.group_name.strip() for row in rows if row.group_name and row.group_name.strip()}
+    index = _unit_path_index(paths)
+    placements = {}
+    for row in rows:
+        candidates = paths.get(_address(row.list_url), []) if row.list_url else []
+        placed = placements_from_paths(row, school.url, candidates, groups)
+        if not placed and not any(p.get('basis') == 'school_website_entry' and not p.get('nodes') for p in candidates):
+            placed = placements_from_unit_identity(row, school.url, index.get(row.name.strip(), []), groups)
+        if placed:
+            placements[row.id] = placed
+    tree = source_hierarchy([row for row in rows if row.id in columns], rows,
+        capture.get('directory_entries', ()), placements=placements,
+        publisher_descriptors=recorded_descriptors(capture, rows, school))
+    def decorate(unit):
+        unit['basis'] = 'recorded_directory'
+        unit['own_columns'] = [dict(columns[c['department'].id], label=c['label'])
+            for c in unit['own_columns'] if c['department'].id in columns]
+        for child in unit['children']:
+            decorate(child)
+        unit['columns'] = list({c['department'].id:c for c in unit['own_columns'] +
+            [c for child in unit['children'] for c in child['columns']]}.values())
+    for units in tree.values():
+        for unit in units:
+            decorate(unit)
+    return tree
 
 
 def source_choices(capture, *, retained_ids=(), allowed_ids=None):

@@ -25,7 +25,7 @@ class DesktopDownloadTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.data = Path(self.temp.name) / '个人数据'
+        self.data = Path(self.temp.name).resolve() / '个人数据'
         self.original = Mock()
         self.original_new_window = Mock()
         self.core = SimpleNamespace(DownloadStarting=Event(self.original), Profile=SimpleNamespace(),

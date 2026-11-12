@@ -67,15 +67,45 @@ def display_tree(capture, choices, school_url):
                 children={}, columns=[], expandable=True, basis=basis,
                 navigation_url=node.get('url') or '', navigation_key=str(node['key']),
                 preset_heading=bool(node.get('preset_heading'))))
+            ident = node.get('department_id')
+            if ident is None and str(node['key']).startswith('record:'):
+                ident = int(str(node['key']).split(':',1)[1])
+            if ident in records:
+                unit.update(department_id=ident,url=node.get('url') or '')
             if basis == 'verified_owner':
                 unit['basis'] = basis
             siblings = unit['children']
-        if not path:
+        if not path and column is not None:
             key = 'leaf-' + str(column['department'].id)
             unit = siblings.setdefault(key, dict(key=key, name='', own_columns=[],
                 children={}, columns=[], expandable=False, basis=basis))
-        if not any(c['department'].id == column['department'].id for c in unit['own_columns']):
+        if column is not None and not any(c['department'].id == column['department'].id for c in unit['own_columns']):
             unit['own_columns'].append(dict(column, display_group=''))
+
+    # Reuse captured directory and page context for both reading and source
+    # preferences. These remain display placements, never publisher relations.
+    from backend.services.structure_snapshot import recorded_source_choices
+    columns = {c['department'].id:c for units in choices.values() for unit in units
+        for c in unit['columns']}
+    recorded = recorded_source_choices(capture, columns)
+    recorded_paths = defaultdict(list)
+    def collect(unit, group, trail):
+        path = trail
+        if unit['expandable']:
+            ident = unit.get('department_id')
+            node = dict(key=f'record:{ident}' if ident is not None else 'recorded:'+unit['key'],
+                name=unit['name'],url=unit.get('url') or '',department_id=ident)
+            path = trail + [node]
+            if not unit['columns']:
+                put(group,path,None,'display_directory')
+        for column in unit['own_columns']:
+            if path:
+                recorded_paths[column['department'].id].append((group,path,column['label']))
+        for child in unit['children']:
+            collect(child,group,path)
+    for group, units in recorded.items():
+        for unit in units:
+            collect(unit,group,[])
 
     from backend.services.starter_catalog import placements
     for fallback_group, units in choices.items():
@@ -99,6 +129,11 @@ def display_tree(capture, choices, school_url):
                     continue
                 # Explicit saved directory memberships are useful navigation,
                 # even when they do not prove an administrative publisher.
+                observed = recorded_paths.get(row.id, [])
+                if observed:
+                    for group, path, label in observed:
+                        put(group,path,dict(column,label=label),'display_directory')
+                    continue
                 paths = [(group, path[:-1]) for group, path in stored_paths(row.id)
                          if parents[row.id] and column.get('display_group') and path]
                 if not paths:

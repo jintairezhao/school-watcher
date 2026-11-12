@@ -8,6 +8,7 @@ from copy import deepcopy
 import hashlib
 import json
 import re
+from types import SimpleNamespace
 from urllib.parse import urlsplit, urlunsplit
 
 from flask import current_app, g, has_app_context, has_request_context, request
@@ -341,9 +342,44 @@ def legacy_channels_for(departments):
     return result
 
 
+def recorded_descriptors(capture, rows, school):
+    """Legacy reading captions from the same pinned capture, never owner facts."""
+    indexed = {row.id:row for row in rows}
+    parents = defaultdict(list)
+    entries = capture.get('directory_entries', ())
+    for entry in entries:
+        if entry.parent_id in indexed and entry.department_id in indexed:
+            parents[entry.department_id].append(entry.parent_id)
+    pages = {_address(page['url']):page for page in capture.get('presentation_pages', {}).values()
+        if page.get('state') == 'fetched'}
+    addresses = dict(pages)
+    for page in pages.values():
+        if page.get('final_url') and page.get('health') != 'dynamic_content':
+            addresses[_address(page['final_url'])] = page
+    data = dict(school=school,departments=indexed,parents=parents,entries=entries,
+        catalog_paths=capture.get('presentation_paths', {}),catalog_pages=pages,pages_by_address=addresses)
+    from backend.services.source_directory_reconciliation import directory_websites, navigation_parent
+    websites = directory_websites(school,rows,entries,pages.values())
+    result = {}
+    for row in rows:
+        units = _unit_chain(row.id,data) or _path_units(row,data)
+        if not units:
+            matches = [item for item in websites.values() if _scope_contains(row.list_url,item['url'])]
+            match = matches[0] if len(matches) == 1 else navigation_parent(row,school,rows,pages.values())
+            if match:
+                unit = indexed[match['unit_id']]
+                units = _unit_chain(unit.id,data) + [dict(id=unit.id,name=unit.name,
+                    url=match.get('url') or unit.list_url)]
+                if match.get('name'):
+                    data.setdefault('navigation_labels', {})[row.id] = match['name']
+        result[row.id] = _descriptor(row,data,units)
+    _hide_internal_addresses(result)
+    return result
+
+
 def descriptors_from_structure(capture, school):
     """Read-only captions from one already captured structure version."""
-    from backend.services.structure_snapshot import department_records
+    from backend.services.structure_snapshot import department_records, recorded_source_choices
     from backend.services.localization import translate
     records = {row['id']: row for row in department_records(capture)}
     nodes = {node['id']: node for node in capture['facts']['nodes']}
@@ -351,6 +387,21 @@ def descriptors_from_structure(capture, school):
     for edge in capture['facts']['relations']:
         if edge['type'] == 'source_ownership':
             ownership[edge['target']][edge['source']].append(edge['id'])
+    context_columns = {ident:dict(department=SimpleNamespace(**record), label=record['name'])
+        for ident,record in records.items() if record.get('kind','column') == 'column'
+        and not ownership.get(f'source:{ident}')}
+    recorded_paths = defaultdict(list)
+    def retain_context(unit, trail):
+        current = trail + ([unit['name']] if unit['expandable'] else [])
+        for column in unit['own_columns']:
+            if current:
+                recorded_paths[column['department'].id].append(' / '.join(dict.fromkeys(current)))
+        for child in unit['children']:
+            retain_context(child,current)
+    context_tree = recorded_source_choices(capture, context_columns) if context_columns else {}
+    for group, units in context_tree.items():
+        for unit in units:
+            retain_context(unit,[group])
     result = {}
     for ident, record in records.items():
         source = nodes.get(f'source:{ident}')
@@ -364,16 +415,19 @@ def descriptors_from_structure(capture, school):
         label = source_label(source['label'] if source else record['name'], '官网栏目')
         # Stored grouping remains useful reading context even when no current
         # publisher relationship is proven. It does not populate publishers.
-        recorded_group = source_label(record.get('group_name')) if not publishers else ''
-        names = [school.name, publisher_label, recorded_group, label]
+        names = [school.name, publisher_label, label]
         if not publishers:
             names.append(translate('栏目（归属待核实）') if source else translate('历史通知范围'))
+        breadcrumb = ' / '.join(dict.fromkeys(name for name in names if name))
+        context = list(dict.fromkeys(recorded_paths.get(ident, []))) if not publishers else []
+        if context:
+            breadcrumb += ' · ' + translate('记录分组：{name}', name='；'.join(context))
         result[ident] = dict(source_id=ident, school_id=school.id, school_name=school.name,
             publisher_key=publishers[0]['key'] if len(publishers) == 1 else
                 _key(school.id, 'publishers', *(p['key'] for p in publishers)) if publishers else
                 _key(school.id, 'unverified-source', ident),
             publisher_label=publisher_label, publishers=publishers, units=units,
-            column_label=label, breadcrumb=' / '.join(dict.fromkeys(name for name in names if name)),
+            column_label=label, breadcrumb=breadcrumb, recorded_paths=context,
             official_url=source.get('url') or '' if source else _publication_url(record.get('list_url') or ''),
             display_group=record.get('group_name') or '',
             basis='source_ownership' if publishers else 'ownership_pending' if source else 'historical_reference',

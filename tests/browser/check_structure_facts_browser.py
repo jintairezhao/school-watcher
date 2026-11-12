@@ -24,8 +24,8 @@ def check(output=None):
             args=['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
         fixture=StructureSnapshotTests();fixture.setUp()
         try:
-            source=fixture.source('本科教学通知')
-            shared=fixture.source('研究生培养通知',source.list_url,'.graduate li')
+            source=fixture.source('本科教学通知',verified=True)
+            shared=fixture.source('研究生培养通知',source.list_url,'.graduate li',verified=True)
             directory=fixture.school.url+'/departments'
             pages=[fixture.document(fixture.school.url,directory,label='学校官网'),
                    fixture.document(directory,source.list_url,label='院系设置'),
@@ -62,9 +62,10 @@ def check(output=None):
                 page.route('**/*',serve)
                 page.goto('http://localhost'+fixture.fixture.page)
                 page.locator('#languageSelect').select_option('zh-CN')
+                page.locator('#monitorScope').select_option('exploration')
                 expect(page.locator('#atlasStage')).to_have_attribute('data-renderer','ready')
                 page.locator('#monitorAuto').uncheck()
-                page.wait_for_function('discoveryMonitor.monitorSnapshot?.source_count===2')
+                page.wait_for_function('()=>discoveryMonitor.monitorSnapshot?.nodes.filter(n=>n.entity_type==="source"&&n.configured).length===2')
                 expect(page.locator('#atlasPlay')).to_be_disabled()
                 page.locator('#atlasListPanel').evaluate('(node)=>node.open=true')
                 page.locator(f'.monitor-node[data-node-id="source:{source.id}"]').click()
@@ -82,7 +83,7 @@ def check(output=None):
                 expect(page.locator('#monitorDetail h3').first).to_have_text(source.name)
                 assert 'delta' in updates
                 page.locator('#languageSelect').select_option('en')
-                expect(page.locator('#monitorScope option:checked')).to_have_text('Connected sources and entrances')
+                expect(page.locator('#monitorScope option:checked')).to_have_text('Exploration candidates')
                 expect(page.locator('#atlasPathEvidence h3')).to_have_text('Website access path')
                 expect(page.locator('#monitorConnection')).to_contain_text('Auto refresh is off')
                 assert '数据读取于' not in page.locator('#monitorReadAt').inner_text()

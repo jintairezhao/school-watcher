@@ -46,7 +46,7 @@ def main():
                 expect(page.locator('#discoveryPause')).to_have_text('继续')
                 expect(page.locator('#discoveryMessage')).to_have_text('已暂停，进度已保存')
                 expect(page.locator('#discoveryProgress')).to_be_hidden()
-                expect(page.locator('#discoveryCounts')).to_contain_text('已接入')
+                expect(page.locator('#discoveryCounts')).to_contain_text('已启用')
                 page.reload()
                 page.locator('.discovery-details > summary').click()
                 expect(page.locator('#discoveryPause')).to_have_text('继续')
@@ -73,7 +73,7 @@ def main():
                     db.session.rollback(); tasks.handoff(handle, deferred)
             page.locator('#discoveryRefresh').click()
             expect(page.locator('#discoveryPause')).to_have_text('继续')
-            expect(page.locator('#discoveryCounts')).to_contain_text('已接入')
+            expect(page.locator('#discoveryCounts')).to_contain_text('已启用')
             expect(page.locator('[name="department"]').first).not_to_be_checked()
             # Failed resume stays paused, with an actionable error and a retryable control.
             page.route('**/api/subscriptions/*/discovery', lambda route: route.fulfill(status=503, json={'error':'请重试'}))

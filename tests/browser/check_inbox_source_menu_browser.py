@@ -135,7 +135,7 @@ def check(capture=True):
                 assert not page.locator('.notice-panel').evaluate('(e) => e.inert')
                 group = page.locator('[data-source-group="院系设置"]')
                 group.locator('.source-group-toggle').click()
-                unit = page.locator('[data-source-unit="205"]')
+                unit = page.locator('[data-source-unit-name="化学工程与环境学院"]')
                 unit.locator('.source-unit-toggle').click()
                 first = unit.locator('.department-option:has(input[value="201"])')
                 first.scroll_into_view_if_needed()
@@ -167,9 +167,10 @@ def check(capture=True):
                 expect(page.locator('input[value="201"][data-department]')).to_be_checked()
                 checks.append('directory search preserves filters and restores expansion')
 
+                group_ids = set(group.locator('[data-department]:not(:disabled)').evaluate_all('items=>items.map(i=>i.value)'))
                 group.locator('[data-source-group-filter]').click(); settled()
-                expect(page.locator('.toolbar-topline')).to_contain_text('院系设置')
-                expect(page.locator('[data-department]:checked')).to_have_count(0)
+                expect(page.locator('.toolbar-topline')).to_contain_text('已选')
+                assert set(page.locator('[data-department]:checked').evaluate_all('items=>items.map(i=>i.value)')) == group_ids
                 page.locator('#clearDepartments').click(); settled()
                 page.locator('#schoolFilter').select_option('2'); settled()
                 mode('pinned')

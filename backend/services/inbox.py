@@ -19,7 +19,8 @@ def source_groups(departments):
     return groups
 
 
-def source_hierarchy(departments, known_departments=None, directory_entries=(), *, available_only=False, retained_ids=()):
+def source_hierarchy(departments, known_departments=None, directory_entries=(), *, available_only=False, retained_ids=(),
+                     placements=None, publisher_descriptors=None):
     """Legacy subscription/bookmark projection, never current ownership facts.
 
     Explicit directory memberships take precedence. Published website paths then
@@ -46,17 +47,17 @@ def source_hierarchy(departments, known_departments=None, directory_entries=(), 
             AnnouncementSource.department_id.in_(ids)).distinct())
         departments = [d for d in departments if d.kind in ('unit','group') or
                       (d.list_selector or '').strip() or d.id in historical or d.id in retained_ids]
-    placements = official_source_placements(known)
+    placements = official_source_placements(known) if placements is None else placements
     by_id = {d.id: d for d in known}
     parents = {}
     directory_ids = set()
     for entry in directory_entries:
         parent, child = by_id.get(entry.parent_id), by_id.get(entry.department_id)
         if parent and child and parent.school_id == child.school_id and parent.id != child.id:
-            parents.setdefault(child.id, []).append((parent, entry.position))
+            parents.setdefault(child.id, []).append((parent, getattr(entry, 'position', 0)))
             directory_ids.add(parent.id)
     groups = {}
-    publishers = None
+    publishers = publisher_descriptors
 
     def resolve_node(node, school_id):
         # The observed path, exact unit identity and stored directory membership

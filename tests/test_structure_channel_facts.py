@@ -65,7 +65,9 @@ class StructureChannelFactsTests(unittest.TestCase):
             self.assertEqual(item['basis'], 'ownership_pending')
             self.assertEqual(item['display_group'], unit.name)
             self.assertIn('归属待核实', item['breadcrumb'])
-            self.assertNotIn(unit.name, item['breadcrumb'])
+            self.assertIn(unit.name, ' '.join(item['recorded_paths']))
+            self.assertIn('记录分组：', item['breadcrumb'])
+            self.assertNotIn(unit.name, item['breadcrumb'].split(' · 记录分组：')[0])
             g.ui_locale = 'en'
             self.assertIn('ownership unverified', channels_for([source])[source.id]['breadcrumb'])
         self.assertEqual(self.f.retained(), saved)
