@@ -58,7 +58,7 @@ def check():
                     # Both native keyboard activation keys open the actual picker.
                     picker.focus()
                     with page.expect_file_chooser() as chosen:
-                        page.keyboard.press('Enter')
+                        picker.press('Enter')
                     long_name='备份-original-'+('long-filename-'*8)+'.zip'
                     chosen.value.set_files({'name':long_name,'mimeType':'application/zip','buffer':packed(fixture.sample()).getvalue()})
                     expect(filename).to_have_text(long_name)
@@ -75,7 +75,7 @@ def check():
                     assert actual.input_value()==''
                     picker.focus()
                     with page.expect_file_chooser() as chosen:
-                        page.keyboard.press('Space')
+                        picker.press('Space')
                     chosen.value.set_files({'name':'valid-history.zip','mimeType':'application/zip','buffer':packed(fixture.sample()).getvalue()})
                     expect(filename).to_have_text('valid-history.zip')
                     page.locator('#storageImportForm button[type=submit]').click()
