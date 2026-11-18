@@ -131,7 +131,7 @@ def _remove_article_noise(soup, config=None, *, title='', page_url=''):
     layout_ancestors = _article_layout_ancestors(soup, config, title, page_url)
     # An article's own headline can live in .article__header. Preserve that
     # branch only after the title, local publication line and body agree.
-    from backend.scraper.article_observation import article_heading, title_bound_body, prune_unready_article_nodes
+    from backend.scraper.article_observation import article_heading, title_bound_body, prune_unready_article_nodes, publication_nodes
     heading = article_heading(soup, title) if title else None
     header_proven = heading is not None and title_bound_body(soup, page_url, title) is not None
     regions = soup.select(config['content_selector']) if config and config.get('content_selector') else []
@@ -150,13 +150,33 @@ def _remove_article_noise(soup, config=None, *, title='', page_url=''):
             if re.search(r'(?:^|[\s_-])(?:site|logo|brand|banner)(?:$|[\s_-])',
                          ' '.join(header.get('class', [])) + ' ' + header.get('id', ''), re.I):
                 continue
-            owner = header.parent
+            branch, owner = header, header.parent
+            # Some CMSs add a title-only wrapper around their header, leaving
+            # the publication line and body beside that wrapper. Cross only
+            # wrappers containing exactly this headline, never site chrome or
+            # other text/widgets, and still require the executed sibling body.
+            headline_text = re.sub(r'\s+', '', heading.get_text(' ', strip=True))
+            while owner.name not in ('body', 'html', '[document]'):
+                markers = ' '.join(owner.get('class', [])) + ' ' + owner.get('id', '')
+                if (re.search(r'(?:^|[\s_-])(?:site|logo|brand|banner)(?:$|[\s_-])', markers, re.I)
+                        or re.sub(r'\s+', '', owner.get_text(' ', strip=True)) != headline_text):
+                    break
+                branch, owner = owner, owner.parent
             if owner.name in ('body', 'html', '[document]'):
                 continue
-            for region in regions:
+            candidates = [region for region in regions if region is not owner]
+            if any(region is owner for region in regions):
+                # An executed article column may include its own headline.
+                # This is still local proof: the title-only branch, explicit
+                # publication line and following body share this exact owner.
+                # A whole-page selector or another article cannot supply it.
+                metadata, metadata_owner = publication_nodes(soup, heading)
+                if metadata and metadata_owner is owner:
+                    candidates.extend(branch.find_next_siblings())
+            for region in candidates:
                 if region.name in ('body', 'html', 'head', 'nav', 'aside', 'header', 'footer') or region.parent is not owner:
                     continue
-                if not any(node is region for node in header.find_next_siblings()):
+                if not any(node is region for node in branch.find_next_siblings()):
                     continue
                 material, state = article_material(region, page_url)
                 if material is None or state != 'ready':
@@ -164,6 +184,8 @@ def _remove_article_noise(soup, config=None, *, title='', page_url=''):
                 resources = has_public_body_resource([material], page_url)
                 for node in list(material.select('a,button,nav,aside,header,footer,script,style')):
                     node.decompose()
+                if re.match(r'^(?:发布日期|发布时间|发文日期|发布于)\s*[：:]?', material.get_text(' ', strip=True)):
+                    continue
                 if resources or len(material.get_text(' ', strip=True)) >= 15:
                     header_proven = True
                     break

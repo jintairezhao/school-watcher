@@ -49,6 +49,27 @@ def layout(kind='new'):
 
 
 class RightLocalNavigationTests(unittest.TestCase):
+    def test_empty_placeholder_thumbnail_does_not_hide_the_existing_column(self):
+        html,config,_=layout('old')
+        soup=BeautifulSoup(html,'lxml')
+        for card in soup.select('.middleArticle__art--art'):
+            placeholder=soup.new_tag('a',href='###')
+            placeholder['class']=['middleArticle__art--img']
+            card.insert_after(placeholder)
+        self.assertIsNotNone(observed_scope_revision(config,str(soup)))
+        soup.select_one('.middleArticle__art--img')['onclick']='openOtherColumn()'
+        self.assertIsNone(observed_scope_revision(config,str(soup)))
+
+    def test_observed_nested_pagination_is_not_another_publication_region(self):
+        html,config,_=layout('old')
+        soup=BeautifulSoup(html,'lxml')
+        pager=soup.select_one('.middlePag').extract()
+        pager['class']=['middlePicArticle__list--pagination']
+        soup.select_one('.middleArticle__art').append(pager)
+        self.assertIsNotNone(observed_scope_revision(config,str(soup)))
+        pager.append('另一个栏目')
+        self.assertIsNone(observed_scope_revision(config,str(soup)))
+
     def check_revision(self,kind):
         html,config,name=layout(kind)
         before=_column_scope(config,{'url':URL},html=html)[0]

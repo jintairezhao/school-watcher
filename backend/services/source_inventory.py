@@ -38,7 +38,13 @@ def resolve_page_link(base_url, href):
             # same-scheme relative references retain their existing meaning.
             if '\\' in href or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in href):
                 return ''
-            absolute = urlsplit(link.scheme + '://' + link.path)
+            # The same browser spelling can contain one authority slash:
+            # http:/host/path. Do not extend this to arbitrary slash counts.
+            spelling = href.split(':', 1)[1]
+            if spelling.startswith('//'):
+                return ''
+            authority_path = link.path[1:] if link.path.startswith('/') else link.path
+            absolute = urlsplit(link.scheme + '://' + authority_path)
             if (not base.hostname or absolute.hostname != base.hostname
                     or absolute.username or absolute.password
                     or absolute.port not in (None, 443 if link.scheme.lower() == 'https' else 80)):

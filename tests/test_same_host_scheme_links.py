@@ -8,6 +8,16 @@ BASE='https://www.example.edu.cn/news/index_17.shtml'
 
 
 class SameHostSchemeLinkTests(unittest.TestCase):
+    def test_observed_single_slash_cross_scheme_reference_matches_browser(self):
+        link='http:/www.example.edu.cn/college/c/2025-04-18/527551.shtml'
+        self.assertEqual(resolve_page_link(BASE,link),
+            'http://www.example.edu.cn/college/c/2025-04-18/527551.shtml')
+        for bad in ('other.example.edu.cn/news','www.example.edu.cn.evil.invalid/news',
+                    'user@www.example.edu.cn/news','www.example.edu.cn:bad/news'):
+            with self.subTest(bad=bad):self.assertEqual(resolve_page_link(BASE,'http:/'+bad),'')
+        self.assertEqual(resolve_page_link(BASE,'https:/www.example.edu.cn/item'),
+            'https://www.example.edu.cn/www.example.edu.cn/item')
+
     def test_observed_cross_scheme_missing_authority_slashes_matches_browser_target(self):
         link='http:www.example.edu.cn/college/c/2025-06-12/528820.shtml'
         expected='http://www.example.edu.cn/college/c/2025-06-12/528820.shtml'

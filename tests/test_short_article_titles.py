@@ -10,6 +10,15 @@ URL = 'https://www.example.edu.cn/'
 
 
 class ShortArticleTests(unittest.TestCase):
+    def test_two_character_official_article_title_keeps_whitespace_and_requires_article_url(self):
+        address = URL + 'college/c/2024-04-12/520994.shtml'
+        for title in ('讣告', '讣 告', '声明'):
+            with self.subTest(title=title):
+                self.assertFalse(is_junk_title(title, article_url=address))
+                self.assertTrue(is_junk_title(title, article_url=URL + 'services/'))
+        for title in ('', '好', '12', 'A B', '首页', '附件', '更多'):
+            self.assertTrue(is_junk_title(title, article_url=address))
+
     def test_explicit_article_address_can_support_a_short_title(self):
         for title in ('会议扫码签到说明', '工作简报', '用印流程'):
             self.assertTrue(is_junk_title(title))

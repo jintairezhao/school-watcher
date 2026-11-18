@@ -56,7 +56,11 @@ def is_junk_title(title, *, article_url='') -> bool:
         return True
     t = title.strip()
     if len(t) < 4:
-        return True
+        compact = re.sub(r'\s+', '', t)
+        # A dated/explicit article can genuinely be titled “讣 告” or “声明”.
+        # Bare navigation, one character, numbers and Latin fragments cannot.
+        if not (re.fullmatch(r'[\u3400-\u9fff]{2,3}', compact) and ARTICLE.search(article_url or '')):
+            return True
     if t.lower() in _JUNK_EXACT:
         return True
     if re.match(r'^(english\s+(version|website)|网站地图|版权所有)\b', t, re.I):
@@ -112,6 +116,17 @@ def extract_title_text(element, *, anchor=None, page_url=''):
     attribute = (element.get('title') or element.get('data-title') or '').strip()
     if attribute:
         return attribute
+    # This card contract explicitly separates title, date and synopsis inside
+    # one link. Generic p1 paragraphs elsewhere retain their literal meaning.
+    if (element.name == 'a' and element.parent is not None
+            and 'list_item' in element.parent.get('class', [])):
+        titles = element.select(':scope > p.p1')
+        dates = element.select(':scope > p.p2')
+        descriptions = element.select(':scope > p.p3.list_item_des')
+        if (len(titles) == len(dates) == len(descriptions) == 1
+                and len(element.find_all(recursive=False)) == 3
+                and not titles[0].select('a,button,select')):
+            return titles[0].get_text(' ', strip=True)
     fields = [element] if (element.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6')
         or element.get('itemprop') == 'headline'
         or set(element.get('class', [])) & {'title', 'tit', 'headline', 'news-title', 'article-title'}) else element.select(_HEADLINE)

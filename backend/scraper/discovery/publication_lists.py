@@ -37,6 +37,13 @@ def image_more_link(link):
             any('more' in node.get('class', []) for node in (link, *link.find_all(True))))
 
 
+def pagination_link(link):
+    """A numbered pager's arrows cannot supply a column's More entrance."""
+    return any(re.search(r'(?:^|[\s_-])(?:page|paging|pagination|pager)(?:$|[\s_-])',
+        ' '.join(node.get('class', [])) + ' ' + node.get('id', ''), re.I)
+        for node in link.parents if node.attrs is not None)
+
+
 def listing_alias(block, current, url, target):
     """Record a breadcrumb identity only when this URL matches its real pager.
 
@@ -342,7 +349,7 @@ def heading_evidence(first_item, url, tabs=None):
             scope = scope.parent
         choices = {}
         for link in scope.select('a[href]'):
-            if not is_more(title_text(link)):
+            if pagination_link(link) or not is_more(title_text(link)):
                 continue
             href = link['href'].strip()
             if not resolve_page_link(url, href):

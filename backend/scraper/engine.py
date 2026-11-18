@@ -90,7 +90,7 @@ def _resolve_url(base_url: str, link: str) -> str:
     return resolve_page_link(base_url, link)
 
 
-PAGINATION_SCOPE_VERSION = 1
+PAGINATION_SCOPE_VERSION = 2
 
 
 class PaginationScopeError(ValueError):
@@ -372,6 +372,98 @@ def _probe_selectors(html: str, department: Department) -> tuple | None:
     return result, True
 
 
+def _configured_entry_region(config, html, page_url, *, binding=None, requested_url=None):
+    """Bind an existing selection to its witnessed entry, not its display name.
+
+    This is a collection-only observation. It neither edits the configured
+    name/publisher nor grants validation for installing a new source. A later
+    page must prove the same complete region, entry link and observed name.
+    """
+    from backend.services.source_governance import _column_scope, _normal, adoptable_column_name
+    from backend.services.source_inventory import canonical_url, resolve_page_link
+    from backend.scraper.discovery.publication_lists import publication_lists
+
+    configured = canonical_url(config['list_url'])
+    entry = canonical_url(binding.get('entry_url', '')) if binding else canonical_url(page_url)
+    if binding:
+        if (canonical_url(binding.get('configured_url', entry)) != configured
+                or not entry or not binding.get('name')):
+            return None
+    elif entry != configured:
+        # The collector witnessed this exact request upgrading to HTTPS. URL
+        # similarity alone, a different path or a saved later page proves none
+        # of that, and cannot supply a redirect or a receipt.
+        if (canonical_url(requested_url or '') != configured or not entry.startswith('https:')
+                or canonical_url('http:' + entry[len('https:'):]) != configured):
+            return None
+    soup = BeautifulSoup(html, 'lxml')
+    selected = soup.select(config['list_selector'])
+    if not selected:
+        return None
+    feeds = publication_lists(html, page_url)
+    if binding and len(selected) == 1:
+        # The final page may have one real entry, below the optional detector's
+        # minimum. The existing validator still requires the complete ZCMS
+        # list plus its real breadcrumb/pager evidence for this exact page.
+        _, errors, final_region = _column_scope(dict(config, name=binding['name'], list_url=entry),
+                                                {'url': page_url}, html=html)
+        if not errors and final_region.get('basis') == 'single_entry_breadcrumb':
+            feeds.append(dict(name=final_region['name'], column_url=binding.get('column_url', entry),
+                column_link_locator=final_region['heading'], list_selector=config['list_selector']))
+    candidates = {}
+    for feed in feeds:
+        name = feed.get('name') or ''
+        column = canonical_url(feed.get('column_url') or '')
+        alias = feed.get('listing_alias') or {}
+        members = soup.select(feed['list_selector'])
+        overlaps = lambda a, b: a is b or a in b.parents or b in a.parents
+        complete = (len(members) == len(selected)
+                    and all(sum(overlaps(item, member) for member in members) == 1 for item in selected)
+                    and all(sum(overlaps(item, member) for item in selected) == 1 for member in members))
+        same_entry = (column == binding.get('column_url', entry) if binding else
+            column == entry or canonical_url(alias.get('url', '')) == canonical_url(page_url)
+            and canonical_url(alias.get('canonical_url', '')) == column)
+        paged_heading = False
+        if (not same_entry and not feed.get('module_preview')
+                and (not binding or binding.get('binding') == 'configured_paged_heading')):
+            # Some complete archives have a plain heading instead of a linked
+            # breadcrumb. Require their own visible current-page control, with
+            # page one on the initial read. A later page cannot become an entry.
+            _, local_errors, local = _column_scope(dict(config, name=name, list_url=entry),
+                                                    {'url': page_url}, html=html)
+            if not local_errors and local.get('container') and local.get('heading'):
+                try:
+                    root = _pagination_root(selected)
+                except PaginationScopeError:
+                    continue
+                controls = [node for node in soup.select('[aria-current="page"],.checked,.current,.active')
+                    if re.fullmatch(r'[1-9]\d*', node.get_text(' ', strip=True))
+                    and node.get('href', '').strip() in ('', '#', page_url)
+                    and not node.has_attr('hidden') and node.get('aria-hidden') != 'true'
+                    and 'display:none' not in node.get('style', '').replace(' ', '').lower()
+                    and _pagination_owner(soup, node, root, dict(container_selector=local['container'],
+                        heading_selector=local['heading'])) is root]
+                paged_heading = len(controls) == 1 and (bool(binding) or controls[0].get_text(' ', strip=True) == '1')
+                if paged_heading:
+                    same_entry, column = True, entry
+        if (not adoptable_column_name(name) or feed.get('heading_ambiguous')
+                or feed.get('heading_article_reference') or not same_entry
+                or binding and _normal(name) != _normal(binding['name'])
+                or not complete):
+            continue
+        links = soup.select(feed.get('column_link_locator') or ':not(*)')
+        if not paged_heading and (len(links) != 1 or links[0].name != 'a' or not links[0].get('href')
+                or resolve_page_link(page_url, links[0]['href']) != column):
+            continue
+        _, errors, region = _column_scope(dict(config, name=name, list_url=entry), {'url': page_url}, html=html)
+        if errors or not region.get('container') or not region.get('heading'):
+            continue
+        candidates[(region['container'], region['heading'], region['name'])] = dict(
+            region, configured_url=configured, entry_url=entry, column_url=column,
+            binding='configured_paged_heading' if paged_heading else 'configured_entry_self_link')
+    return next(iter(candidates.values())) if len(candidates) == 1 else None
+
+
 def _complete_configured_page(html, page_url, config):
     """Verify every configured page region ends here, without claiming its history."""
     from backend.services.source_scope import observe_joint_selection
@@ -600,6 +692,7 @@ def scrape_department(department: Department, school_base_url: str,
         logger.info(f"[{department.name}] 第{page}页 {page_url}")
         db.session.commit()  # Release any list-membership writes before the next network call.
 
+        requested_page_url = page_url
         html = _fetch_html(page_url, raise_fetch_errors=True, purpose='list',
                            source_id=str(department.id), readiness_selector=list_sel)
 
@@ -657,7 +750,19 @@ def scrape_department(department: Department, school_base_url: str,
 
         # A later page must still publish this column, even if its old selector
         # happens to match entries in another region after navigation/redirect.
-        _, scope_errors, region = _column_scope(config, {'url': page_url}, column_scope, html=html)
+        if not column_scope and page == 1:
+            observed = _configured_entry_region(config, html, page_url, requested_url=requested_page_url)
+            if observed:
+                column_scope = {'container_selector': observed['container'],
+                    'heading_selector': observed['heading'], 'name': observed['name'],
+                    'entry_url': observed['entry_url'], 'column_url': observed['column_url'],
+                    'configured_url': observed['configured_url'],
+                    'binding': observed['binding']}
+        if column_scope and column_scope.get('binding') in ('configured_entry_self_link', 'configured_paged_heading'):
+            region = _configured_entry_region(config, html, page_url, binding=column_scope) or {}
+            scope_errors = [] if region else ['configured_entry_scope_unconfirmed']
+        else:
+            _, scope_errors, region = _column_scope(config, {'url': page_url}, column_scope, html=html)
         if scope_errors and (column_scope or page > 1):
             from backend.scraper.selector_monitor import queue_parser_repair, ParserRepairPending
             raise ParserRepairPending(queue_parser_repair(department, html))

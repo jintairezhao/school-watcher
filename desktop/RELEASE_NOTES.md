@@ -1,10 +1,8 @@
-School Watcher 2.28
+School Watcher 2.29
 
-- 搜索学院或部门时优先显示匹配的上级名称，精确搜索不再需要反复放大；选中提示框避开球体。
-- 通知来源恢复清楚的部门与栏目层次，修正重复展示；已启用来源与本批更新数量分别显示，说明等待或失败原因。
-- 官网结构、归属和访问路径保留原文依据与稳定身份；导航、目录和组织关系分别表达，更新时保持各处数据一致。
-- 修复部分正文、图片和附件读取与缓存问题，改进多板块主页、分页和中英文标题识别；未解决的页面仍显示实际状态。
-- 简化存储管理，合并缓存分类，收纳保留规则；日志文件按日期轮换，升级保留通知、订阅、收藏、阅读记录和存储位置。
-- 保留默认收起的探索策略调试入口，可手动调整或主动使用已配置的 AI 辅助；现有参数仍需使用反馈验证，不代表通用最优值。
+- 修复部分来源在翻页时被误认为其他栏目、反复等待修复的问题；沿已经核实的入口继续读取，并保留尚未完成的进度。
+- 修复同站不完整链接、带空格的短中文标题、部分列表卡片标题与分页识别，避免漏读有效通知或把下一页误作其他栏目。
+- 修复部分正文标题嵌套及页面结构不规范时的误判，保留实际正文与标题之间的核对。
+- 升级保留原来源ID、通知、订阅、收藏、阅读状态及文件位置；缺失的来源读取设置仍按实际页面单独保存。
 
-English: Clearer graph search labels and source hierarchies, accurate update-scope reporting, traceable structure records, collection and cached-resource recovery, simpler storage controls, and optional exploration-policy debugging. Upgrades preserve personal data and storage locations. Experimental strategy parameters remain subject to feedback and validation.
+English: Recover witnessed source pagination without confusing saved display names with column headings. Improve same-site link handling, short Chinese titles, card headlines, paging controls and nested article headers. Preserve source identities, saved notices, subscriptions and personal state. Source-specific reading settings remain in personal data.

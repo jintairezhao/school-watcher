@@ -90,13 +90,22 @@ def zcms_right_local_heading(item, url):
         # card links to this exact address; another sibling link is a widget.
         previous = child.find_previous_sibling()
         if (container_class == 'middleArticle__art' and child.name == 'a'
+                and 'middleArticle__art--img' in child.get('class', [])
+                and re.fullmatch(r'#+', child.get('href', '').strip())
+                and not child.get_text(strip=True) and not child.find(True)
+                and not any(key.lower().startswith('on') for key in child.attrs)):
+            continue  # An empty disabled thumbnail has no independent content.
+        if (container_class == 'middleArticle__art' and child.name == 'a'
                 and 'middleArticle__art--img' in child.get('class', []) and not child.get_text(strip=True)
                 and not child.select('a,button,script,iframe,object') and previous is not None
                 and row_class in previous.get('class', [])
                 and (target := resolve_page_link(url, child.get('href')))
                 and target in {resolve_page_link(url, a['href']) for a in previous.select('a[href]')}):
             continue
-        if not (second and 'SecondList__list--pagination' in child.get('class', []) and pagination_only(child)):
+        nested_pager = (second and 'SecondList__list--pagination' in child.get('class', [])
+            or container_class == 'middleArticle__art'
+            and 'middlePicArticle__list--pagination' in child.get('class', []))
+        if not (nested_pager and pagination_only(child)):
             return unknown
     left_marker = 'SecondLeft-nav__left--navClick' if second else 'middleLeft__left--navClick'
     top_marker = 'SecondTop-nav__top--navClick' if second else 'middleTop__navClick'
